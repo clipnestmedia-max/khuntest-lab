@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Login - KhunTest Lab</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fbff, #fff1f1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .header img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      border-radius: 16px;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      color: #052b5f;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .tabs {
+      display: flex;
+      background: #eef3f9;
+      border-radius: 16px;
+      padding: 5px;
+      margin-bottom: 22px;
+    }
+
+    .tabs button {
+      flex: 1;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      background: transparent;
+      font-weight: 800;
+      cursor: pointer;
+      color: #334155;
+    }
+
+    .tabs button.active {
+      background: #ffffff;
+      color: #d60000;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .form-box {
+      display: none;
+    }
+
+    .form-box.active {
+      display: block;
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      color: #172033;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid #dbe3ee;
+      border-radius: 13px;
+      font-size: 15px;
+      margin-bottom: 16px;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: #0b5ed7;
+      box-shadow: 0 0 0 3px rgba(11,94,215,0.14);
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      padding: 14px;
+      border-radius: 15px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      background: #d60000;
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(214,0,0,0.22);
+      margin-top: 4px;
+    }
+
+    .forgot {
+      display: block;
+      text-align: right;
+      margin: 4px 0 16px;
+      color: #0b5ed7;
+      font-weight: 800;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 18px;
+      color: #0f172a;
+      text-decoration: none;
+      font-size: 15px;
+    }
+
+    .msg {
+      display: none;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .msg.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .msg.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <img src="logo.png" alt="KhunTest Lab Logo" onerror="this.style.display='none'">
+      <h1>Patient Portal</h1>
+    </div>
+
+    <div class="tabs">
+      <button id="loginTab" class="active" type="button" onclick="showTab('login')">Login</button>
+      <button id="registerTab" type="button" onclick="showTab('register')">Register</button>
+    </div>
+
+    <div id="loginBox" class="form-box active">
+      <form id="patientLoginForm">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="Enter registered email" required>
+
+        <label>Password</label>
+        <input id="loginPassword" type="password" placeholder="Enter password" required>
+
+        <a href="forgot-password.html?role=patient" class="forgot">Forgot Password?</a>
+
+        <button class="btn" type="submit">Login</button>
+      </form>
+    </div>
+
+    <div id="registerBox" class="form-box">
+      <form id="patientRegisterForm">
+        <label>Patient Name</label>
+        <input id="regName" type="text" placeholder="Enter patient name" required>
+
+        <label>Email</label>
+        <input id="regEmail" type="email" placeholder="Enter email" required>
+
+        <label>Phone</label>
+        <input id="regPhone" type="tel" placeholder="Enter phone number" required>
+
+        <label>Password</label>
+        <input id="regPassword" type="password" placeholder="Create password" required>
+
+        <button class="btn" type="submit">Register</button>
+      </form>
+    </div>
+
+    <div id="message" class="msg"></div>
+
+    <a href="index.html" class="back">← Back to Website</a>
+  </div>
+
+  <script>
+    const msg = document.getElementById("message");
+
+    function showMessage(text, type) {
+      msg.textContent = text;
+      msg.className = "msg " + type;
+    }
+
+    function showTab(tab) {
+      document.getElementById("loginTab").classList.toggle("active", tab === "login");
+      document.getElementById("registerTab").classList.toggle("active", tab === "register");
+      document.getElementById("loginBox").classList.toggle("active", tab === "login");
+      document.getElementById("registerBox").classList.toggle("active", tab === "register");
+      msg.className = "msg";
+      msg.textContent = "";
+    }
+
+    document.getElementById("patientLoginForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      if (!email || !password) {
+        showMessage("Email and password required.", "error");
+        return;
+      }
+
+      showMessage("Logging in...", "success");
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            role: "patient"
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          showMessage(data.message || "Login failed.", "error");
+          return;
+        }
+
+        if (!data.user || data.user.role !== "patient") {
+          showMessage("This account is not a patient account.", "error");
+          return;
+        }
+
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+
+        showMessage("Login successful. Redirecting...", "success");
+
+        setTimeout(function() {
+          window.location.href = "patient-dashboard.html";
+        }, 500);
+
+      } catch (err) {
+        console.error(err);
+        showMessage("Server connection error.", "error");
+      }
+    });
+
+    document.getElementById("patientRegisterForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const phone = document.getElementById("regPhone").value.trim();
+      const password = document.getElementById("regPassword").value;
+
+      if (!name || !email || !phone || !password) {
+        showMessage("All fields are required.", "error");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            phone: phone,
+            password: password,
+            role: "patient"
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          showMessage(data.message || "Registration failed.", "error");
+          return;
+        }
+
+        showMessage("Registration successful. Please login.", "success");
+        document.getElementById("loginEmail").value = email;
+        document.getElementById("patientRegisterForm").reset();
+
+        setTimeout(function() {
+          showTab("login");
+        }, 700);
+
+      } catch (err) {
+        console.error(err);
+        showMessage("Server connection error.", "error");
+      }
+    });
+  </script>
+
+</body>
+</html>

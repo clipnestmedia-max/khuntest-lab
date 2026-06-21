@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login - KhunTest Lab</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #031b3a, #063b6f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 34px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    .logo-box {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-box img {
+      width: 78px;
+      height: 78px;
+      object-fit: contain;
+      border-radius: 50%;
+      margin-bottom: 12px;
+    }
+
+    .logo-box h1 {
+      font-size: 26px;
+      color: #052b5f;
+      margin-bottom: 6px;
+    }
+
+    .logo-box p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #0b5ed7;
+      box-shadow: 0 0 0 3px rgba(11,94,215,0.15);
+    }
+
+    .login-btn {
+      width: 100%;
+      border: none;
+      background: #d60000;
+      color: #fff;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .login-btn:hover {
+      background: #b80000;
+    }
+
+    .links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    .links a {
+      text-decoration: none;
+      color: #0b5ed7;
+      font-weight: 700;
+    }
+
+    .message {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .message.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="logo-box">
+      <img src="logo.png" alt="KhunTest Lab Logo" onerror="this.style.display='none'">
+      <h1>KHUNTEST LAB</h1>
+      <p>Admin Login Panel</p>
+    </div>
+
+    <form id="adminLoginForm">
+      <div class="form-group">
+        <label for="adminEmail">Email</label>
+        <input
+          id="adminEmail"
+          type="email"
+          placeholder="Enter admin email"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="adminPassword">Password</label>
+        <input
+          id="adminPassword"
+          type="password"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button class="login-btn" type="submit">Login</button>
+
+      <div id="loginMessage" class="message"></div>
+
+      <div class="links">
+        <a href="index.html">← Back to Home</a>
+        <a href="forgot-password.html?role=admin">Forgot Password?</a>
+      </div>
+    </form>
+
+    <div class="footer-note">
+      Secure admin access for patient entry, billing and reports.
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("adminLoginForm");
+    const msg = document.getElementById("loginMessage");
+
+    function showMessage(text, type) {
+      msg.textContent = text;
+      msg.className = "message " + type;
+    }
+
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value;
+
+      if (!email || !password) {
+        showMessage("Email and password required.", "error");
+        return;
+      }
+
+      showMessage("Logging in...", "success");
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            role: "admin"
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          showMessage(data.message || "Login failed.", "error");
+          return;
+        }
+
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+
+        showMessage("Login successful. Redirecting...", "success");
+
+        setTimeout(function() {
+          window.location.href = "admin-dashboard.html";
+        }, 700);
+
+      } catch (err) {
+        console.error(err);
+        showMessage("Server connection error.", "error");
+      }
+    });
+  </script>
+
+</body>
+</html>

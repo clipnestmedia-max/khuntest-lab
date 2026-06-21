@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KhunTest Lab - Admin Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body onload="adminDashboard()">
+<div class="dashboard">
+  <aside class="sidebar">
+    <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab"><span>KHUNTEST LAB</span></a>
+    <div class="side-menu">
+      <button class="active" data-tab="overview" onclick="setTab('overview')">Dashboard</button>
+      <button data-tab="patientEntry" onclick="setTab('patientEntry');preparePatientEntry()">Patient Entry</button>
+      <button data-tab="reportGen" onclick="setTab('reportGen');renderReportBookingSelect()">Report Generate</button>
+      <button data-tab="bookings" onclick="setTab('bookings')">Booking List</button>
+      <button data-tab="tests" onclick="setTab('tests')">Tests</button>
+      <button data-tab="packages" onclick="setTab('packages')">Packages</button>
+      <button data-tab="staff" onclick="setTab('staff')">Staff</button>
+      <button data-tab="revenue" onclick="setTab('revenue')">Revenue</button>
+      <button data-tab="notify" onclick="setTab('notify')">Notifications</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="main admin-main">
+    <div class="dash-top">
+      <div><h1>Admin Dashboard</h1><p>Patient entry, test billing, report finding, report release and notification workflow.</p></div>
+      <a class="btn btn-red" href="booking.html">Online Booking Page</a>
+    </div>
+
+    <section data-panel="overview">
+      <div class="metric-grid">
+        <div class="metric"><span>Total Bookings</span><b id="mBookings">0</b></div>
+        <div class="metric"><span>Total Revenue</span><b id="mRevenue">₹0</b></div>
+        <div class="metric"><span>Patients</span><b id="mPatients">0</b></div>
+        <div class="metric"><span>Reports Uploaded</span><b id="mReports">0</b></div>
+      </div>
+      <div class="notice">New flow added: Patient Entry → Add Tests/Package → Save Billing → Report Generate → Fill Findings → Release Report → Patient Download.</div>
+    </section>
+
+    <section data-panel="patientEntry" class="hidden">
+      <div class="legacy-shell">
+        <div class="legacy-titlebar"><b>PATIENT ENTRY FORM</b><span>LOG-CENTER : BN-MAIN | SESSION: 2025-2026</span></div>
+        <form id="patientEntryForm" onsubmit="savePatientEntry(event)">
+          <div class="rate-row">
+            <b>RATE-TYPE :</b>
+            <label><input type="radio" name="rateType" value="GENERAL" checked onchange="refreshEntryTotals()"> GENERAL</label>
+            <label><input type="radio" name="rateType" value="REBAT" onchange="refreshEntryTotals()"> REBAT</label>
+            <label><input type="radio" name="rateType" value="LAB.CHARGE" onchange="refreshEntryTotals()"> LAB.CHARGE</label>
+          </div>
+
+          <div class="legacy-form-grid">
+            <div>
+              <label>REMOTE- NO :</label><input name="remoteNo" value="0">
+              <label>BILL NO :</label><input name="billNo" id="entryBillNo" readonly>
+              <label>ADM.DATE :</label><input name="admDate" id="entryAdmDate" type="datetime-local">
+              <label>COLL.DATE:</label><input name="collDate" id="entryCollDate" type="datetime-local">
+              <label>DAY S.No :</label><input name="dayNo" value="0">
+            </div>
+            <div>
+              <label>PATHOLOGY NAME:</label><select name="pathologyName"><option>BN-MAIN</option><option>KHUNTEST MAIN</option></select>
+              <label>PATIENT-NAME :</label><input name="patientName" required>
+              <label>PATIENT-AGE :</label><input name="age" placeholder="Ex: 54Y" required>
+              <label>CONTACT NO :</label><input name="phone" required>
+              <label>GENDER :</label><select name="gender"><option>Male</option><option>Female</option><option>Other</option></select>
+            </div>
+            <div>
+              <label>E-MAIL :</label><input name="email" type="email" required>
+              <label>REF. DOCTOR :</label><input name="doctor" value="Dr N.K SUMAN(MBBS, MD)">
+              <label>C/O. Name :</label><input name="coName">
+              <label>FIELD-BOY NAME :</label><select name="fieldBoy" id="entryStaffSelect"></select>
+              <label>ASSOCIATE LAB.:</label><input name="associateLab">
+            </div>
+          </div>
+
+          <div class="legacy-add-row">
+            <div class="test-search-box">
+              <label>TEST_NAME</label>
+              <input id="entryTestSearch" list="testCatalogList" placeholder="Search Test Name e.g. CBC" oninput="previewEntryTest()">
+              <datalist id="testCatalogList"></datalist>
+            </div>
+            <div><label>TEST_RATE</label><input id="entryTestRate" readonly></div>
+            <button type="button" class="legacy-green" onclick="addEntryTest()">&lt;&lt; Add Test &gt;&gt;</button>
+            <button type="button" class="legacy-blue" onclick="addEntryPackage()">&lt;&lt; Add Package &gt;&gt;</button>
+          </div>
+
+          <div class="entry-layout">
+            <div class="table-card legacy-table-card">
+              <table>
+                <thead><tr><th>TEST_NAME</th><th>PACKAGE</th><th>TEST_RATE</th><th>ACTION</th></tr></thead>
+                <tbody id="entryTestsBody"><tr><td colspan="4">No test added.</td></tr></tbody>
+              </table>
+            </div>
+
+            <div class="billing-box">
+              <label>GROSS TOTAL :</label><input id="grossTotal" readonly value="0.00">
+              <label>CASH RECEIVED :</label><input name="cashReceived" id="cashReceived" type="number" value="0" oninput="refreshEntryTotals()">
+              <label>CARD RECEIVED :</label><input name="cardReceived" id="cardReceived" type="number" value="0" oninput="refreshEntryTotals()">
+              <label>DISCOUNT :</label><input name="discount" id="discount" type="number" value="0" oninput="refreshEntryTotals()">
+              <label>BALANCE/DUES :</label><input id="balanceDue" readonly value="0.00">
+              <label>REMARKS :</label><input name="remarks">
+              <button class="save-strip" type="submit">&lt;&lt; SAVE &gt;&gt;</button>
+              <div class="test-count">NO. OF TEST : <span id="entryTestCount">0</span></div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section data-panel="reportGen" class="hidden">
+      <div class="legacy-shell">
+        <div class="legacy-titlebar"><b>PATIENT FINDING / REPORT GENERATE</b><span>Release report with all patient, billing and test values</span></div>
+        <div class="form-card report-select-card">
+          <label>Select Patient / Bill No</label>
+          <select id="reportBookingSelect" onchange="loadReportEditor(this.value)"></select>
+        </div>
+        <div id="reportEditor" class="hidden">
+          <div class="legacy-form-grid report-info-grid">
+            <div>
+              <label>REMOTE- NO :</label><input id="rRemoteNo" readonly>
+              <label>BILL NO :</label><input id="rBillNo" readonly>
+              <label>ADM.DATE :</label><input id="rAdmDate" readonly>
+              <label>COLL.DATE:</label><input id="rCollDate" readonly>
+              <label>DAY S.No :</label><input id="rDayNo" readonly>
+            </div>
+            <div>
+              <label>PATHOLOGY NAME:</label><input id="rPathology" readonly>
+              <label>PATIENT-NAME :</label><input id="rPatientName" readonly>
+              <label>PATIENT-AGE :</label><input id="rAge" readonly>
+              <label>CONTACT NO :</label><input id="rPhone" readonly>
+              <label>GENDER :</label><input id="rGender" readonly>
+            </div>
+            <div>
+              <label>E-MAIL :</label><input id="rEmail" readonly>
+              <label>REF. DOCTOR :</label><input id="rDoctor" readonly>
+              <label>C/O. Name :</label><input id="rCoName" readonly>
+              <label>FIELD-BOY NAME :</label><input id="rFieldBoy" readonly>
+              <label>REPORTING DATE:</label><input id="rReportingDate" type="datetime-local">
+            </div>
+          </div>
+
+          <div class="table-card legacy-table-card report-table-card">
+            <table>
+              <thead><tr><th>TEST-NAME</th><th>NORMAL-VALUE</th><th>FINDING</th><th>UNIT</th><th>COMMENT</th><th>STATUS</th><th>HISTORY</th></tr></thead>
+              <tbody id="findingRows"></tbody>
+            </table>
+          </div>
+          <div class="report-actions">
+            <button class="btn btn-outline" onclick="openReportPreview()">Preview Report</button>
+            <button class="btn btn-green" onclick="releaseGeneratedReport()">RELEASE REPORT</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="bookings" class="hidden">
+      <h2>Booking List</h2>
+      <div class="toolbar"><input id="bookingSearch" onkeyup="filterAdminBookings()" placeholder="Search booking, patient, phone, test..."></div>
+      <div class="table-card"><table><thead><tr><th>ID</th><th>Patient</th><th>Test</th><th>Collection</th><th>Status</th><th>Assign Staff</th><th>Report</th></tr></thead><tbody id="adminBookings"></tbody></table></div>
+    </section>
+
+    <section data-panel="tests" class="hidden">
+      <h2>Manage Tests & Pricing</h2>
+      <form class="form-card" onsubmit="addTest(event)"><div class="two"><div><label>Test Name</label><input name="name" required></div><div><label>Price</label><input name="price" type="number" required></div></div><div class="two"><div><label>Category</label><input name="category" required></div><div><label>Report Time</label><input name="time" required></div></div><br><button class="btn btn-navy">Add Test</button></form>
+      <div class="table-card"><table><thead><tr><th>Test</th><th>Price</th><th>Time</th><th>Action</th></tr></thead><tbody id="testsBody"></tbody></table></div>
+    </section>
+
+    <section data-panel="packages" class="hidden"><h2>Manage Test Packages</h2><form class="form-card" onsubmit="addPackage(event)"><label>Package Name</label><input name="name" required><label>Price</label><input name="price" type="number" required><label>Included Tests comma separated</label><textarea name="tests" required></textarea><br><button class="btn btn-navy">Add Package</button></form><div class="table-card"><table><thead><tr><th>Package</th><th>Price</th><th>Action</th></tr></thead><tbody id="packagesBody"></tbody></table></div></section>
+    <section data-panel="staff" class="hidden"><h2>Home Collection Staff Management</h2><form class="form-card" onsubmit="addStaff(event)"><div class="two"><div><label>Staff Name</label><input name="name" required></div><div><label>Phone</label><input name="phone" required></div></div><label>Area</label><input name="area" required><br><br><button class="btn btn-navy">Add Staff</button></form><div class="table-card"><table><thead><tr><th>Name</th><th>Phone</th><th>Area</th><th>Action</th></tr></thead><tbody id="staffBody"></tbody></table></div></section>
+    <section data-panel="revenue" class="hidden"><h2>Revenue Reports</h2><div class="card"><p>Revenue is calculated from booking amount. Patient Entry now saves cash, card, discount and balance/dues also.</p><button class="btn btn-green" onclick="alert('Demo CSV exported')">Export CSV</button></div></section>
+    <section data-panel="notify" class="hidden"><h2>SMS & WhatsApp Notifications</h2><div class="grid grid-3"><div class="card"><h3>Booking Confirmation</h3><button class="btn btn-green btn-small" onclick="addNotification('Demo WhatsApp booking confirmation sent');renderNotifications();alert('Demo sent')">Send Demo</button></div><div class="card"><h3>Report Ready</h3><button class="btn btn-green btn-small" onclick="addNotification('Demo report ready notification sent');renderNotifications();alert('Demo sent')">Send Demo</button></div><div class="card"><h3>Payment Link</h3><button class="btn btn-green btn-small" onclick="addNotification('Demo Razorpay payment link created');renderNotifications();alert('Demo link created')">Create Link</button></div></div><div class="table-card"><table><thead><tr><th>Notification</th><th>Date</th></tr></thead><tbody id="notifyBody"></tbody></table></div></section>
+  </main>
+</div>
+<script src="app.js"></script>
+<script src="api-patch.js"></script>
+<script src="api-patch.js"></script>
+<script src="api-patch.js"></script>
+</body>
+</html>

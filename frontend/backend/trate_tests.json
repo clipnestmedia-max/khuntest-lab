@@ -1,0 +1,4106 @@
+[
+  {
+    "sno": 1,
+    "test_name": "1-5 Biopsy Sample ( May Call As Small Specimen)",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 2,
+    "test_name": "17-Alpha Hydroxyprogesterone",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 3,
+    "test_name": "21 Hydroxylase Ab",
+    "rate": 20000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 4,
+    "test_name": "24 hr Urine Protein Random",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 5,
+    "test_name": "24 Hrs Urinary copper",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 6,
+    "test_name": "24 Hrs Urinary Magnesium",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 7,
+    "test_name": "24 Hrs urinary Microalbuminuria",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 8,
+    "test_name": "24 Hrs Urinary Oxalate",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 9,
+    "test_name": "24 hrs Urinary Protein",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 10,
+    "test_name": "24 Hrs urine Metanephrins",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 11,
+    "test_name": "24 Hrs urine Nor- Metanephrins",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 12,
+    "test_name": "5 Alpha-Dihydro testosterone",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 13,
+    "test_name": "Aarogyam 1.3",
+    "rate": 0,
+    "category": "Package/Custom"
+  },
+  {
+    "sno": 14,
+    "test_name": "ABG TEST",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 15,
+    "test_name": "Abnormal Haemoglobin Studies Hb Variants Blood",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 16,
+    "test_name": "ABO GROUP & RH TYPING",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 17,
+    "test_name": "ABSOLUTE EOSINOPHIL COUNT",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 18,
+    "test_name": "Absolute Neutrophil count",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 19,
+    "test_name": "ACE (ANGIOTENSIN CONVERTING ENZYME )",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 20,
+    "test_name": "AChR Antibodies",
+    "rate": 3200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 21,
+    "test_name": "Acid Phosphatase",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 22,
+    "test_name": "Acitic Fluid -Cell Type/ Cell Count /Albumin",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 23,
+    "test_name": "ACTH (Adreno Cortico Tropic Hormone)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 24,
+    "test_name": "ADA",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 25,
+    "test_name": "Advance Electrolytes",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 26,
+    "test_name": "Advance lipid (APO A+ APO B + LIPO)",
+    "rate": 0,
+    "category": "Package/Custom"
+  },
+  {
+    "sno": 27,
+    "test_name": "AFB CULTURE/SENSETIVITY",
+    "rate": 7500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 28,
+    "test_name": "AFB STAINING (ZEIL NIELSON STAIN) 2 SAMPLES",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 29,
+    "test_name": "AFP (Alpha Feto Protein)",
+    "rate": 1400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 30,
+    "test_name": "Aldolase",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 31,
+    "test_name": "Aldosterone -Plasma renin ratio",
+    "rate": 7500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 32,
+    "test_name": "ALKALINE PHOSPHATE",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 33,
+    "test_name": "Allergy Drug Panel Comprehensive",
+    "rate": 13500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 34,
+    "test_name": "ALPHA1 ANTI TRYPSIN",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 35,
+    "test_name": "AMH PLUS PREMIUM",
+    "rate": 3700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 36,
+    "test_name": "Ammonia Level",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 37,
+    "test_name": "AMYLASE",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 38,
+    "test_name": "ANA (ANTI NUCLEAR ANTIBODY)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 39,
+    "test_name": "ANA By IFA MATHOD",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 40,
+    "test_name": "ANA By IFA MATHOD TITER",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 41,
+    "test_name": "ANA PROFILE",
+    "rate": 5500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 42,
+    "test_name": "ANCA (Vasculitis Screan IF)",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 43,
+    "test_name": "ANCA-C",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 44,
+    "test_name": "ANCA-P",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 45,
+    "test_name": "Androgen",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 46,
+    "test_name": "Anemia Comprehensive panel",
+    "rate": 6000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 47,
+    "test_name": "ANEMIA PANEL",
+    "rate": 6900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 48,
+    "test_name": "Antenatal Panel",
+    "rate": 6980,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 49,
+    "test_name": "Anti CARDLOLIPIN ANTIBODY -Igg",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 50,
+    "test_name": "Anti CARDLOLIPIN ANTIBODY -Igm",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 51,
+    "test_name": "ANTI CCP (Antibody)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 52,
+    "test_name": "Anti Centromere Antibody",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 53,
+    "test_name": "Anti DNase B",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 54,
+    "test_name": "Anti Ds DNA",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 55,
+    "test_name": "ANTI HAV Igm",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 56,
+    "test_name": "ANTI HAV TOTAL (IgG&IgM)",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 57,
+    "test_name": "Anti HBC Ag-IgG",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 58,
+    "test_name": "Anti HBC Ag-IgM",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 59,
+    "test_name": "Anti HBC Total",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 60,
+    "test_name": "Anti HBe Antibody",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 61,
+    "test_name": "Anti HBS",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 62,
+    "test_name": "Anti HBS Antibody",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 63,
+    "test_name": "Anti HBS IgG",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 64,
+    "test_name": "Anti HBS IgM",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 65,
+    "test_name": "ANTI HEPATITIS C VIRUS (ANTI HCV) - TOTAL",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 66,
+    "test_name": "ANTI HEPATITIS C VIRUS (ANTI HCV) - TOTAL",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 67,
+    "test_name": "Anti Hepatitis E Virus (Anti HEV) - IgM",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 68,
+    "test_name": "Anti HEV Igg",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 69,
+    "test_name": "Anti Insulin Antibody",
+    "rate": 2800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 70,
+    "test_name": "Anti Mitochondrial A/B (AMA)",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 71,
+    "test_name": "ANTI MPO",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 72,
+    "test_name": "Anti Mullenium Hormone (AMH)",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 73,
+    "test_name": "ANTI MULLERIAN HORMONE (AMH)",
+    "rate": 1800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 74,
+    "test_name": "Anti PHOSPHOLIPID ANTIBODY -Igg",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 75,
+    "test_name": "Anti PHOSPHOLIPID ANTIBODY -Igm",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 76,
+    "test_name": "Anti Sm - Antibody",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 77,
+    "test_name": "Anti-HBc IgM (IgM Ab to Hep-B Core Ag)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 78,
+    "test_name": "Anti-IA2",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 79,
+    "test_name": "Anti-Smooth Muscle Antibody",
+    "rate": 2100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 80,
+    "test_name": "Anti-TPO",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 81,
+    "test_name": "Antibody To Hapatitis C Virus (ECI)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 82,
+    "test_name": "Antithyroglobulin (ATG)",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 83,
+    "test_name": "APLA (Antiphospholipid antibody )- IgG",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 84,
+    "test_name": "APLA (Antiphospholipid antibody )- IgM",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 85,
+    "test_name": "Apolipoprotein A (APOA-1)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 86,
+    "test_name": "Apolipoprotein B (APOB)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 87,
+    "test_name": "APTT(Activated Partial Thromboplastin Time)",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 88,
+    "test_name": "Arthritis  Panel",
+    "rate": 5500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 89,
+    "test_name": "Ascitic Fluid - Grams Stain",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 90,
+    "test_name": "Ascitic Fluid -AFB Stain",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 91,
+    "test_name": "ASCITIC Fluid Analysis- Cell,Sugar and Protein",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 92,
+    "test_name": "Ascitic Fluid Analysis- Culture",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 93,
+    "test_name": "ASCITIC FLUID EXAM+ ASPIRATION CHARGE",
+    "rate": 1650,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 94,
+    "test_name": "Ascitic fluid For Cytology ( Cell Count & Cell Type)",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 95,
+    "test_name": "ASO  LATEX",
+    "rate": 350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 96,
+    "test_name": "ASO TITRE (Quantitative)",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 97,
+    "test_name": "Aspergillus IgG",
+    "rate": 1400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 98,
+    "test_name": "ASPIRATION CHARGE ANY SAMPLE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 99,
+    "test_name": "BACTERIAL CULTRUE & SENSITIVITY EXAMINATION",
+    "rate": 1800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 100,
+    "test_name": "BAL FLUID ANALYSIS",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 101,
+    "test_name": "BAL Fluid Analysis -Cytology For Malignant Cell",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 102,
+    "test_name": "BAL FLUID ANALYSIS-CYTOLOGY FOR MALIGNANT CELL",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 103,
+    "test_name": "Bal For Culture & Sensitivity",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 104,
+    "test_name": "BAND Cell",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 105,
+    "test_name": "Basic Fever Panel",
+    "rate": 3050,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 106,
+    "test_name": "Basic infertility profile",
+    "rate": 6000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 107,
+    "test_name": "Bence Jones Proteins  urine",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 108,
+    "test_name": "BETA HCG",
+    "rate": 1100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 109,
+    "test_name": "Beta Hcg Cancer Marker",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 110,
+    "test_name": "Beta-2 Glycoprotein IgG",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 111,
+    "test_name": "Beta-2 Glycoprotein IgM",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 112,
+    "test_name": "BETA2 MICROGLOBULIN",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 113,
+    "test_name": "Bile Acid",
+    "rate": 1700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 114,
+    "test_name": "Biopsy Bone Marrow (Procedure)",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 115,
+    "test_name": "Biopsy Nerve",
+    "rate": 4500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 116,
+    "test_name": "Biopsy Neuropathology",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 117,
+    "test_name": "Blood C And S",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 118,
+    "test_name": "Blood Culture",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 119,
+    "test_name": "BLOOD CULTURE (AEROBIC)",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 120,
+    "test_name": "Blood Culture (Paired)",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 121,
+    "test_name": "Blood Culture With Urine Culture and ET Secration",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 122,
+    "test_name": "Blood Culture With Urine Culture and Sputum Culture",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 123,
+    "test_name": "Blood Culture With Urine Culture and Tracheal Culture",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 124,
+    "test_name": "Blood Group & Rh Factor",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 125,
+    "test_name": "Blood Sugar (2 hrs. 75 g Glucose)",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 126,
+    "test_name": "Blood Sugar (2 hrs. PP)",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 127,
+    "test_name": "Blood Sugar (Fasting)",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 128,
+    "test_name": "Blood Sugar (Random)",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 129,
+    "test_name": "BLOOD SUGAR PP+DRUGS",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 130,
+    "test_name": "BLOOD UREA",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 131,
+    "test_name": "Blood urea nitrogen (BUN)",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 132,
+    "test_name": "Blood Urea Nitrogen(BUN)",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 133,
+    "test_name": "BMI",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 134,
+    "test_name": "BODY FLUID FOR CULTURE(BACTEC)",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 135,
+    "test_name": "BONE MARROW EXAMINATION",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 136,
+    "test_name": "Brucella  IgG",
+    "rate": 1100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 137,
+    "test_name": "Brucella IgM",
+    "rate": 1100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 138,
+    "test_name": "BT",
+    "rate": 50,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 139,
+    "test_name": "C S F",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 140,
+    "test_name": "C-Peptide",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 141,
+    "test_name": "C-Reactive Protein  Quantitative",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 142,
+    "test_name": "C-Reactive Protein  Quantitative",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 143,
+    "test_name": "C-Reactive Protein  Quantitative",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 144,
+    "test_name": "CA 15.3",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 145,
+    "test_name": "CA 242",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 146,
+    "test_name": "CA 50",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 147,
+    "test_name": "CA 72.4",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 148,
+    "test_name": "CA-125",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 149,
+    "test_name": "CA19.9",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 150,
+    "test_name": "Calcitonin",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 151,
+    "test_name": "Calcium",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 152,
+    "test_name": "CALCIUM IONISED",
+    "rate": 350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 153,
+    "test_name": "Carbamazepine (Tegretol, Mazetol)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 154,
+    "test_name": "Carbamazepine (Tegretol, Mazetol)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 155,
+    "test_name": "Cardic profile",
+    "rate": 4500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 156,
+    "test_name": "CATHETERTIP CULTURE+SENSITIVITY",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 157,
+    "test_name": "CBC",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 158,
+    "test_name": "CBC+COMMENT OF SMEAR",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 159,
+    "test_name": "CD3",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 160,
+    "test_name": "CD4",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 161,
+    "test_name": "CD4/CD8",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 162,
+    "test_name": "CD5 ( Immunohistochemistry )",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 163,
+    "test_name": "CEA Levels(Carcino Embryonic Antigen)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 164,
+    "test_name": "CELL BLOCK",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 165,
+    "test_name": "Cell Block cytology",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 166,
+    "test_name": "CENTRAL LINE TIP FOR CULTURE+SENSITIVITY",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 167,
+    "test_name": "Chickun Guniya Serology",
+    "rate": 1850,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 168,
+    "test_name": "CHIKUNGUNIYA IGG",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 169,
+    "test_name": "CHIKUNGUNIYA IGM",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 170,
+    "test_name": "Chloride",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 171,
+    "test_name": "Cholesterol",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 172,
+    "test_name": "Chyle Qualitative Detection, Urine",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 173,
+    "test_name": "CML Quest IRMA",
+    "rate": 8000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 174,
+    "test_name": "CMV IgG (Cytomegalovirus antibodes)",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 175,
+    "test_name": "CMV(CYTOMEGGALO )IGM",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 176,
+    "test_name": "COAGULATION PROFILE",
+    "rate": 1550,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 177,
+    "test_name": "collection charge",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 178,
+    "test_name": "Complement Protein Concentration(c3)",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 179,
+    "test_name": "Complement Protein Concentration(c4)",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 180,
+    "test_name": "COMPLETE INFERTILITY Profile (female)",
+    "rate": 2300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 181,
+    "test_name": "Comprehensive Health panel (male)",
+    "rate": 6970,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 182,
+    "test_name": "Comprehensive Health panel female",
+    "rate": 5620,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 183,
+    "test_name": "Comprehensive Hormone Panel female",
+    "rate": 6100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 184,
+    "test_name": "CONJUNCTIVAL SWAB FOR C AND S",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 185,
+    "test_name": "COOMBS TEST DIRECT",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 186,
+    "test_name": "COOMBS TEST INDIRECT",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 187,
+    "test_name": "COPPER Serum",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 188,
+    "test_name": "Cortisol free 24 Hrs Urine",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 189,
+    "test_name": "Cortisol Urine",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 190,
+    "test_name": "Covid 19 Package - 3",
+    "rate": 6080,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 191,
+    "test_name": "Covid 19 Package -2",
+    "rate": 13760,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 192,
+    "test_name": "COVID-19 ANTIGEN",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 193,
+    "test_name": "COVID-19 TOTAL ANTIBODY",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 194,
+    "test_name": "COVID-19 TOTAL ANTIBODY (IgG)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 195,
+    "test_name": "COVID-19 TOTAL ANTIBODY (IgM+IgG+IgA)",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 196,
+    "test_name": "CPK (MB)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 197,
+    "test_name": "Creatine Kinase -MB",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 198,
+    "test_name": "Creatine PhosphoKinase (CPK) -NAC",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 199,
+    "test_name": "Cross Match",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 200,
+    "test_name": "Cryptococcus Antigen ,CSF",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 201,
+    "test_name": "Cryptococcus Antigen, Serum",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 202,
+    "test_name": "CSF  - AFB  Stain",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 203,
+    "test_name": "CSF -Culture",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 204,
+    "test_name": "CSF Electrophoresis",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 205,
+    "test_name": "CT",
+    "rate": 50,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 206,
+    "test_name": "CT GUIDED F.N.A.C",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 207,
+    "test_name": "Culture & Sensitivity ( Other Specimen)",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 208,
+    "test_name": "Culture, Body Fluid",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 209,
+    "test_name": "CVP Line Tip For Culture & Sensitivity",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 210,
+    "test_name": "Cystatin C",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 211,
+    "test_name": "Cytogenetics",
+    "rate": 9000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 212,
+    "test_name": "CYTOLOGY FOR MALIGNANT CELLS",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 213,
+    "test_name": "Cytology For Nipple Discharge",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 214,
+    "test_name": "D DIMER",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 215,
+    "test_name": "D Dimer(Quantitative)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 216,
+    "test_name": "D.L.C",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 217,
+    "test_name": "Dehydroepiandrosterone-sulfate(DHEAS)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 218,
+    "test_name": "Dengue Ns1 Antigen",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 219,
+    "test_name": "Dengue Profile",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 220,
+    "test_name": "Dengue Serology (Ig M & Ig G)",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 221,
+    "test_name": "DIABETIC PANEL",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 222,
+    "test_name": "DIABETIC PROFILE",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 223,
+    "test_name": "Dual marker",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 224,
+    "test_name": "E GFR (estimated GFR)",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 225,
+    "test_name": "EAR DISCHARGE C+S",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 226,
+    "test_name": "EAR SWAB C & S",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 227,
+    "test_name": "ECG",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 228,
+    "test_name": "Electrolytes (Na/K/Cl), Urine",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 229,
+    "test_name": "Elisa For H.Pylori (IgG,IgM,)",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 230,
+    "test_name": "ELISA FOR H.PYLORI (IGM)",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 231,
+    "test_name": "ELISA FOR H.PYLORI RAPAID",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 232,
+    "test_name": "ELISA FOR H.PYLORI(IgG)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 233,
+    "test_name": "ELISA FOR MICROFILARIA",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 234,
+    "test_name": "Elisa for Pro-Calcitonin",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 235,
+    "test_name": "Entamoeba Histolytica Antibodies",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 236,
+    "test_name": "ERYTHROPOIETIN",
+    "rate": 2300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 237,
+    "test_name": "Erythropoietin (EPO) Level",
+    "rate": 2300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 238,
+    "test_name": "Esnophil",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 239,
+    "test_name": "ESR",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 240,
+    "test_name": "ESTRADIOL(E2)",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 241,
+    "test_name": "ET SECRETION FOR CULTURE SENSITIVITY",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 242,
+    "test_name": "EXTRA SLIDE",
+    "rate": 160,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 243,
+    "test_name": "EYE SWAB CULTURE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 244,
+    "test_name": "Factor 5 Functional",
+    "rate": 6500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 245,
+    "test_name": "Factor 8 Studies",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 246,
+    "test_name": "Factor 9 Studies",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 247,
+    "test_name": "Factor VII Activit",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 248,
+    "test_name": "FDP,FIBRINOGENDEGRADATION",
+    "rate": 1700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 249,
+    "test_name": "Fecal Calprotectin",
+    "rate": 3200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 250,
+    "test_name": "Fine Needle Aspiration Cytology",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 251,
+    "test_name": "FISH & Cytogenetics(Aneuploidy Detection Products Of Conception (PO",
+    "rate": 6300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 252,
+    "test_name": "FISH FOR BCR / ABL",
+    "rate": 6000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 253,
+    "test_name": "Fluid ADA",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 254,
+    "test_name": "FLUID AMYLASE",
+    "rate": 350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 255,
+    "test_name": "Fluid Analysis -Cytology For Malignant Cell",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 256,
+    "test_name": "FLUID ASPIRATION CHARGE",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 257,
+    "test_name": "Fluid Gram Stain",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 258,
+    "test_name": "Fluid LDH",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 259,
+    "test_name": "FLUID LDH RATIO",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 260,
+    "test_name": "FLUID-AFB",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 261,
+    "test_name": "FNAC  OF BOTH AXILLARY GLAND",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 262,
+    "test_name": "FNAC BOTH BREAST",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 263,
+    "test_name": "FNAC-CLN",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 264,
+    "test_name": "Foleys Catheter Tip For Culture & Sensitivity",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 265,
+    "test_name": "Folic Acid",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 266,
+    "test_name": "Folic Acid [Folate]",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 267,
+    "test_name": "Free beta HCG",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 268,
+    "test_name": "Free T3",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 269,
+    "test_name": "FREE THYROID PROFILE",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 270,
+    "test_name": "free-Testosterone",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 271,
+    "test_name": "FSH (Follicle Stimulating Hormone)",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 272,
+    "test_name": "FT3",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 273,
+    "test_name": "FT4",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 274,
+    "test_name": "Fungal Culture Test",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 275,
+    "test_name": "FUNGAL STAINING",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 276,
+    "test_name": "G6PD DEFICIENCY TEST",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 277,
+    "test_name": "GAD 65",
+    "rate": 6500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 278,
+    "test_name": "GAD 65 Antibody",
+    "rate": 7000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 279,
+    "test_name": "Gamma Gt",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 280,
+    "test_name": "Gastrin-17",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 281,
+    "test_name": "GENEXPERT ULTRA (NEXT GENERATION) MTB WITH RIFAMPICIN RESIST",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 282,
+    "test_name": "GFR TEST",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 283,
+    "test_name": "Globulin",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 284,
+    "test_name": "Glucose",
+    "rate": 70,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 285,
+    "test_name": "Glucose Challenge Test ( 50 gram glucose  GCT)",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 286,
+    "test_name": "Glucose Tolerance Test (75 gm Gluscose)",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 287,
+    "test_name": "Glucose Tolerence Test ( Gestation 100 Gm Glucose)",
+    "rate": 350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 288,
+    "test_name": "GRAM STAIN",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 289,
+    "test_name": "Growth Hormone",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 290,
+    "test_name": "H Pylori  Rapid Test",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 291,
+    "test_name": "H.I.V BOTH",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 292,
+    "test_name": "H.PYLORI QUANTITATIVE",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 293,
+    "test_name": "HAEMOGLOBIN",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 294,
+    "test_name": "HAEMOGLOBIN VARIANT ANALYSIS",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 295,
+    "test_name": "Hapatitis B Profile",
+    "rate": 4500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 296,
+    "test_name": "Hapatitis B Surface Antigen (ECI)",
+    "rate": 650,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 297,
+    "test_name": "HAV IgM",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 298,
+    "test_name": "HB Electrophoresis HPLC",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 299,
+    "test_name": "HBA1C",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 300,
+    "test_name": "HBeAg-Hepatitis B Envelope Antigen",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 301,
+    "test_name": "HBsAg (Rapid)",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 302,
+    "test_name": "HBsAg ELISA",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 303,
+    "test_name": "HBV Viral Load By Real Time PCR",
+    "rate": 4900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 304,
+    "test_name": "HCV  (Rapid)",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 305,
+    "test_name": "HCV RNA Qualitative (PCR)",
+    "rate": 3900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 306,
+    "test_name": "HCV RNA Quantitative (PCR)",
+    "rate": 3900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 307,
+    "test_name": "HDL Cholesterol",
+    "rate": 250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 308,
+    "test_name": "Health check-up silver (female)",
+    "rate": 8400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 309,
+    "test_name": "Health check-up silver (male)",
+    "rate": 8800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 310,
+    "test_name": "Helicobacter Pylori (H.pylori) Antigen, Stool",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 311,
+    "test_name": "Helicobacter Pylori (H.pylori) Antigen, Stool",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 312,
+    "test_name": "Helicobacter Pylori IgM Antibodies",
+    "rate": 1900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 313,
+    "test_name": "Hepatitis A (HAV) IgG",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 314,
+    "test_name": "Hepatitis A Virus IgM Antibodies",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 315,
+    "test_name": "Hepatitis B core -Total Antibodies (HBc-T)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 316,
+    "test_name": "Hepatitis B Core IgG",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 317,
+    "test_name": "Hepatitis B Core IgM",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 318,
+    "test_name": "Hepatitis B envelope Antibodies (HBeAb)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 319,
+    "test_name": "Hepatitis B Profile",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 320,
+    "test_name": "Hepatitis B Profile",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 321,
+    "test_name": "Hepatitis B Surface Antibodies (HBsAb)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 322,
+    "test_name": "Hepatitis B surface antigen (HBsAg) ECLIA",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 323,
+    "test_name": "Hepatitis B Surface Total Antibodies",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 324,
+    "test_name": "Hepatitis B Virus DNA Quantitative PCR",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 325,
+    "test_name": "Hepatitis B Virus Viral Load DNA LEVEL",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 326,
+    "test_name": "Hepatitis B. MARKA",
+    "rate": 4500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 327,
+    "test_name": "Hepatitis C Antibody (HCV), Quantitative",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 328,
+    "test_name": "Hepatitis C virus IgG",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 329,
+    "test_name": "Hepatitis C virus Igm",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 330,
+    "test_name": "Hepatitis E Virus IgM Antibodies",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 331,
+    "test_name": "Hepatitis E Virus, IgG Antibodies",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 332,
+    "test_name": "Hepatitis E Virus, IgG Antibodies",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 333,
+    "test_name": "Hepatitis E Virus, IgM Antibodies",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 334,
+    "test_name": "High-Sensitivity C-Reactive Protein(hs-CRP)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 335,
+    "test_name": "Histo Block Of Review",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 336,
+    "test_name": "HISTOPATHOLOGY EXTRA LARGE BIOPSY",
+    "rate": 8000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 337,
+    "test_name": "HISTOPATHOLOGY LARGE",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 338,
+    "test_name": "Histopathology Medium Specimen",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 339,
+    "test_name": "Histopathology Small Specimen",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 340,
+    "test_name": "HISTOPATHOLOGY/FNAC SLIDE AND BLOCK ISSUE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 341,
+    "test_name": "Histopathology: Block/Slide For Review",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 342,
+    "test_name": "Histopathology: Radical Specimen",
+    "rate": 4500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 343,
+    "test_name": "HIV 1 & 2 Antibody (ECI)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 344,
+    "test_name": "HIV 1 & 2 Antibody (Rapid)",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 345,
+    "test_name": "HIV 4th Gen  ELISA",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 346,
+    "test_name": "HIV I & II Quantitative (HIV)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 347,
+    "test_name": "HIV RNA Qualitative (PCR)",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 348,
+    "test_name": "HLA-B27 (Flowcytometer)",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 349,
+    "test_name": "HLA-B27 PCR,QUALITATIVE",
+    "rate": 3200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 350,
+    "test_name": "Homocysteine  (Serum)",
+    "rate": 1450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 351,
+    "test_name": "Hormonal Assay",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 352,
+    "test_name": "HPV",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 353,
+    "test_name": "HPV (LBC)",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 354,
+    "test_name": "HPV DNA Hybrid capture",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 355,
+    "test_name": "HPV-Human Papilloma Virus DNA Detection And Typing LBC",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 356,
+    "test_name": "HSV-1/2 IgG (Herpes Simplex virus)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 357,
+    "test_name": "HSV-1/2 IgM (Herpes Simplex virus)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 358,
+    "test_name": "HSV-2 IgE (Herpes simplex virus)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 359,
+    "test_name": "HSV-2 IgG (Herpes Simplex virus)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 360,
+    "test_name": "HSV-2 IgM (Herpes simplex virus)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 361,
+    "test_name": "Human Leukocyte Antigen B27 (HLA-B27)",
+    "rate": 3200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 362,
+    "test_name": "ICA",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 363,
+    "test_name": "IgA (Urine)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 364,
+    "test_name": "IgE TOTAL",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 365,
+    "test_name": "IGF-1",
+    "rate": 5000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 366,
+    "test_name": "IgG (Serum)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 367,
+    "test_name": "IgG (Urine)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 368,
+    "test_name": "IgM",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 369,
+    "test_name": "IL-6",
+    "rate": 3500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 370,
+    "test_name": "Immature/Mature Neutrophil Ratio",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 371,
+    "test_name": "IMMUNOGLOBULIN A (IGA)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 372,
+    "test_name": "Immunoglobulin Profile",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 373,
+    "test_name": "IMMUNOGLOBULIN- IgA",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 374,
+    "test_name": "Immunohistochemistry -Three Markers",
+    "rate": 4400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 375,
+    "test_name": "Immunohistochemistry Er/Pr",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 376,
+    "test_name": "Immunohistochemistry Her - 2 Neu",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 377,
+    "test_name": "Immunohistochemistry- Two Markers",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 378,
+    "test_name": "Immunohistochemistry-OneMarker",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 379,
+    "test_name": "Immunohistochemistry> Three Markers",
+    "rate": 5100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 380,
+    "test_name": "India Ink",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 381,
+    "test_name": "INDIRECT COOMBS TEST",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 382,
+    "test_name": "Infertility Panel (Male)",
+    "rate": 4850,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 383,
+    "test_name": "INHIBIN A, Maternal Marker",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 384,
+    "test_name": "Inorganic phosphorus",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 385,
+    "test_name": "Insulin Fasting",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 386,
+    "test_name": "Insulin Fasting",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 387,
+    "test_name": "Insulin Like Growth Factor-1 (IGF-1)",
+    "rate": 4300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 388,
+    "test_name": "IRON DEFICIENCY BASIC PANEL",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 389,
+    "test_name": "IRON PROFILE with Ferritin",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 390,
+    "test_name": "IT Ratio",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 391,
+    "test_name": "Karyotyping",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 392,
+    "test_name": "KFT",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 393,
+    "test_name": "Kidney Stone Analysis",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 394,
+    "test_name": "KOH Stanning ( Small Specimen)",
+    "rate": 250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 395,
+    "test_name": "Lactate, Plasma",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 396,
+    "test_name": "LDH -( LACTATE DEHYDROGENASE) - FLUID",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 397,
+    "test_name": "LDH Total (Serum)",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 398,
+    "test_name": "LDL Cholestrol",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 399,
+    "test_name": "Le Cells",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 400,
+    "test_name": "LEPTOSPIRA IGM & ICG (BY RAPID METHOD)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 401,
+    "test_name": "LEPTOSPIRA-IgM",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 402,
+    "test_name": "LH",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 403,
+    "test_name": "LIPASE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 404,
+    "test_name": "LIPID PROFILE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 405,
+    "test_name": "Lipoprotein A",
+    "rate": 1400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 406,
+    "test_name": "Liquid Based Cytology (LBC),Sure path Cytology",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 407,
+    "test_name": "LIVER FUNCTION TEST",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 408,
+    "test_name": "LKM-1 Antibodies",
+    "rate": 1700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 409,
+    "test_name": "LKM1 Antibodies (Liver Kidney Microsomes)",
+    "rate": 3200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 410,
+    "test_name": "LUPUS ANTICOAGULANT SCREEN TIME",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 411,
+    "test_name": "Magnesium (Serum)",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 412,
+    "test_name": "Malaria Antigen (Rapid Test For Malaria)",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 413,
+    "test_name": "MALARIA PARASITE",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 414,
+    "test_name": "Malaria Profile",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 415,
+    "test_name": "Malaria Total Antibody",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 416,
+    "test_name": "Malaria Total Antibody",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 417,
+    "test_name": "Malignant Cells",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 418,
+    "test_name": "MANTOUX TEST (MT)",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 419,
+    "test_name": "Microalbuminuria (MAU)",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 420,
+    "test_name": "Microalbuminuria (MAU)",
+    "rate": 0,
+    "category": "Package/Custom"
+  },
+  {
+    "sno": 421,
+    "test_name": "MICROFALARIA (RAPID TEST)",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 422,
+    "test_name": "Mini Diab Profile",
+    "rate": 80,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 423,
+    "test_name": "MTB WITH RIFAMPICIN AND ISONIAZID RESISTANCE",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 424,
+    "test_name": "Mucosal Scrapping for Cytology",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 425,
+    "test_name": "Mumps IgG",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 426,
+    "test_name": "Mumps IgM",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 427,
+    "test_name": "Mycobacterium Tuberculosis (Sputum)",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 428,
+    "test_name": "Myeloma Profile",
+    "rate": 9500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 429,
+    "test_name": "Nail Clipping For Fungus",
+    "rate": 250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 430,
+    "test_name": "Nasal Swab For Culture & Sensitivity",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 431,
+    "test_name": "Needle Stick Injury Panel",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 432,
+    "test_name": "Nicotine Metabolite",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 433,
+    "test_name": "NORMAL COVID PACKAGE",
+    "rate": 5080,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 434,
+    "test_name": "NT-Pro BNP",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 435,
+    "test_name": "OncqHaem IRMA",
+    "rate": 13500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 436,
+    "test_name": "OPTIMAL FOR MALARIA(RTMP)",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 437,
+    "test_name": "Other Fluid Analysis - Cell Type & Cell Count",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 438,
+    "test_name": "Other Fluid Analysis - Culture",
+    "rate": 1100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 439,
+    "test_name": "Other Fluid Analysis -LDH",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 440,
+    "test_name": "PAP SMEAE EXAMINATION.",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 441,
+    "test_name": "PAP SMEAR",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 442,
+    "test_name": "Pap Smear Examination",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 443,
+    "test_name": "PCR For Chlamydia- urine",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 444,
+    "test_name": "PCR For Herpes simplex virus",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 445,
+    "test_name": "PCV",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 446,
+    "test_name": "Pericardial Fluid ADA",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 447,
+    "test_name": "Pericardiocentesis fluid analysis",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 448,
+    "test_name": "Peripheral Smear Examination",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 449,
+    "test_name": "Phosphorus",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 450,
+    "test_name": "Plasma  nor metanephrine",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 451,
+    "test_name": "Plasma metanephrine",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 452,
+    "test_name": "PLATELET COUNT",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 453,
+    "test_name": "Pleural Fluid",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 454,
+    "test_name": "Pleural Fluid - AFB Stain",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 455,
+    "test_name": "Pleural Fluid ADA",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 456,
+    "test_name": "Pleural Fluid Analysis-Culture",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 457,
+    "test_name": "Pleural Fluid Analysis-Grams Stain",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 458,
+    "test_name": "POTASSIUM",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 459,
+    "test_name": "Pre Dailysis Screen",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 460,
+    "test_name": "PRO BNP",
+    "rate": 1700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 461,
+    "test_name": "Procalcitonin (Qualitative)",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 462,
+    "test_name": "Progesterone",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 463,
+    "test_name": "Proinsulin",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 464,
+    "test_name": "Protein 24 hrs Urine",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 465,
+    "test_name": "Prothrombin Time ( With INR)",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 466,
+    "test_name": "PSA FREE",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 467,
+    "test_name": "PSA- Total (Prostate Specific Antigen total )",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 468,
+    "test_name": "PTH-Intact (Parathormone Intact)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 469,
+    "test_name": "Pus C & S",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 470,
+    "test_name": "PUS FOR AFB",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 471,
+    "test_name": "QUADRUPLE(MARKER)",
+    "rate": 3600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 472,
+    "test_name": "R H TITRE ANTIBODY",
+    "rate": 1150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 473,
+    "test_name": "R K -39  FOR KALAZAR",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 474,
+    "test_name": "R.P.R BOTH",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 475,
+    "test_name": "R.P.R-H",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 476,
+    "test_name": "R.P.R-W",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 477,
+    "test_name": "RA FACTOR(Quantitative)",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 478,
+    "test_name": "RA LATEX",
+    "rate": 350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 479,
+    "test_name": "RBC Count",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 480,
+    "test_name": "Renal Profile",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 481,
+    "test_name": "Reticulocyte Count",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 482,
+    "test_name": "Rh Antibody Titre",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 483,
+    "test_name": "RPR (Rapid Plasma regin)",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 484,
+    "test_name": "Rubella IgE",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 485,
+    "test_name": "Rubella IgG",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 486,
+    "test_name": "Rubella IgM",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 487,
+    "test_name": "S Prolactin",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 488,
+    "test_name": "S TYPHI DOT",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 489,
+    "test_name": "S-100",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 490,
+    "test_name": "S. Estradiol",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 491,
+    "test_name": "S. Lithium",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 492,
+    "test_name": "S. Valproate level",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 493,
+    "test_name": "SAAG(Serum Ascites Albumin Gradient",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 494,
+    "test_name": "SATYAMEV ACTIVE",
+    "rate": 1599,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 495,
+    "test_name": "Satyamev Advance",
+    "rate": 3449,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 496,
+    "test_name": "SATYAMEV COMPLETE",
+    "rate": 4149,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 497,
+    "test_name": "Satyamev Complte",
+    "rate": 4149,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 498,
+    "test_name": "Satyamev Lite",
+    "rate": 1099,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 499,
+    "test_name": "SATYAMEV LITE",
+    "rate": 1099,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 500,
+    "test_name": "Satyamev Mini camp",
+    "rate": 49,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 501,
+    "test_name": "Satyamev Platinum",
+    "rate": 5149,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 502,
+    "test_name": "Satyamev Screen",
+    "rate": 999,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 503,
+    "test_name": "Satyamev Super",
+    "rate": 2549,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 504,
+    "test_name": "SATYAMEV SUPER",
+    "rate": 2549,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 505,
+    "test_name": "SATYAMEV TOTAL",
+    "rate": 2149,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 506,
+    "test_name": "SCCA",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 507,
+    "test_name": "Scrub Typhus IgM (ELISA)",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 508,
+    "test_name": "Scrub Typhus IgM (RAPID) CARD",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 509,
+    "test_name": "SEMEN ANALYSIS (H.S.F)",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 510,
+    "test_name": "Semen C & S",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 511,
+    "test_name": "Serum  Ketone",
+    "rate": 1800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 512,
+    "test_name": "SERUM ADA",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 513,
+    "test_name": "SERUM ALBUMIN",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 514,
+    "test_name": "Serum Aldosterone",
+    "rate": 2800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 515,
+    "test_name": "Serum Bilrubin Total and Direct",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 516,
+    "test_name": "SERUM CERULOPLASMIN",
+    "rate": 1400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 517,
+    "test_name": "Serum Cortisol 08 AM",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 518,
+    "test_name": "Serum Cortisol 8:00 PM",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 519,
+    "test_name": "SERUM CREATININE",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 520,
+    "test_name": "SERUM FERRITIN",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 521,
+    "test_name": "SERUM IgE",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 522,
+    "test_name": "Serum Igg Aspergillus",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 523,
+    "test_name": "SERUM INSULIN (PP)",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 524,
+    "test_name": "SERUM INSULIN FASTING",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 525,
+    "test_name": "Serum Iron",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 526,
+    "test_name": "Serum Lysine level",
+    "rate": 7600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 527,
+    "test_name": "Serum Osmolality",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 528,
+    "test_name": "Serum Osmolality",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 529,
+    "test_name": "Serum pH",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 530,
+    "test_name": "Serum Phenytoin",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 531,
+    "test_name": "SERUM PROLACTIN",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 532,
+    "test_name": "SERUM PROTEIN",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 533,
+    "test_name": "Serum protein Electrophoresis",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 534,
+    "test_name": "SERUM SODIUM",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 535,
+    "test_name": "Sex Hormone Binding Globulin (SHBG)",
+    "rate": 2600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 536,
+    "test_name": "SGOT (AST)",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 537,
+    "test_name": "SGPT (ALT)",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 538,
+    "test_name": "SICKLING SCREENING TEST",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 539,
+    "test_name": "SKIN SCRAPPING FOR FUNGUS",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 540,
+    "test_name": "SKIN SMEAR FOR -AFB (LEPROSY )1 SITE",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 541,
+    "test_name": "SLIDES FOR REVIEW",
+    "rate": 550,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 542,
+    "test_name": "SLIT SKIN SMEAR FOR AFB",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 543,
+    "test_name": "SMEAR FOR FUNGUS",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 544,
+    "test_name": "Smear For Gram Staining",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 545,
+    "test_name": "SPILENE PUNCTURE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 546,
+    "test_name": "SPIROMETRY",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 547,
+    "test_name": "Sputum  For Eosinophils",
+    "rate": 250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 548,
+    "test_name": "SPUTUM CULTURE",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 549,
+    "test_name": "SPUTUM FOR AFB",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 550,
+    "test_name": "Sputum for AFB",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 551,
+    "test_name": "Sputum For Fungus",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 552,
+    "test_name": "Sputum for Garm Stain",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 553,
+    "test_name": "Sputum For Malignant Cell & Cytology",
+    "rate": 650,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 554,
+    "test_name": "Stone Analysis",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 555,
+    "test_name": "Stool Culture/Sensitivity",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 556,
+    "test_name": "Stool For  Ex Egg",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 557,
+    "test_name": "Stool For Hanging Drop",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 558,
+    "test_name": "Stool for occult blood",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 559,
+    "test_name": "Stool For Reducing Substance",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 560,
+    "test_name": "Stool pH",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 561,
+    "test_name": "Stool Routine & Microscopy",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 562,
+    "test_name": "SUPER ACTIVE",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 563,
+    "test_name": "SUPER HEALTH",
+    "rate": 2350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 564,
+    "test_name": "SUPER SCREEN",
+    "rate": 899,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 565,
+    "test_name": "SUPER1",
+    "rate": 880,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 566,
+    "test_name": "SYNOVIAL C&S",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 567,
+    "test_name": "SYNOVIAL CULTURE",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 568,
+    "test_name": "SYNOVIAL FLUID EXAM",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 569,
+    "test_name": "T.L.C",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 570,
+    "test_name": "T.P.H.A -W",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 571,
+    "test_name": "T.P.H.A- BOTH",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 572,
+    "test_name": "T.P.H.A-H",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 573,
+    "test_name": "T3",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 574,
+    "test_name": "T3,T4,TSH",
+    "rate": 900,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 575,
+    "test_name": "T4",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 576,
+    "test_name": "T4 TSH",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 577,
+    "test_name": "TB Gold (ECL)",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 578,
+    "test_name": "TB PCR - Endometrium",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 579,
+    "test_name": "TB PCR - Semen",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 580,
+    "test_name": "TB PCR -BLOOD",
+    "rate": 2600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 581,
+    "test_name": "TB PCR -CSF",
+    "rate": 2600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 582,
+    "test_name": "TB PCR- Endometrium Blood",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 583,
+    "test_name": "TB PCR- Tissue",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 584,
+    "test_name": "TB PCR- Urine",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 585,
+    "test_name": "TB PCR-Menstrual Blood",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 586,
+    "test_name": "TB PCR-Other",
+    "rate": 2400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 587,
+    "test_name": "TB SURE",
+    "rate": 4000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 588,
+    "test_name": "Testosterone",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 589,
+    "test_name": "TGA",
+    "rate": 2800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 590,
+    "test_name": "Thalassemia",
+    "rate": 2200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 591,
+    "test_name": "Throat swab C & S",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 592,
+    "test_name": "Thyroid Profile",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 593,
+    "test_name": "Tip C & S",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 594,
+    "test_name": "TISSUE CULTURE",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 595,
+    "test_name": "Tissue For Culture & Sensitivity",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 596,
+    "test_name": "TISSUE TRANSGLUTAMINASE TTG ANTIBODY IGG IGM",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 597,
+    "test_name": "TLC+DLC+HB",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 598,
+    "test_name": "TLC/HB",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 599,
+    "test_name": "TMA",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 600,
+    "test_name": "TORCH IGG",
+    "rate": 1250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 601,
+    "test_name": "TORCH IgG + IgM",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 602,
+    "test_name": "TORCH IgM",
+    "rate": 1250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 603,
+    "test_name": "TORCH PROFILE (10)",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 604,
+    "test_name": "TORCH PROFILE (8)",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 605,
+    "test_name": "TOTAL BILE ACID",
+    "rate": 1700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 606,
+    "test_name": "Total Proteins With Albumin/Globulin/A/G",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 607,
+    "test_name": "TOXO IgG",
+    "rate": 750,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 608,
+    "test_name": "TOXO IgM",
+    "rate": 750,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 609,
+    "test_name": "TOXO TEST",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 610,
+    "test_name": "TPHA",
+    "rate": 650,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 611,
+    "test_name": "Tracheal Secrations For Culture & Sensitivity",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 612,
+    "test_name": "Triglycerides",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 613,
+    "test_name": "Triple Marker",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 614,
+    "test_name": "TROP- I",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 615,
+    "test_name": "TROPONIN-I QUANTITATIVE",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 616,
+    "test_name": "TROPONIN-T",
+    "rate": 1300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 617,
+    "test_name": "TSH",
+    "rate": 350,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 618,
+    "test_name": "TTg-IgA",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 619,
+    "test_name": "TUMOR MARKERS",
+    "rate": 9000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 620,
+    "test_name": "Tzanck Smear",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 621,
+    "test_name": "URETRIC STONE",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 622,
+    "test_name": "Uric Acid",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 623,
+    "test_name": "Urinary Amylase",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 624,
+    "test_name": "Urinary Calcium - 24 Hrs",
+    "rate": 850,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 625,
+    "test_name": "Urinary Calcium - Spot",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 626,
+    "test_name": "Urinary Chloride (Spot Sample)",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 627,
+    "test_name": "Urinary Chloride 24 Hrs",
+    "rate": 850,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 628,
+    "test_name": "URINARY CREATININE-24HRS",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 629,
+    "test_name": "Urinary Potassium -(Spot Sample)",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 630,
+    "test_name": "Urinary Potassium -24 Hrs",
+    "rate": 850,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 631,
+    "test_name": "Urinary Protein (Spot)",
+    "rate": 250,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 632,
+    "test_name": "Urinary Uric Acid -24 Hrs",
+    "rate": 550,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 633,
+    "test_name": "URINE  CYTOLOGY FOR  MALIGNANT CELL",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 634,
+    "test_name": "URINE  R/E +BILE",
+    "rate": 110,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 635,
+    "test_name": "URINE ACR",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 636,
+    "test_name": "Urine Albumin",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 637,
+    "test_name": "URINE C&S",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 638,
+    "test_name": "Urine Chyluria",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 639,
+    "test_name": "Urine cotinine (Spot)",
+    "rate": 1500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 640,
+    "test_name": "Urine Creatinine (Spot)",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 641,
+    "test_name": "URINE CULTURE",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 642,
+    "test_name": "Urine Electrophoresis",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 643,
+    "test_name": "Urine Fat globules",
+    "rate": 500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 644,
+    "test_name": "URINE FOR  GLOBULIN",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 645,
+    "test_name": "Urine For AFB Smear",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 646,
+    "test_name": "Urine For Bile Pigment",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 647,
+    "test_name": "Urine For Bile Salt",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 648,
+    "test_name": "Urine For Cast",
+    "rate": 700,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 649,
+    "test_name": "Urine For Dysmorphic RBC",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 650,
+    "test_name": "Urine For Haematuria",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 651,
+    "test_name": "URINE FOR MALIGNANT CELLS",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 652,
+    "test_name": "URINE FOR MICROALBUMIN",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 653,
+    "test_name": "Urine For Sodium ( Spot Sample)",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 654,
+    "test_name": "Urine For Specefic Gravity",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 655,
+    "test_name": "Urine Ketone",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 656,
+    "test_name": "Urine NMP22",
+    "rate": 3000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 657,
+    "test_name": "Urine Pregnancy",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 658,
+    "test_name": "Urine Protein (Spot)",
+    "rate": 400,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 659,
+    "test_name": "Urine Protein/Creatinine Ratio",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 660,
+    "test_name": "Urine Routine & Microscopy",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 661,
+    "test_name": "Urine Sugar  Fasting",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 662,
+    "test_name": "Urine Sugar (pp)",
+    "rate": 30,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 663,
+    "test_name": "Urine Sugar Fasting",
+    "rate": 30,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 664,
+    "test_name": "Urine Sugar PP",
+    "rate": 20,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 665,
+    "test_name": "Urine Sugar Random",
+    "rate": 100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 666,
+    "test_name": "USG GUIDED F.N.A.C",
+    "rate": 2000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 667,
+    "test_name": "Vaginal Swab Culture & Sensitivity",
+    "rate": 600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 668,
+    "test_name": "VALPROIC ACID",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 669,
+    "test_name": "Varicella IgM",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 670,
+    "test_name": "VDRL",
+    "rate": 150,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 671,
+    "test_name": "VDRL (BOTH)",
+    "rate": 300,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 672,
+    "test_name": "Viral Marker",
+    "rate": 1100,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 673,
+    "test_name": "VITAMIN B2/RIBOFLAVIN",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 674,
+    "test_name": "Vitamin B6",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 675,
+    "test_name": "Vitamin D -Total",
+    "rate": 1200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 676,
+    "test_name": "VITAMIN D2",
+    "rate": 1600,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 677,
+    "test_name": "VITAMIN D3",
+    "rate": 1800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 678,
+    "test_name": "VITAMIN E",
+    "rate": 2500,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 679,
+    "test_name": "Vitamin K",
+    "rate": 6000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 680,
+    "test_name": "Vitamin-B12",
+    "rate": 1000,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 681,
+    "test_name": "VLDL",
+    "rate": 800,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 682,
+    "test_name": "WIDAL TEST",
+    "rate": 200,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 683,
+    "test_name": "Wound Swab C+S",
+    "rate": 450,
+    "category": "Lab Test"
+  },
+  {
+    "sno": 684,
+    "test_name": "Zinc Transporter 8 (ZNT8) Antibody",
+    "rate": 4500,
+    "category": "Lab Test"
+  }
+]
