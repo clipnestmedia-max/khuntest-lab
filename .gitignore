@@ -18,4 +18,7 @@ frontend/backups/
 *.key
 *.pem
 *service*account*.json
+*serviceAccount*.json
+*service-account*.json
 *firebase*admin*.json
+*firebase-adminsdk*.json
