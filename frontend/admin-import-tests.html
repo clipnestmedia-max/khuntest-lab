@@ -117,13 +117,16 @@
         });
       });
       if (!user) {
-        window.location.href = "admin-login.html";
+        $("statusText").textContent = "Login";
+        log("Please login as admin first.");
+        $("logBox").innerHTML += `<a class="btn btn-red btn-small" href="admin-login.html">Go to Admin Login</a>\n`;
         return false;
       }
       const role = await getCurrentUserRole();
       if (role !== "admin") {
         await logoutUser();
-        window.location.href = "admin-login.html";
+        $("statusText").textContent = "Blocked";
+        log("This account is not authorized for import.");
         return false;
       }
       return true;

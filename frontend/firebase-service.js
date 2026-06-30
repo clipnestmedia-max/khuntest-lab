@@ -192,6 +192,29 @@ export async function loginUser(email, password) {
   return profile;
 }
 
+export async function requireAuth() {
+  const user = await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (current) => {
+      unsub();
+      resolve(current);
+    });
+  });
+  if (!user) throw new Error("Please login first.");
+  return user;
+}
+
+export async function getCurrentUserProfile() {
+  const user = await requireAuth();
+  const snap = await getDoc(doc(db, C.users, user.uid));
+  if (!snap.exists()) throw new Error("User profile not found in Firestore.");
+  return normalizeDoc(snap);
+}
+
+export async function isAdmin() {
+  const profile = await getCurrentUserProfile().catch(() => null);
+  return Boolean(profile && profile.role === "admin" && profile.isActive !== false);
+}
+
 export async function logoutUser() {
   await signOut(auth);
   localStorage.removeItem("auth_token");
@@ -258,6 +281,19 @@ export async function getTests({ activeOnly = true } = {}) {
 export async function getAllBookings() {
   const snap = await getDocs(query(collection(db, C.bookings), orderBy("createdAt", "desc")));
   return snap.docs.map(normalizeDoc);
+}
+
+export async function getTodayBookings() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  const snap = await getDocs(query(
+    collection(db, C.bookings),
+    where("createdAt", ">=", Timestamp.fromDate(start)),
+    where("createdAt", "<", Timestamp.fromDate(end))
+  ));
+  return snap.docs.map(normalizeDoc).sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
 }
 
 export async function getPatientBookings(email, phone) {
@@ -372,6 +408,64 @@ export async function updateBookingStatus(bookingId, status) {
   });
 }
 
+export async function assignStaff(bookingId, staffName) {
+  await updateDoc(doc(db, C.bookings, bookingId), {
+    staff: staffName || "Not Assigned",
+    updatedAt: serverTimestamp()
+  });
+}
+
+export const getAllTests = getTests;
+
+export async function searchTests(searchText = "", category = "") {
+  const q = String(searchText || "").trim().toLowerCase();
+  return (await getTests()).filter((test) => {
+    if (category && test.category !== category) return false;
+    if (!q) return true;
+    return [test.testCode, test.name, test.category, ...(test.searchKeywords || [])].join(" ").toLowerCase().includes(q);
+  });
+}
+
+export async function getTestById(testId) {
+  const snap = await getDoc(doc(db, C.tests, String(testId || "")));
+  return snap.exists() ? normalizeTest(normalizeDoc(snap)) : null;
+}
+
+export async function saveReportDraft(reportData) {
+  const bill = String(reportData.billNo || "");
+  if (!bill) throw new Error("Bill number is required.");
+  const draft = {
+    ...reportData,
+    billNo: bill,
+    reportStatus: "Draft",
+    status: "Draft",
+    updatedAt: serverTimestamp(),
+    createdAt: reportData.createdAt || serverTimestamp()
+  };
+  await setDoc(doc(db, C.reports, bill), draft, { merge: true });
+  if (reportData.bookingId) {
+    await updateDoc(doc(db, C.bookings, reportData.bookingId), {
+      status: "Report Entry",
+      updatedAt: serverTimestamp()
+    });
+  }
+  return draft;
+}
+
+export const releaseReport = saveReport;
+export const getAllReports = getReports;
+
+export async function getPatientReports(user) {
+  const email = cleanEmail(user?.email || user?.patientEmail);
+  if (!email) return [];
+  const snap = await getDocs(query(collection(db, C.reports), where("patientEmail", "==", email)));
+  return snap.docs.map(normalizeDoc).sort((a, b) => (toDate(b.releasedAt)?.getTime() || 0) - (toDate(a.releasedAt)?.getTime() || 0));
+}
+
+export function cleanupOldData(months = 2) {
+  return deleteDataOlderThanMonths(months);
+}
+
 function csvEscape(value) {
   const text = value === undefined || value === null ? "" : String(value);
   return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
@@ -443,8 +537,12 @@ export async function downloadLastTwoMonthsCSV() {
 }
 
 export async function deleteDataOlderThanTwoMonths() {
+  return deleteDataOlderThanMonths(2);
+}
+
+export async function deleteDataOlderThanMonths(months = 2) {
   const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - 2);
+  cutoff.setMonth(cutoff.getMonth() - Number(months || 2));
   const cutoffTs = Timestamp.fromDate(cutoff);
   const [oldBookings, oldReports] = await Promise.all([
     getDocs(query(collection(db, C.bookings), where("createdAt", "<", cutoffTs))),
@@ -465,21 +563,34 @@ export async function getReports() {
 export const KTFirebase = {
   auth,
   db,
+  requireAuth,
+  getCurrentUserProfile,
+  isAdmin,
   loginUser,
   logoutUser,
   getCurrentUserRole,
   registerPatient,
   createBooking,
   getAllBookings,
+  getTodayBookings,
   getPatientBookings,
+  assignStaff,
   getTests,
+  getAllTests,
+  searchTests,
+  getTestById,
+  saveReportDraft,
+  releaseReport,
   saveReport,
   getReportByBillNo,
   updateBookingStatus,
   downloadBookingsCSV,
   downloadLastTwoMonthsCSV,
+  cleanupOldData,
   deleteDataOlderThanTwoMonths,
-  getReports
+  getReports,
+  getAllReports,
+  getPatientReports
 };
 
 window.KTFirebase = KTFirebase;
