@@ -181,42 +181,42 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { auth, getCurrentUserRole, getPatientBookings, getReportByBillNo, logoutUser } from "./firebase-service.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    function safe(value) {
+      return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+    }
+
     function getUser() {
-      try {
-        return JSON.parse(localStorage.getItem("auth_user") || "{}");
-      } catch (e) {
-        return {};
-      }
+      try { return JSON.parse(localStorage.getItem("auth_user") || "{}"); } catch (e) { return {}; }
     }
 
-    function protectPage() {
-      const token = localStorage.getItem("auth_token");
-      const user = getUser();
-
-      console.log("Patient dashboard auth check:", {
-        tokenExists: !!token,
-        user: user
-      });
-
-      if (!token || user.role !== "patient") {
-        window.location.href = "patient-login.html";
-        return false;
-      }
-
-      return true;
-    }
-
-    function logout() {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_user");
+    window.logout = async function() {
+      await logoutUser();
       window.location.href = "patient-login.html";
+    };
+
+    async function protectPage() {
+      const current = await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (user) => {
+          unsub();
+          resolve(user);
+        });
+      });
+      const user = getUser();
+      const role = current ? await getCurrentUserRole() : null;
+      if (!current || role !== "patient") {
+        window.location.href = "patient-login.html";
+        return null;
+      }
+      return user;
     }
 
     async function loadPatientDashboard() {
-      if (!protectPage()) return;
-
-      const user = getUser();
+      const user = await protectPage();
+      if (!user) return;
 
       document.getElementById("welcomeName").innerText =
         "Welcome, " + (user.name || "Patient");
@@ -225,22 +225,14 @@
         user.email || "";
 
       try {
-        const res = await fetch("/api/bookings");
-        const bookings = await res.json();
-
-        const patientBookings = Array.isArray(bookings)
-          ? bookings.filter(b =>
-              String(b.email || "").toLowerCase() === String(user.email || "").toLowerCase() ||
-              String(b.phone || "") === String(user.phone || "")
-            )
-          : [];
+        const patientBookings = await getPatientBookings(user.email, user.phone);
+        const reportFlags = await Promise.all(patientBookings.map(async (b) => {
+          const bill = b.billNo || b.bill_no || "";
+          return bill ? Boolean(await getReportByBillNo(bill)) : false;
+        }));
 
         document.getElementById("totalBookings").innerText = patientBookings.length;
-        document.getElementById("totalReports").innerText =
-          patientBookings.filter(b =>
-            String(b.status || "").toLowerCase().includes("reported") ||
-            String(b.status || "").toLowerCase().includes("released")
-          ).length;
+        document.getElementById("totalReports").innerText = reportFlags.filter(Boolean).length;
 
         const area = document.getElementById("bookingArea");
 
@@ -262,20 +254,25 @@
               </tr>
             </thead>
             <tbody>
-              ${patientBookings.map(b => `
+              ${patientBookings.map((b, index) => {
+                const bill = b.bill_no || b.billNo || "";
+                const tests = Array.isArray(b.tests)
+                  ? b.tests.map(t => t.name || t.test_name || t.testName).filter(Boolean).join(", ")
+                  : (b.test || "-");
+                return `
                 <tr>
-                  <td>${b.bill_no || b.billNo || "-"}</td>
-                  <td>${b.patient_name || b.patientName || user.name || "-"}</td>
-                  <td>${Array.isArray(b.tests) ? b.tests.map(t => t.name || t.test_name).join(", ") : "-"}</td>
-                  <td>₹${Number(b.gross_total || b.grossTotal || 0).toFixed(2)}</td>
-                  <td>${b.status || "Pending"}</td>
+                  <td>${safe(bill || "-")}</td>
+                  <td>${safe(b.patient_name || b.patientName || user.name || "-")}</td>
+                  <td>${safe(tests)}</td>
+                  <td>₹${Number(b.totalAmount || b.gross_total || b.grossTotal || b.price || 0).toFixed(2)}</td>
+                  <td>${safe(b.status || "Pending")}</td>
                   <td>
-                    <a class="btn" href="report.html?bill=${encodeURIComponent(b.bill_no || b.billNo || "")}" target="_blank">
-                      View
-                    </a>
+                    ${reportFlags[index]
+                      ? `<a class="btn" href="report.html?bill=${encodeURIComponent(bill)}" target="_blank">View</a>`
+                      : "Not released"}
                   </td>
                 </tr>
-              `).join("")}
+              `}).join("")}
             </tbody>
           </table>
         `;

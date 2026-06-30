@@ -6,7 +6,7 @@
 <title>KhunTest Lab - Admin Dashboard</title>
 <link rel="stylesheet" href="styles.css">
 </head>
-<body onload="adminDashboard()">
+<body>
 <div class="dashboard">
   <aside class="sidebar">
     <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab"><span>KHUNTEST LAB</span></a>
@@ -157,7 +157,12 @@
 
     <section data-panel="bookings" class="hidden">
       <h2>Booking List</h2>
-      <div class="toolbar"><input id="bookingSearch" onkeyup="filterAdminBookings()" placeholder="Search booking, patient, phone, test..."></div>
+      <div class="toolbar">
+        <input id="bookingSearch" onkeyup="filterAdminBookings()" placeholder="Search booking, patient, phone, test...">
+        <button class="btn btn-green btn-small" type="button" id="downloadAllCsv">Download All CSV</button>
+        <button class="btn btn-navy btn-small" type="button" id="downloadTwoMonthCsv">Download Last 2 Months CSV</button>
+        <button class="btn btn-red btn-small" type="button" id="deleteOldData">Delete Data Older Than 2 Months</button>
+      </div>
       <div class="table-card"><table><thead><tr><th>ID</th><th>Patient</th><th>Test</th><th>Collection</th><th>Status</th><th>Assign Staff</th><th>Report</th></tr></thead><tbody id="adminBookings"></tbody></table></div>
     </section>
 
@@ -174,8 +179,310 @@
   </main>
 </div>
 <script src="app.js"></script>
-<script src="api-patch.js"></script>
-<script src="api-patch.js"></script>
-<script src="api-patch.js"></script>
+<script type="module">
+import {
+  auth,
+  logoutUser,
+  getCurrentUserRole,
+  getAllBookings,
+  getReports,
+  createBooking,
+  saveReport,
+  updateBookingStatus,
+  downloadBookingsCSV,
+  downloadLastTwoMonthsCSV,
+  deleteDataOlderThanTwoMonths
+} from "./firebase-service.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+let firebaseBookings = [];
+let firebaseReports = [];
+let currentReportBooking = null;
+
+function html(value) {
+  return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+}
+
+function rupees(value) {
+  return "₹" + Number(value || 0).toLocaleString("en-IN");
+}
+
+function createdText(value) {
+  const d = value?.toDate ? value.toDate() : new Date(value || Date.now());
+  return isNaN(d.getTime()) ? "" : d.toLocaleString("en-IN");
+}
+
+async function requireAdmin() {
+  const user = await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (current) => {
+      unsub();
+      resolve(current);
+    });
+  });
+  if (!user) {
+    window.location.href = "admin-login.html";
+    return null;
+  }
+  const role = await getCurrentUserRole();
+  if (role !== "admin") {
+    await logoutUser();
+    window.location.href = "admin-login.html";
+    return null;
+  }
+  const stored = JSON.parse(localStorage.getItem("auth_user") || "{}");
+  return stored;
+}
+
+async function refreshFirebaseDashboard() {
+  firebaseBookings = await getAllBookings();
+  firebaseReports = await getReports();
+  renderFirebaseMetrics();
+  renderFirebaseBookings();
+  renderFirebaseReportSelect();
+}
+
+function renderFirebaseMetrics() {
+  document.getElementById("mBookings").textContent = firebaseBookings.length;
+  document.getElementById("mRevenue").textContent = rupees(firebaseBookings.reduce((sum, b) => sum + Number(b.totalAmount || b.grossTotal || b.price || 0), 0));
+  document.getElementById("mPatients").textContent = new Set(firebaseBookings.map((b) => b.patientEmail || b.email || b.phone).filter(Boolean)).size;
+  document.getElementById("mReports").textContent = firebaseReports.length;
+}
+
+function renderFirebaseBookings() {
+  const body = document.getElementById("adminBookings");
+  if (!body) return;
+  body.innerHTML = firebaseBookings.length ? firebaseBookings.map((b) => {
+    const tests = Array.isArray(b.tests) ? b.tests.map((t) => t.name || t.testName || t.test_name).join(", ") : (b.test || "");
+    const bill = b.billNo || b.id;
+    return `<tr>
+      <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
+      <td>${html(b.patientName)}<br><small>${html(b.age || "")} ${html(b.gender || "")}<br>${html(b.phone)}<br>${html(b.patientEmail || b.email || "")}</small></td>
+      <td>${html(tests)}<br><b>${rupees(b.totalAmount || b.grossTotal || b.price)}</b></td>
+      <td>${html(b.bookingType || "")}<br><small>${html((b.date || "") + " " + (b.time || ""))}</small><br><small>${html(b.address || "")}</small></td>
+      <td><select onchange="firebaseUpdateStatus('${html(b.id)}', this.value)">${["Pending","Reported","Completed","Cancelled"].map((x) => `<option ${b.status === x ? "selected" : ""}>${x}</option>`).join("")}</select></td>
+      <td>${html(b.staff || "Not Assigned")}</td>
+      <td>
+        ${b.reportReleased ? `<a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(bill)}">View</a>` : "Not released"}
+        <br><a class="report-link" target="_blank" href="https://wa.me/${encodeURIComponent(b.whatsapp || b.phone || "")}?text=${encodeURIComponent("Your KhunTest Lab report is ready: " + location.origin + location.pathname.replace("admin-dashboard.html", "report.html?bill=" + bill))}">WhatsApp</a>
+      </td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="7">No bookings found.</td></tr>`;
+}
+
+function renderFirebaseReportSelect() {
+  const sel = document.getElementById("reportBookingSelect");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select patient / bill</option>' + firebaseBookings.map((b) => {
+    const tests = Array.isArray(b.tests) ? b.tests.map((t) => t.name || t.testName || t.test_name).join(", ") : (b.test || "");
+    return `<option value="${html(b.id)}">${html(b.billNo || b.id)} - ${html(b.patientName)} - ${html(tests)}</option>`;
+  }).join("");
+}
+
+window.renderReportBookingSelect = renderFirebaseReportSelect;
+
+function currentFindingRows() {
+  const rows = [];
+  document.querySelectorAll("#findingRows tr").forEach((tr) => {
+    const obj = {};
+    tr.querySelectorAll("[data-r]").forEach((el) => {
+      if (el.dataset.r === "details") {
+        try { obj.details = JSON.parse(el.value || "[]"); } catch (e) { obj.details = []; }
+      } else {
+        obj[el.dataset.r] = el.value;
+      }
+    });
+    rows.push(obj);
+  });
+  return rows;
+}
+
+function reportResultsFromRows(rows) {
+  const results = [];
+  rows.forEach((row) => {
+    if (Array.isArray(row.details) && row.details.length) {
+      row.details.forEach((detail) => results.push({
+        testName: row.name || "",
+        parameterName: detail.parameter || row.name || "",
+        resultValue: detail.finding || "",
+        normalValue: detail.normal || "",
+        unit: detail.unit || "",
+        comment: row.comment || ""
+      }));
+      return;
+    }
+    results.push({
+      testName: row.name || "",
+      parameterName: row.name || "",
+      resultValue: row.finding || "",
+      normalValue: row.normal || "",
+      unit: row.unit || "",
+      comment: row.comment || ""
+    });
+  });
+  return results;
+}
+
+window.firebaseUpdateStatus = async function(bookingId, status) {
+  await updateBookingStatus(bookingId, status);
+  await refreshFirebaseDashboard();
+};
+
+window.loadReportEditor = function(id) {
+  currentReportBooking = firebaseBookings.find((b) => b.id === id);
+  const box = document.getElementById("reportEditor");
+  if (!box) return;
+  if (!currentReportBooking) {
+    box.classList.add("hidden");
+    return;
+  }
+  box.classList.remove("hidden");
+  const b = currentReportBooking;
+  const map = {
+    rRemoteNo: b.remoteNo || "0",
+    rBillNo: b.billNo || b.id,
+    rAdmDate: b.admDate || b.date || "",
+    rCollDate: b.collDate || b.date || "",
+    rDayNo: b.dayNo || "0",
+    rPathology: b.pathologyName || "BN-MAIN",
+    rPatientName: b.patientName || "",
+    rAge: b.age || "",
+    rPhone: b.phone || "",
+    rGender: b.gender || "",
+    rEmail: b.patientEmail || b.email || "",
+    rDoctor: b.doctor || "",
+    rCoName: b.coName || "",
+    rFieldBoy: b.staff || ""
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  document.getElementById("rReportingDate").value = ktNowLocal();
+  const rows = Array.isArray(b.tests) && b.tests.length ? b.tests.map((t) => ({
+    name: t.name || t.testName || t.test_name || "Test",
+    normal: t.normal || "",
+    finding: t.finding || "",
+    unit: t.unit || "",
+    status: "Final",
+    comment: ""
+  })) : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
+  paintFindingRows(rows);
+};
+
+window.openReportPreview = function() {
+  if (!currentReportBooking) {
+    alert("Please select booking.");
+    return;
+  }
+  const bill = currentReportBooking.billNo || currentReportBooking.id;
+  window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
+  alert("Preview opens the saved Firestore report after release. Release this report first if it is not saved yet.");
+};
+
+window.releaseGeneratedReport = async function() {
+  if (!currentReportBooking) {
+    alert("Please select booking.");
+    return;
+  }
+  const rows = currentFindingRows();
+  const bill = currentReportBooking.billNo || currentReportBooking.id;
+  await saveReport({
+    billNo: bill,
+    bookingId: currentReportBooking.id,
+    patientName: currentReportBooking.patientName,
+    patientEmail: currentReportBooking.patientEmail || currentReportBooking.email,
+    phone: currentReportBooking.phone,
+    age: currentReportBooking.age,
+    gender: currentReportBooking.gender,
+    doctor: currentReportBooking.doctor,
+    collectionDate: currentReportBooking.collDate || currentReportBooking.date,
+    tests: currentReportBooking.tests || [],
+    results: reportResultsFromRows(rows)
+  });
+  alert("Report released and saved to Firestore.");
+  await refreshFirebaseDashboard();
+};
+
+window.savePatientEntry = async function(e) {
+  e.preventDefault();
+  const f = e.target;
+  const tests = Array.from(document.querySelectorAll("#entryTestsBody tr")).map((tr) => {
+    const cells = tr.querySelectorAll("td");
+    if (cells.length < 3 || cells[0].textContent.includes("No test")) return null;
+    return {
+      name: cells[0].textContent.trim(),
+      package: cells[1].textContent.trim(),
+      price: Number(cells[2].textContent.trim())
+    };
+  }).filter(Boolean);
+  if (!tests.length) {
+    alert("Please add at least one test.");
+    return;
+  }
+  const gross = tests.reduce((sum, t) => sum + Number(t.price || 0), 0);
+  const booking = await createBooking({
+    billNo: f.billNo.value || String(Math.floor(100000 + Math.random() * 900000)),
+    remoteNo: f.remoteNo.value,
+    dayNo: f.dayNo.value,
+    patientName: f.patientName.value.trim(),
+    patientEmail: f.email.value.trim().toLowerCase(),
+    email: f.email.value.trim().toLowerCase(),
+    age: f.age.value,
+    gender: f.gender.value,
+    phone: f.phone.value.trim(),
+    whatsapp: f.phone.value.trim(),
+    doctor: f.doctor.value,
+    coName: f.coName.value,
+    pathologyName: f.pathologyName.value,
+    associateLab: f.associateLab.value,
+    tests,
+    test: tests.map((t) => t.name).join(", "),
+    totalAmount: gross,
+    grossTotal: gross,
+    bookingType: "Centre Visit",
+    date: (f.admDate.value || "").slice(0, 10),
+    time: (f.admDate.value || "").slice(11),
+    admDate: f.admDate.value,
+    collDate: f.collDate.value,
+    address: "Lab Centre",
+    status: "Pending",
+    payment: "Lab Billing",
+    staff: f.fieldBoy.value || "Not Assigned",
+    cashReceived: Number(f.cashReceived.value || 0),
+    cardReceived: Number(f.cardReceived.value || 0),
+    discount: Number(f.discount.value || 0),
+    balanceDue: Number(document.getElementById("balanceDue")?.value || 0),
+    remarks: f.remarks.value
+  });
+  alert("Patient entry saved to Firestore. Bill No: " + booking.billNo);
+  f.reset();
+  preparePatientEntry();
+  await refreshFirebaseDashboard();
+};
+
+window.logout = async function() {
+  await logoutUser();
+  window.location.href = "admin-login.html";
+};
+
+document.getElementById("downloadAllCsv").addEventListener("click", downloadBookingsCSV);
+document.getElementById("downloadTwoMonthCsv").addEventListener("click", downloadLastTwoMonthsCSV);
+document.getElementById("deleteOldData").addEventListener("click", async function() {
+  if (!confirm("Delete bookings and reports older than 2 months? This cannot be undone.")) return;
+  const count = await deleteDataOlderThanTwoMonths();
+  alert(count + " old records deleted.");
+  await refreshFirebaseDashboard();
+});
+
+document.addEventListener("DOMContentLoaded", async function() {
+  if (!await requireAdmin()) return;
+  renderTests();
+  renderStaff();
+  renderPackages();
+  renderNotifications();
+  preparePatientEntry();
+  await refreshFirebaseDashboard();
+});
+</script>
 </body>
 </html>

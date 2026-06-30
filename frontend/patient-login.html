@@ -91,7 +91,7 @@
       font-size: 14px;
     }
 
-    input {
+    input, select, textarea {
       width: 100%;
       padding: 14px 15px;
       border: 1px solid #dbe3ee;
@@ -200,6 +200,20 @@
         <label>Phone</label>
         <input id="regPhone" type="tel" placeholder="Enter phone number" required>
 
+        <label>Age</label>
+        <input id="regAge" type="number" placeholder="Enter age">
+
+        <label>Gender</label>
+        <select id="regGender">
+          <option value="">Select gender</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Other</option>
+        </select>
+
+        <label>Address</label>
+        <textarea id="regAddress" placeholder="Enter address"></textarea>
+
         <label>Password</label>
         <input id="regPassword" type="password" placeholder="Create password" required>
 
@@ -212,7 +226,9 @@
     <a href="index.html" class="back">← Back to Website</a>
   </div>
 
-  <script>
+  <script type="module">
+    import { loginUser, logoutUser, registerPatient } from "./firebase-service.js";
+
     const msg = document.getElementById("message");
 
     function showMessage(text, type) {
@@ -243,32 +259,13 @@
       showMessage("Logging in...", "success");
 
       try {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-            role: "patient"
-          })
-        });
+        const user = await loginUser(email, password);
 
-        const data = await res.json();
-
-        if (!data.success) {
-          showMessage(data.message || "Login failed.", "error");
-          return;
-        }
-
-        if (!data.user || data.user.role !== "patient") {
+        if (!user || user.role !== "patient") {
+          await logoutUser();
           showMessage("This account is not a patient account.", "error");
           return;
         }
-
-        localStorage.setItem("auth_token", data.token);
-        localStorage.setItem("auth_user", JSON.stringify(data.user));
 
         showMessage("Login successful. Redirecting...", "success");
 
@@ -278,7 +275,7 @@
 
       } catch (err) {
         console.error(err);
-        showMessage("Server connection error.", "error");
+        showMessage(err.message || "Firebase login failed.", "error");
       }
     });
 
@@ -289,6 +286,9 @@
       const email = document.getElementById("regEmail").value.trim();
       const phone = document.getElementById("regPhone").value.trim();
       const password = document.getElementById("regPassword").value;
+      const age = document.getElementById("regAge").value.trim();
+      const gender = document.getElementById("regGender").value;
+      const address = document.getElementById("regAddress").value.trim();
 
       if (!name || !email || !phone || !password) {
         showMessage("All fields are required.", "error");
@@ -296,26 +296,7 @@
       }
 
       try {
-        const res = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name: name,
-            email: email,
-            phone: phone,
-            password: password,
-            role: "patient"
-          })
-        });
-
-        const data = await res.json();
-
-        if (!data.success) {
-          showMessage(data.message || "Registration failed.", "error");
-          return;
-        }
+        await registerPatient({ name, email, phone, password, age, gender, address });
 
         showMessage("Registration successful. Please login.", "success");
         document.getElementById("loginEmail").value = email;
@@ -327,7 +308,7 @@
 
       } catch (err) {
         console.error(err);
-        showMessage("Server connection error.", "error");
+        showMessage(err.message || "Firebase registration failed.", "error");
       }
     });
   </script>

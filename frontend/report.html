@@ -285,7 +285,9 @@
 
   <div id="app" class="loading">Loading report...</div>
 
-  <script>
+  <script type="module">
+    import { getReportByBillNo } from "./firebase-service.js";
+
     function getBillNo() {
       const params = new URLSearchParams(window.location.search);
       return params.get("bill") || params.get("billNo") || params.get("bill_no") || "";
@@ -313,7 +315,7 @@
 
     function formatDate(value) {
       if (!value) return "";
-      const d = new Date(value);
+      const d = value.toDate ? value.toDate() : new Date(value);
       if (isNaN(d.getTime())) return value;
       return d.toLocaleString("en-IN", {
         day: "2-digit",
@@ -396,15 +398,14 @@
       }
 
       try {
-        const res = await fetch("/api/reports/" + encodeURIComponent(billNo));
-        const data = await res.json();
+        const report = await getReportByBillNo(billNo);
 
-        if (!data.success) {
-          throw new Error(data.message || "Report API failed");
+        if (!report) {
+          throw new Error("Report is not released yet or bill number was not found.");
         }
 
-        const booking = data.booking || {};
-        const results = normalizeResults(data.results || []);
+        const booking = report || {};
+        const results = normalizeResults(report.results || []);
 
         if (!results.length) {
           document.getElementById("app").className = "error-box";
@@ -420,8 +421,8 @@
         const gender = pick(booking, ["patient_gender", "gender"], "");
         const refBy = pick(booking, ["ref_doctor", "refDoctor", "doctor", "ref_by"], "");
         const collectionDate = pick(booking, ["collection_date", "collectionDate", "admission_date", "created_at"], "");
-        const registeredDate = pick(booking, ["registered_date", "registeredDate", "created_at"], "");
-        const reportedDate = pick(booking, ["reporting_date", "reportedDate", "updated_at"], "");
+        const registeredDate = pick(booking, ["createdAt", "registered_date", "registeredDate", "created_at"], "");
+        const reportedDate = pick(booking, ["releasedAt", "reporting_date", "reportedDate", "updated_at"], "");
         const status = pick(booking, ["report_status", "status"], "Final");
 
         document.title = "Report - " + billNo;

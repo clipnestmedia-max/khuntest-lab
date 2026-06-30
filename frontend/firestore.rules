@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.role == "admin";
+    }
+
+    function sameEmail(email) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.email == email;
+    }
+
+    match /users/{uid} {
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == "patient";
+      allow create: if isAdmin();
+      allow read, update: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if request.resource.data.patientEmail is string
+        && request.resource.data.patientName is string
+        && request.resource.data.phone is string;
+      allow read: if isAdmin()
+        || sameEmail(resource.data.patientEmail)
+        || sameEmail(resource.data.email);
+      allow update, delete: if isAdmin();
+    }
+
+    match /reports/{billNo} {
+      allow read: if isAdmin() || sameEmail(resource.data.patientEmail);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /tests/{testId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Temporary development-only rules, if needed during setup:
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
+  }
+}

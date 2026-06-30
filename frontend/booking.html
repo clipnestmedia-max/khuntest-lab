@@ -3,4 +3,44 @@
 <nav class="nav"><div class="container nav-inner"><a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab Logo"><span>KHUNTEST LAB</span></a><div class="menu"><a href="index.html">Home</a><a href="about.html">About</a><a href="tests.html">All Tests</a><a href="packages.html">Packages</a><a href="home-collection.html">Home Collection</a><a href="contact.html">Contact</a><a href="patient-login.html">Patient</a><a href="admin-login.html">Admin</a></div><a class="btn btn-red" href="booking.html">Book Now</a></div></nav>
 <section class='page-hero'><div class='container'><h1>Book Test Online</h1><p>Register, select test, choose collection mode and track report online.</p></div></section><section class='section'><div class='container form-wrap'><div class='form-card'><h2>Booking Form</h2><div id='bookingMsg' class='hidden'></div><form onsubmit='bookTest(event)'><div class='two'><div><label>Patient Name</label><input name='patientName' required></div><div><label>Phone</label><input name='phone' required pattern='[0-9]{10}'></div></div><div class='two'><div><label>Age</label><input name='age' type='number' required></div><div><label>Gender</label><select name='gender'><option>Male</option><option>Female</option><option>Other</option></select></div></div><label>Email</label><input name='email' type='email' required placeholder='Use this email in patient login'><div class='two'><div><label>Test / Package</label><select id='testSelect' name='test' required></select></div><div><label>Booking Type</label><select name='bookingType'><option>Home Collection</option><option>Centre Visit</option></select></div></div><div class='two'><div><label>Date</label><input name='date' type='date' required></div><div><label>Time</label><input name='time' type='time' required></div></div><label>Address</label><textarea name='address' required></textarea><label>Payment Option</label><select name='payment'><option>Pay at Lab / Cash</option><option>Online Payment - Razorpay Demo</option><option>UPI - Demo</option></select><br><br><button class='btn btn-red'>Confirm Booking</button></form></div><div class='card'><h2>Flow</h2><p><b>1.</b> Book test online</p><p><b>2.</b> Admin confirms booking</p><p><b>3.</b> Home collection staff assigned</p><p><b>4.</b> Report uploaded by admin</p><p><b>5.</b> Patient downloads PDF report</p><div class='notice'>For production, connect Razorpay live API and WhatsApp/Email notification API.</div></div></div></section>
 <footer class="footer"><div class="container footer-grid"><div><h3>KhunTest Lab</h3><p>Accurate • Reliable • Trusted diagnostic services with home sample collection, online reports and health packages.</p></div><div><h4>Public Website</h4><a href="about.html">About Us</a><a href="tests.html">All Tests</a><a href="packages.html">Health Packages</a><a href="home-collection.html">Home Collection</a></div><div><h4>Portals</h4><a href="booking.html">Book Test Online</a><a href="patient-login.html">Patient Login</a><a href="admin-login.html">Admin Login</a></div><div><h4>Contact</h4><p>📞 +91 98765 43210</p><p>💬 WhatsApp: +91 98765 43210</p><p>📍 Darbhanga, Bihar</p></div></div><div class="container copy">© 2026 KhunTest Lab. All Rights Reserved.</div></footer><a class="whatsapp-float" href="https://wa.me/919876543210?text=Hello%20KhunTest%20Lab%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
-<script src='app.js'></script></body></html>
+<script src='app.js'></script>
+<script type="module">
+import { createBooking } from "./firebase-service.js";
+
+window.bookTest = async function(e) {
+  e.preventDefault();
+  const f = e.target;
+  const opt = f.test.options[f.test.selectedIndex];
+  const price = Number(opt?.dataset?.price || 0);
+  const booking = {
+    billNo: String(Math.floor(100000 + Math.random() * 900000)),
+    patientName: f.patientName.value.trim(),
+    patientEmail: f.email.value.trim().toLowerCase(),
+    email: f.email.value.trim().toLowerCase(),
+    phone: f.phone.value.trim(),
+    whatsapp: f.phone.value.trim(),
+    age: f.age.value,
+    gender: f.gender.value,
+    tests: [{ name: f.test.value, price }],
+    test: f.test.value,
+    totalAmount: price,
+    grossTotal: price,
+    bookingType: f.bookingType.value,
+    date: f.date.value,
+    time: f.time.value,
+    address: f.address.value.trim(),
+    payment: f.payment.value,
+    status: "Pending",
+    reportReleased: false
+  };
+
+  try {
+    const saved = await createBooking(booking);
+    showMsg("bookingMsg", "success", `Booking successful. Bill No is ${saved.billNo}. Login with same email to track reports.`);
+    f.reset();
+  } catch (err) {
+    console.error(err);
+    showMsg("bookingMsg", "error", err.message || "Booking could not be saved.");
+  }
+};
+</script></body></html>
