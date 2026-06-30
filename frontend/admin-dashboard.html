@@ -212,6 +212,34 @@ function createdText(value) {
   return isNaN(d.getTime()) ? "" : d.toLocaleString("en-IN");
 }
 
+function reportBill(b) {
+  return b.reportBillNo || b.billNo || b.bill_no || b.id || "";
+}
+
+function hasFirestoreReport(b) {
+  const bill = reportBill(b);
+  return Boolean(bill && (
+    b.reportReleased ||
+    firebaseReports.some((r) => String(r.billNo || r.id || "") === String(bill))
+  ));
+}
+
+function reportActionsHtml(b) {
+  const bill = reportBill(b);
+  if (bill) {
+    const url = `report.html?bill=${encodeURIComponent(bill)}`;
+    if (hasFirestoreReport(b)) {
+      return `<a class="report-link" target="_blank" href="${url}">View Report</a><br><a class="report-link" target="_blank" href="${url}">Print Report</a>`;
+    }
+    return "Not released";
+  }
+  if (b.externalReportData || b.reportData) {
+    const uploaded = b.externalReportData || b.reportData;
+    return `<a class="report-link" target="_blank" href="${html(uploaded)}">View Uploaded File</a>`;
+  }
+  return "No report available";
+}
+
 async function requireAdmin() {
   const user = await new Promise((resolve) => {
     const unsub = onAuthStateChanged(auth, (current) => {
@@ -253,7 +281,7 @@ function renderFirebaseBookings() {
   if (!body) return;
   body.innerHTML = firebaseBookings.length ? firebaseBookings.map((b) => {
     const tests = Array.isArray(b.tests) ? b.tests.map((t) => t.name || t.testName || t.test_name).join(", ") : (b.test || "");
-    const bill = b.billNo || b.id;
+    const bill = reportBill(b);
     return `<tr>
       <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
       <td>${html(b.patientName)}<br><small>${html(b.age || "")} ${html(b.gender || "")}<br>${html(b.phone)}<br>${html(b.patientEmail || b.email || "")}</small></td>
@@ -262,7 +290,7 @@ function renderFirebaseBookings() {
       <td><select onchange="firebaseUpdateStatus('${html(b.id)}', this.value)">${["Pending","Reported","Completed","Cancelled"].map((x) => `<option ${b.status === x ? "selected" : ""}>${x}</option>`).join("")}</select></td>
       <td>${html(b.staff || "Not Assigned")}</td>
       <td>
-        ${b.reportReleased ? `<a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(bill)}">View</a>` : "Not released"}
+        ${reportActionsHtml(b)}
         <br><a class="report-link" target="_blank" href="https://wa.me/${encodeURIComponent(b.whatsapp || b.phone || "")}?text=${encodeURIComponent("Your KhunTest Lab report is ready: " + location.origin + location.pathname.replace("admin-dashboard.html", "report.html?bill=" + bill))}">WhatsApp</a>
       </td>
     </tr>`;
@@ -301,21 +329,27 @@ function reportResultsFromRows(rows) {
   rows.forEach((row) => {
     if (Array.isArray(row.details) && row.details.length) {
       row.details.forEach((detail) => results.push({
+        category: row.category || "",
         testName: row.name || "",
         parameterName: detail.parameter || row.name || "",
         resultValue: detail.finding || "",
         normalValue: detail.normal || "",
         unit: detail.unit || "",
+        method: detail.method || row.method || "",
+        sample: detail.sample || row.sample || "",
         comment: row.comment || ""
       }));
       return;
     }
     results.push({
+      category: row.category || "",
       testName: row.name || "",
       parameterName: row.name || "",
       resultValue: row.finding || "",
       normalValue: row.normal || "",
       unit: row.unit || "",
+      method: row.method || "",
+      sample: row.sample || "",
       comment: row.comment || ""
     });
   });
@@ -386,6 +420,7 @@ window.releaseGeneratedReport = async function() {
   }
   const rows = currentFindingRows();
   const bill = currentReportBooking.billNo || currentReportBooking.id;
+  const reportingDate = document.getElementById("rReportingDate")?.value || "";
   await saveReport({
     billNo: bill,
     bookingId: currentReportBooking.id,
@@ -395,7 +430,9 @@ window.releaseGeneratedReport = async function() {
     age: currentReportBooking.age,
     gender: currentReportBooking.gender,
     doctor: currentReportBooking.doctor,
+    refBy: currentReportBooking.refBy || currentReportBooking.doctor,
     collectionDate: currentReportBooking.collDate || currentReportBooking.date,
+    reportingDate,
     tests: currentReportBooking.tests || [],
     results: reportResultsFromRows(rows)
   });

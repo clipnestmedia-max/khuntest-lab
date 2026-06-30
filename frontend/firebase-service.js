@@ -95,13 +95,17 @@ function normalizeBooking(data) {
 
 function normalizeResult(row) {
   return {
+    category: row.category || row.department || row.section || "",
     testName: row.testName || row.test_name || row.name || "",
     parameterName: row.parameterName || row.parameter_name || row.parameter || row.name || "",
     resultValue: row.resultValue || row.result_value || row.finding || row.value || "",
     normalValue: row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
     unit: row.unit || row.units || "",
+    method: row.method || row.methodName || row.method_name || "",
+    sample: row.sample || row.sampleType || row.sample_type || "",
     comment: row.comment || row.remarks || "",
-    details: row.details || []
+    details: row.details || [],
+    isHeading: Boolean(row.isHeading || row.heading || row.type === "heading")
   };
 }
 
@@ -181,7 +185,7 @@ export async function getPatientBookings(email, phone) {
   return rows.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
 }
 
-export async function saveReport({ billNo, patientName, patientEmail, phone, tests, results, bookingId, age, gender, doctor, createdAt, collectionDate }) {
+export async function saveReport({ billNo, patientName, patientEmail, phone, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate }) {
   const report = {
     billNo: String(billNo || ""),
     bookingId: bookingId || "",
@@ -190,8 +194,10 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, tes
     phone: phone || "",
     age: age || "",
     gender: gender || "",
-    doctor: doctor || "",
+    refBy: refBy || doctor || "",
+    doctor: doctor || refBy || "",
     collectionDate: collectionDate || "",
+    reportingDate: reportingDate || "",
     tests: Array.isArray(tests) ? tests : [],
     results: Array.isArray(results) ? results.map(normalizeResult) : [],
     status: "Final",
@@ -203,6 +209,8 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, tes
     await updateDoc(doc(db, C.bookings, bookingId), {
       status: "Reported",
       reportReleased: true,
+      reportBillNo: report.billNo,
+      reportingDate: reportingDate || "",
       updatedAt: serverTimestamp()
     });
   }
@@ -210,8 +218,57 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, tes
 }
 
 export async function getReportByBillNo(billNoValue) {
-  const snap = await getDoc(doc(db, C.reports, String(billNoValue || "")));
-  return snap.exists() ? normalizeDoc(snap) : null;
+  const bill = String(billNoValue || "").trim();
+  if (!bill) return null;
+
+  const directReport = await getDoc(doc(db, C.reports, bill));
+  if (directReport.exists()) return normalizeDoc(directReport);
+
+  const reportSnap = await getDocs(query(collection(db, C.reports), where("billNo", "==", bill), limit(1)));
+  if (!reportSnap.empty) return normalizeDoc(reportSnap.docs[0]);
+
+  const directBooking = await getDoc(doc(db, C.bookings, bill));
+  const bookingDoc = directBooking.exists()
+    ? directBooking
+    : (await getDocs(query(collection(db, C.bookings), where("billNo", "==", bill), limit(1)))).docs[0];
+
+  if (!bookingDoc) return null;
+
+  const booking = normalizeDoc(bookingDoc);
+  const results = Array.isArray(booking.results)
+    ? booking.results
+    : Array.isArray(booking.reportResults)
+      ? booking.reportResults
+      : Array.isArray(booking.reportValues)
+        ? booking.reportValues.map((row) => ({
+            category: row.category || row.department || "",
+            testName: row.testName || row.test_name || row.name || booking.test || "",
+            parameterName: row.parameterName || row.parameter_name || row.parameter || row.name || "",
+            resultValue: row.resultValue || row.result_value || row.finding || row.value || "",
+            normalValue: row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
+            unit: row.unit || row.units || "",
+            method: row.method || "",
+            sample: row.sample || "",
+            comment: row.comment || row.remarks || "",
+            details: row.details || []
+          }))
+        : [];
+
+  if (!booking.reportReleased && !results.length) return null;
+
+  return {
+    ...booking,
+    billNo: booking.billNo || bill,
+    bookingId: booking.id,
+    patientName: booking.patientName || booking.patient_name || "",
+    patientEmail: cleanEmail(booking.patientEmail || booking.email),
+    refBy: booking.refBy || booking.doctor || booking.refDoctor || "",
+    doctor: booking.doctor || booking.refBy || booking.refDoctor || "",
+    collectionDate: booking.collectionDate || booking.collDate || booking.date || "",
+    reportingDate: booking.reportingDate || "",
+    status: "Final",
+    results: results.map(normalizeResult)
+  };
 }
 
 export async function updateBookingStatus(bookingId, status) {

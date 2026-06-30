@@ -19,6 +19,8 @@ firebase-debug.log
 **/firebase-debug.log
 backups/
 frontend/backups/
+database/
+frontend/backend/database/
 *.key
 *.pem
 *service*account*.json
