@@ -9,6 +9,10 @@ node_modules/
 **/node_modules/
 *.zip
 *.sql
+*.save
+*.bak
+*.old_backup
+*.patient_code_backup
 .DS_Store
 **/.DS_Store
 firebase-debug.log

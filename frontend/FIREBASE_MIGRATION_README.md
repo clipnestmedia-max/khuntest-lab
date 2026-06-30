@@ -25,8 +25,6 @@ Hosting is configured with `public: "."` because this folder is a multi-page sta
 
 ## First Admin
 
-Open `admin-login.html`, click **Create First Admin**, enter the admin name, email, and password. This helper works during setup only if you temporarily enable the commented development rules or manually create the first admin profile in Firestore.
-
 Manual first admin profile:
 
 1. Create the admin user in Firebase Authentication.
@@ -77,4 +75,5 @@ The delete action asks for browser confirmation before deleting old bookings/rep
 
 - Firebase Hosting ignores `backend`, `node_modules`, `.env`, SQL, ZIP, and backup folders.
 - Do not put WhatsApp Cloud API tokens in frontend code. Use Cloud Functions or keep a small backend/VPS service for WhatsApp sending.
+- Custom OTP by email requires Firebase Cloud Functions or backend SMTP because SMTP password cannot be stored in frontend.
 - Firestore rules are not fully public. Patients can read their own records by email, admins can manage all data, and public booking creation is limited to basic booking fields.

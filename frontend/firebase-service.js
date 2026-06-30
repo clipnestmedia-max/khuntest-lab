@@ -105,25 +105,6 @@ function normalizeResult(row) {
   };
 }
 
-export async function createFirstAdmin(email, password, name) {
-  const existing = await getDocs(query(collection(db, C.users), where("role", "==", "admin"), limit(1)));
-  if (!existing.empty) throw new Error("Admin already exists. Please login with an admin account.");
-  const cred = await createUserWithEmailAndPassword(auth, cleanEmail(email), password);
-  const profile = {
-    uid: cred.user.uid,
-    name: name || "Admin",
-    email: cleanEmail(email),
-    phone: "",
-    role: "admin",
-    createdAt: serverTimestamp(),
-    isActive: true
-  };
-  await setDoc(doc(db, C.users, cred.user.uid), profile);
-  localStorage.setItem("auth_user", JSON.stringify(profile));
-  localStorage.setItem("auth_token", cred.user.uid);
-  return profile;
-}
-
 export async function loginUser(email, password) {
   const cred = await signInWithEmailAndPassword(auth, cleanEmail(email), password);
   const profileSnap = await getDoc(doc(db, C.users, cred.user.uid));
@@ -333,7 +314,6 @@ export async function getReports() {
 export const KTFirebase = {
   auth,
   db,
-  createFirstAdmin,
   loginUser,
   logoutUser,
   getCurrentUserRole,

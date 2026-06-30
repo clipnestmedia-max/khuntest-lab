@@ -1,211 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login - KhunTest Lab</title>
-
+  <link rel="stylesheet" href="styles.css">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #031b3a, #063b6f);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .login-card {
-      width: 100%;
-      max-width: 430px;
-      background: #ffffff;
-      border-radius: 22px;
-      padding: 34px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-    }
-
-    .logo-box {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .logo-box img {
-      width: 78px;
-      height: 78px;
-      object-fit: contain;
-      border-radius: 50%;
-      margin-bottom: 12px;
-    }
-
-    .logo-box h1 {
-      font-size: 26px;
-      color: #052b5f;
-      margin-bottom: 6px;
-    }
-
-    .logo-box p {
-      color: #64748b;
-      font-size: 14px;
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px 15px;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      font-size: 15px;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: #0b5ed7;
-      box-shadow: 0 0 0 3px rgba(11,94,215,0.15);
-    }
-
-    .login-btn {
-      width: 100%;
-      border: none;
-      background: #d60000;
-      color: #fff;
-      padding: 14px;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    .login-btn:hover {
-      background: #b80000;
-    }
-
-    .links {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 18px;
-      font-size: 14px;
-    }
-
-    .links a {
-      text-decoration: none;
-      color: #0b5ed7;
-      font-weight: 700;
-    }
-
-    .message {
-      margin-top: 14px;
-      padding: 12px;
-      border-radius: 10px;
-      font-size: 14px;
-      display: none;
-    }
-
-    .message.error {
-      display: block;
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .message.success {
-      display: block;
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .footer-note {
-      margin-top: 22px;
-      text-align: center;
-      color: #64748b;
-      font-size: 13px;
-    }
-
-    .setup-btn {
-      width: 100%;
-      border: 1px solid #0b5ed7;
-      background: #ffffff;
-      color: #0b5ed7;
-      padding: 12px;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 10px;
-    }
+    .portal-page{min-height:calc(100vh - 280px);display:grid;place-items:center;padding:48px 0;background:linear-gradient(135deg,#f8fbff,#fff1f1)}
+    .login-card{width:100%;max-width:430px;background:#fff;border-radius:22px;padding:34px;box-shadow:0 20px 60px rgba(0,0,0,.14)}
+    .logo-box{text-align:center;margin-bottom:24px}
+    .logo-box img{width:78px;height:78px;object-fit:contain;border-radius:18px;margin:0 auto 12px}
+    .logo-box h1{font-size:26px;color:#052b5f;margin:0 0 6px}
+    .logo-box p{color:#64748b;font-size:14px;margin:0}
+    .form-group{margin-bottom:18px}
+    .portal-links{display:flex;justify-content:space-between;gap:14px;margin-top:18px;font-size:14px;flex-wrap:wrap}
+    .portal-links a{text-decoration:none;color:#0b5ed7;font-weight:800}
+    .message{margin-top:14px;padding:12px;border-radius:10px;font-size:14px;display:none}
+    .message.error{display:block;background:#fee2e2;color:#991b1b}
+    .message.success{display:block;background:#dcfce7;color:#166534}
+    .footer-note{margin-top:22px;text-align:center;color:#64748b;font-size:13px}
+    @media (max-width:480px){.login-card{padding:24px}.portal-page{padding:32px 0}}
   </style>
 </head>
 <body>
-
-  <div class="login-card">
-    <div class="logo-box">
-      <img src="logo.png" alt="KhunTest Lab Logo" onerror="this.style.display='none'">
-      <h1>KHUNTEST LAB</h1>
-      <p>Admin Login Panel</p>
-    </div>
-
-    <form id="adminLoginForm">
-      <div class="form-group">
-        <label for="adminEmail">Email</label>
-        <input
-          id="adminEmail"
-          type="email"
-          placeholder="Enter admin email"
-          autocomplete="email"
-          required
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="adminPassword">Password</label>
-        <input
-          id="adminPassword"
-          type="password"
-          placeholder="Enter password"
-          autocomplete="current-password"
-          required
-        />
-      </div>
-
-      <button class="login-btn" type="submit">Login</button>
-      <button class="setup-btn" type="button" id="createFirstAdminBtn">Create First Admin</button>
-
-      <div id="loginMessage" class="message"></div>
-
-      <div class="links">
-        <a href="index.html">← Back to Home</a>
-        <a href="forgot-password.html?role=admin">Forgot Password?</a>
-      </div>
-    </form>
-
-    <div class="footer-note">
-      Secure admin access for patient entry, billing and reports.
+  <div class="topbar">
+    <div class="container">
+      <div>📍 Allalpatti, Laheriasarai, Darbhanga, Bihar | Home Sample Collection Available</div>
+      <div>📞 +91 9234277007 | ✉️ khuntest@yahoo.com</div>
     </div>
   </div>
 
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab Logo"><span>KHUNTEST LAB</span></a>
+      <input class="nav-toggle" id="navToggle" type="checkbox">
+      <label class="nav-toggle-label" for="navToggle">☰</label>
+      <div class="menu">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="tests.html">All Tests</a>
+        <a href="packages.html">Packages</a>
+        <a href="home-collection.html">Home Collection</a>
+        <a href="contact.html">Contact</a>
+        <a href="patient-login.html">Patient</a>
+        <a href="admin-login.html">Admin</a>
+      </div>
+      <a class="btn btn-red" href="booking.html">Book Now</a>
+    </div>
+  </nav>
+
+  <main class="portal-page">
+    <div class="container">
+      <div class="login-card">
+        <div class="logo-box">
+          <img src="assets/khuntest-logo.png" alt="KhunTest Lab Logo">
+          <h1>KHUNTEST LAB</h1>
+          <p>Admin Login Panel</p>
+        </div>
+
+        <form id="adminLoginForm">
+          <div class="form-group">
+            <label for="adminEmail">Email</label>
+            <input id="adminEmail" type="email" placeholder="Enter admin email" autocomplete="email" required>
+          </div>
+
+          <div class="form-group">
+            <label for="adminPassword">Password</label>
+            <input id="adminPassword" type="password" placeholder="Enter password" autocomplete="current-password" required>
+          </div>
+
+          <button class="btn btn-red" type="submit" style="width:100%">Login</button>
+          <div id="loginMessage" class="message"></div>
+
+          <div class="portal-links">
+            <a href="index.html">← Back to Home</a>
+            <a href="forgot-password.html?role=admin">Forgot Password?</a>
+          </div>
+        </form>
+
+        <div class="footer-note">Secure admin access for patient entry, billing and reports.</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div><h3>KhunTest Lab</h3><p>Accurate • Reliable • Trusted diagnostic services with home sample collection, online reports and health packages.</p></div>
+      <div><h4>Public Website</h4><a href="about.html">About Us</a><a href="tests.html">All Tests</a><a href="packages.html">Health Packages</a><a href="home-collection.html">Home Collection</a></div>
+      <div><h4>Portals</h4><a href="booking.html">Book Test Online</a><a href="patient-login.html">Patient Login</a><a href="admin-login.html">Admin Login</a></div>
+      <div><h4>Contact</h4><p>📞 +91 9234277007</p><p>💬 WhatsApp: +91 9234277007</p><p>✉️ khuntest@yahoo.com</p><p>📍 Allalpatti, Laheriasarai, Darbhanga, Bihar</p></div>
+    </div>
+    <div class="container copy">©️ 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601</div>
+  </footer>
+
   <script type="module">
-    import { createFirstAdmin, loginUser, logoutUser } from "./firebase-service.js";
+    import { loginUser, logoutUser } from "./firebase-service.js";
 
     const form = document.getElementById("adminLoginForm");
     const msg = document.getElementById("loginMessage");
-    const createBtn = document.getElementById("createFirstAdminBtn");
 
     function showMessage(text, type) {
       msg.textContent = text;
@@ -239,37 +131,11 @@
         setTimeout(function() {
           window.location.href = "admin-dashboard.html";
         }, 700);
-
       } catch (err) {
         console.error(err);
         showMessage(err.message || "Firebase login failed.", "error");
       }
     });
-
-    createBtn.addEventListener("click", async function() {
-      const name = prompt("Admin name:");
-      if (!name) return;
-
-      const email = document.getElementById("adminEmail").value.trim() || prompt("Admin email:");
-      if (!email) return;
-
-      const password = document.getElementById("adminPassword").value || prompt("Admin password (minimum 6 characters):");
-      if (!password) return;
-
-      showMessage("Creating first admin...", "success");
-
-      try {
-        await createFirstAdmin(email, password, name);
-        showMessage("First admin created. Redirecting...", "success");
-        setTimeout(function() {
-          window.location.href = "admin-dashboard.html";
-        }, 700);
-      } catch (err) {
-        console.error(err);
-        showMessage(err.message || "Unable to create first admin.", "error");
-      }
-    });
   </script>
-
 </body>
 </html>

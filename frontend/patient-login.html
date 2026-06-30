@@ -1,230 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Patient Login - KhunTest Lab</title>
-
+  <link rel="stylesheet" href="styles.css">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f8fbff, #fff1f1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .card {
-      width: 100%;
-      max-width: 440px;
-      background: #ffffff;
-      border-radius: 24px;
-      padding: 32px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 22px;
-    }
-
-    .header img {
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-      border-radius: 16px;
-      margin-bottom: 10px;
-    }
-
-    .header h1 {
-      color: #052b5f;
-      font-size: 26px;
-      font-weight: 900;
-    }
-
-    .tabs {
-      display: flex;
-      background: #eef3f9;
-      border-radius: 16px;
-      padding: 5px;
-      margin-bottom: 22px;
-    }
-
-    .tabs button {
-      flex: 1;
-      border: none;
-      padding: 12px;
-      border-radius: 12px;
-      background: transparent;
-      font-weight: 800;
-      cursor: pointer;
-      color: #334155;
-    }
-
-    .tabs button.active {
-      background: #ffffff;
-      color: #d60000;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    }
-
-    .form-box {
-      display: none;
-    }
-
-    .form-box.active {
-      display: block;
-    }
-
-    label {
-      display: block;
-      font-weight: 800;
-      color: #172033;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 14px 15px;
-      border: 1px solid #dbe3ee;
-      border-radius: 13px;
-      font-size: 15px;
-      margin-bottom: 16px;
-      outline: none;
-      background: #fff;
-    }
-
-    input:focus {
-      border-color: #0b5ed7;
-      box-shadow: 0 0 0 3px rgba(11,94,215,0.14);
-    }
-
-    .btn {
-      width: 100%;
-      border: none;
-      padding: 14px;
-      border-radius: 15px;
-      font-size: 16px;
-      font-weight: 900;
-      cursor: pointer;
-      background: #d60000;
-      color: #fff;
-      box-shadow: 0 12px 30px rgba(214,0,0,0.22);
-      margin-top: 4px;
-    }
-
-    .forgot {
-      display: block;
-      text-align: right;
-      margin: 4px 0 16px;
-      color: #0b5ed7;
-      font-weight: 800;
-      font-size: 14px;
-      text-decoration: none;
-    }
-
-    .back {
-      display: block;
-      text-align: center;
-      margin-top: 18px;
-      color: #0f172a;
-      text-decoration: none;
-      font-size: 15px;
-    }
-
-    .msg {
-      display: none;
-      margin-top: 14px;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .msg.error {
-      display: block;
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .msg.success {
-      display: block;
-      background: #dcfce7;
-      color: #166534;
-    }
+    .portal-page{min-height:calc(100vh - 280px);display:grid;place-items:center;padding:48px 0;background:linear-gradient(135deg,#f8fbff,#fff1f1)}
+    .patient-card{width:100%;max-width:460px;background:#fff;border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+    .portal-header{text-align:center;margin-bottom:22px}
+    .portal-header img{width:72px;height:72px;object-fit:contain;border-radius:16px;margin:0 auto 10px}
+    .portal-header h1{color:#052b5f;font-size:26px;font-weight:900;margin:0}
+    .tabs{display:flex;background:#eef3f9;border-radius:16px;padding:5px;margin-bottom:22px}
+    .tabs button{flex:1;border:0;padding:12px;border-radius:12px;background:transparent;font-weight:900;cursor:pointer;color:#334155}
+    .tabs button.active{background:#fff;color:#d60000;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    .form-box{display:none}
+    .form-box.active{display:block}
+    .forgot{display:block;text-align:right;margin:4px 0 16px;color:#0b5ed7;font-weight:800;font-size:14px;text-decoration:none}
+    .back{display:block;text-align:center;margin-top:18px;color:#0f172a;text-decoration:none;font-size:15px}
+    .msg{display:none;margin-top:14px;padding:12px;border-radius:12px;font-size:14px;font-weight:700}
+    .msg.error{display:block;background:#fee2e2;color:#991b1b}
+    .msg.success{display:block;background:#dcfce7;color:#166534}
+    @media (max-width:480px){.patient-card{padding:24px}.portal-page{padding:32px 0}.tabs button{padding:11px 8px}}
   </style>
 </head>
 <body>
-
-  <div class="card">
-    <div class="header">
-      <img src="logo.png" alt="KhunTest Lab Logo" onerror="this.style.display='none'">
-      <h1>Patient Portal</h1>
+  <div class="topbar">
+    <div class="container">
+      <div>📍 Allalpatti, Laheriasarai, Darbhanga, Bihar | Home Sample Collection Available</div>
+      <div>📞 +91 9234277007 | ✉️ khuntest@yahoo.com</div>
     </div>
-
-    <div class="tabs">
-      <button id="loginTab" class="active" type="button" onclick="showTab('login')">Login</button>
-      <button id="registerTab" type="button" onclick="showTab('register')">Register</button>
-    </div>
-
-    <div id="loginBox" class="form-box active">
-      <form id="patientLoginForm">
-        <label>Email</label>
-        <input id="loginEmail" type="email" placeholder="Enter registered email" required>
-
-        <label>Password</label>
-        <input id="loginPassword" type="password" placeholder="Enter password" required>
-
-        <a href="forgot-password.html?role=patient" class="forgot">Forgot Password?</a>
-
-        <button class="btn" type="submit">Login</button>
-      </form>
-    </div>
-
-    <div id="registerBox" class="form-box">
-      <form id="patientRegisterForm">
-        <label>Patient Name</label>
-        <input id="regName" type="text" placeholder="Enter patient name" required>
-
-        <label>Email</label>
-        <input id="regEmail" type="email" placeholder="Enter email" required>
-
-        <label>Phone</label>
-        <input id="regPhone" type="tel" placeholder="Enter phone number" required>
-
-        <label>Age</label>
-        <input id="regAge" type="number" placeholder="Enter age">
-
-        <label>Gender</label>
-        <select id="regGender">
-          <option value="">Select gender</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
-        </select>
-
-        <label>Address</label>
-        <textarea id="regAddress" placeholder="Enter address"></textarea>
-
-        <label>Password</label>
-        <input id="regPassword" type="password" placeholder="Create password" required>
-
-        <button class="btn" type="submit">Register</button>
-      </form>
-    </div>
-
-    <div id="message" class="msg"></div>
-
-    <a href="index.html" class="back">← Back to Website</a>
   </div>
+
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab Logo"><span>KHUNTEST LAB</span></a>
+      <input class="nav-toggle" id="navToggle" type="checkbox">
+      <label class="nav-toggle-label" for="navToggle">☰</label>
+      <div class="menu">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="tests.html">All Tests</a>
+        <a href="packages.html">Packages</a>
+        <a href="home-collection.html">Home Collection</a>
+        <a href="contact.html">Contact</a>
+        <a href="patient-login.html">Patient</a>
+        <a href="admin-login.html">Admin</a>
+      </div>
+      <a class="btn btn-red" href="booking.html">Book Now</a>
+    </div>
+  </nav>
+
+  <main class="portal-page">
+    <div class="container">
+      <div class="patient-card">
+        <div class="portal-header">
+          <img src="assets/khuntest-logo.png" alt="KhunTest Lab Logo">
+          <h1>Patient Portal</h1>
+        </div>
+
+        <div class="tabs">
+          <button id="loginTab" class="active" type="button">Login</button>
+          <button id="registerTab" type="button">Register</button>
+        </div>
+
+        <div id="loginBox" class="form-box active">
+          <form id="patientLoginForm">
+            <label>Email</label>
+            <input id="loginEmail" type="email" placeholder="Enter registered email" required>
+
+            <label>Password</label>
+            <input id="loginPassword" type="password" placeholder="Enter password" required>
+
+            <a href="forgot-password.html?role=patient" class="forgot">Forgot Password?</a>
+
+            <button class="btn btn-red" type="submit" style="width:100%">Login</button>
+          </form>
+        </div>
+
+        <div id="registerBox" class="form-box">
+          <form id="patientRegisterForm">
+            <label>Patient Name</label>
+            <input id="regName" type="text" placeholder="Enter patient name" required>
+
+            <label>Email</label>
+            <input id="regEmail" type="email" placeholder="Enter email" required>
+
+            <label>Phone</label>
+            <input id="regPhone" type="tel" placeholder="Enter phone number" required>
+
+            <label>Age</label>
+            <input id="regAge" type="number" placeholder="Enter age">
+
+            <label>Gender</label>
+            <select id="regGender">
+              <option value="">Select gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+
+            <label>Address</label>
+            <textarea id="regAddress" placeholder="Enter address"></textarea>
+
+            <label>Password</label>
+            <input id="regPassword" type="password" placeholder="Create password" required>
+
+            <button class="btn btn-red" type="submit" style="width:100%">Register</button>
+          </form>
+        </div>
+
+        <div id="message" class="msg"></div>
+        <a href="index.html" class="back">← Back to Website</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div><h3>KhunTest Lab</h3><p>Accurate • Reliable • Trusted diagnostic services with home sample collection, online reports and health packages.</p></div>
+      <div><h4>Public Website</h4><a href="about.html">About Us</a><a href="tests.html">All Tests</a><a href="packages.html">Health Packages</a><a href="home-collection.html">Home Collection</a></div>
+      <div><h4>Portals</h4><a href="booking.html">Book Test Online</a><a href="patient-login.html">Patient Login</a><a href="admin-login.html">Admin Login</a></div>
+      <div><h4>Contact</h4><p>📞 +91 9234277007</p><p>💬 WhatsApp: +91 9234277007</p><p>✉️ khuntest@yahoo.com</p><p>📍 Allalpatti, Laheriasarai, Darbhanga, Bihar</p></div>
+    </div>
+    <div class="container copy">©️ 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601</div>
+  </footer>
 
   <script type="module">
     import { loginUser, logoutUser, registerPatient } from "./firebase-service.js";
@@ -244,6 +144,14 @@
       msg.className = "msg";
       msg.textContent = "";
     }
+
+    document.getElementById("loginTab").addEventListener("click", function() {
+      showTab("login");
+    });
+
+    document.getElementById("registerTab").addEventListener("click", function() {
+      showTab("register");
+    });
 
     document.getElementById("patientLoginForm").addEventListener("submit", async function(e) {
       e.preventDefault();
@@ -272,7 +180,6 @@
         setTimeout(function() {
           window.location.href = "patient-dashboard.html";
         }, 500);
-
       } catch (err) {
         console.error(err);
         showMessage(err.message || "Firebase login failed.", "error");
@@ -305,13 +212,11 @@
         setTimeout(function() {
           showTab("login");
         }, 700);
-
       } catch (err) {
         console.error(err);
         showMessage(err.message || "Firebase registration failed.", "error");
       }
     });
   </script>
-
 </body>
 </html>
