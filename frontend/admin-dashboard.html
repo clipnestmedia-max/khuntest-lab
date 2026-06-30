@@ -33,9 +33,12 @@
     <section data-panel="overview">
       <div class="metric-grid">
         <div class="metric"><span>Total Bookings</span><b id="mBookings">0</b></div>
-        <div class="metric"><span>Total Revenue</span><b id="mRevenue">₹0</b></div>
+        <div class="metric"><span>Pending Bookings</span><b id="mPending">0</b></div>
         <div class="metric"><span>Patients</span><b id="mPatients">0</b></div>
-        <div class="metric"><span>Reports Uploaded</span><b id="mReports">0</b></div>
+        <div class="metric"><span>Reported</span><b id="mReports">0</b></div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><span>Total Revenue</span><b id="mRevenue">₹0</b></div>
       </div>
       <div class="notice">New flow added: Patient Entry → Add Tests/Package → Save Billing → Report Generate → Fill Findings → Release Report → Patient Download.</div>
     </section>
@@ -168,6 +171,7 @@
 
     <section data-panel="tests" class="hidden">
       <h2>Manage Tests & Pricing</h2>
+      <div class="toolbar"><a class="btn btn-green btn-small" href="admin-import-tests.html">Import SQL Backup Tests</a></div>
       <form class="form-card" onsubmit="addTest(event)"><div class="two"><div><label>Test Name</label><input name="name" required></div><div><label>Price</label><input name="price" type="number" required></div></div><div class="two"><div><label>Category</label><input name="category" required></div><div><label>Report Time</label><input name="time" required></div></div><br><button class="btn btn-navy">Add Test</button></form>
       <div class="table-card"><table><thead><tr><th>Test</th><th>Price</th><th>Time</th><th>Action</th></tr></thead><tbody id="testsBody"></tbody></table></div>
     </section>
@@ -205,6 +209,24 @@ function html(value) {
 
 function rupees(value) {
   return "₹" + Number(value || 0).toLocaleString("en-IN");
+}
+
+function bookingTests(b) {
+  return Array.isArray(b.selectedTests) && b.selectedTests.length
+    ? b.selectedTests
+    : Array.isArray(b.tests)
+      ? b.tests
+      : [];
+}
+
+function whatsappReportLink(b) {
+  const bill = reportBill(b);
+  const phone = String(b.whatsapp || b.phone || "").replace(/\D/g, "");
+  if (!phone || !bill) return "";
+  const fullPhone = phone.length === 10 ? "91" + phone : phone;
+  const reportUrl = `https://khuntest-lab-e5966.web.app/report.html?bill=${encodeURIComponent(bill)}`;
+  const message = `Hello ${b.patientName || "Patient"},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
+  return `https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`;
 }
 
 function createdText(value) {
@@ -271,17 +293,19 @@ async function refreshFirebaseDashboard() {
 
 function renderFirebaseMetrics() {
   document.getElementById("mBookings").textContent = firebaseBookings.length;
+  document.getElementById("mPending").textContent = firebaseBookings.filter((b) => (b.status || "Pending") === "Pending").length;
   document.getElementById("mRevenue").textContent = rupees(firebaseBookings.reduce((sum, b) => sum + Number(b.totalAmount || b.grossTotal || b.price || 0), 0));
   document.getElementById("mPatients").textContent = new Set(firebaseBookings.map((b) => b.patientEmail || b.email || b.phone).filter(Boolean)).size;
-  document.getElementById("mReports").textContent = firebaseReports.length;
+  document.getElementById("mReports").textContent = firebaseBookings.filter((b) => b.reportReleased || (b.status || "") === "Reported").length;
 }
 
 function renderFirebaseBookings() {
   const body = document.getElementById("adminBookings");
   if (!body) return;
   body.innerHTML = firebaseBookings.length ? firebaseBookings.map((b) => {
-    const tests = Array.isArray(b.tests) ? b.tests.map((t) => t.name || t.testName || t.test_name).join(", ") : (b.test || "");
+    const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
     const bill = reportBill(b);
+    const wa = whatsappReportLink(b);
     return `<tr>
       <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
       <td>${html(b.patientName)}<br><small>${html(b.age || "")} ${html(b.gender || "")}<br>${html(b.phone)}<br>${html(b.patientEmail || b.email || "")}</small></td>
@@ -291,7 +315,7 @@ function renderFirebaseBookings() {
       <td>${html(b.staff || "Not Assigned")}</td>
       <td>
         ${reportActionsHtml(b)}
-        <br><a class="report-link" target="_blank" href="https://wa.me/${encodeURIComponent(b.whatsapp || b.phone || "")}?text=${encodeURIComponent("Your KhunTest Lab report is ready: " + location.origin + location.pathname.replace("admin-dashboard.html", "report.html?bill=" + bill))}">WhatsApp</a>
+        ${hasFirestoreReport(b) && wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">Send WhatsApp</a>` : ""}
       </td>
     </tr>`;
   }).join("") : `<tr><td colspan="7">No bookings found.</td></tr>`;
@@ -301,7 +325,7 @@ function renderFirebaseReportSelect() {
   const sel = document.getElementById("reportBookingSelect");
   if (!sel) return;
   sel.innerHTML = '<option value="">Select patient / bill</option>' + firebaseBookings.map((b) => {
-    const tests = Array.isArray(b.tests) ? b.tests.map((t) => t.name || t.testName || t.test_name).join(", ") : (b.test || "");
+    const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
     return `<option value="${html(b.id)}">${html(b.billNo || b.id)} - ${html(b.patientName)} - ${html(tests)}</option>`;
   }).join("");
 }
@@ -330,10 +354,10 @@ function reportResultsFromRows(rows) {
     if (Array.isArray(row.details) && row.details.length) {
       row.details.forEach((detail) => results.push({
         category: row.category || "",
-        testName: row.name || "",
+        testName: row.testName || row.name || "",
         parameterName: detail.parameter || row.name || "",
         resultValue: detail.finding || "",
-        normalValue: detail.normal || "",
+        normalRange: detail.normal || "",
         unit: detail.unit || "",
         method: detail.method || row.method || "",
         sample: detail.sample || row.sample || "",
@@ -343,10 +367,10 @@ function reportResultsFromRows(rows) {
     }
     results.push({
       category: row.category || "",
-      testName: row.name || "",
+      testName: row.testName || row.name || "",
       parameterName: row.name || "",
       resultValue: row.finding || "",
-      normalValue: row.normal || "",
+      normalRange: row.normal || "",
       unit: row.unit || "",
       method: row.method || "",
       sample: row.sample || "",
@@ -392,14 +416,21 @@ window.loadReportEditor = function(id) {
     if (el) el.value = val;
   });
   document.getElementById("rReportingDate").value = ktNowLocal();
-  const rows = Array.isArray(b.tests) && b.tests.length ? b.tests.map((t) => ({
-    name: t.name || t.testName || t.test_name || "Test",
-    normal: t.normal || "",
-    finding: t.finding || "",
-    unit: t.unit || "",
-    status: "Final",
-    comment: ""
-  })) : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
+  const rows = bookingTests(b).length ? bookingTests(b).flatMap((t) => {
+    const params = Array.isArray(t.parameters) && t.parameters.length ? t.parameters : [{ name: t.name || "Result", normalRange: t.normal || "", unit: t.unit || "", method: t.method || "", sample: t.sample || "" }];
+    return params.map((p) => ({
+      name: p.name || t.name || "Test",
+      category: t.category || "",
+      testName: t.name || "",
+      normal: p.normalRange || p.normalValue || p.normal || "",
+      finding: p.finding || "",
+      unit: p.unit || "",
+      method: p.method || "",
+      sample: p.sample || t.sample || "",
+      status: "Final",
+      comment: ""
+    }));
+  }) : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
   paintFindingRows(rows);
 };
 
@@ -433,7 +464,7 @@ window.releaseGeneratedReport = async function() {
     refBy: currentReportBooking.refBy || currentReportBooking.doctor,
     collectionDate: currentReportBooking.collDate || currentReportBooking.date,
     reportingDate,
-    tests: currentReportBooking.tests || [],
+    tests: bookingTests(currentReportBooking),
     results: reportResultsFromRows(rows)
   });
   alert("Report released and saved to Firestore.");
@@ -472,6 +503,7 @@ window.savePatientEntry = async function(e) {
     coName: f.coName.value,
     pathologyName: f.pathologyName.value,
     associateLab: f.associateLab.value,
+    selectedTests: tests,
     tests,
     test: tests.map((t) => t.name).join(", "),
     totalAmount: gross,

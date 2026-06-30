@@ -26,7 +26,8 @@ const C = {
   users: "users",
   bookings: "bookings",
   reports: "reports",
-  tests: "tests"
+  tests: "tests",
+  packages: "packages"
 };
 
 function cleanEmail(email) {
@@ -49,12 +50,81 @@ function normalizeDoc(snap) {
   return { id: snap.id, ...data };
 }
 
+function safeSlug(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100) || String(Date.now());
+}
+
+function testKeywords(...values) {
+  return Array.from(new Set(values
+    .join(" ")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 1)));
+}
+
+function normalizeParameter(row, fallback = {}) {
+  const name = row.name || row.parameterName || row.parameter_name || row.parameter || fallback.name || "Result";
+  return {
+    name,
+    normalRange: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
+    unit: row.unit || row.units || "",
+    method: row.method || row.methodName || row.method_name || "",
+    sample: row.sample || row.sampleType || row.sample_type || fallback.sample || "",
+    sortOrder: Number(row.sortOrder || row.sort_order || 0)
+  };
+}
+
+function normalizeTest(data) {
+  const name = data.name || data.testName || data.test_name || "";
+  const testCode = String(data.testCode || data.test_code || data.code || data.sourceId || safeSlug(name)).trim();
+  const category = data.category || "Lab Test";
+  const sample = data.sample || "";
+  const parameters = Array.isArray(data.parameters) && data.parameters.length
+    ? data.parameters.map((p) => normalizeParameter(p, { name, sample }))
+    : [normalizeParameter({ name, normalRange: data.normalRange || data.normalValue || "", unit: data.unit || "", method: data.method || "", sample }, { name, sample })];
+  return {
+    testCode,
+    name,
+    nameLower: String(data.nameLower || name).toLowerCase(),
+    category,
+    price: Number(data.price ?? data.priceInr ?? data.price_inr ?? 0),
+    sample,
+    reportTime: data.reportTime || data.report_time || data.time || "Same Day",
+    isActive: data.isActive !== false && data.is_active !== 0,
+    parameters,
+    searchKeywords: Array.isArray(data.searchKeywords) && data.searchKeywords.length
+      ? data.searchKeywords
+      : testKeywords(testCode, name, category)
+  };
+}
+
+function normalizeSelectedTest(data) {
+  const test = normalizeTest(data);
+  return {
+    testCode: test.testCode,
+    name: test.name,
+    category: test.category,
+    price: test.price,
+    sample: test.sample,
+    reportTime: test.reportTime,
+    parameters: test.parameters
+  };
+}
+
 function normalizeBooking(data) {
-  const tests = Array.isArray(data.tests)
-    ? data.tests
+  const selectedTests = Array.isArray(data.selectedTests)
+    ? data.selectedTests.map(normalizeSelectedTest)
+    : Array.isArray(data.tests)
+      ? data.tests.map(normalizeSelectedTest)
     : data.test
-      ? [{ name: data.test, price: Number(data.price || data.totalAmount || 0) }]
+      ? [normalizeSelectedTest({ name: data.test, price: Number(data.price || data.totalAmount || 0) })]
       : [];
+  const totalAmount = Number(data.totalAmount || data.grossTotal || data.price || selectedTests.reduce((sum, t) => sum + Number(t.price || 0), 0));
 
   return {
     billNo: data.billNo || data.bill_no || billNo(),
@@ -65,10 +135,11 @@ function normalizeBooking(data) {
     whatsapp: String(data.whatsapp || data.phone || "").trim(),
     age: data.age || data.patientAge || "",
     gender: data.gender || "",
-    tests,
-    test: data.test || tests.map((t) => t.name || t.testName || t.test_name).filter(Boolean).join(", "),
-    totalAmount: Number(data.totalAmount || data.grossTotal || data.price || tests.reduce((sum, t) => sum + Number(t.price || 0), 0)),
-    grossTotal: Number(data.totalAmount || data.grossTotal || data.price || 0),
+    selectedTests,
+    tests: selectedTests,
+    test: data.test || selectedTests.map((t) => t.name).filter(Boolean).join(", "),
+    totalAmount,
+    grossTotal: totalAmount,
     status: data.status || "Pending",
     reportReleased: Boolean(data.reportReleased),
     bookingType: data.bookingType || data.collectionType || "",
@@ -99,7 +170,8 @@ function normalizeResult(row) {
     testName: row.testName || row.test_name || row.name || "",
     parameterName: row.parameterName || row.parameter_name || row.parameter || row.name || "",
     resultValue: row.resultValue || row.result_value || row.finding || row.value || "",
-    normalValue: row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
+    normalRange: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
+    normalValue: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
     unit: row.unit || row.units || "",
     method: row.method || row.methodName || row.method_name || "",
     sample: row.sample || row.sampleType || row.sample_type || "",
@@ -136,7 +208,9 @@ export async function getCurrentUserRole() {
   });
   if (!user) return null;
   const snap = await getDoc(doc(db, C.users, user.uid));
-  return snap.exists() ? normalizeDoc(snap).role : null;
+  if (!snap.exists()) return null;
+  const profile = normalizeDoc(snap);
+  return profile.isActive === false ? null : profile.role;
 }
 
 export async function registerPatient({ name, email, phone, password, age, gender, address }) {
@@ -169,6 +243,18 @@ export async function createBooking(bookingData) {
   return { id: docRef.id, ...booking };
 }
 
+export async function getTests({ activeOnly = true } = {}) {
+  const testQuery = activeOnly
+    ? query(collection(db, C.tests), where("isActive", "==", true))
+    : query(collection(db, C.tests), orderBy("nameLower", "asc"));
+  const snap = await getDocs(testQuery);
+  return snap.docs
+    .map(normalizeDoc)
+    .map(normalizeTest)
+    .filter((test) => !activeOnly || test.isActive)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export async function getAllBookings() {
   const snap = await getDocs(query(collection(db, C.bookings), orderBy("createdAt", "desc")));
   return snap.docs.map(normalizeDoc);
@@ -176,16 +262,21 @@ export async function getAllBookings() {
 
 export async function getPatientBookings(email, phone) {
   const emailValue = cleanEmail(email);
-  const snap = await getDocs(query(collection(db, C.bookings), where("patientEmail", "==", emailValue)));
+  const snap = emailValue
+    ? await getDocs(query(collection(db, C.bookings), where("patientEmail", "==", emailValue)))
+    : { docs: [] };
   let rows = snap.docs.map(normalizeDoc);
-  if (!rows.length && phone) {
+  if (phone) {
     const phoneSnap = await getDocs(query(collection(db, C.bookings), where("phone", "==", String(phone).trim())));
-    rows = phoneSnap.docs.map(normalizeDoc);
+    const byId = new Map(rows.map((row) => [row.id, row]));
+    phoneSnap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
+    rows = Array.from(byId.values());
   }
   return rows.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
 }
 
 export async function saveReport({ billNo, patientName, patientEmail, phone, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate }) {
+  const selectedTests = Array.isArray(tests) ? tests.map(normalizeSelectedTest) : [];
   const report = {
     billNo: String(billNo || ""),
     bookingId: bookingId || "",
@@ -198,11 +289,13 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, tes
     doctor: doctor || refBy || "",
     collectionDate: collectionDate || "",
     reportingDate: reportingDate || "",
-    tests: Array.isArray(tests) ? tests : [],
+    tests: selectedTests,
+    selectedTests,
     results: Array.isArray(results) ? results.map(normalizeResult) : [],
     status: "Final",
+    reportStatus: "Final",
     releasedAt: serverTimestamp(),
-    createdAt: serverTimestamp()
+    createdAt: createdAt || serverTimestamp()
   };
   await setDoc(doc(db, C.reports, report.billNo), report);
   if (bookingId) {
@@ -245,7 +338,7 @@ export async function getReportByBillNo(billNoValue) {
             testName: row.testName || row.test_name || row.name || booking.test || "",
             parameterName: row.parameterName || row.parameter_name || row.parameter || row.name || "",
             resultValue: row.resultValue || row.result_value || row.finding || row.value || "",
-            normalValue: row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
+            normalRange: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
             unit: row.unit || row.units || "",
             method: row.method || "",
             sample: row.sample || "",
@@ -267,6 +360,7 @@ export async function getReportByBillNo(billNoValue) {
     collectionDate: booking.collectionDate || booking.collDate || booking.date || "",
     reportingDate: booking.reportingDate || "",
     status: "Final",
+    tests: booking.selectedTests || booking.tests || [],
     results: results.map(normalizeResult)
   };
 }
@@ -313,7 +407,7 @@ async function collectCsvRows(cutoffDate = null) {
       b.patientName || "",
       b.patientEmail || b.email || "",
       b.phone || "",
-      (b.tests || []).map((t) => t.name || t.testName || t.test_name).join(" | ") || b.test || "",
+      (b.selectedTests || b.tests || []).map((t) => t.name || t.testName || t.test_name).join(" | ") || b.test || "",
       b.totalAmount || b.grossTotal || b.price || 0,
       b.status || "",
       rowDate(b).toISOString()
@@ -326,7 +420,7 @@ async function collectCsvRows(cutoffDate = null) {
       r.patientName || "",
       r.patientEmail || "",
       r.phone || "",
-      (r.tests || []).map((t) => t.name || t.testName || t.test_name).join(" | "),
+      (r.selectedTests || r.tests || []).map((t) => t.name || t.testName || t.test_name).join(" | "),
       "",
       r.status || "Final",
       rowDate(r).toISOString()
@@ -378,6 +472,7 @@ export const KTFirebase = {
   createBooking,
   getAllBookings,
   getPatientBookings,
+  getTests,
   saveReport,
   getReportByBillNo,
   updateBookingStatus,

@@ -12,12 +12,21 @@ service cloud.firestore {
     function isAdmin() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && userDoc().data.role == "admin";
+        && userDoc().data.role == "admin"
+        && userDoc().data.isActive == true;
+    }
+
+    function isPatient() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.role == "patient"
+        && userDoc().data.isActive == true;
     }
 
     function sameEmail(email) {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userDoc().data.isActive == true
         && userDoc().data.email == email;
     }
 
@@ -31,9 +40,18 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow create: if request.resource.data.patientEmail is string
-        && request.resource.data.patientName is string
-        && request.resource.data.phone is string;
+      allow create: if isAdmin()
+        || (
+          request.resource.data.patientEmail is string
+          && request.resource.data.patientName is string
+          && request.resource.data.phone is string
+        )
+        || (
+          isPatient()
+          && request.resource.data.patientEmail == userDoc().data.email
+          && request.resource.data.patientName is string
+          && request.resource.data.phone is string
+        );
       allow read: if isAdmin()
         || sameEmail(resource.data.patientEmail)
         || sameEmail(resource.data.email);
@@ -46,7 +64,12 @@ service cloud.firestore {
     }
 
     match /tests/{testId} {
-      allow read: if true;
+      allow read: if resource.data.isActive == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /packages/{packageId} {
+      allow read: if resource.data.isActive == true || isAdmin();
       allow write: if isAdmin();
     }
 

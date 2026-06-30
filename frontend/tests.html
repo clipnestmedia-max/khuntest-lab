@@ -6,30 +6,108 @@
   <title>All Tests - KhunTest Lab</title>
   <meta name="description" content="KhunTest Lab diagnostic website with home sample collection, patient report portal and admin dashboard.">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .test-toolbar { display: grid; grid-template-columns: 1fr 240px; gap: 12px; margin: 18px 0; }
+    .test-toolbar input, .test-toolbar select { width: 100%; padding: 12px; border: 1px solid #d8e1ef; border-radius: 8px; }
+    .test-count-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; color: #42526b; margin-bottom: 12px; }
+    .param-list { margin: 10px 0 0; padding-left: 18px; color: #334155; }
+    .param-list li { margin: 4px 0; }
+    .empty-tests { padding: 28px; text-align: center; color: #64748b; background: #fff; border: 1px solid #dce4f2; border-radius: 8px; }
+    @media (max-width: 760px) { .test-toolbar { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-  <div class="topbar"><div class="container"><div>📍 Allalpatti, Laheriasarai, Darbhanga, Bihar | Home Sample Collection Available</div><div>📞 +91 9234277007 | ✉️ khuntest@yahoo.com</div></div></div>
+  <div class="topbar"><div class="container"><div>Allalpatti, Laheriasarai, Darbhanga, Bihar | Home Sample Collection Available</div><div>+91 9234277007 | khuntest@yahoo.com</div></div></div>
   <nav class="nav"><div class="container nav-inner"><a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab Logo"><span>KhunTest Lab</span></a><input class="nav-toggle" id="navToggle" type="checkbox"><label class="nav-toggle-label" for="navToggle">☰</label><div class="menu"><a href="index.html">Home</a><a href="about.html">About</a><a href="tests.html">All Tests</a><a href="packages.html">Packages</a><a href="home-collection.html">Home Collection</a><a href="contact.html">Contact</a><a href="patient-login.html">Patient</a><a href="admin-login.html">Admin</a></div><a class="btn btn-red" href="booking.html">Book Now</a></div></nav>
 
-  <section class="page-hero"><div class="container"><h1>All Tests</h1><p>Common diagnostic tests and profiles for routine care, wellness screening and follow-up reports.</p></div></section>
+  <section class="page-hero"><div class="container"><h1>All Tests</h1><p>Search the live KhunTest Lab catalog and book centre visit or home collection.</p></div></section>
   <section class="section">
     <div class="container">
-      <div class="section-head"><div><h2>Popular Lab Tests</h2><p class="lead">Select a test and book home collection or centre visit.</p></div><a class="btn btn-outline" href="booking.html">Book Now</a></div>
-      <div class="grid grid-4">
-        <div class="card test-card"><div class="icon">🩸</div><h3>CBC Blood Test</h3><p>Blood Test • Report: Same Day</p><div class="price">₹399</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">🧬</div><h3>Thyroid Profile</h3><p>Hormone • Report: 24 Hours</p><div class="price">₹699</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">❤️</div><h3>Lipid Profile</h3><p>Heart Health • Report: 24 Hours</p><div class="price">₹799</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">🩺</div><h3>Diabetes Test</h3><p>Diabetes • Report: Same Day</p><div class="price">₹499</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">☀️</div><h3>Vitamin D/B12</h3><p>Vitamin • Report: 24 Hours</p><div class="price">₹1299</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">✅</div><h3>Full Body Checkup</h3><p>Package • Report: 24-48 Hours</p><div class="price">₹1999</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">🧫</div><h3>Liver Function Test</h3><p>Organ Profile • Report: 24 Hours</p><div class="price">₹899</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
-        <div class="card test-card"><div class="icon">💧</div><h3>Kidney Function Test</h3><p>Organ Profile • Report: 24 Hours</p><div class="price">₹899</div><br><a class="btn btn-red btn-small" href="booking.html">Book Now</a></div>
+      <div class="section-head"><div><h2>Test Catalog</h2><p class="lead" id="catalogLead">Loading tests...</p></div><a class="btn btn-outline" href="booking.html">Book Now</a></div>
+      <div class="test-toolbar">
+        <input id="testSearch" placeholder="Search test, code, parameter...">
+        <select id="categoryFilter"><option value="">All categories</option></select>
       </div>
+      <div class="test-count-row"><span id="resultCount">0 tests</span><span id="loadingText">Loading from Firestore...</span></div>
+      <div class="grid grid-4" id="testsGrid"></div>
+      <div class="empty-tests hidden" id="emptyTests">No tests imported yet. Admin should import tests first.</div>
     </div>
   </section>
 
-  <footer class="footer"><div class="container footer-grid"><div><h3>KhunTest Lab</h3><p>Accurate, reliable and trusted diagnostic services with home sample collection, online reports and health packages.</p></div><div><h4>Public Website</h4><a href="about.html">About Us</a><a href="tests.html">All Tests</a><a href="packages.html">Health Packages</a><a href="home-collection.html">Home Collection</a><a href="contact.html">Contact</a></div><div><h4>Portals</h4><a href="booking.html">Book Test Online</a><a href="patient-login.html">Patient Login</a><a href="admin-login.html">Admin Login</a></div><div><h4>Contact</h4><p>📞 +91 9234277007</p><p>💬 WhatsApp: +91 9234277007</p><p>📍 Allalpatti, Laheriasarai, Darbhanga, Bihar</p><p>✉️ khuntest@yahoo.com</p></div></div><div class="container copy">©️ 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601</div></footer>
+  <footer class="footer"><div class="container footer-grid"><div><h3>KhunTest Lab</h3><p>Accurate, reliable and trusted diagnostic services with home sample collection, online reports and health packages.</p></div><div><h4>Public Website</h4><a href="about.html">About Us</a><a href="tests.html">All Tests</a><a href="packages.html">Health Packages</a><a href="home-collection.html">Home Collection</a><a href="contact.html">Contact</a></div><div><h4>Portals</h4><a href="booking.html">Book Test Online</a><a href="patient-login.html">Patient Login</a><a href="admin-login.html">Admin Login</a></div><div><h4>Contact</h4><p>+91 9234277007</p><p>WhatsApp: +91 9234277007</p><p>Allalpatti, Laheriasarai, Darbhanga, Bihar</p><p>khuntest@yahoo.com</p></div></div><div class="container copy">© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. +91 9142579601</div></footer>
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KhunTest%20Lab%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
   <script src="app.js"></script>
+  <script type="module">
+    import { getTests } from "./firebase-service.js";
+
+    let allTests = [];
+    const $ = (id) => document.getElementById(id);
+    const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+    const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
+
+    function matches(test, q, category) {
+      if (category && test.category !== category) return false;
+      if (!q) return true;
+      const haystack = [
+        test.testCode,
+        test.name,
+        test.category,
+        ...(test.searchKeywords || []),
+        ...(test.parameters || []).map((p) => p.name).slice(0, 20)
+      ].join(" ").toLowerCase();
+      return haystack.includes(q);
+    }
+
+    function renderCategories() {
+      const categories = Array.from(new Set(allTests.map((t) => t.category).filter(Boolean))).sort();
+      $("categoryFilter").innerHTML = '<option value="">All categories</option>' + categories.map((cat) => `<option>${safe(cat)}</option>`).join("");
+    }
+
+    window.toggleParams = function(index) {
+      const box = document.getElementById(`params-${index}`);
+      if (box) box.classList.toggle("hidden");
+    };
+
+    function renderTests() {
+      const q = $("testSearch").value.trim().toLowerCase();
+      const category = $("categoryFilter").value;
+      const rows = allTests.filter((test) => matches(test, q, category));
+      $("resultCount").textContent = `${rows.length} of ${allTests.length} tests`;
+      $("emptyTests").classList.toggle("hidden", allTests.length !== 0);
+      $("testsGrid").innerHTML = rows.map((test, index) => `
+        <div class="card test-card">
+          <h3>${safe(test.name)}</h3>
+          <p>${safe(test.category)} • ${safe(test.reportTime || "Same Day")}</p>
+          <p><b>${safe(test.parameters?.length || 0)}</b> parameters</p>
+          <div class="price">${rupees(test.price)}</div>
+          <br>
+          <button class="btn btn-outline btn-small" type="button" onclick="toggleParams(${index})">View Parameters</button>
+          <a class="btn btn-red btn-small" href="booking.html?test=${encodeURIComponent(test.testCode || test.name)}">Book Now</a>
+          <ul class="param-list hidden" id="params-${index}">
+            ${(test.parameters || []).map((p) => `<li><b>${safe(p.name)}</b>${p.normalRange ? ` - ${safe(p.normalRange)}` : ""}${p.unit ? ` ${safe(p.unit)}` : ""}</li>`).join("")}
+          </ul>
+        </div>
+      `).join("");
+    }
+
+    async function load() {
+      try {
+        allTests = await getTests();
+        $("catalogLead").textContent = `${allTests.length} active tests loaded from Firestore.`;
+        $("loadingText").textContent = "";
+        renderCategories();
+        renderTests();
+      } catch (err) {
+        console.error(err);
+        $("catalogLead").textContent = "Unable to load tests from Firestore.";
+        $("loadingText").textContent = err.message || "Load failed";
+        $("emptyTests").classList.remove("hidden");
+      }
+    }
+
+    $("testSearch").addEventListener("input", renderTests);
+    $("categoryFilter").addEventListener("change", renderTests);
+    load();
+  </script>
 </body>
 </html>

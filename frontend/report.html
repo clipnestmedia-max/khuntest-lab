@@ -59,6 +59,10 @@
       font-size: 12px;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
     .report-page {
       width: 210mm;
       min-height: 297mm;
@@ -313,6 +317,7 @@
 <body>
   <div class="no-print">
     <button onclick="window.print()">Print Report</button>
+    <button id="shareWhatsAppBtn" class="hidden" onclick="shareReportWhatsApp()">Share on WhatsApp</button>
     <button class="back-btn" onclick="history.back()">Back</button>
     <div class="print-note">Print settings: A4 portrait, scale 100%, margins none/default, background graphics enabled if needed.</div>
   </div>
@@ -372,7 +377,7 @@
         testName,
         parameterName: pick(row, ["parameterName", "parameter_name", "parameter", "test_parameter", "name"], testName),
         resultValue: pick(row, ["resultValue", "result_value", "value", "finding", "result"], ""),
-        normalValue: pick(row, ["normalValue", "normal_value", "referenceRange", "reference_range", "range", "normal"], ""),
+        normalValue: pick(row, ["normalRange", "normalValue", "normal_value", "referenceRange", "reference_range", "range", "normal"], ""),
         unit: pick(row, ["unit", "units"], ""),
         method: pick(row, ["method", "methodName", "method_name"], ""),
         sample: pick(row, ["sample", "sampleType", "sample_type"], ""),
@@ -539,7 +544,24 @@
       const app = document.getElementById("app");
       app.className = "";
       app.innerHTML = pages.join("");
+      window.currentReportForShare = { report, billNo };
+      const shareBtn = document.getElementById("shareWhatsAppBtn");
+      const phone = String(report.whatsapp || report.phone || "").replace(/\D/g, "");
+      shareBtn.classList.toggle("hidden", !phone);
     }
+
+    window.shareReportWhatsApp = function() {
+      const current = window.currentReportForShare;
+      if (!current) return;
+      const { report, billNo } = current;
+      const phone = String(report.whatsapp || report.phone || "").replace(/\D/g, "");
+      if (!phone) return;
+      const fullPhone = phone.length === 10 ? "91" + phone : phone;
+      const patientName = pick(report, ["patientName", "patient_name", "name"], "Patient");
+      const reportUrl = `https://khuntest-lab-e5966.web.app/report.html?bill=${encodeURIComponent(billNo)}`;
+      const message = `Hello ${patientName},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
+      window.open(`https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`, "_blank");
+    };
 
     function showError(message) {
       const app = document.getElementById("app");

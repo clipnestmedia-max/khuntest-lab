@@ -126,7 +126,7 @@ function saveFindingPanel(){
 function paintFindingRows(rows){
   const tbody=document.getElementById('findingRows'); if(!tbody) return;
   tbody.innerHTML = rows.map((t,i)=>`<tr>
-    <td><input value="${escapeHtml(t.name||'')}" data-r="name" data-i="${i}"><input type="hidden" data-r="details" data-i="${i}" value='${escapeHtml(JSON.stringify(t.details||[]))}'></td>
+    <td><input value="${escapeHtml(t.name||'')}" data-r="name" data-i="${i}"><input type="hidden" data-r="testName" data-i="${i}" value="${escapeHtml(t.testName||'')}"><input type="hidden" data-r="category" data-i="${i}" value="${escapeHtml(t.category||'')}"><input type="hidden" data-r="method" data-i="${i}" value="${escapeHtml(t.method||'')}"><input type="hidden" data-r="sample" data-i="${i}" value="${escapeHtml(t.sample||'')}"><input type="hidden" data-r="details" data-i="${i}" value='${escapeHtml(JSON.stringify(t.details||[]))}'></td>
     <td><input value="${escapeHtml(t.normal||'')}" data-r="normal" data-i="${i}"></td>
     <td><input value="${escapeHtml(t.finding||'')}" data-r="finding" data-i="${i}" placeholder="Enter result value"></td>
     <td><input value="${escapeHtml(t.unit||'')}" data-r="unit" data-i="${i}"></td>

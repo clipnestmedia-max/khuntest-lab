@@ -71,14 +71,23 @@
           <input name="email" type="email" required placeholder="Use this email in patient login">
           <div class="two">
             <div>
-              <label>Test / Package</label>
-              <select id="testSelect" name="test" required></select>
+              <label>Search Test</label>
+              <input id="testSearch" list="testCatalogList" placeholder="Search by test name or code">
+              <datalist id="testCatalogList"></datalist>
             </div>
             <div>
               <label>Booking Type</label>
               <select name="bookingType"><option>Home Collection</option><option>Centre Visit</option></select>
             </div>
           </div>
+          <button class="btn btn-outline btn-small" type="button" id="addTestBtn">Add Test</button>
+          <div class="table-card" style="margin:14px 0;">
+            <table>
+              <thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Action</th></tr></thead>
+              <tbody id="selectedTestsBody"><tr><td colspan="5">No test selected.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="notice">Total Amount: <b id="bookingTotal">₹0</b></div>
           <div class="two">
             <div>
               <label>Date</label>
@@ -121,15 +130,88 @@
   </footer>
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KhunTest%20Lab%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
 
-  <script src="app.js"></script>
   <script type="module">
-    import { createBooking } from "./firebase-service.js";
+    import { createBooking, getTests } from "./firebase-service.js";
+
+    let catalog = [];
+    let selectedTests = [];
+    const $ = (id) => document.getElementById(id);
+    const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+    const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
+
+    function showMessage(kind, message) {
+      const el = $("bookingMsg");
+      el.className = kind;
+      el.textContent = message;
+      el.classList.remove("hidden");
+    }
+
+    function testLabel(test) {
+      return `${test.name} - ${rupees(test.price)} (${test.testCode})`;
+    }
+
+    function selectedTotal() {
+      return selectedTests.reduce((sum, test) => sum + Number(test.price || 0), 0);
+    }
+
+    function renderSelectedTests() {
+      $("bookingTotal").textContent = rupees(selectedTotal());
+      $("selectedTestsBody").innerHTML = selectedTests.length ? selectedTests.map((test, index) => `
+        <tr>
+          <td><b>${safe(test.name)}</b><br><small>${safe(test.testCode)}</small></td>
+          <td>${safe(test.category)}</td>
+          <td>${rupees(test.price)}</td>
+          <td>${safe(test.parameters?.length || 0)}</td>
+          <td><button class="btn btn-outline btn-small" type="button" onclick="removeSelectedTest(${index})">Remove</button></td>
+        </tr>
+      `).join("") : `<tr><td colspan="5">No test selected.</td></tr>`;
+    }
+
+    window.removeSelectedTest = function(index) {
+      selectedTests.splice(index, 1);
+      renderSelectedTests();
+    };
+
+    function addSelectedTest() {
+      const q = $("testSearch").value.trim().toLowerCase();
+      const test = catalog.find((item) => testLabel(item).toLowerCase() === q)
+        || catalog.find((item) => item.testCode.toLowerCase() === q || item.name.toLowerCase() === q)
+        || catalog.find((item) => item.name.toLowerCase().includes(q));
+      if (!test) {
+        showMessage("error", "Please select a valid test from the catalog.");
+        return;
+      }
+      if (selectedTests.some((item) => item.testCode === test.testCode && item.name === test.name)) {
+        showMessage("error", "This test is already selected.");
+        return;
+      }
+      selectedTests.push(test);
+      $("testSearch").value = "";
+      renderSelectedTests();
+    }
+
+    async function loadCatalog() {
+      catalog = await getTests();
+      $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
+      const requested = new URLSearchParams(location.search).get("test");
+      if (requested) {
+        const match = catalog.find((test) => test.testCode === requested || test.name === requested);
+        if (match) {
+          selectedTests = [match];
+          renderSelectedTests();
+        }
+      }
+      if (!catalog.length) showMessage("error", "No tests imported yet. Admin should import tests first.");
+    }
 
     window.bookTest = async function(e) {
       e.preventDefault();
       const f = e.target;
-      const opt = f.test.options[f.test.selectedIndex];
-      const price = Number(opt?.dataset?.price || 0);
+      if (!selectedTests.length) {
+        showMessage("error", "Please add at least one test.");
+        return;
+      }
+      const price = selectedTotal();
       const booking = {
         billNo: String(Math.floor(100000 + Math.random() * 900000)),
         patientName: f.patientName.value.trim(),
@@ -139,8 +221,9 @@
         whatsapp: f.phone.value.trim(),
         age: f.age.value,
         gender: f.gender.value,
-        tests: [{ name: f.test.value, price }],
-        test: f.test.value,
+        selectedTests,
+        tests: selectedTests,
+        test: selectedTests.map((test) => test.name).join(", "),
         totalAmount: price,
         grossTotal: price,
         bookingType: f.bookingType.value,
@@ -154,13 +237,24 @@
 
       try {
         const saved = await createBooking(booking);
-        showMsg("bookingMsg", "success", `Booking successful. Bill No is ${saved.billNo}. Login with same email to track reports.`);
+        showMessage("success", `Booking successful. Bill No is ${saved.billNo}. Login with same email to track reports.`);
+        selectedTests = [];
+        renderSelectedTests();
         f.reset();
       } catch (err) {
         console.error(err);
-        showMsg("bookingMsg", "error", err.message || "Booking could not be saved.");
+        showMessage("error", err.message || "Booking could not be saved.");
       }
     };
+
+    $("addTestBtn").addEventListener("click", addSelectedTest);
+    $("testSearch").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addSelectedTest();
+      }
+    });
+    loadCatalog().catch((err) => showMessage("error", err.message || "Could not load tests."));
   </script>
 </body>
 </html>

@@ -256,8 +256,9 @@
             <tbody>
               ${patientBookings.map((b, index) => {
                 const bill = b.bill_no || b.billNo || "";
-                const tests = Array.isArray(b.tests)
-                  ? b.tests.map(t => t.name || t.test_name || t.testName).filter(Boolean).join(", ")
+                const selectedTests = Array.isArray(b.selectedTests) && b.selectedTests.length ? b.selectedTests : (Array.isArray(b.tests) ? b.tests : []);
+                const tests = selectedTests.length
+                  ? selectedTests.map(t => t.name || t.test_name || t.testName).filter(Boolean).join(", ")
                   : (b.test || "-");
                 return `
                 <tr>

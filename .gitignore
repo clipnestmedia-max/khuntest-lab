@@ -9,6 +9,8 @@ node_modules/
 **/node_modules/
 *.zip
 *.sql
+database/*.sql
+backups/*.sql
 *.save
 *.bak
 *.old_backup

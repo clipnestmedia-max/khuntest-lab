@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Tests - KhunTest Lab</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .import-main { max-width: 1120px; margin: 0 auto; padding: 28px 18px 56px; }
+    .import-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+    .import-card { background: #fff; border: 1px solid #dce4f2; border-radius: 8px; padding: 18px; box-shadow: 0 10px 28px rgba(18, 38, 63, 0.08); }
+    .import-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .import-stat { border: 1px solid #e3eaf5; border-radius: 8px; padding: 12px; background: #f8fbff; }
+    .import-stat span { display: block; color: #5e6f86; font-size: 13px; }
+    .import-stat b { display: block; margin-top: 4px; color: #0b2447; font-size: 22px; }
+    .import-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+    .import-progress { width: 100%; height: 12px; border-radius: 99px; overflow: hidden; background: #e8edf5; margin: 12px 0; }
+    .import-progress div { width: 0%; height: 100%; background: #0f9d58; transition: width 0.2s ease; }
+    .import-log { min-height: 110px; max-height: 260px; overflow: auto; white-space: pre-wrap; border: 1px solid #dce4f2; border-radius: 8px; padding: 12px; background: #08111f; color: #d9e8ff; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+    .preview-table { margin-top: 18px; max-height: 440px; overflow: auto; }
+    .preview-table table { min-width: 860px; }
+    @media (max-width: 760px) {
+      .import-head { align-items: flex-start; flex-direction: column; }
+      .import-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab"><span>KHUNTEST LAB</span></a>
+      <div class="side-menu">
+        <a class="btn btn-outline" href="admin-dashboard.html">Dashboard</a>
+        <a class="btn btn-outline" href="tests.html">Public Tests</a>
+        <button id="logoutBtn" type="button">Logout</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="import-main">
+        <div class="import-head">
+          <div>
+            <h1>Import Tests</h1>
+            <p>Load the extracted SQL backup catalog into the Firestore <b>tests</b> collection.</p>
+          </div>
+          <a class="btn btn-red" href="admin-dashboard.html">Back to Admin</a>
+        </div>
+
+        <section class="import-card">
+          <div class="import-stats">
+            <div class="import-stat"><span>Tests in JSON</span><b id="testCount">0</b></div>
+            <div class="import-stat"><span>Parameters</span><b id="parameterCount">0</b></div>
+            <div class="import-stat"><span>Firestore</span><b id="remoteCount">-</b></div>
+            <div class="import-stat"><span>Status</span><b id="statusText">Checking</b></div>
+          </div>
+
+          <div class="import-actions">
+            <button class="btn btn-outline" id="reloadBtn" type="button">Reload JSON</button>
+            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update Firestore</button>
+          </div>
+
+          <div class="import-progress"><div id="progressBar"></div></div>
+          <div class="import-log" id="logBox"></div>
+
+          <div class="table-card preview-table">
+            <table>
+              <thead><tr><th>Code</th><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th></tr></thead>
+              <tbody id="previewBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import { getCurrentUserRole, logoutUser } from "./firebase-service.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      collection,
+      doc,
+      getCountFromServer,
+      getDoc,
+      serverTimestamp,
+      writeBatch
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const CHUNK_SIZE = 450;
+    let tests = [];
+
+    const $ = (id) => document.getElementById(id);
+    const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+    const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
+    const docIdFor = (test) => String(test.slug || `${test.testCode || ""}-${test.name || ""}`)
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 100);
+
+    function log(message) {
+      const now = new Date().toLocaleTimeString("en-IN");
+      $("logBox").textContent += `[${now}] ${message}\n`;
+      $("logBox").scrollTop = $("logBox").scrollHeight;
+    }
+
+    function setProgress(done, total) {
+      $("progressBar").style.width = total ? `${Math.round((done / total) * 100)}%` : "0%";
+    }
+
+    async function requireAdmin() {
+      const user = await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (current) => {
+          unsub();
+          resolve(current);
+        });
+      });
+      if (!user) {
+        window.location.href = "admin-login.html";
+        return false;
+      }
+      const role = await getCurrentUserRole();
+      if (role !== "admin") {
+        await logoutUser();
+        window.location.href = "admin-login.html";
+        return false;
+      }
+      return true;
+    }
+
+    async function loadRemoteCount() {
+      try {
+        const snap = await getCountFromServer(collection(db, "tests"));
+        $("remoteCount").textContent = snap.data().count;
+      } catch (err) {
+        $("remoteCount").textContent = "Error";
+        log(`Could not read Firestore count: ${err.message}`);
+      }
+    }
+
+    function renderPreview() {
+      $("testCount").textContent = tests.length;
+      $("parameterCount").textContent = tests.reduce((sum, test) => sum + (test.parameters?.length || 0), 0);
+      $("previewBody").innerHTML = tests.slice(0, 25).map((test) => `
+        <tr>
+          <td>${safe(test.testCode)}</td>
+          <td><b>${safe(test.name)}</b></td>
+          <td>${safe(test.category)}</td>
+          <td>${rupees(test.price)}</td>
+          <td>${safe(test.parameters?.length || 0)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="5">No tests found in JSON.</td></tr>`;
+    }
+
+    async function loadTests() {
+      $("statusText").textContent = "Loading";
+      $("importBtn").disabled = true;
+      setProgress(0, 0);
+      const response = await fetch("./data/tests.json", { cache: "no-store" });
+      if (!response.ok) throw new Error(`Could not load data/tests.json (${response.status})`);
+      tests = await response.json();
+      renderPreview();
+      await loadRemoteCount();
+      $("statusText").textContent = "Ready";
+      $("importBtn").disabled = !tests.length;
+      log(`Loaded ${tests.length} tests from data/tests.json.`);
+    }
+
+    async function importTests() {
+      if (!tests.length) return;
+      if (!confirm(`Import or update ${tests.length} tests in Firestore?`)) return;
+
+      $("importBtn").disabled = true;
+      $("statusText").textContent = "Importing";
+      let done = 0;
+      let imported = 0;
+      let updated = 0;
+      let skipped = 0;
+      const errors = [];
+
+      try {
+        for (let start = 0; start < tests.length; start += CHUNK_SIZE) {
+          const batch = writeBatch(db);
+          const chunk = tests.slice(start, start + CHUNK_SIZE);
+          for (const test of chunk) {
+            if (!test.name) {
+              skipped++;
+              continue;
+            }
+            const ref = doc(db, "tests", docIdFor(test));
+            const exists = await getDoc(ref).then((snap) => snap.exists()).catch((err) => {
+              errors.push(`${test.name}: ${err.message}`);
+              return false;
+            });
+            const payload = {
+              name: test.name,
+              nameLower: test.nameLower || String(test.name).toLowerCase(),
+              testCode: String(test.testCode || ""),
+              category: test.category || "Lab Test",
+              price: Number(test.price || 0),
+              sample: test.sample || "",
+              reportTime: test.reportTime || "Same Day",
+              isActive: test.isActive !== false,
+              parameters: Array.isArray(test.parameters) ? test.parameters : [],
+              searchKeywords: Array.isArray(test.searchKeywords) ? test.searchKeywords : [],
+              sourceId: test.sourceId || null,
+              slug: docIdFor(test),
+              updatedAt: serverTimestamp(),
+              importedAt: serverTimestamp()
+            };
+            if (!exists) payload.createdAt = serverTimestamp();
+            batch.set(ref, payload, { merge: true });
+            if (exists) updated++; else imported++;
+          }
+          await batch.commit();
+          done += chunk.length;
+          setProgress(done, tests.length);
+          log(`Imported ${done}/${tests.length} tests.`);
+        }
+        $("statusText").textContent = "Done";
+        await loadRemoteCount();
+        log(`Firestore tests import completed. Imported: ${imported}, updated: ${updated}, skipped: ${skipped}, errors: ${errors.length}.`);
+        errors.slice(0, 10).forEach((error) => log(`Error: ${error}`));
+      } catch (err) {
+        $("statusText").textContent = "Error";
+        log(`Import failed: ${err.message}`);
+      } finally {
+        $("importBtn").disabled = false;
+      }
+    }
+
+    $("reloadBtn").addEventListener("click", () => loadTests().catch((err) => log(err.message)));
+    $("importBtn").addEventListener("click", importTests);
+    $("logoutBtn").addEventListener("click", async () => {
+      await logoutUser();
+      window.location.href = "admin-login.html";
+    });
+
+    if (await requireAdmin()) {
+      await loadTests().catch((err) => {
+        $("statusText").textContent = "Error";
+        log(err.message);
+      });
+    }
+  </script>
+</body>
+</html>
