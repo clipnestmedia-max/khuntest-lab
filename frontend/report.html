@@ -1,256 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KhunTest Lab Report</title>
-
   <style>
     @page {
-      size: A4;
-      margin: 10mm 12mm;
+      size: A4 portrait;
+      margin: 0;
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html,
     body {
       margin: 0;
       padding: 0;
       background: #e5e7eb;
-      font-family: Arial, Helvetica, sans-serif;
       color: #000;
-      font-size: 12px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11.5px;
+      line-height: 1.22;
     }
 
     .no-print {
-      text-align: center;
-      padding: 14px;
-      background: #f8fafc;
-      border-bottom: 1px solid #cbd5e1;
       position: sticky;
       top: 0;
-      z-index: 9999;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid #cbd5e1;
     }
 
     .no-print button {
-      background: #062b5f;
-      color: #fff;
-      border: none;
-      padding: 10px 18px;
+      border: 0;
       border-radius: 8px;
+      padding: 10px 16px;
+      background: #062b59;
+      color: #fff;
       font-weight: 700;
       cursor: pointer;
-      margin: 4px;
     }
 
     .no-print .back-btn {
       background: #d60000;
     }
 
-    .report-page {
-      width: 210mm;
-      min-height: 297mm;
-      margin: 18px auto;
-      background: #fff;
-      padding: 13mm 12mm 10mm 12mm;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.18);
-      position: relative;
-    }
-
-    .lab-header {
+    .print-note {
+      width: 100%;
+      color: #334155;
       text-align: center;
-      border-bottom: 2px solid #000;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-    }
-
-    .lab-name {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      color: #062b5f;
-      text-transform: uppercase;
-      margin-bottom: 3px;
-    }
-
-    .lab-subtitle {
-      font-size: 11px;
-      font-weight: 700;
-      color: #d60000;
-      margin-bottom: 3px;
-    }
-
-    .lab-address {
-      font-size: 10px;
-      line-height: 1.35;
-    }
-
-    .patient-block {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px 26px;
-      margin-top: 10px;
-      margin-bottom: 12px;
-    }
-
-    .info-row {
-      display: grid;
-      grid-template-columns: 112px 10px 1fr;
-      min-height: 18px;
-      line-height: 1.35;
       font-size: 12px;
     }
 
-    .info-row .label {
-      font-weight: 700;
-      text-transform: uppercase;
+    .report-page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 16px auto;
+      background: #fff;
+      box-shadow: 0 0 12px rgba(0,0,0,0.15);
+      padding: 18mm 14mm 14mm 14mm;
+      position: relative;
+      overflow: hidden;
     }
 
-    .info-row .colon {
-      font-weight: 700;
-      text-align: center;
+    .report-header {
+      border-top: 2px solid #111;
+      border-bottom: 1.4px solid #111;
+      padding: 3mm 2mm 2mm;
+      display: grid;
+      grid-template-columns: 34mm 1fr 32mm 63mm;
+      gap: 4mm;
+      align-items: center;
     }
 
-    .info-row .value {
+    .barcode {
+      height: 18mm;
+      width: 18mm;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          #000 0,
+          #000 1.2px,
+          #fff 1.2px,
+          #fff 3.4px,
+          #000 3.4px,
+          #000 4.2px,
+          #fff 4.2px,
+          #fff 6.4px
+        );
+    }
+
+    .patient-left,
+    .patient-right {
+      display: grid;
+      gap: 2px;
+    }
+
+    .info-line {
+      display: grid;
+      grid-template-columns: auto 8px 1fr;
+      gap: 2px;
+      min-height: 14px;
+      align-items: baseline;
+    }
+
+    .info-line .label {
+      font-weight: 700;
+    }
+
+    .info-line .value {
       font-weight: 600;
+      word-break: break-word;
     }
 
-    .status-final {
+    .info-line .status {
       font-weight: 800;
     }
 
-    .report-title {
-      text-align: center;
-      font-size: 13px;
-      font-weight: 800;
-      text-transform: uppercase;
-      margin: 10px 0 6px 0;
-      text-decoration: underline;
+    .qr {
+      width: 23mm;
+      height: 23mm;
+      margin-inline: auto;
+      border: 1px solid #111;
+      background:
+        linear-gradient(90deg, #000 8%, transparent 8% 15%, #000 15% 22%, transparent 22% 36%, #000 36% 47%, transparent 47% 58%, #000 58% 69%, transparent 69% 80%, #000 80%),
+        linear-gradient(#fff, #fff);
+      opacity: .88;
     }
 
     .result-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 6px;
-      font-size: 12px;
+      table-layout: fixed;
+      margin-top: 0;
+      font-size: 11.5px;
     }
 
     .result-table th {
-      text-align: left;
-      border-bottom: 1.5px solid #000;
-      border-top: 1.5px solid #000;
-      padding: 5px 4px;
+      padding: 3px 5px 4px;
+      border-top: 1.4px solid #111;
+      border-bottom: 1.4px solid #111;
+      text-align: center;
+      font-size: 14px;
       font-weight: 800;
     }
 
     .result-table td {
-      padding: 3.5px 4px;
+      padding: 3.2px 5px;
       vertical-align: top;
-      line-height: 1.3;
     }
 
-    .result-table .test-col {
-      width: 43%;
+    .test-col {
+      width: 40%;
     }
 
-    .result-table .result-col {
-      width: 16%;
-      text-align: left;
-      font-weight: 700;
+    .result-col {
+      width: 17%;
+      text-align: center;
     }
 
-    .result-table .range-col {
+    .range-col {
       width: 29%;
+      text-align: center;
     }
 
-    .result-table .unit-col {
-      width: 12%;
+    .unit-col {
+      width: 14%;
+      text-align: center;
     }
 
-    .section-row td {
-      font-weight: 800;
-      padding-top: 8px;
-      padding-bottom: 4px;
+    .category-row td {
+      padding: 5px 5px 4px;
+      text-align: center;
+      text-decoration: underline;
       text-transform: uppercase;
-    }
-
-    .main-test-row td {
       font-weight: 800;
-      padding-top: 5px;
-      text-transform: uppercase;
     }
 
-    .method-row td {
-      font-size: 10.2px;
+    .group-row td {
+      padding-top: 7px;
+      font-weight: 800;
+      text-transform: none;
+    }
+
+    .result-value {
+      font-weight: 400;
+    }
+
+    .note-row td {
       padding-top: 0;
-      padding-bottom: 4px;
-      color: #111;
+      font-size: 10.7px;
+      font-style: italic;
       line-height: 1.25;
     }
 
-    .description-row td {
-      font-size: 10.5px;
-      line-height: 1.35;
-      text-align: justify;
-      padding-top: 4px;
+    .subhead-row td {
+      padding-top: 7px;
+      font-weight: 800;
+      text-decoration: underline;
     }
 
-    .end-report {
+    .comment-row td {
+      padding-top: 7px;
+      font-size: 10.4px;
+      line-height: 1.35;
+      text-align: justify;
+    }
+
+    .end-area {
+      margin: 6px 5mm 0;
+      border-top: 1px dotted #111;
       text-align: center;
       font-weight: 800;
-      margin-top: 18px;
+      padding-top: 8px;
       font-size: 12px;
     }
 
-    .signature-area {
-      margin-top: 35px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      font-size: 11px;
+    .continued {
+      margin-top: 7px;
+      text-align: right;
+      font-size: 10.5px;
+      font-style: italic;
     }
 
-    .signature-box {
-      text-align: center;
-      padding-top: 28px;
-    }
-
-    .signature-line {
-      border-top: 1px solid #000;
-      padding-top: 5px;
-      font-weight: 700;
-    }
-
+    .loading,
     .error-box {
-      max-width: 700px;
+      max-width: 760px;
       margin: 70px auto;
-      background: #fff;
-      border-radius: 14px;
       padding: 28px;
+      border-radius: 14px;
+      background: #fff;
       text-align: center;
-      color: #991b1b;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 35px rgba(0,0,0,.15);
       font-weight: 700;
     }
 
     .loading {
-      max-width: 700px;
-      margin: 70px auto;
-      background: #fff;
-      border-radius: 14px;
-      padding: 28px;
-      text-align: center;
-      color: #062b5f;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.15);
-      font-weight: 700;
+      color: #062b59;
+    }
+
+    .error-box {
+      color: #991b1b;
+    }
+
+    @media (max-width: 900px) {
+      .report-page {
+        width: min(210mm, calc(100vw - 24px));
+        min-height: auto;
+        padding: 16mm 7mm 12mm;
+      }
+
+      .report-header {
+        grid-template-columns: 24mm 1fr;
+      }
+
+      .qr {
+        display: none;
+      }
+
+      .patient-right {
+        grid-column: 1 / -1;
+      }
     }
 
     @media print {
+      html,
       body {
-        background: #fff !important;
-        font-size: 12px;
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0;
+        padding: 0;
+        background: #fff;
       }
 
       .no-print {
@@ -258,15 +285,22 @@
       }
 
       .report-page {
-        width: auto;
-        min-height: auto;
+        width: 210mm;
+        min-height: 297mm;
+        height: 297mm;
+        box-sizing: border-box;
+        padding: 18mm 14mm 14mm 14mm;
+        page-break-after: always;
+        break-after: page;
+        background: #fff;
+        overflow: hidden;
         margin: 0;
-        padding: 0;
         box-shadow: none;
       }
 
-      .lab-header {
-        margin-top: 0;
+      .report-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
       }
 
       a {
@@ -276,20 +310,26 @@
     }
   </style>
 </head>
-
 <body>
   <div class="no-print">
-    <button onclick="window.print()">Print / Save PDF</button>
+    <button onclick="window.print()">Print Report</button>
     <button class="back-btn" onclick="history.back()">Back</button>
+    <div class="print-note">Print settings: A4 portrait, scale 100%, margins none/default, background graphics enabled if needed.</div>
   </div>
 
-  <div id="app" class="loading">Loading report...</div>
+  <main id="app" class="loading">Loading report...</main>
 
   <script type="module">
     import { getReportByBillNo } from "./firebase-service.js";
 
+    const ROWS_PER_PAGE = 25;
+
+    function getParams() {
+      return new URLSearchParams(window.location.search);
+    }
+
     function getBillNo() {
-      const params = new URLSearchParams(window.location.search);
+      const params = getParams();
       return params.get("bill") || params.get("billNo") || params.get("bill_no") || "";
     }
 
@@ -306,178 +346,158 @@
     function pick(obj, keys, fallback = "") {
       if (!obj) return fallback;
       for (const key of keys) {
-        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
-          return obj[key];
-        }
+        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== "") return obj[key];
       }
       return fallback;
     }
 
     function formatDate(value) {
       if (!value) return "";
-      const d = value.toDate ? value.toDate() : new Date(value);
-      if (isNaN(d.getTime())) return value;
-      return d.toLocaleString("en-IN", {
+      const date = value.toDate ? value.toDate() : new Date(value);
+      if (isNaN(date.getTime())) return String(value);
+      return date.toLocaleString("en-IN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
-      });
+        minute: "2-digit",
+        hour12: false
+      }).replace(",", "");
+    }
+
+    function normalizeResult(row) {
+      const testName = pick(row, ["testName", "test_name", "test", "groupName", "group"], "");
+      return {
+        category: pick(row, ["category", "department", "section"], ""),
+        testName,
+        parameterName: pick(row, ["parameterName", "parameter_name", "parameter", "test_parameter", "name"], testName),
+        resultValue: pick(row, ["resultValue", "result_value", "value", "finding", "result"], ""),
+        normalValue: pick(row, ["normalValue", "normal_value", "referenceRange", "reference_range", "range", "normal"], ""),
+        unit: pick(row, ["unit", "units"], ""),
+        method: pick(row, ["method", "methodName", "method_name"], ""),
+        sample: pick(row, ["sample", "sampleType", "sample_type"], ""),
+        comment: pick(row, ["comment", "remarks", "description", "interpretation"], ""),
+        details: Array.isArray(row.details) ? row.details : [],
+        isHeading: Boolean(row.isHeading || row.heading || row.type === "heading")
+      };
     }
 
     function normalizeResults(results) {
       if (!Array.isArray(results)) return [];
-
-      return results.map((r) => {
-        return {
-          testName: pick(r, ["test_name", "testName", "test", "category"], ""),
-          parameterName: pick(r, ["parameter_name", "parameterName", "name", "test_parameter", "parameter"], ""),
-          resultValue: pick(r, ["result_value", "resultValue", "value", "finding", "result"], ""),
-          normalValue: pick(r, ["normal_value", "normalValue", "range", "reference_range", "referenceRange"], ""),
-          unit: pick(r, ["unit", "units"], ""),
-          comment: pick(r, ["comment", "method", "remarks", "description"], "")
-        };
-      });
+      return results.map(normalizeResult).filter((row) => (
+        row.category || row.testName || row.parameterName || row.resultValue || row.normalValue || row.unit || row.comment || row.details.length
+      ));
     }
 
-    function buildResultRows(results) {
-      if (!results.length) {
-        return `
-          <tr>
-            <td colspan="4" style="text-align:center;padding:20px;font-weight:700;">
-              Report result not available.
-            </td>
-          </tr>
-        `;
+    function groupResults(results) {
+      const groups = new Map();
+      results.forEach((row) => {
+        const category = row.category || "";
+        const testName = row.testName || row.parameterName || "Report";
+        const key = `${category}__${testName}`;
+        if (!groups.has(key)) {
+          groups.set(key, { category, testName, rows: [], comments: [] });
+        }
+        const group = groups.get(key);
+        group.rows.push(row);
+        if (row.comment && !row.method && !row.sample && row.parameterName === row.testName) {
+          group.comments.push(row.comment);
+        }
+      });
+      return Array.from(groups.values());
+    }
+
+    function chunkRows(rows) {
+      const chunks = [];
+      for (let i = 0; i < rows.length; i += ROWS_PER_PAGE) {
+        chunks.push(rows.slice(i, i + ROWS_PER_PAGE));
+      }
+      return chunks.length ? chunks : [[]];
+    }
+
+    function noteText(row) {
+      const parts = [];
+      if (row.sample) parts.push(`Sample-${row.sample}`);
+      if (row.method) parts.push(`Method- ${row.method}`);
+      return parts.join(" ");
+    }
+
+    function rowHtml(row) {
+      if (row.isHeading && row.parameterName) {
+        return `<tr class="subhead-row"><td colspan="4">${safe(row.parameterName)}</td></tr>`;
       }
 
-      let html = "";
-      let lastGroup = "";
+      let html = `
+        <tr>
+          <td class="test-col">${safe(row.parameterName || row.testName)}</td>
+          <td class="result-col result-value">${safe(row.resultValue)}</td>
+          <td class="range-col">${safe(row.normalValue)}</td>
+          <td class="unit-col">${safe(row.unit)}</td>
+        </tr>
+      `;
 
-      results.forEach((r) => {
-        const group = r.testName || "";
+      const note = noteText(row);
+      if (note) {
+        html += `<tr class="note-row"><td colspan="4">${safe(note)}</td></tr>`;
+      }
 
-        if (group && group !== lastGroup) {
-          html += `
-            <tr class="section-row">
-              <td colspan="4">${safe(group)}</td>
-            </tr>
-          `;
-          lastGroup = group;
-        }
+      if (row.comment && (row.method || row.sample || row.parameterName !== row.testName)) {
+        html += `<tr class="comment-row"><td colspan="4">${safe(row.comment)}</td></tr>`;
+      }
 
+      row.details.forEach((detail) => {
+        const detailRow = normalizeResult(detail);
         html += `
           <tr>
-            <td class="test-col">${safe(r.parameterName)}</td>
-            <td class="result-col">${safe(r.resultValue)}</td>
-            <td class="range-col">${safe(r.normalValue)}</td>
-            <td class="unit-col">${safe(r.unit)}</td>
+            <td class="test-col">${safe(detailRow.parameterName || detailRow.testName)}</td>
+            <td class="result-col result-value">${safe(detailRow.resultValue)}</td>
+            <td class="range-col">${safe(detailRow.normalValue)}</td>
+            <td class="unit-col">${safe(detailRow.unit)}</td>
           </tr>
         `;
-
-        if (r.comment) {
-          html += `
-            <tr class="method-row">
-              <td colspan="4">${safe(r.comment)}</td>
-            </tr>
-          `;
-        }
+        const detailNote = noteText(detailRow);
+        if (detailNote) html += `<tr class="note-row"><td colspan="4">${safe(detailNote)}</td></tr>`;
       });
 
       return html;
     }
 
-    async function loadReport() {
-      const billNo = getBillNo();
+    function patientHeader(report, billNo) {
+      const patientName = pick(report, ["patientName", "patient_name", "name"], "");
+      const age = pick(report, ["age", "patient_age"], "");
+      const gender = pick(report, ["gender", "patient_gender"], "");
+      const refBy = pick(report, ["refBy", "ref_by", "doctor", "refDoctor", "ref_doctor"], "");
+      const collectionDate = pick(report, ["collectionDate", "collection_date", "collDate", "createdAt"], "");
+      const registeredDate = pick(report, ["registeredDate", "registered_date", "createdAt", "created_at"], "");
+      const reportedDate = pick(report, ["reportedDate", "reportingDate", "reporting_date", "releasedAt", "updatedAt"], "");
+      const status = pick(report, ["reportStatus", "report_status", "status"], "Final");
 
-      if (!billNo) {
-        document.getElementById("app").className = "error-box";
-        document.getElementById("app").innerHTML = "Bill number missing in report link.";
-        return;
-      }
-
-      try {
-        const report = await getReportByBillNo(billNo);
-
-        if (!report) {
-          throw new Error("Report is not released yet or bill number was not found.");
-        }
-
-        const booking = report || {};
-        const results = normalizeResults(report.results || []);
-
-        if (!results.length) {
-          document.getElementById("app").className = "error-box";
-          document.getElementById("app").innerHTML = `
-            Report is not released yet or result was not saved permanently.<br><br>
-            Bill No: ${safe(billNo)}
-          `;
-          return;
-        }
-
-        const patientName = pick(booking, ["patient_name", "patientName", "name"], pick(results[0], ["patientName"], ""));
-        const age = pick(booking, ["patient_age", "age"], "");
-        const gender = pick(booking, ["patient_gender", "gender"], "");
-        const refBy = pick(booking, ["ref_doctor", "refDoctor", "doctor", "ref_by"], "");
-        const collectionDate = pick(booking, ["collection_date", "collectionDate", "admission_date", "created_at"], "");
-        const registeredDate = pick(booking, ["createdAt", "registered_date", "registeredDate", "created_at"], "");
-        const reportedDate = pick(booking, ["releasedAt", "reporting_date", "reportedDate", "updated_at"], "");
-        const status = pick(booking, ["report_status", "status"], "Final");
-
-        document.title = "Report - " + billNo;
-
-        document.getElementById("app").className = "report-page";
-        document.getElementById("app").innerHTML = `
-          <div class="lab-header">
-            <div class="lab-name">KhunTest Lab</div>
-            <div class="lab-subtitle">Accurate • Reliable • Trusted</div>
-            <div class="lab-address">
-              Diagnostic Centre | Darbhanga, Bihar<br>
-              Online Report Verification & Patient Report
-            </div>
+      return `
+        <header class="report-header">
+          <div class="barcode" aria-hidden="true"></div>
+          <div class="patient-left">
+            <div class="info-line"><span class="label">PATIENT NAME</span><span>:</span><span class="value">${safe(patientName)}</span></div>
+            <div class="info-line"><span>Bill No</span><span>:</span><span class="value">${safe(billNo)}</span></div>
+            <div class="info-line"><span>Age/Gender</span><span>:</span><span class="value">${safe(age)}${age && gender ? "/" : ""}${safe(gender)}</span></div>
+            <div class="info-line"><span class="label">Report Status</span><span>:</span><span class="value status">${safe(status || "Final")}</span></div>
           </div>
-
-          <div class="patient-block">
-            <div>
-              <div class="info-row">
-                <div class="label">Patient Name</div><div class="colon">:</div>
-                <div class="value">${safe(patientName)}</div>
-              </div>
-              <div class="info-row">
-                <div class="label">Age/Gender</div><div class="colon">:</div>
-                <div class="value">${safe(age)}${age && gender ? "/" : ""}${safe(gender)}</div>
-              </div>
-              <div class="info-row">
-                <div class="label">Bill No</div><div class="colon">:</div>
-                <div class="value">${safe(billNo)}</div>
-              </div>
-              <div class="info-row">
-                <div class="label">Ref. By</div><div class="colon">:</div>
-                <div class="value">${safe(refBy)}</div>
-              </div>
-            </div>
-
-            <div>
-              <div class="info-row">
-                <div class="label">Collection Date</div><div class="colon">:</div>
-                <div class="value">${safe(formatDate(collectionDate))}</div>
-              </div>
-              <div class="info-row">
-                <div class="label">Registered Date</div><div class="colon">:</div>
-                <div class="value">${safe(formatDate(registeredDate))}</div>
-              </div>
-              <div class="info-row">
-                <div class="label">Reported Date</div><div class="colon">:</div>
-                <div class="value">${safe(formatDate(reportedDate))}</div>
-              </div>
-              <div class="info-row">
-                <div class="label">Report Status</div><div class="colon">:</div>
-                <div class="value status-final">${safe(status || "Final")}</div>
-              </div>
-            </div>
+          <div class="qr" aria-hidden="true"></div>
+          <div class="patient-right">
+            <div class="info-line"><span>Registered Date</span><span>:</span><span class="value">${safe(formatDate(registeredDate))}</span></div>
+            <div class="info-line"><span>Collection Date</span><span>:</span><span class="value">${safe(formatDate(collectionDate))}</span></div>
+            <div class="info-line"><span>Reported Date</span><span>:</span><span class="value">${safe(formatDate(reportedDate))}</span></div>
+            <div class="info-line"><span>Ref. By</span><span>:</span><span class="value">${safe(refBy)}</span></div>
           </div>
+        </header>
+      `;
+    }
 
+    function pageHtml(report, billNo, group, rows, pageIndex, pageCount) {
+      const showEnd = pageIndex === pageCount - 1;
+      const continuation = pageIndex > 0 ? " (Continued)" : "";
+      return `
+        <section class="report-page">
+          ${patientHeader(report, billNo)}
           <table class="result-table">
             <thead>
               <tr>
@@ -488,28 +508,103 @@
               </tr>
             </thead>
             <tbody>
-              ${buildResultRows(results)}
+              ${group.category ? `<tr class="category-row"><td colspan="4">${safe(group.category)}</td></tr>` : ""}
+              <tr class="group-row"><td colspan="4">${safe(group.testName)}${safe(continuation)}</td></tr>
+              ${rows.length ? rows.map(rowHtml).join("") : `<tr><td colspan="4" style="text-align:center;font-weight:700;padding:18px;">Report result not available.</td></tr>`}
+              ${showEnd && group.comments.length ? `<tr class="comment-row"><td colspan="4">${safe(group.comments.join(" "))}</td></tr>` : ""}
             </tbody>
           </table>
+          ${showEnd ? `<div class="end-area">*** End of Report ***</div>` : `<div class="continued">Continued on next page</div>`}
+        </section>
+      `;
+    }
 
-          <div class="end-report">*** End of Report ***</div>
+    function renderReport(report, billNo) {
+      const results = normalizeResults(report.results || report.reportResults || []);
+      if (!results.length) {
+        showError(`Report is not released yet or result was not saved permanently.<br><br>Bill No: ${safe(billNo)}`);
+        return;
+      }
 
-          <div class="signature-area">
-            <div class="signature-box">
-              <div class="signature-line">Lab Technician</div>
-            </div>
-            <div class="signature-box">
-              <div class="signature-line">Authorized Signatory</div>
-            </div>
-          </div>
-        `;
+      const groups = groupResults(results);
+      const pages = [];
+      groups.forEach((group) => {
+        const chunks = chunkRows(group.rows);
+        chunks.forEach((rows, index) => {
+          pages.push(pageHtml(report, billNo, group, rows, index, chunks.length));
+        });
+      });
+
+      document.title = "Report - " + billNo;
+      const app = document.getElementById("app");
+      app.className = "";
+      app.innerHTML = pages.join("");
+    }
+
+    function showError(message) {
+      const app = document.getElementById("app");
+      app.className = "error-box";
+      app.innerHTML = message;
+    }
+
+    function mockReport() {
+      const now = new Date("2026-04-28T14:42:00");
+      return {
+        billNo: "880",
+        patientName: "SOBHA DEVI",
+        age: "24y",
+        gender: "Female",
+        doctor: "Dr N.K SUMAN(MBBS, MD)",
+        status: "Final",
+        createdAt: "2026-04-28T12:56:00",
+        collectionDate: "2026-04-28T12:56:00",
+        releasedAt: now,
+        results: [
+          { category: "BIO-CHEMISTRY", testName: "Blood Sugar (Random)", parameterName: "Blood Sugar (Random)", resultValue: "90", normalValue: "74-140 mg/dl", unit: "mg/dl", sample: "Plasma, Fluoride", method: "GOD/PAP (Rx daytona plus/Rx monaco)" },
+          { category: "SPECIAL TEST", testName: "Serum IgE", parameterName: "Serum IgE", resultValue: "180", normalValue: "0-100", unit: "IU/ml", sample: "Serum", method: "CLIA", comment: "Serum IgE values may vary with age, allergic status and clinical condition. Please correlate clinically." },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Haemoglobin", resultValue: "12.8", normalValue: "12.0-15.0", unit: "gm/dl", sample: "EDTA Whole Blood", method: "Automated Cell Counter" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "WBC", resultValue: "7800", normalValue: "4000-11000", unit: "/cumm" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Differential Count", isHeading: true },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Neutrophils", resultValue: "62", normalValue: "40-75", unit: "%" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Lymphocytes", resultValue: "32", normalValue: "20-45", unit: "%" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Monocytes", resultValue: "04", normalValue: "02-10", unit: "%" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Eosinophils", resultValue: "02", normalValue: "01-06", unit: "%" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "RBC", resultValue: "4.6", normalValue: "3.8-5.2", unit: "million/cumm" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "PCV", resultValue: "38.2", normalValue: "36-46", unit: "%" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "MCV", resultValue: "83", normalValue: "80-100", unit: "fl" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "MCH", resultValue: "28", normalValue: "27-32", unit: "pg" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "MCHC", resultValue: "33", normalValue: "32-36", unit: "g/dl" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "RDW", resultValue: "13.6", normalValue: "11.5-14.5", unit: "%" },
+          { category: "HAEMATOLOGY", testName: "COMPLETE BLOOD COUNT(CBC)", parameterName: "Platelets", resultValue: "2.4", normalValue: "1.5-4.5", unit: "lakh/cumm" }
+        ]
+      };
+    }
+
+    async function loadReport() {
+      const params = getParams();
+      const billNo = getBillNo();
+
+      if (params.get("mock") === "1") {
+        const report = mockReport();
+        renderReport(report, report.billNo);
+        return;
+      }
+
+      if (!billNo) {
+        showError("Bill number missing in report link.");
+        return;
+      }
+
+      try {
+        const report = await getReportByBillNo(billNo);
+        if (!report) {
+          showError(`Report is not released yet or bill number was not found.<br><br>Bill No: ${safe(billNo)}`);
+          return;
+        }
+        renderReport(report, billNo);
       } catch (err) {
         console.error(err);
-        document.getElementById("app").className = "error-box";
-        document.getElementById("app").innerHTML = `
-          Report loading failed.<br><br>
-          ${safe(err.message)}
-        `;
+        showError(`Report loading failed.<br><br>${safe(err.message)}`);
       }
     }
 
