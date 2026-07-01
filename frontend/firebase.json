@@ -10,7 +10,8 @@
       "backups/**",
       "**/.env",
       "**/*.sql",
-      "**/*.zip"
+      "**/*.zip",
+      "**/*.pdf"
     ]
   },
   "firestore": {
