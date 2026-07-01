@@ -80,7 +80,7 @@
     <section data-panel="patientEntry" class="hidden">
       <div class="legacy-shell">
         <div class="legacy-titlebar"><b>PATIENT ENTRY FORM</b><span>LOG-CENTER : BN-MAIN | SESSION: 2025-2026</span></div>
-        <form id="patientEntryForm" onsubmit="savePatientEntry(event)">
+        <form id="patientEntryForm">
           <div class="rate-row">
             <b>RATE-TYPE :</b>
             <label><input type="radio" name="rateType" value="GENERAL" checked onchange="refreshEntryTotals()"> GENERAL</label>
@@ -115,12 +115,12 @@
           <div class="legacy-add-row">
             <div class="test-search-box">
               <label>TEST_NAME</label>
-              <input id="testSearchInput" list="testCatalogList" placeholder="Search Test Name e.g. CBC" oninput="previewEntryTest()">
+              <input id="testSearchInput" list="testCatalogList" placeholder="Search Test Name e.g. CBC">
               <datalist id="testCatalogList"></datalist>
               <div id="testSuggestions" class="test-suggestions hidden"></div>
             </div>
             <div><label>TEST_RATE</label><input id="testRateInput" readonly></div>
-            <button type="button" class="legacy-green" onclick="addEntryTest()">&lt;&lt; Add Test &gt;&gt;</button>
+            <button type="button" id="addTestBtn" class="legacy-green">&lt;&lt; Add Test &gt;&gt;</button>
             <button type="button" class="legacy-blue" onclick="addEntryPackage()">&lt;&lt; Add Package &gt;&gt;</button>
           </div>
 
@@ -128,19 +128,19 @@
             <div class="table-card legacy-table-card">
               <table>
                 <thead><tr><th>TEST_NAME</th><th>PACKAGE</th><th>TEST_RATE</th><th>ACTION</th></tr></thead>
-                <tbody id="entryTestsBody"><tr><td colspan="4">No test added.</td></tr></tbody>
+                <tbody id="selectedTestsBody"><tr><td colspan="4">No test added.</td></tr></tbody>
               </table>
             </div>
 
             <div class="billing-box">
-              <label>GROSS TOTAL :</label><input id="grossTotal" readonly value="0.00">
-              <label>CASH RECEIVED :</label><input name="cashReceived" id="cashReceived" type="number" value="0" oninput="refreshEntryTotals()">
-              <label>CARD RECEIVED :</label><input name="cardReceived" id="cardReceived" type="number" value="0" oninput="refreshEntryTotals()">
-              <label>DISCOUNT :</label><input name="discount" id="discount" type="number" value="0" oninput="refreshEntryTotals()">
-              <label>BALANCE/DUES :</label><input id="balanceDue" readonly value="0.00">
+              <label>GROSS TOTAL :</label><input id="grossTotalInput" readonly value="0.00">
+              <label>CASH RECEIVED :</label><input name="cashReceived" id="cashReceivedInput" type="number" value="0" oninput="refreshEntryTotals()">
+              <label>CARD RECEIVED :</label><input name="cardReceived" id="cardReceivedInput" type="number" value="0" oninput="refreshEntryTotals()">
+              <label>DISCOUNT :</label><input name="discount" id="discountInput" type="number" value="0" oninput="refreshEntryTotals()">
+              <label>BALANCE/DUES :</label><input id="balanceDueInput" readonly value="0.00">
               <label>REMARKS :</label><input name="remarks">
-              <button class="save-strip" type="submit">&lt;&lt; SAVE &gt;&gt;</button>
-              <div class="test-count">NO. OF TEST : <span id="entryTestCount">0</span></div>
+              <button class="save-strip" id="saveBookingBtn" type="submit">&lt;&lt; SAVE &gt;&gt;</button>
+              <div class="test-count">NO. OF TEST : <span id="noOfTestDisplay">0</span></div>
             </div>
           </div>
         </form>
@@ -181,7 +181,7 @@
 
           <div class="table-card legacy-table-card report-table-card">
             <table>
-              <thead><tr><th>TEST-NAME</th><th>NORMAL-VALUE</th><th>FINDING</th><th>UNIT</th><th>COMMENT</th><th>STATUS</th><th>HISTORY</th></tr></thead>
+              <thead><tr><th>Parameter</th><th>Result Input</th><th>Normal Range</th><th>Unit</th></tr></thead>
               <tbody id="findingRows"></tbody>
             </table>
           </div>
@@ -207,13 +207,13 @@
         <button class="btn btn-navy btn-small" type="button" id="downloadTwoMonthCsv">Download Last 2 Months CSV</button>
         <button class="btn btn-red btn-small" type="button" id="deleteOldData">Delete Data Older Than 2 Months</button>
       </div>
-      <div class="table-card"><table><thead><tr><th>ID</th><th>Patient</th><th>Test</th><th>Collection</th><th>Status</th><th>Assign Staff</th><th>Report</th></tr></thead><tbody id="adminBookings"></tbody></table></div>
+      <div class="table-card"><table><thead><tr><th>Bill No</th><th>Patient</th><th>Phone</th><th>Tests</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="adminBookings"></tbody></table></div>
     </section>
 
     <section data-panel="tests" class="hidden">
       <h2>Tests Library</h2>
       <div class="toolbar"><a class="btn btn-green btn-small" href="admin-import-tests.html">Import 684 Tests</a></div>
-      <div class="toolbar"><input id="testLibrarySearch" placeholder="Search tests..." oninput="renderFirebaseTests()"><select id="testCategoryFilter" onchange="renderFirebaseTests()"><option value="">All categories</option></select></div>
+      <div class="toolbar"><input id="adminTestSearch" placeholder="Search tests..."><select id="adminCategoryFilter"><option value="">All categories</option></select></div>
       <div class="notice" id="testsLibrarySummary"><b id="testLibraryCount">0</b> tests • <b id="parameterLibraryCount">0</b> parameters • <b id="reviewLibraryCount">0</b> need review</div>
       <div class="table-card"><table><thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Status</th><th>Actions</th></tr></thead><tbody id="testsLibraryBody"></tbody></table></div>
     </section>
@@ -225,6 +225,10 @@
       <b>Admin Debug</b>
       <div class="admin-debug-grid">
         <span>Tests loaded: <strong id="adminDebugTestsLoaded">0</strong></span>
+        <span>Bookings loaded: <strong id="adminDebugBookingsLoaded">0</strong></span>
+        <span>Reports loaded: <strong id="adminDebugReportsLoaded">0</strong></span>
+        <span>User email: <strong id="adminDebugEmail">-</strong></span>
+        <span>UID: <strong id="adminDebugUid">-</strong></span>
         <span>Test source: <strong id="adminDebugTestSource">not loaded</strong></span>
         <span>Last error: <strong id="adminDebugLastError">none</strong></span>
         <span>Current URL: <strong id="adminDebugUrl">-</strong></span>
@@ -239,44 +243,33 @@
     <div class="admin-modal-body" id="parameterModalBody"></div>
   </div>
 </div>
-<script src="app.js"></script>
 <script type="module">
-import {
-  auth,
-  logoutUser,
-  getCurrentUserRole,
-  getAllBookings,
-  getReports,
-  getTestById,
-  getTestsLoadInfo,
-  updateTest,
-  createBooking,
-  saveReportDraft,
-  saveReport,
-  updateBookingStatus,
-  downloadBookingsCSV,
-  downloadLastTwoMonthsCSV,
-  deleteDataOlderThanTwoMonths
-} from "./firebase-service.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { db } from "./firebase-config.js";
+import { auth, db } from "./firebase-config.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { collection, getDocs, getDoc, addDoc, updateDoc, doc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 console.log("Admin dashboard loading...");
 console.log("Firebase db:", db);
 
+let currentAdmin = null;
+let currentAdminProfile = null;
+let allLabTests = [];
+let allBookings = [];
+let allReports = [];
+let selectedCurrentTest = null;
+let selectedTests = [];
+let selectedBookingForReport = null;
+let reportResults = [];
 let firebaseBookings = [];
 let firebaseReports = [];
 let firebaseTests = [];
 let currentReportBooking = null;
 let currentAdminUser = null;
-let currentAdminProfile = null;
 let lastFirestoreError = "";
 let lastTestLoadingError = "";
 let lastAdminTestSource = "not loaded";
 let adminEntryTests = [];
-let selectedCurrentTest = null;
-window.allLabTests = [];
+window.allLabTests = allLabTests;
 window.lastAdminTestError = "";
 window.selectedCurrentTest = null;
 
@@ -286,6 +279,12 @@ function html(value) {
 
 function rupees(value) {
   return "₹" + Number(value || 0).toLocaleString("en-IN");
+}
+
+function ktNowLocal() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
 }
 
 function bookingTests(b) {
@@ -320,11 +319,15 @@ function reportBill(b) {
   return b.reportBillNo || b.billNo || b.bill_no || b.id || "";
 }
 
+function isFinalReport(report) {
+  return String(report?.reportStatus || report?.status || "").toLowerCase() === "final";
+}
+
 function hasFirestoreReport(b) {
   const bill = reportBill(b);
   return Boolean(bill && (
     b.reportReleased ||
-    firebaseReports.some((r) => String(r.billNo || r.id || "") === String(bill))
+    firebaseReports.some((r) => String(r.billNo || r.id || "") === String(bill) && isFinalReport(r))
   ));
 }
 
@@ -333,7 +336,7 @@ function reportActionsHtml(b) {
   if (bill) {
     const url = `report.html?bill=${encodeURIComponent(bill)}`;
     if (hasFirestoreReport(b)) {
-      return `<a class="report-link" target="_blank" href="${url}">View Report</a><br><a class="report-link" target="_blank" href="${url}&print=1">Print Report</a>`;
+      return `<a class="report-link" target="_blank" href="${url}">View Report</a><br><a class="report-link" target="_blank" href="${url}">Print Report</a>`;
     }
     return "Not released";
   }
@@ -344,7 +347,210 @@ function reportActionsHtml(b) {
   return "No report available";
 }
 
-async function requireAdmin() {
+async function logoutUser() {
+  await signOut(auth);
+}
+
+async function getCurrentUserRole() {
+  return currentAdminProfile?.role || null;
+}
+
+async function readCollection(name, sortField = "createdAt") {
+  try {
+    return await getDocs(query(collection(db, name), orderBy(sortField, "desc")));
+  } catch (err) {
+    console.warn(`Falling back to unordered ${name} read:`, err);
+    return getDocs(collection(db, name));
+  }
+}
+
+async function getAllBookings() {
+  const snap = await readCollection("bookings");
+  const rows = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+  allBookings = rows;
+  firebaseBookings = rows;
+  return rows;
+}
+
+async function loadBookings() {
+  return getAllBookings();
+}
+
+async function getReports() {
+  const snap = await readCollection("reports");
+  const rows = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+  allReports = rows;
+  firebaseReports = rows;
+  return rows;
+}
+
+async function loadReports() {
+  return getReports();
+}
+
+async function getTestById(testId) {
+  const key = String(testId || "").toLowerCase();
+  if (!key) return null;
+  if (!allLabTests.length) await loadAdminTestsDirect();
+  return allLabTests.find((test) => (
+    String(test.id || "").toLowerCase() === key ||
+    String(test.testId || "").toLowerCase() === key ||
+    String(test.testCode || "").toLowerCase() === key ||
+    String(test.name || "").toLowerCase() === key
+  )) || null;
+}
+
+function getTestsLoadInfo() {
+  return {
+    source: lastAdminTestSource,
+    firestoreCount: allLabTests.length,
+    jsonCount: 0,
+    error: window.lastAdminTestError || lastTestLoadingError || ""
+  };
+}
+
+async function updateTest(testId, data) {
+  await updateDoc(doc(db, "tests", testId), {
+    ...data,
+    updatedAt: serverTimestamp()
+  });
+}
+
+async function createBooking(data) {
+  const payload = {
+    ...data,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  const docRef = await addDoc(collection(db, "bookings"), payload);
+  return { id: docRef.id, ...data };
+}
+
+async function findReportForBill(billNo) {
+  const bill = String(billNo || "");
+  if (!bill) return null;
+  const local = allReports.find((report) => String(report.billNo || report.id || "") === bill);
+  if (local) return local;
+  const snap = await getDocs(query(collection(db, "reports"), where("billNo", "==", bill)));
+  const first = snap.docs[0];
+  return first ? { id: first.id, ...(first.data() || {}) } : null;
+}
+
+async function upsertReport(payload) {
+  const billNo = String(payload.billNo || "");
+  const existing = await findReportForBill(billNo);
+  const reportData = {
+    ...payload,
+    billNo,
+    updatedAt: serverTimestamp()
+  };
+  if (existing?.id) {
+    await updateDoc(doc(db, "reports", existing.id), reportData);
+    return { ...existing, ...payload, id: existing.id };
+  }
+  const docRef = await addDoc(collection(db, "reports"), {
+    ...reportData,
+    createdAt: serverTimestamp()
+  });
+  return { id: docRef.id, ...payload };
+}
+
+async function saveReportDraft(payload) {
+  return upsertReport({
+    ...payload,
+    reportStatus: "Draft",
+    status: "Draft"
+  });
+}
+
+async function saveReport(payload) {
+  const saved = await upsertReport({
+    ...payload,
+    reportStatus: "Final",
+    status: "Final",
+    reportReleased: true,
+    releasedAt: serverTimestamp()
+  });
+  if (payload.bookingId) {
+    await updateDoc(doc(db, "bookings", payload.bookingId), {
+      status: "Reported",
+      reportReleased: true,
+      reportBillNo: payload.billNo,
+      updatedAt: serverTimestamp()
+    });
+  }
+  return saved;
+}
+
+async function updateBookingStatus(bookingId, status) {
+  await updateDoc(doc(db, "bookings", bookingId), {
+    status,
+    updatedAt: serverTimestamp()
+  });
+}
+
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename, rows) {
+  const blob = new Blob([rows], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadBookingsCSV() {
+  const header = ["Bill No", "Patient", "Phone", "Tests", "Amount", "Status", "Created"];
+  const lines = [header.map(csvCell).join(",")];
+  firebaseBookings.forEach((booking) => {
+    lines.push([
+      reportBill(booking),
+      booking.patientName || "",
+      booking.phone || "",
+      bookingTests(booking).map((test) => test.name || test.testName || "").join("; "),
+      booking.totalAmount || booking.grossTotal || "",
+      booking.status || "",
+      createdText(booking.createdAt)
+    ].map(csvCell).join(","));
+  });
+  downloadCsv("khuntest-bookings.csv", lines.join("\n"));
+}
+
+function downloadLastTwoMonthsCSV() {
+  const cutoff = Date.now() - (62 * 24 * 60 * 60 * 1000);
+  const rows = firebaseBookings.filter((booking) => {
+    const d = booking.createdAt?.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt || booking.admDate || booking.date || 0);
+    return d.getTime() >= cutoff;
+  });
+  const header = ["Bill No", "Patient", "Phone", "Tests", "Amount", "Status", "Created"];
+  const lines = [header.map(csvCell).join(",")];
+  rows.forEach((booking) => {
+    lines.push([
+      reportBill(booking),
+      booking.patientName || "",
+      booking.phone || "",
+      bookingTests(booking).map((test) => test.name || test.testName || "").join("; "),
+      booking.totalAmount || booking.grossTotal || "",
+      booking.status || "",
+      createdText(booking.createdAt)
+    ].map(csvCell).join(","));
+  });
+  downloadCsv("khuntest-bookings-last-two-months.csv", lines.join("\n"));
+}
+
+async function deleteDataOlderThanTwoMonths() {
+  lastFirestoreError = "Old data cleanup is disabled in the static dashboard for safety.";
+  renderDebugPanel();
+  return 0;
+}
+
+async function checkAdminAuth() {
   const user = await new Promise((resolve) => {
     const unsub = onAuthStateChanged(auth, (current) => {
       unsub();
@@ -355,30 +561,36 @@ async function requireAdmin() {
     window.location.href = "admin-login.html";
     return null;
   }
+  currentAdmin = user;
   currentAdminUser = user;
   const profileSnap = await getDoc(doc(db, "users", user.uid));
   currentAdminProfile = profileSnap.exists() ? profileSnap.data() : null;
-  if (!currentAdminProfile || currentAdminProfile.role !== "admin" || currentAdminProfile.isActive !== true) {
-    await logoutUser();
+  const isAllowed = currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive !== false && currentAdminProfile?.active !== false;
+  if (!isAllowed) {
+    alert("Admin access denied. Please login with an active admin account.");
+    await signOut(auth);
     window.location.href = "admin-login.html";
     return null;
   }
   const role = await getCurrentUserRole();
   if (role !== "admin") return null;
-  const stored = JSON.parse(localStorage.getItem("auth_user") || "{}");
-  return stored;
+  return user;
 }
 
-function allLabTests() {
-  return Array.isArray(window.allLabTests) ? window.allLabTests : firebaseTests;
+async function requireAdmin() {
+  return checkAdminAuth();
 }
 
 function updateAdminDebugBox() {
-  const tests = allLabTests();
+  const tests = allLabTests;
   const values = {
     adminDebugTestsLoaded: tests.length,
+    adminDebugBookingsLoaded: firebaseBookings.length,
+    adminDebugReportsLoaded: firebaseReports.length,
+    adminDebugEmail: currentAdmin?.email || currentAdminUser?.email || "-",
+    adminDebugUid: currentAdmin?.uid || currentAdminUser?.uid || "-",
     adminDebugTestSource: lastAdminTestSource,
-    adminDebugLastError: window.lastAdminTestError || lastTestLoadingError || "none",
+    adminDebugLastError: lastFirestoreError || window.lastAdminTestError || lastTestLoadingError || "none",
     adminDebugUrl: window.location.href,
     adminDebugProject: "khuntest-lab-e5966"
   };
@@ -386,6 +598,12 @@ function updateAdminDebugBox() {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
   });
+}
+
+function showAdminError(message) {
+  lastFirestoreError = message || "Unknown admin dashboard error";
+  updateAdminDebugBox();
+  renderDebugPanel();
 }
 
 async function loadAdminTestsDirect() {
@@ -405,6 +623,7 @@ async function loadAdminTestsDirect() {
         category: d.category || "Lab Test",
         price: Number(d.price || d.rate || d.testRate || 0),
         sample: d.sample || "",
+        method: d.method || "",
         reportTime: d.reportTime || "Same Day",
         isActive: d.isActive !== false,
         parameters: Array.isArray(d.parameters) ? d.parameters : [],
@@ -416,6 +635,7 @@ async function loadAdminTestsDirect() {
       .sort((a, b) => a.name.localeCompare(b.name));
 
     console.log("Admin tests loaded:", tests.length);
+    allLabTests = tests;
     firebaseTests = tests;
     window.allLabTests = tests;
     window.lastAdminTestError = "";
@@ -428,10 +648,15 @@ async function loadAdminTestsDirect() {
     console.error("Admin tests Firestore load failed:", err);
     window.lastAdminTestError = err.message || String(err);
     lastTestLoadingError = window.lastAdminTestError;
+    lastFirestoreError = lastTestLoadingError;
     lastAdminTestSource = "Firestore direct failed";
     updateAdminDebugBox();
     return [];
   }
+}
+
+async function loadAllTests() {
+  return loadAdminTestsDirect();
 }
 
 async function loadAdminTestsCatalog() {
@@ -474,7 +699,7 @@ async function refreshFirebaseDashboard() {
 
 function renderDebugPanel() {
   const testInfo = getTestsLoadInfo();
-  const tests = allLabTests();
+  const tests = allLabTests;
   const values = {
     debugEmail: currentAdminUser?.email || currentAdminProfile?.email || "",
     debugUid: currentAdminUser?.uid || "",
@@ -509,7 +734,7 @@ function renderFirebaseMetrics() {
   document.getElementById("mPatients").textContent = new Set(firebaseBookings.map((b) => b.patientEmail || b.email || b.phone).filter(Boolean)).size;
   document.getElementById("mReports").textContent = releasedCount;
   document.getElementById("mReportPending").textContent = Math.max(firebaseBookings.length - releasedCount, 0);
-  document.getElementById("mTests").textContent = allLabTests().length;
+  document.getElementById("mTests").textContent = allLabTests.length;
 }
 
 function renderFirebaseBookings() {
@@ -523,12 +748,13 @@ function renderFirebaseBookings() {
     return `<tr data-status="${html(b.status || "Pending")}" data-date="${html(b.date || createdDateKey(b.createdAt))}" data-search="${html(rowText)}">
       <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
       <td>${html(b.patientName)}<br><small>${html(b.age || "")} ${html(b.gender || "")}<br>${html(b.phone)}<br>${html(b.patientEmail || b.email || "")}</small></td>
-      <td>${html(tests)}<br><b>${rupees(b.totalAmount || b.grossTotal || b.price)}</b></td>
-      <td>${html(b.bookingType || "")}<br><small>${html((b.date || "") + " " + (b.time || ""))}</small><br><small>${html(b.address || "")}</small></td>
+      <td>${html(b.phone || "")}</td>
+      <td>${html(tests)}</td>
+      <td><b>${rupees(b.totalAmount || b.grossTotal || b.price)}</b></td>
       <td><select onchange="firebaseUpdateStatus('${html(b.id)}', this.value)">${["Pending","Reported","Completed","Cancelled"].map((x) => `<option ${b.status === x ? "selected" : ""}>${x}</option>`).join("")}</select></td>
-      <td>${html(b.staff || "Not Assigned")}</td>
       <td>
-        ${reportActionsHtml(b)}
+        <button class="btn btn-navy btn-small" type="button" onclick="openReportEntry('${html(b.id)}')">Report Entry</button>
+        ${hasFirestoreReport(b) ? `<br>${reportActionsHtml(b)}` : ""}
         ${hasFirestoreReport(b) && wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">Send WhatsApp</a>` : ""}
       </td>
     </tr>`;
@@ -545,15 +771,15 @@ function renderPendingReports() {
   }).join("") : `<tr><td colspan="4">No pending reports.</td></tr>`;
 }
 
-function renderAdminTestsLibrary(sourceTests = allLabTests()) {
+function renderAdminTestsLibrary(sourceTests = allLabTests) {
   const summary = document.getElementById("testsLibrarySummary");
   const body = document.getElementById("testsLibraryBody") || document.getElementById("testsBody");
   if (!body) return;
   const tests = Array.isArray(sourceTests) ? sourceTests : [];
-  const q = (document.getElementById("testLibrarySearch")?.value || "").toLowerCase();
-  const category = document.getElementById("testCategoryFilter")?.value || "";
+  const q = ((document.getElementById("adminTestSearch") || document.getElementById("testLibrarySearch"))?.value || "").toLowerCase();
+  const category = (document.getElementById("adminCategoryFilter") || document.getElementById("testCategoryFilter"))?.value || "";
   const cats = Array.from(new Set(tests.map((t) => t.category).filter(Boolean))).sort();
-  const catSelect = document.getElementById("testCategoryFilter");
+  const catSelect = document.getElementById("adminCategoryFilter") || document.getElementById("testCategoryFilter");
   if (catSelect && catSelect.options.length <= 1) {
     catSelect.innerHTML = '<option value="">All categories</option>' + cats.map((c) => `<option>${html(c)}</option>`).join("");
   }
@@ -572,24 +798,42 @@ function renderAdminTestsLibrary(sourceTests = allLabTests()) {
     return;
   }
 
-  body.innerHTML = filtered.slice(0, 500).map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.needsParameterReview ? "review" : "reported"}">${t.needsParameterReview ? "Review needed" : "Ready"}</span></td><td><button class="btn btn-outline btn-small small-btn" type="button" data-test-id="${html(t.id || t.testId || t.testCode)}" onclick="viewTestParameters('${html(t.id || t.testId || t.testCode)}')">View Parameters</button> <button class="btn btn-navy btn-small" type="button" onclick="editFirestoreTest('${html(t.id || t.testId || t.testCode)}')">Edit Test</button> <button class="btn btn-green btn-small" type="button" onclick="addLibraryTestToBooking('${html(t.id || t.testId || t.testCode)}')">Add to Booking</button></td></tr>`).join("") || `<tr><td colspan="6">No matching tests found.</td></tr>`;
+  body.innerHTML = filtered.slice(0, 500).map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.needsParameterReview ? "review" : "reported"}">${t.needsParameterReview ? "Review needed" : "Ready"}</span></td><td><button class="btn btn-outline btn-small small-btn view-params-btn" type="button" data-test-id="${html(t.id || t.testId || t.testCode)}" onclick="viewTestParameters('${html(t.id || t.testId || t.testCode)}')">View Parameters</button> <button class="btn btn-navy btn-small" type="button" onclick="editFirestoreTest('${html(t.id || t.testId || t.testCode)}')">Edit Test</button> <button class="btn btn-green btn-small add-test-from-library-btn" type="button" onclick="addLibraryTestToBooking('${html(t.id || t.testId || t.testCode)}')">Add to Booking</button></td></tr>`).join("") || `<tr><td colspan="6">No matching tests found.</td></tr>`;
 }
 
 window.renderFirebaseTests = function() {
-  renderAdminTestsLibrary(allLabTests());
+  renderAdminTestsLibrary(allLabTests);
+};
+
+window.renderTestsLibrary = function(tests = allLabTests) {
+  renderAdminTestsLibrary(tests);
+};
+
+window.setupTestsLibrarySearch = function() {
+  const search = document.getElementById("adminTestSearch");
+  const category = document.getElementById("adminCategoryFilter");
+  if (search && search.dataset.bound !== "true") {
+    search.dataset.bound = "true";
+    search.addEventListener("input", () => renderAdminTestsLibrary(allLabTests));
+  }
+  if (category && category.dataset.bound !== "true") {
+    category.dataset.bound = "true";
+    category.addEventListener("change", () => renderAdminTestsLibrary(allLabTests));
+  }
 };
 
 window.showAdminTestsLibrary = async function() {
-  setTab("tests");
-  const tests = allLabTests().length ? allLabTests() : await loadAdminTestsDirect();
+  window.setTab("tests");
+  const tests = allLabTests.length ? allLabTests : await loadAdminTestsDirect();
   renderAdminTestsLibrary(tests);
   setupAdminTestSearch();
+  window.setupTestsLibrarySearch();
   renderFirebaseMetrics();
   renderDebugPanel();
 };
 
 window.viewTestParameters = function(testId) {
-  const test = allLabTests().find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
+  const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
   if (!test) return alert("Test not found.");
   document.getElementById("parameterModalTitle").textContent = `${test.name} Parameters`;
   document.getElementById("parameterModalBody").innerHTML = (test.parameters || []).length ? `
@@ -606,7 +850,7 @@ window.closeParameterModal = function() {
 };
 
 window.editFirestoreTest = async function(testId) {
-  const test = allLabTests().find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
+  const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
   if (!test) return alert("Test not found.");
   const priceValue = prompt(`Edit price for ${test.name}`, String(test.price || 0));
   if (priceValue === null) return;
@@ -627,9 +871,9 @@ window.editFirestoreTest = async function(testId) {
 };
 
 window.addLibraryTestToBooking = async function(testId) {
-  const test = allLabTests().find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
+  const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
   if (!test) return alert("Test not found.");
-  setTab("patientEntry");
+  window.setTab("patientEntry");
   await window.preparePatientEntry();
   addTestToEntry(test);
 };
@@ -655,7 +899,7 @@ window.renderReportsPanel = function() {
   const body = document.getElementById("reportsBody");
   if (!body) return;
   const q = (document.getElementById("reportSearch")?.value || "").toLowerCase();
-  const rows = firebaseReports.filter((r) => !q || [r.billNo, r.patientName, r.phone].join(" ").toLowerCase().includes(q));
+  const rows = firebaseReports.filter((r) => isFinalReport(r) && (!q || [r.billNo, r.patientName, r.phone].join(" ").toLowerCase().includes(q)));
   body.innerHTML = rows.map((r) => {
     const b = firebaseBookings.find((booking) => String(reportBill(booking)) === String(r.billNo || r.id)) || r;
     const wa = whatsappReportLink(b);
@@ -722,6 +966,37 @@ function reportResultsFromRows(rows) {
   return results;
 }
 
+window.setTab = function(tab) {
+  document.querySelectorAll("[data-panel]").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.dataset.panel !== tab);
+  });
+  document.querySelectorAll("[data-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.tab === tab);
+  });
+};
+
+function paintFindingRows(rows) {
+  const body = document.getElementById("findingRows");
+  if (!body) return;
+  reportResults = rows;
+  body.innerHTML = rows.length ? rows.map((row, index) => `
+    <tr>
+      <td>
+        <b>${html(row.name || row.parameterName || "Result")}</b>
+        <br><small>${html(row.testName || row.category || "")}</small>
+        <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "Result")}">
+        <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
+        <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
+        <input type="hidden" data-r="method" data-i="${index}" value="${html(row.method || "")}">
+        <input type="hidden" data-r="sample" data-i="${index}" value="${html(row.sample || "")}">
+      </td>
+      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="Enter result"></td>
+      <td><input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly></td>
+      <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
+    </tr>
+  `).join("") : `<tr><td colspan="4">No parameters found. A default result row is available after selecting a booking.</td></tr>`;
+}
+
 window.firebaseUpdateStatus = async function(bookingId, status) {
   await updateBookingStatus(bookingId, status);
   await refreshFirebaseDashboard();
@@ -745,7 +1020,7 @@ function entrySuggestionsBox() {
 
 function findFirebaseCatalogTest(value) {
   const q = String(value || "").trim().toLowerCase();
-  const tests = allLabTests();
+  const tests = allLabTests;
   return tests.find((t) => entryTestLabel(t).toLowerCase() === q)
     || tests.find((t) => String(t.testCode || "").toLowerCase() === q || String(t.name || "").toLowerCase() === q)
     || tests.find((t) => testMatchesQuery(t, q));
@@ -754,7 +1029,7 @@ function findFirebaseCatalogTest(value) {
 function populateEntryTestDatalist() {
   const dl = document.getElementById("testCatalogList");
   if (!dl) return;
-  const tests = allLabTests();
+  const tests = allLabTests;
   dl.innerHTML = tests.length
     ? tests.map((test) => `<option value="${html(entryTestLabel(test))}"></option>`).join("")
     : "";
@@ -798,6 +1073,7 @@ function addTestToEntry(test, packageName = "") {
   if (!test) return false;
   if (adminEntryTests.some((item) => item.testCode === test.testCode && item.name === test.name)) return false;
   adminEntryTests.push(selectedTestSnapshot(test, packageName));
+  selectedTests = adminEntryTests;
   renderAdminEntryTests();
   window.refreshEntryTotals();
   return true;
@@ -818,7 +1094,7 @@ function renderEntrySuggestions(value) {
     hideEntrySuggestions();
     return;
   }
-  const matches = allLabTests()
+  const matches = allLabTests
     .filter((test) => testMatchesQuery(test, q))
     .slice(0, 20);
   if (!matches.length) {
@@ -860,13 +1136,12 @@ function setupAdminTestSearch() {
       return;
     }
 
-    const matches = allLabTests().filter((test) => {
-      const paramText = (test.parameters || []).map((p) => p.name || "").join(" ").toLowerCase();
+    const matches = allLabTests.filter((test) => {
       return (
         String(test.nameLower || test.name || "").toLowerCase().includes(q)
         || String(test.testCode || "").toLowerCase().includes(q)
         || String(test.category || "").toLowerCase().includes(q)
-        || paramText.includes(q)
+        || testMatchesQuery(test, q)
       );
     }).slice(0, 25);
 
@@ -897,10 +1172,28 @@ function setupAdminTestSearch() {
   });
 }
 
+window.setupTestAutocomplete = setupAdminTestSearch;
+
+window.setupAddTestButton = function() {
+  const btn = document.getElementById("addTestBtn");
+  if (btn && btn.dataset.bound !== "true") {
+    btn.dataset.bound = "true";
+    btn.addEventListener("click", window.addEntryTest);
+  }
+};
+
+window.setupSaveBooking = function() {
+  const form = document.getElementById("patientEntryForm");
+  if (form && form.dataset.bound !== "true") {
+    form.dataset.bound = "true";
+    form.addEventListener("submit", window.savePatientEntry);
+  }
+};
+
 window.preparePatientEntry = async function() {
   const f = document.getElementById("patientEntryForm");
   if (!f) return;
-  if (!allLabTests().length) {
+  if (!allLabTests.length) {
     try {
       const testResult = await loadAdminTestsCatalog();
       lastTestLoadingError = testResult.error ? String(testResult.error) : "";
@@ -920,6 +1213,7 @@ window.preparePatientEntry = async function() {
   const staffSel = document.getElementById("entryStaffSelect");
   if (staffSel && !staffSel.options.length) staffSel.innerHTML = '<option value="">Select Field Boy</option>';
   adminEntryTests = [];
+  selectedTests = adminEntryTests;
   selectedCurrentTest = null;
   window.selectedCurrentTest = null;
   hideEntrySuggestions();
@@ -939,7 +1233,7 @@ window.previewEntryTest = function() {
 };
 
 window.pickEntrySuggestion = function(testId) {
-  const test = allLabTests().find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
+  const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
   if (!test) return;
   selectedCurrentTest = test;
   window.selectedCurrentTest = test;
@@ -953,7 +1247,7 @@ window.pickEntrySuggestion = function(testId) {
 window.addEntryTest = function() {
   const test = window.selectedCurrentTest || selectedCurrentTest;
   if (!test) {
-    alert(allLabTests().length ? "Please select a test first." : "No tests loaded. Check Firebase Debug for the last test loading error.");
+    alert(allLabTests.length ? "Please select a test first." : "No tests loaded. Check Firebase Debug for the last test loading error.");
     return;
   }
   addTestToEntry(test);
@@ -972,26 +1266,27 @@ window.addEntryPackage = function() {
 };
 
 function renderAdminEntryTests() {
-  const body = document.getElementById("entryTestsBody");
+  const body = document.getElementById("selectedTestsBody") || document.getElementById("entryTestsBody");
   if (!body) return;
-  body.innerHTML = adminEntryTests.length ? adminEntryTests.map((t, i) => `<tr><td>${html(t.name)}</td><td>${html(t.package || "")}</td><td>${Number(t.price || 0).toFixed(2)}</td><td><button type="button" class="mini-remove" onclick="adminEntryTestsRemove(${i})">Remove</button></td></tr>`).join("") : '<tr><td colspan="4">No test added.</td></tr>';
-  const count = document.getElementById("entryTestCount");
+  body.innerHTML = adminEntryTests.length ? adminEntryTests.map((t, i) => `<tr><td>${html(t.name)}</td><td>${html(t.package || t.category || "")}</td><td>${Number(t.price || 0).toFixed(2)}</td><td><button type="button" class="mini-remove" onclick="adminEntryTestsRemove(${i})">Remove</button></td></tr>`).join("") : '<tr><td colspan="4">No test added.</td></tr>';
+  const count = document.getElementById("noOfTestDisplay") || document.getElementById("entryTestCount");
   if (count) count.textContent = adminEntryTests.length;
 }
 
 window.adminEntryTestsRemove = function(index) {
   adminEntryTests.splice(index, 1);
+  selectedTests = adminEntryTests;
   renderAdminEntryTests();
   window.refreshEntryTotals();
 };
 
 window.refreshEntryTotals = function() {
   const gross = adminEntryTests.reduce((sum, test) => sum + Number(test.price || 0), 0);
-  const cash = Number(document.getElementById("cashReceived")?.value || 0);
-  const card = Number(document.getElementById("cardReceived")?.value || 0);
-  const discount = Number(document.getElementById("discount")?.value || 0);
-  const grossEl = document.getElementById("grossTotal");
-  const balanceEl = document.getElementById("balanceDue");
+  const cash = Number((document.getElementById("cashReceivedInput") || document.getElementById("cashReceived"))?.value || 0);
+  const card = Number((document.getElementById("cardReceivedInput") || document.getElementById("cardReceived"))?.value || 0);
+  const discount = Number((document.getElementById("discountInput") || document.getElementById("discount"))?.value || 0);
+  const grossEl = document.getElementById("grossTotalInput") || document.getElementById("grossTotal");
+  const balanceEl = document.getElementById("balanceDueInput") || document.getElementById("balanceDue");
   if (grossEl) grossEl.value = gross.toFixed(2);
   if (balanceEl) balanceEl.value = (gross - cash - card - discount).toFixed(2);
 };
@@ -1010,6 +1305,7 @@ window.filterAdminBookings = function() {
 
 window.loadReportEditor = async function(id) {
   currentReportBooking = firebaseBookings.find((b) => b.id === id);
+  selectedBookingForReport = currentReportBooking;
   const box = document.getElementById("reportEditor");
   if (!box) return;
   if (!currentReportBooking) {
@@ -1040,7 +1336,7 @@ window.loadReportEditor = async function(id) {
   });
   document.getElementById("rReportingDate").value = ktNowLocal();
   const testsWithParams = [];
-  let availableTests = allLabTests();
+  let availableTests = allLabTests;
   for (const t of bookingTests(b)) {
     let full = t;
     if (!Array.isArray(t.parameters) || !t.parameters.length) {
@@ -1062,7 +1358,19 @@ window.loadReportEditor = async function(id) {
     }
     testsWithParams.push(full);
   }
-  const rows = testsWithParams.length ? testsWithParams.flatMap((t) => {
+  const existingReport = allReports.find((report) => String(report.billNo || report.id || "") === String(reportBill(b)));
+  const rows = Array.isArray(existingReport?.results) && existingReport.results.length ? existingReport.results.map((result) => ({
+    name: result.parameterName || result.name || "Result",
+    category: result.category || "",
+    testName: result.testName || "",
+    normal: result.normalRange || result.normal || "",
+    finding: result.resultValue || result.finding || "",
+    unit: result.unit || "",
+    method: result.method || "",
+    sample: result.sample || "",
+    status: existingReport.reportStatus || existingReport.status || "Draft",
+    comment: result.comment || ""
+  })) : testsWithParams.length ? testsWithParams.flatMap((t) => {
     const params = Array.isArray(t.parameters) && t.parameters.length ? t.parameters : [{ name: t.name || "Result", normalRange: t.normal || "", unit: t.unit || "", method: t.method || "", sample: t.sample || "" }];
     return params.map((p) => ({
       name: p.name || t.name || "Test",
@@ -1081,6 +1389,14 @@ window.loadReportEditor = async function(id) {
   updateReportActionState();
 };
 
+window.openReportEntry = async function(bookingId) {
+  window.setTab("reportGen");
+  renderFirebaseReportSelect();
+  const select = document.getElementById("reportBookingSelect");
+  if (select) select.value = bookingId;
+  await window.loadReportEditor(bookingId);
+};
+
 window.openReportPreview = function() {
   if (!currentReportBooking) {
     alert("Please select booking.");
@@ -1096,7 +1412,7 @@ window.printGeneratedReport = function() {
     return;
   }
   const bill = currentReportBooking.billNo || currentReportBooking.id;
-  window.open(`report.html?bill=${encodeURIComponent(bill)}&print=1`, "_blank");
+  window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
 };
 
 function reportPayload(status = "Draft") {
@@ -1169,6 +1485,16 @@ window.sendCurrentReportWhatsApp = function() {
 window.savePatientEntry = async function(e) {
   e.preventDefault();
   const f = e.target;
+  const patientName = f.patientName.value.trim();
+  const phone = f.phone.value.trim();
+  if (!patientName) {
+    alert("Please enter patient name.");
+    return;
+  }
+  if (!phone) {
+    alert("Please enter contact number.");
+    return;
+  }
   const tests = adminEntryTests.map((test) => ({ ...test }));
   if (!tests.length) {
     alert("Please add at least one test.");
@@ -1179,13 +1505,13 @@ window.savePatientEntry = async function(e) {
     billNo: f.billNo.value || String(Math.floor(100000 + Math.random() * 900000)),
     remoteNo: f.remoteNo.value,
     dayNo: f.dayNo.value,
-    patientName: f.patientName.value.trim(),
+    patientName,
     patientEmail: f.email.value.trim().toLowerCase(),
     email: f.email.value.trim().toLowerCase(),
     age: f.age.value,
     gender: f.gender.value,
-    phone: f.phone.value.trim(),
-    whatsapp: f.phone.value.trim(),
+    phone,
+    whatsapp: phone,
     doctor: f.doctor.value,
     coName: f.coName.value,
     refBy: f.doctor.value,
@@ -1207,11 +1533,12 @@ window.savePatientEntry = async function(e) {
     status: "Pending",
     reportReleased: false,
     payment: "Lab Billing",
+    fieldBoyName: f.fieldBoy.value || "Not Assigned",
     staff: f.fieldBoy.value || "Not Assigned",
     cashReceived: Number(f.cashReceived.value || 0),
     cardReceived: Number(f.cardReceived.value || 0),
     discount: Number(f.discount.value || 0),
-    balanceDue: Number(document.getElementById("balanceDue")?.value || 0),
+    balanceDue: Number((document.getElementById("balanceDueInput") || document.getElementById("balanceDue"))?.value || 0),
     remarks: f.remarks.value
   });
   alert("Patient entry saved to Firestore. Bill No: " + booking.billNo);
@@ -1237,14 +1564,29 @@ document.getElementById("deleteOldData").addEventListener("click", async functio
 document.getElementById("overviewCleanup").addEventListener("click", () => document.getElementById("deleteOldData").click());
 
 document.addEventListener("DOMContentLoaded", async function() {
-  if (!await requireAdmin()) return;
-  document.getElementById("todayText").textContent = new Date().toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
-  renderTests();
-  renderStaff();
-  renderPackages();
-  renderNotifications();
-  await refreshFirebaseDashboard();
-  window.preparePatientEntry();
+  try {
+    await checkAdminAuth();
+    document.getElementById("todayText").textContent = new Date().toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+    await loadAllTests();
+    await loadBookings();
+    await loadReports();
+    renderFirebaseMetrics();
+    renderFirebaseBookings();
+    renderFirebaseReportSelect();
+    renderPendingReports();
+    renderFirebaseTests();
+    renderPatientsPanel();
+    renderReportsPanel();
+    renderDebugPanel();
+    window.setupTestsLibrarySearch();
+    window.setupTestAutocomplete();
+    window.setupAddTestButton();
+    window.setupSaveBooking();
+    await window.preparePatientEntry();
+  } catch (err) {
+    console.error("Admin init failed:", err);
+    showAdminError(err.message || String(err));
+  }
 });
 </script>
 </body>
