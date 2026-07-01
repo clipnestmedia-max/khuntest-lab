@@ -94,9 +94,10 @@
 
     async function load() {
       try {
-        allTests = await loadAvailableTests();
+        const result = await loadAvailableTests();
+        allTests = result.tests || [];
         const info = getTestsLoadInfo();
-        $("catalogLead").textContent = `${allTests.length} active tests loaded from ${info.source}.`;
+        $("catalogLead").textContent = `${allTests.length} active tests loaded from ${result.source || info.source}.`;
         $("loadingText").textContent = "";
         renderCategories();
         renderTests();

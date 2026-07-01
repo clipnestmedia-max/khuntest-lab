@@ -239,7 +239,8 @@
     };
 
     async function loadCatalog() {
-      catalog = await loadAvailableTests();
+      const result = await loadAvailableTests();
+      catalog = result.tests || [];
       $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
       renderCategories();
       renderCatalog();

@@ -97,6 +97,7 @@ function normalizeTest(data) {
     : [normalizeParameter({ name, normalRange: data.normalRange || data.normalValue || "", unit: data.unit || "", method: data.method || "", sample }, { name, sample })];
   return {
     id: data.id || data.slug || safeSlug(`${testCode}-${name}`),
+    testId: data.testId || data.id || data.slug || testCode,
     slug: data.slug || safeSlug(`${testCode}-${name}`),
     sno: Number(data.sno || 0),
     testCode,
@@ -286,7 +287,8 @@ export async function createBooking(bookingData) {
 }
 
 export async function getTests({ activeOnly = true } = {}) {
-  return loadAvailableTests({ activeOnly });
+  const result = await loadAvailableTests({ activeOnly });
+  return result.tests;
 }
 
 async function loadTestsFromJson(activeOnly = true) {
@@ -303,10 +305,7 @@ export async function loadAvailableTests({ activeOnly = true } = {}) {
   let firestoreError = "";
   let firestoreWasEmpty = false;
   try {
-    const testQuery = activeOnly
-      ? query(collection(db, C.tests), where("isActive", "==", true))
-      : query(collection(db, C.tests), orderBy("nameLower", "asc"));
-    const snap = await getDocs(testQuery);
+    const snap = await getDocs(collection(db, C.tests));
     const firestoreTests = snap.docs
       .map(normalizeDoc)
       .map(normalizeTest)
@@ -314,13 +313,13 @@ export async function loadAvailableTests({ activeOnly = true } = {}) {
       .sort((a, b) => a.name.localeCompare(b.name));
     if (firestoreTests.length) {
       lastTestsLoadInfo = {
-        source: "Firestore",
+        source: "firestore",
         count: firestoreTests.length,
         firestoreCount: firestoreTests.length,
         jsonCount: 0,
         error: ""
       };
-      return firestoreTests;
+      return { tests: firestoreTests, source: "firestore", error: null };
     }
     lastTestsLoadInfo = {
       source: "Firestore empty, using data/tests.json",
@@ -335,18 +334,15 @@ export async function loadAvailableTests({ activeOnly = true } = {}) {
   }
 
   const jsonTests = await loadTestsFromJson(activeOnly);
+  const source = "data/tests.json";
   lastTestsLoadInfo = {
-    source: firestoreError
-      ? "data/tests.json fallback after Firestore error"
-      : firestoreWasEmpty
-        ? "data/tests.json fallback after Firestore empty"
-        : "data/tests.json fallback",
+    source,
     count: jsonTests.length,
     firestoreCount: 0,
     jsonCount: jsonTests.length,
     error: firestoreError
   };
-  return jsonTests;
+  return { tests: jsonTests, source, error: firestoreError || (firestoreWasEmpty ? null : null) };
 }
 
 export function getTestsLoadInfo() {
@@ -504,11 +500,12 @@ export async function assignStaff(bookingId, staffName) {
   });
 }
 
-export const getAllTests = loadAvailableTests;
+export const getAllTests = getTests;
 
 export async function searchTests(searchText = "", category = "") {
   const q = String(searchText || "").trim().toLowerCase();
-  return (await loadAvailableTests()).filter((test) => {
+  const { tests } = await loadAvailableTests();
+  return tests.filter((test) => {
     if (category && test.category !== category) return false;
     if (!q) return true;
     return [test.testCode, test.name, test.category, ...(test.searchKeywords || [])].join(" ").toLowerCase().includes(q);

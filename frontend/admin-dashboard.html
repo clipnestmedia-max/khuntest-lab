@@ -308,7 +308,7 @@ function reportActionsHtml(b) {
   if (bill) {
     const url = `report.html?bill=${encodeURIComponent(bill)}`;
     if (hasFirestoreReport(b)) {
-      return `<a class="report-link" target="_blank" href="${url}">View Report</a><br><a class="report-link" target="_blank" href="${url}">Print Report</a>`;
+      return `<a class="report-link" target="_blank" href="${url}">View Report</a><br><a class="report-link" target="_blank" href="${url}&print=1">Print Report</a>`;
     }
     return "Not released";
   }
@@ -346,12 +346,16 @@ async function requireAdmin() {
 
 async function refreshFirebaseDashboard() {
   try {
-    [firebaseBookings, firebaseReports, firebaseTests] = await Promise.all([
+    const [bookings, reports, testResult] = await Promise.all([
       getAllBookings(),
       getReports(),
       loadAvailableTests()
     ]);
-    lastFirestoreError = getTestsLoadInfo().error || "";
+    firebaseBookings = bookings;
+    firebaseReports = reports;
+    firebaseTests = testResult.tests || [];
+    window.allLabTests = firebaseTests;
+    lastFirestoreError = testResult.error || getTestsLoadInfo().error || "";
   } catch (err) {
     lastFirestoreError = err.message || String(err);
     console.error(err);
@@ -691,8 +695,10 @@ window.preparePatientEntry = async function() {
   if (!f) return;
   if (!firebaseTests.length) {
     try {
-      firebaseTests = await loadAvailableTests();
-      lastFirestoreError = getTestsLoadInfo().error || "";
+      const testResult = await loadAvailableTests();
+      firebaseTests = testResult.tests || [];
+      window.allLabTests = firebaseTests;
+      lastFirestoreError = testResult.error || getTestsLoadInfo().error || "";
       renderFirebaseTests();
       renderFirebaseMetrics();
       renderDebugPanel();
@@ -824,7 +830,8 @@ window.loadReportEditor = async function(id) {
     let full = t;
     if (!Array.isArray(t.parameters) || !t.parameters.length) {
       if (!availableTests.length) {
-        availableTests = await loadAvailableTests().catch(() => []);
+        const testResult = await loadAvailableTests().catch(() => ({ tests: [] }));
+        availableTests = testResult.tests || [];
         if (availableTests.length) firebaseTests = availableTests;
       }
       const key = String(t.testCode || t.id || t.name || "").toLowerCase();

@@ -64,7 +64,7 @@ service cloud.firestore {
     }
 
     match /tests/{testId} {
-      allow read: if resource.data.isActive == true || isAdmin();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
