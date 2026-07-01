@@ -81,6 +81,13 @@
             </div>
           </div>
           <button class="btn btn-outline btn-small" type="button" id="addTestBtn">Add Test</button>
+          <div id="categoryChips" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;"></div>
+          <div class="table-card" style="margin:14px 0;max-height:320px;overflow:auto;">
+            <table>
+              <thead><tr><th>Available Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Select</th></tr></thead>
+              <tbody id="catalogBody"><tr><td colspan="5">Loading tests...</td></tr></tbody>
+            </table>
+          </div>
           <div class="table-card" style="margin:14px 0;">
             <table>
               <thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Action</th></tr></thead>
@@ -135,6 +142,7 @@
 
     let catalog = [];
     let selectedTests = [];
+    let selectedCategory = "";
     const $ = (id) => document.getElementById(id);
     const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
@@ -152,6 +160,32 @@
 
     function selectedTotal() {
       return selectedTests.reduce((sum, test) => sum + Number(test.price || 0), 0);
+    }
+
+    function renderCategories() {
+      const categories = Array.from(new Set(catalog.map((test) => test.category).filter(Boolean))).sort();
+      const jsString = (value) => JSON.stringify(value).replace(/"/g, "&quot;");
+      $("categoryChips").innerHTML = [`<button class="btn btn-small ${selectedCategory ? "btn-outline" : "btn-red"}" type="button" onclick="setBookingCategory('')">All</button>`]
+        .concat(categories.map((cat) => `<button class="btn btn-small ${selectedCategory === cat ? "btn-red" : "btn-outline"}" type="button" onclick="setBookingCategory(${jsString(cat)})">${safe(cat)}</button>`))
+        .join("");
+    }
+
+    function renderCatalog() {
+      const q = $("testSearch").value.trim().toLowerCase();
+      const rows = catalog
+        .filter((test) => !selectedCategory || test.category === selectedCategory)
+        .filter((test) => !q || [test.testCode, test.name, test.category, ...(test.searchKeywords || [])].join(" ").toLowerCase().includes(q))
+        .slice(0, 80);
+      $("catalogBody").innerHTML = rows.map((test, index) => `
+        <tr>
+          <td><b>${safe(test.name)}</b><br><small>${safe(test.testCode)}</small></td>
+          <td>${safe(test.category)}</td>
+          <td>${rupees(test.price)}</td>
+          <td>${safe(test.parameters?.length || 0)}</td>
+          <td><button class="btn btn-red btn-small" type="button" onclick="selectCatalogTest(${index})">Select</button></td>
+        </tr>
+      `).join("") || `<tr><td colspan="5">No tests found.</td></tr>`;
+      window.currentCatalogRows = rows;
     }
 
     function renderSelectedTests() {
@@ -188,11 +222,27 @@
       selectedTests.push(test);
       $("testSearch").value = "";
       renderSelectedTests();
+      renderCatalog();
     }
+
+    window.setBookingCategory = function(category) {
+      selectedCategory = category;
+      renderCategories();
+      renderCatalog();
+    };
+
+    window.selectCatalogTest = function(index) {
+      const test = (window.currentCatalogRows || [])[index];
+      if (!test) return;
+      $("testSearch").value = testLabel(test);
+      addSelectedTest();
+    };
 
     async function loadCatalog() {
       catalog = await getTests();
       $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
+      renderCategories();
+      renderCatalog();
       const requested = new URLSearchParams(location.search).get("test");
       if (requested) {
         const match = catalog.find((test) => test.testCode === requested || test.name === requested);
@@ -257,6 +307,7 @@
         addSelectedTest();
       }
     });
+    $("testSearch").addEventListener("input", renderCatalog);
     loadCatalog().catch((err) => showMessage("error", err.message || "Could not load tests."));
   </script>
 </body>

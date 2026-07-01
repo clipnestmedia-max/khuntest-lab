@@ -221,7 +221,7 @@ import {
   deleteDataOlderThanTwoMonths
 } from "./firebase-service.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
 let firebaseBookings = [];
@@ -232,6 +232,36 @@ let currentAdminUser = null;
 let currentAdminProfile = null;
 let lastFirestoreError = "";
 let adminEntryTests = [];
+
+function normalizeDashboardTestDoc(snap) {
+  const data = snap.data ? snap.data() : snap;
+  const name = data.name || data.testName || data.test_name || "";
+  const testCode = String(data.testCode || data.test_code || data.code || snap.id || name).trim();
+  return {
+    id: snap.id || data.id || data.slug || testCode,
+    slug: data.slug || snap.id || testCode,
+    sno: Number(data.sno || 0),
+    testCode,
+    name,
+    nameLower: String(data.nameLower || name).toLowerCase(),
+    category: data.category || "Lab Test",
+    price: Number(data.price || data.priceInr || data.price_inr || 0),
+    sample: data.sample || "",
+    reportTime: data.reportTime || data.report_time || "Same Day",
+    isActive: data.isActive !== false && data.is_active !== 0,
+    parameters: Array.isArray(data.parameters) ? data.parameters : [],
+    searchKeywords: Array.isArray(data.searchKeywords) ? data.searchKeywords : [],
+    needsParameterReview: data.needsParameterReview === true
+  };
+}
+
+async function loadFirestoreTestsDirect() {
+  const snap = await getDocs(collection(db, "tests"));
+  return snap.docs
+    .map(normalizeDashboardTestDoc)
+    .filter((test) => test.isActive !== false)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 function html(value) {
   return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -327,7 +357,7 @@ async function refreshFirebaseDashboard() {
     [firebaseBookings, firebaseReports, firebaseTests] = await Promise.all([
       getAllBookings(),
       getReports(),
-      getTests()
+      loadFirestoreTestsDirect()
     ]);
     lastFirestoreError = "";
   } catch (err) {
@@ -363,10 +393,11 @@ function renderDebugPanel() {
 function renderFirebaseMetrics() {
   const today = new Date().toISOString().slice(0, 10);
   const todayBookings = firebaseBookings.filter((b) => (b.date || createdDateKey(b.createdAt)) === today);
-  const releasedCount = firebaseBookings.filter((b) => b.reportReleased || (b.status || "") === "Reported").length;
+  const releasedCount = firebaseReports.filter((r) => (r.reportStatus || r.status || "") === "Final").length;
+  const pendingStatuses = new Set(["pending", "confirmed", "sample collected", "report entry"]);
   document.getElementById("mBookings").textContent = firebaseBookings.length;
   document.getElementById("mToday").textContent = todayBookings.length;
-  document.getElementById("mPending").textContent = firebaseBookings.filter((b) => (b.status || "Pending") === "Pending").length;
+  document.getElementById("mPending").textContent = firebaseBookings.filter((b) => pendingStatuses.has(String(b.status || "Pending").toLowerCase())).length;
   document.getElementById("mRevenue").textContent = rupees(firebaseBookings.reduce((sum, b) => sum + Number(b.totalAmount || b.grossTotal || b.price || 0), 0));
   document.getElementById("mRevenueToday").textContent = rupees(todayBookings.reduce((sum, b) => sum + Number(b.totalAmount || b.grossTotal || b.price || 0), 0));
   document.getElementById("mPatients").textContent = new Set(firebaseBookings.map((b) => b.patientEmail || b.email || b.phone).filter(Boolean)).size;
@@ -558,14 +589,34 @@ function findFirebaseCatalogTest(value) {
     || firebaseTests.find((t) => String(t.name || "").toLowerCase().includes(q));
 }
 
-window.preparePatientEntry = function() {
+function populateEntryTestDatalist() {
+  const dl = document.getElementById("testCatalogList");
+  if (!dl) return;
+  dl.innerHTML = firebaseTests.length
+    ? firebaseTests.map((test) => `<option value="${html(entryTestLabel(test))}"></option>`).join("")
+    : "";
+}
+
+window.preparePatientEntry = async function() {
   const f = document.getElementById("patientEntryForm");
   if (!f) return;
+  if (!firebaseTests.length) {
+    try {
+      firebaseTests = await loadFirestoreTestsDirect();
+      lastFirestoreError = "";
+      renderFirebaseTests();
+      renderFirebaseMetrics();
+      renderDebugPanel();
+    } catch (err) {
+      lastFirestoreError = err.message || String(err);
+      console.error(err);
+      renderDebugPanel();
+    }
+  }
   document.getElementById("entryBillNo").value = String(Math.floor(100000 + Math.random() * 900000));
   document.getElementById("entryAdmDate").value = ktNowLocal();
   document.getElementById("entryCollDate").value = ktNowLocal();
-  const dl = document.getElementById("testCatalogList");
-  if (dl) dl.innerHTML = firebaseTests.map((test) => `<option value="${html(entryTestLabel(test))}"></option>`).join("");
+  populateEntryTestDatalist();
   const staffSel = document.getElementById("entryStaffSelect");
   if (staffSel && !staffSel.options.length) staffSel.innerHTML = '<option value="">Select Field Boy</option>';
   adminEntryTests = [];
