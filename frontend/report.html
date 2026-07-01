@@ -325,7 +325,7 @@
   <main id="app" class="loading">Loading report...</main>
 
   <script type="module">
-    import { getReportByBillNo } from "./firebase-service.js";
+    import { getBookingByBillNo, getReportByBillNo } from "./firebase-service.js";
 
     const ROWS_PER_PAGE = 25;
 
@@ -558,7 +558,7 @@
       if (!phone) return;
       const fullPhone = phone.length === 10 ? "91" + phone : phone;
       const patientName = pick(report, ["patientName", "patient_name", "name"], "Patient");
-      const reportUrl = `https://khuntest-lab-e5966.web.app/report.html?bill=${encodeURIComponent(billNo)}`;
+      const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
       const message = `Hello ${patientName},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
       window.open(`https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`, "_blank");
     };
@@ -620,10 +620,12 @@
       try {
         const report = await getReportByBillNo(billNo);
         if (!report) {
-          showError(`Report is not released yet or bill number was not found.<br><br>Bill No: ${safe(billNo)}`);
+          const booking = await getBookingByBillNo(billNo);
+          showError(booking ? `Report not released yet.<br><br>Bill No: ${safe(billNo)}` : `Bill number was not found.<br><br>Bill No: ${safe(billNo)}`);
           return;
         }
         renderReport(report, billNo);
+        if (params.get("print") === "1") setTimeout(() => window.print(), 350);
       } catch (err) {
         console.error(err);
         showError(`Report loading failed.<br><br>${safe(err.message)}`);

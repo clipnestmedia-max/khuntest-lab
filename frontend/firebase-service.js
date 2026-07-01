@@ -88,6 +88,9 @@ function normalizeTest(data) {
     ? data.parameters.map((p) => normalizeParameter(p, { name, sample }))
     : [normalizeParameter({ name, normalRange: data.normalRange || data.normalValue || "", unit: data.unit || "", method: data.method || "", sample }, { name, sample })];
   return {
+    id: data.id || data.slug || safeSlug(`${testCode}-${name}`),
+    slug: data.slug || safeSlug(`${testCode}-${name}`),
+    sno: Number(data.sno || 0),
     testCode,
     name,
     nameLower: String(data.nameLower || name).toLowerCase(),
@@ -100,13 +103,17 @@ function normalizeTest(data) {
     parameters,
     searchKeywords: Array.isArray(data.searchKeywords) && data.searchKeywords.length
       ? data.searchKeywords
-      : testKeywords(testCode, name, category)
+      : testKeywords(testCode, name, category),
+    source: data.source || null,
+    sourceId: data.sourceId || null
   };
 }
 
 function normalizeSelectedTest(data) {
   const test = normalizeTest(data);
   return {
+    testId: data.testId || test.id || test.slug || test.testCode,
+    id: test.id,
     testCode: test.testCode,
     name: test.name,
     category: test.category,
@@ -144,14 +151,17 @@ function normalizeBooking(data) {
     status: data.status || "Pending",
     reportReleased: Boolean(data.reportReleased),
     bookingType: data.bookingType || data.collectionType || "",
+    collectionType: data.collectionType || data.bookingType || "",
     date: data.date || "",
     time: data.time || "",
+    collectionDate: data.collectionDate || data.collDate || data.date || "",
     address: data.address || "",
     payment: data.payment || "",
     staff: data.staff || "Not Assigned",
     remoteNo: data.remoteNo || "0",
     dayNo: data.dayNo || "0",
     doctor: data.doctor || data.refDoctor || "",
+    refBy: data.refBy || data.doctor || data.refDoctor || "",
     coName: data.coName || "",
     pathologyName: data.pathologyName || "BN-MAIN",
     associateLab: data.associateLab || "",
@@ -312,7 +322,7 @@ export async function getPatientBookings(email, phone) {
   return rows.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
 }
 
-export async function saveReport({ billNo, patientName, patientEmail, phone, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate }) {
+export async function saveReport({ billNo, patientName, patientEmail, phone, whatsapp, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate }) {
   const selectedTests = Array.isArray(tests) ? tests.map(normalizeSelectedTest) : [];
   const report = {
     billNo: String(billNo || ""),
@@ -320,6 +330,7 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, tes
     patientName: patientName || "",
     patientEmail: cleanEmail(patientEmail),
     phone: phone || "",
+    whatsapp: whatsapp || phone || "",
     age: age || "",
     gender: gender || "",
     refBy: refBy || doctor || "",
@@ -345,6 +356,10 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, tes
     });
   }
   return report;
+}
+
+export async function releaseReport(reportData) {
+  return saveReport(reportData);
 }
 
 export async function getReportByBillNo(billNoValue) {
@@ -402,6 +417,15 @@ export async function getReportByBillNo(billNoValue) {
   };
 }
 
+export async function getBookingByBillNo(billNoValue) {
+  const bill = String(billNoValue || "").trim();
+  if (!bill) return null;
+  const direct = await getDoc(doc(db, C.bookings, bill));
+  if (direct.exists()) return normalizeDoc(direct);
+  const snap = await getDocs(query(collection(db, C.bookings), where("billNo", "==", bill), limit(1)));
+  return snap.empty ? null : normalizeDoc(snap.docs[0]);
+}
+
 export async function updateBookingStatus(bookingId, status) {
   await updateDoc(doc(db, C.bookings, bookingId), {
     status,
@@ -428,8 +452,33 @@ export async function searchTests(searchText = "", category = "") {
 }
 
 export async function getTestById(testId) {
-  const snap = await getDoc(doc(db, C.tests, String(testId || "")));
-  return snap.exists() ? normalizeTest(normalizeDoc(snap)) : null;
+  const value = String(testId || "").trim();
+  if (!value) return null;
+  const direct = await getDoc(doc(db, C.tests, value));
+  if (direct.exists()) return normalizeTest(normalizeDoc(direct));
+  const slugValue = safeSlug(value);
+  if (slugValue && slugValue !== value) {
+    const slugSnap = await getDoc(doc(db, C.tests, slugValue));
+    if (slugSnap.exists()) return normalizeTest(normalizeDoc(slugSnap));
+  }
+  const codeSnap = await getDocs(query(collection(db, C.tests), where("testCode", "==", value), limit(1)));
+  if (!codeSnap.empty) return normalizeTest(normalizeDoc(codeSnap.docs[0]));
+  const nameSnap = await getDocs(query(collection(db, C.tests), where("nameLower", "==", value.toLowerCase()), limit(1)));
+  return nameSnap.empty ? null : normalizeTest(normalizeDoc(nameSnap.docs[0]));
+}
+
+export async function updateTest(testId, patch) {
+  const existing = await getTestById(testId);
+  if (!existing) throw new Error("Test not found in Firestore.");
+  const ref = doc(db, C.tests, existing.id || existing.slug || safeSlug(`${existing.testCode}-${existing.name}`));
+  const payload = {
+    ...patch,
+    price: patch.price === undefined ? existing.price : Number(patch.price || 0),
+    parameters: Array.isArray(patch.parameters) ? patch.parameters.map((p) => normalizeParameter(p, { name: existing.name, sample: existing.sample })) : existing.parameters,
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(ref, payload, { merge: true });
+  return { ...existing, ...payload };
 }
 
 export async function saveReportDraft(reportData) {
@@ -453,7 +502,6 @@ export async function saveReportDraft(reportData) {
   return draft;
 }
 
-export const releaseReport = saveReport;
 export const getAllReports = getReports;
 
 export async function getPatientReports(user) {
@@ -580,10 +628,12 @@ export const KTFirebase = {
   getAllTests,
   searchTests,
   getTestById,
+  updateTest,
   saveReportDraft,
   releaseReport,
   saveReport,
   getReportByBillNo,
+  getBookingByBillNo,
   updateBookingStatus,
   downloadBookingsCSV,
   downloadLastTwoMonthsCSV,

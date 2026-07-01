@@ -57,7 +57,7 @@
 
           <div class="import-actions">
             <button class="btn btn-outline" id="reloadBtn" type="button">Reload JSON</button>
-            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update 684 Tests to Firestore</button>
+            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update 684 Tests</button>
           </div>
 
           <div class="import-progress"><div id="progressBar"></div></div>
@@ -123,13 +123,16 @@
         $("logBox").innerHTML += `<a class="btn btn-red btn-small" href="admin-login.html">Go to Admin Login</a>\n`;
         return false;
       }
-      const role = await getCurrentUserRole();
-      if (role !== "admin") {
+      const profileSnap = await getDoc(doc(db, "users", user.uid));
+      const profile = profileSnap.exists() ? profileSnap.data() : null;
+      if (!profile || profile.role !== "admin" || profile.isActive !== true) {
         await logoutUser();
         $("statusText").textContent = "Blocked";
         log("This account is not authorized for import.");
         return false;
       }
+      const role = await getCurrentUserRole();
+      if (role !== "admin") return false;
       return true;
     }
 

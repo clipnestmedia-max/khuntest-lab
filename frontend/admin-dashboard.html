@@ -164,8 +164,12 @@
             </table>
           </div>
           <div class="report-actions">
+            <button class="btn btn-outline" onclick="saveGeneratedDraft()">Save Draft</button>
             <button class="btn btn-outline" onclick="openReportPreview()">Preview Report</button>
+            <button class="btn btn-outline" onclick="printGeneratedReport()">Print Report</button>
             <button class="btn btn-green" onclick="releaseGeneratedReport()">RELEASE REPORT</button>
+            <button class="btn btn-navy" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Send WhatsApp</button>
+            <span id="reportShareHint" class="notice" style="display:inline-block;margin:0;">Release report first to send WhatsApp.</span>
           </div>
         </div>
       </div>
@@ -189,12 +193,12 @@
       <div class="toolbar"><a class="btn btn-green btn-small" href="admin-import-tests.html">Import 684 Tests</a></div>
       <div class="toolbar"><input id="testLibrarySearch" placeholder="Search tests..." oninput="renderFirebaseTests()"><select id="testCategoryFilter" onchange="renderFirebaseTests()"><option value="">All categories</option></select></div>
       <div class="notice"><b id="testLibraryCount">0</b> tests • <b id="parameterLibraryCount">0</b> parameters • <b id="reviewLibraryCount">0</b> need review</div>
-      <div class="table-card"><table><thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Status</th></tr></thead><tbody id="testsBody"></tbody></table></div>
+      <div class="table-card"><table><thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Status</th><th>Actions</th></tr></thead><tbody id="testsBody"></tbody></table></div>
     </section>
 
     <section data-panel="patients" class="hidden"><h2>Patients</h2><div class="toolbar"><input id="patientSearch" placeholder="Search patient, phone, email..." oninput="renderPatientsPanel()"></div><div class="table-card"><table><thead><tr><th>Patient</th><th>Contact</th><th>Bookings</th><th>Revenue</th><th>Last Visit</th></tr></thead><tbody id="patientsBody"></tbody></table></div></section>
     <section data-panel="reports" class="hidden"><h2>Released Reports</h2><div class="toolbar"><input id="reportSearch" placeholder="Search bill, patient, phone..." oninput="renderReportsPanel()"></div><div class="table-card"><table><thead><tr><th>Bill</th><th>Patient</th><th>Tests</th><th>Released</th><th>Actions</th></tr></thead><tbody id="reportsBody"></tbody></table></div></section>
-    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KhunTest Lab" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div></section>
+    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KhunTest Lab" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Tests Count<input id="debugTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label></div></section>
   </main>
 </div>
 <script src="app.js"></script>
@@ -206,7 +210,10 @@ import {
   getAllBookings,
   getReports,
   getTests,
+  getTestById,
+  updateTest,
   createBooking,
+  saveReportDraft,
   saveReport,
   updateBookingStatus,
   downloadBookingsCSV,
@@ -214,11 +221,17 @@ import {
   deleteDataOlderThanTwoMonths
 } from "./firebase-service.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { db } from "./firebase-config.js";
 
 let firebaseBookings = [];
 let firebaseReports = [];
 let firebaseTests = [];
 let currentReportBooking = null;
+let currentAdminUser = null;
+let currentAdminProfile = null;
+let lastFirestoreError = "";
+let adminEntryTests = [];
 
 function html(value) {
   return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -241,7 +254,7 @@ function whatsappReportLink(b) {
   const phone = String(b.whatsapp || b.phone || "").replace(/\D/g, "");
   if (!phone || !bill) return "";
   const fullPhone = phone.length === 10 ? "91" + phone : phone;
-  const reportUrl = `https://khuntest-lab-e5966.web.app/report.html?bill=${encodeURIComponent(bill)}`;
+  const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(bill)}`;
   const message = `Hello ${b.patientName || "Patient"},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
   return `https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`;
 }
@@ -295,22 +308,32 @@ async function requireAdmin() {
     window.location.href = "admin-login.html";
     return null;
   }
-  const role = await getCurrentUserRole();
-  if (role !== "admin") {
+  currentAdminUser = user;
+  const profileSnap = await getDoc(doc(db, "users", user.uid));
+  currentAdminProfile = profileSnap.exists() ? profileSnap.data() : null;
+  if (!currentAdminProfile || currentAdminProfile.role !== "admin" || currentAdminProfile.isActive !== true) {
     await logoutUser();
     window.location.href = "admin-login.html";
     return null;
   }
+  const role = await getCurrentUserRole();
+  if (role !== "admin") return null;
   const stored = JSON.parse(localStorage.getItem("auth_user") || "{}");
   return stored;
 }
 
 async function refreshFirebaseDashboard() {
-  [firebaseBookings, firebaseReports, firebaseTests] = await Promise.all([
-    getAllBookings(),
-    getReports(),
-    getTests()
-  ]);
+  try {
+    [firebaseBookings, firebaseReports, firebaseTests] = await Promise.all([
+      getAllBookings(),
+      getReports(),
+      getTests()
+    ]);
+    lastFirestoreError = "";
+  } catch (err) {
+    lastFirestoreError = err.message || String(err);
+    console.error(err);
+  }
   renderFirebaseMetrics();
   renderFirebaseBookings();
   renderFirebaseReportSelect();
@@ -318,6 +341,23 @@ async function refreshFirebaseDashboard() {
   renderFirebaseTests();
   renderPatientsPanel();
   renderReportsPanel();
+  renderDebugPanel();
+}
+
+function renderDebugPanel() {
+  const values = {
+    debugEmail: currentAdminUser?.email || currentAdminProfile?.email || "",
+    debugUid: currentAdminUser?.uid || "",
+    debugAdminLoaded: currentAdminProfile ? "yes" : "no",
+    debugTestsCount: firebaseTests.length,
+    debugBookingsCount: firebaseBookings.length,
+    debugReportsCount: firebaseReports.length,
+    debugFirestoreError: lastFirestoreError || "none"
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
 }
 
 function renderFirebaseMetrics() {
@@ -383,7 +423,35 @@ window.renderFirebaseTests = function() {
   document.getElementById("parameterLibraryCount").textContent = filtered.reduce((sum, t) => sum + (t.parameters?.length || 0), 0);
   const reviewCount = document.getElementById("reviewLibraryCount");
   if (reviewCount) reviewCount.textContent = filtered.filter((t) => t.needsParameterReview).length;
-  body.innerHTML = filtered.slice(0, 250).map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.isActive ? "reported" : "cancelled"}">${t.isActive ? "Active" : "Inactive"}</span></td></tr>`).join("") || `<tr><td colspan="5">No tests found. Import tests first.</td></tr>`;
+  body.innerHTML = filtered.map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.isActive ? "reported" : "cancelled"}">${t.isActive ? "Active" : "Inactive"}</span></td><td><button class="btn btn-outline btn-small" onclick="viewTestParameters('${html(t.id || t.slug || t.testCode)}')">View Parameters</button> <button class="btn btn-navy btn-small" onclick="editFirestoreTest('${html(t.id || t.slug || t.testCode)}')">Edit</button></td></tr>`).join("") || `<tr><td colspan="6">No tests imported yet. <a class="btn btn-green btn-small" href="admin-import-tests.html">Click Import Tests</a></td></tr>`;
+};
+
+window.viewTestParameters = function(testId) {
+  const test = firebaseTests.find((t) => [t.id, t.slug, t.testCode].includes(testId));
+  if (!test) return alert("Test not found.");
+  const lines = (test.parameters || []).map((p) => `${p.name} | ${p.normalRange || ""} | ${p.unit || ""} | ${p.method || ""}`).join("\n");
+  alert(`${test.name}\n\n${lines || "No parameters found."}`);
+};
+
+window.editFirestoreTest = async function(testId) {
+  const test = firebaseTests.find((t) => [t.id, t.slug, t.testCode].includes(testId));
+  if (!test) return alert("Test not found.");
+  const priceValue = prompt(`Edit price for ${test.name}`, String(test.price || 0));
+  if (priceValue === null) return;
+  const paramsText = prompt("Edit parameters as one per line: name | normal range | unit | method | sample", (test.parameters || []).map((p) => `${p.name || ""} | ${p.normalRange || ""} | ${p.unit || ""} | ${p.method || ""} | ${p.sample || ""}`).join("\n"));
+  if (paramsText === null) return;
+  const parameters = paramsText.split(/\n+/).map((line, index) => {
+    const [name, normalRange, unit, method, sample] = line.split("|").map((part) => part.trim());
+    return name ? { name, normalRange: normalRange || "", unit: unit || "", method: method || "", sample: sample || "", sortOrder: index + 1 } : null;
+  }).filter(Boolean);
+  await updateTest(test.id || test.slug || test.testCode, {
+    price: Number(priceValue || 0),
+    parameters,
+    needsParameterReview: false,
+    searchKeywords: [test.testCode, test.name, test.category, ...parameters.map((p) => p.name)].join(" ").toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 1)
+  });
+  alert("Test updated in Firestore.");
+  await refreshFirebaseDashboard();
 };
 
 window.renderPatientsPanel = function() {
@@ -479,6 +547,96 @@ window.firebaseUpdateStatus = async function(bookingId, status) {
   await refreshFirebaseDashboard();
 };
 
+function entryTestLabel(test) {
+  return `${test.name} - ${rupees(test.price)} (${test.testCode})`;
+}
+
+function findFirebaseCatalogTest(value) {
+  const q = String(value || "").trim().toLowerCase();
+  return firebaseTests.find((t) => entryTestLabel(t).toLowerCase() === q)
+    || firebaseTests.find((t) => String(t.testCode || "").toLowerCase() === q || String(t.name || "").toLowerCase() === q)
+    || firebaseTests.find((t) => String(t.name || "").toLowerCase().includes(q));
+}
+
+window.preparePatientEntry = function() {
+  const f = document.getElementById("patientEntryForm");
+  if (!f) return;
+  document.getElementById("entryBillNo").value = String(Math.floor(100000 + Math.random() * 900000));
+  document.getElementById("entryAdmDate").value = ktNowLocal();
+  document.getElementById("entryCollDate").value = ktNowLocal();
+  const dl = document.getElementById("testCatalogList");
+  if (dl) dl.innerHTML = firebaseTests.map((test) => `<option value="${html(entryTestLabel(test))}"></option>`).join("");
+  const staffSel = document.getElementById("entryStaffSelect");
+  if (staffSel && !staffSel.options.length) staffSel.innerHTML = '<option value="">Select Field Boy</option>';
+  adminEntryTests = [];
+  renderAdminEntryTests();
+  window.refreshEntryTotals();
+};
+
+window.previewEntryTest = function() {
+  const test = findFirebaseCatalogTest(document.getElementById("entryTestSearch")?.value);
+  const rate = document.getElementById("entryTestRate");
+  if (rate) rate.value = test ? Number(test.price || 0).toFixed(2) : "";
+};
+
+window.addEntryTest = function() {
+  const test = findFirebaseCatalogTest(document.getElementById("entryTestSearch")?.value);
+  if (!test) {
+    alert(firebaseTests.length ? "Please search and select a valid Firestore test." : "No tests imported yet. Click Import Tests first.");
+    return;
+  }
+  adminEntryTests.push({
+    testId: test.id || test.slug || test.testCode,
+    testCode: test.testCode,
+    name: test.name,
+    category: test.category,
+    price: Number(test.price || 0),
+    sample: test.sample || "",
+    reportTime: test.reportTime || "Same Day",
+    parameters: test.parameters || []
+  });
+  document.getElementById("entryTestSearch").value = "";
+  window.previewEntryTest();
+  renderAdminEntryTests();
+  window.refreshEntryTotals();
+};
+
+window.addEntryPackage = function() {
+  ["CBC", "LIVER FUNCTION TEST", "KFT", "LIPID PROFILE", "Thyroid Profile"].forEach((name) => {
+    const test = findFirebaseCatalogTest(name);
+    if (test && !adminEntryTests.some((item) => item.testCode === test.testCode)) {
+      adminEntryTests.push({ testId: test.id || test.slug || test.testCode, testCode: test.testCode, name: test.name, category: test.category, price: Number(test.price || 0), sample: test.sample || "", reportTime: test.reportTime || "Same Day", parameters: test.parameters || [], package: "Common Package" });
+    }
+  });
+  renderAdminEntryTests();
+  window.refreshEntryTotals();
+};
+
+function renderAdminEntryTests() {
+  const body = document.getElementById("entryTestsBody");
+  if (!body) return;
+  body.innerHTML = adminEntryTests.length ? adminEntryTests.map((t, i) => `<tr><td>${html(t.name)}</td><td>${html(t.package || "")}</td><td>${Number(t.price || 0).toFixed(2)}</td><td><button type="button" class="mini-remove" onclick="adminEntryTestsRemove(${i})">Remove</button></td></tr>`).join("") : '<tr><td colspan="4">No test added.</td></tr>';
+  const count = document.getElementById("entryTestCount");
+  if (count) count.textContent = adminEntryTests.length;
+}
+
+window.adminEntryTestsRemove = function(index) {
+  adminEntryTests.splice(index, 1);
+  renderAdminEntryTests();
+  window.refreshEntryTotals();
+};
+
+window.refreshEntryTotals = function() {
+  const gross = adminEntryTests.reduce((sum, test) => sum + Number(test.price || 0), 0);
+  const cash = Number(document.getElementById("cashReceived")?.value || 0);
+  const card = Number(document.getElementById("cardReceived")?.value || 0);
+  const discount = Number(document.getElementById("discount")?.value || 0);
+  const grossEl = document.getElementById("grossTotal");
+  const balanceEl = document.getElementById("balanceDue");
+  if (grossEl) grossEl.value = gross.toFixed(2);
+  if (balanceEl) balanceEl.value = (gross - cash - card - discount).toFixed(2);
+};
+
 window.filterAdminBookings = function() {
   const q = ((document.getElementById("bookingSearch")?.value || document.getElementById("adminGlobalSearch")?.value || "")).toLowerCase();
   const status = document.getElementById("statusFilter")?.value || "";
@@ -491,7 +649,7 @@ window.filterAdminBookings = function() {
   });
 };
 
-window.loadReportEditor = function(id) {
+window.loadReportEditor = async function(id) {
   currentReportBooking = firebaseBookings.find((b) => b.id === id);
   const box = document.getElementById("reportEditor");
   if (!box) return;
@@ -522,7 +680,15 @@ window.loadReportEditor = function(id) {
     if (el) el.value = val;
   });
   document.getElementById("rReportingDate").value = ktNowLocal();
-  const rows = bookingTests(b).length ? bookingTests(b).flatMap((t) => {
+  const testsWithParams = [];
+  for (const t of bookingTests(b)) {
+    let full = t;
+    if (!Array.isArray(t.parameters) || !t.parameters.length) {
+      full = await getTestById(t.testCode || t.id || t.name).catch(() => t) || t;
+    }
+    testsWithParams.push(full);
+  }
+  const rows = testsWithParams.length ? testsWithParams.flatMap((t) => {
     const params = Array.isArray(t.parameters) && t.parameters.length ? t.parameters : [{ name: t.name || "Result", normalRange: t.normal || "", unit: t.unit || "", method: t.method || "", sample: t.sample || "" }];
     return params.map((p) => ({
       name: p.name || t.name || "Test",
@@ -538,6 +704,7 @@ window.loadReportEditor = function(id) {
     }));
   }) : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
   paintFindingRows(rows);
+  updateReportActionState();
 };
 
 window.openReportPreview = function() {
@@ -547,7 +714,48 @@ window.openReportPreview = function() {
   }
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
-  alert("Preview opens the saved Firestore report after release. Release this report first if it is not saved yet.");
+};
+
+window.printGeneratedReport = function() {
+  if (!currentReportBooking) {
+    alert("Please select booking.");
+    return;
+  }
+  const bill = currentReportBooking.billNo || currentReportBooking.id;
+  window.open(`report.html?bill=${encodeURIComponent(bill)}&print=1`, "_blank");
+};
+
+function reportPayload(status = "Draft") {
+  if (!currentReportBooking) return null;
+  const rows = currentFindingRows();
+  const bill = currentReportBooking.billNo || currentReportBooking.id;
+  const reportingDate = document.getElementById("rReportingDate")?.value || "";
+  return {
+    billNo: bill,
+    bookingId: currentReportBooking.id,
+    patientName: currentReportBooking.patientName,
+    patientEmail: currentReportBooking.patientEmail || currentReportBooking.email,
+    phone: currentReportBooking.phone,
+    whatsapp: currentReportBooking.whatsapp || currentReportBooking.phone,
+    age: currentReportBooking.age,
+    gender: currentReportBooking.gender,
+    doctor: currentReportBooking.doctor,
+    refBy: currentReportBooking.refBy || currentReportBooking.doctor,
+    collectionDate: currentReportBooking.collDate || currentReportBooking.collectionDate || currentReportBooking.date,
+    reportingDate,
+    tests: bookingTests(currentReportBooking),
+    results: reportResultsFromRows(rows),
+    reportStatus: status,
+    status
+  };
+}
+
+window.saveGeneratedDraft = async function() {
+  const payload = reportPayload("Draft");
+  if (!payload) return alert("Please select booking.");
+  await saveReportDraft(payload);
+  alert("Draft saved to Firestore.");
+  await refreshFirebaseDashboard();
 };
 
 window.releaseGeneratedReport = async function() {
@@ -555,40 +763,39 @@ window.releaseGeneratedReport = async function() {
     alert("Please select booking.");
     return;
   }
-  const rows = currentFindingRows();
-  const bill = currentReportBooking.billNo || currentReportBooking.id;
-  const reportingDate = document.getElementById("rReportingDate")?.value || "";
-  await saveReport({
-    billNo: bill,
-    bookingId: currentReportBooking.id,
-    patientName: currentReportBooking.patientName,
-    patientEmail: currentReportBooking.patientEmail || currentReportBooking.email,
-    phone: currentReportBooking.phone,
-    age: currentReportBooking.age,
-    gender: currentReportBooking.gender,
-    doctor: currentReportBooking.doctor,
-    refBy: currentReportBooking.refBy || currentReportBooking.doctor,
-    collectionDate: currentReportBooking.collDate || currentReportBooking.date,
-    reportingDate,
-    tests: bookingTests(currentReportBooking),
-    results: reportResultsFromRows(rows)
-  });
+  const payload = reportPayload("Final");
+  await saveReport(payload);
+  currentReportBooking.reportReleased = true;
+  currentReportBooking.reportBillNo = payload.billNo;
+  currentReportBooking.status = "Reported";
+  updateReportActionState();
   alert("Report released and saved to Firestore.");
   await refreshFirebaseDashboard();
+};
+
+function updateReportActionState() {
+  const btn = document.getElementById("reportWhatsAppBtn");
+  const hint = document.getElementById("reportShareHint");
+  if (!btn || !hint || !currentReportBooking) return;
+  const released = hasFirestoreReport(currentReportBooking);
+  btn.disabled = !released;
+  hint.textContent = released ? "WhatsApp share is ready." : "Release report first to send WhatsApp.";
+}
+
+window.sendCurrentReportWhatsApp = function() {
+  if (!currentReportBooking || !hasFirestoreReport(currentReportBooking)) {
+    alert("Release report first to send WhatsApp.");
+    return;
+  }
+  const url = whatsappReportLink(currentReportBooking);
+  if (!url) return alert("Patient phone/WhatsApp number is missing.");
+  window.open(url, "_blank");
 };
 
 window.savePatientEntry = async function(e) {
   e.preventDefault();
   const f = e.target;
-  const tests = Array.from(document.querySelectorAll("#entryTestsBody tr")).map((tr) => {
-    const cells = tr.querySelectorAll("td");
-    if (cells.length < 3 || cells[0].textContent.includes("No test")) return null;
-    return {
-      name: cells[0].textContent.trim(),
-      package: cells[1].textContent.trim(),
-      price: Number(cells[2].textContent.trim())
-    };
-  }).filter(Boolean);
+  const tests = adminEntryTests.map((test) => ({ ...test }));
   if (!tests.length) {
     alert("Please add at least one test.");
     return;
@@ -607,6 +814,7 @@ window.savePatientEntry = async function(e) {
     whatsapp: f.phone.value.trim(),
     doctor: f.doctor.value,
     coName: f.coName.value,
+    refBy: f.doctor.value,
     pathologyName: f.pathologyName.value,
     associateLab: f.associateLab.value,
     selectedTests: tests,
@@ -615,12 +823,15 @@ window.savePatientEntry = async function(e) {
     totalAmount: gross,
     grossTotal: gross,
     bookingType: "Centre Visit",
+    collectionType: "Centre Visit",
     date: (f.admDate.value || "").slice(0, 10),
     time: (f.admDate.value || "").slice(11),
+    collectionDate: f.collDate.value,
     admDate: f.admDate.value,
     collDate: f.collDate.value,
     address: "Lab Centre",
     status: "Pending",
+    reportReleased: false,
     payment: "Lab Billing",
     staff: f.fieldBoy.value || "Not Assigned",
     cashReceived: Number(f.cashReceived.value || 0),
@@ -631,7 +842,7 @@ window.savePatientEntry = async function(e) {
   });
   alert("Patient entry saved to Firestore. Bill No: " + booking.billNo);
   f.reset();
-  preparePatientEntry();
+  window.preparePatientEntry();
   await refreshFirebaseDashboard();
 };
 
@@ -658,8 +869,8 @@ document.addEventListener("DOMContentLoaded", async function() {
   renderStaff();
   renderPackages();
   renderNotifications();
-  preparePatientEntry();
   await refreshFirebaseDashboard();
+  window.preparePatientEntry();
 });
 </script>
 </body>

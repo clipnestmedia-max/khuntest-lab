@@ -119,7 +119,7 @@ const finalTests = trateTests.map((test) => {
         sortOrder: Number(param.sortOrder || index + 1)
       }))
     : [{
-        name: "Result",
+        name: test.name,
         normalRange: PLACEHOLDER_RANGE,
         unit: "",
         method: "",

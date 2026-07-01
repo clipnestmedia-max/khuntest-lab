@@ -9654,7 +9654,7 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
+        "name": "FISH & Cytogenetics(Aneuploidy Detection Products Of Conception (POC) Using Chromosomes 13 18 21 X & Y)",
         "normalRange": "As per lab method / reference range",
         "unit": "",
         "method": "",
@@ -9678,8 +9678,7 @@
       "18",
       "21",
       "lab",
-      "test",
-      "result"
+      "test"
     ],
     "needsParameterReview": true,
     "source": {
@@ -10772,7 +10771,7 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
+        "name": "GENEXPERT ULTRA (NEXT GENERATION) MTB WITH RIFAMPICIN RESISTANCE",
         "normalRange": "As per lab method / reference range",
         "unit": "",
         "method": "",
@@ -10791,8 +10790,7 @@
       "rifampicin",
       "resistance",
       "lab",
-      "test",
-      "result"
+      "test"
     ],
     "needsParameterReview": true,
     "source": {
