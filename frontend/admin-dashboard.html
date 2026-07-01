@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KhunTest Lab - Admin Dashboard</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+  .admin-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(8, 20, 40, 0.46); padding: 18px; }
+  .admin-modal.hidden { display: none; }
+  .admin-modal-box { width: min(980px, 100%); max-height: 86vh; overflow: auto; background: #fff; border-radius: 8px; box-shadow: 0 22px 60px rgba(5, 20, 44, 0.24); }
+  .admin-modal-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; background: #062b59; color: #fff; }
+  .admin-modal-head button { border: 0; background: #d60000; color: #fff; width: 34px; height: 34px; border-radius: 8px; font-size: 22px; cursor: pointer; }
+  .admin-modal-body { padding: 16px; }
+  .entry-suggestions { margin-top: 6px; max-height: 240px; overflow: auto; border: 1px solid #dce4f2; border-radius: 8px; background: #fff; box-shadow: 0 12px 24px rgba(18, 38, 63, 0.08); }
+  .entry-suggestions.hidden { display: none; }
+  .entry-suggestion { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 9px 11px; border: 0; border-bottom: 1px solid #edf2f8; background: #fff; text-align: left; cursor: pointer; }
+  .entry-suggestion:hover { background: #f5f9ff; }
+  .entry-suggestion small { color: #5e6f86; }
+  .status.review { background: #fff7ed; color: #9a3412; }
+</style>
 </head>
 <body>
 <div class="dashboard">
@@ -96,6 +110,7 @@
               <label>TEST_NAME</label>
               <input id="entryTestSearch" list="testCatalogList" placeholder="Search Test Name e.g. CBC" oninput="previewEntryTest()">
               <datalist id="testCatalogList"></datalist>
+              <div id="entryTestSuggestions" class="entry-suggestions hidden"></div>
             </div>
             <div><label>TEST_RATE</label><input id="entryTestRate" readonly></div>
             <button type="button" class="legacy-green" onclick="addEntryTest()">&lt;&lt; Add Test &gt;&gt;</button>
@@ -198,8 +213,14 @@
 
     <section data-panel="patients" class="hidden"><h2>Patients</h2><div class="toolbar"><input id="patientSearch" placeholder="Search patient, phone, email..." oninput="renderPatientsPanel()"></div><div class="table-card"><table><thead><tr><th>Patient</th><th>Contact</th><th>Bookings</th><th>Revenue</th><th>Last Visit</th></tr></thead><tbody id="patientsBody"></tbody></table></div></section>
     <section data-panel="reports" class="hidden"><h2>Released Reports</h2><div class="toolbar"><input id="reportSearch" placeholder="Search bill, patient, phone..." oninput="renderReportsPanel()"></div><div class="table-card"><table><thead><tr><th>Bill</th><th>Patient</th><th>Tests</th><th>Released</th><th>Actions</th></tr></thead><tbody id="reportsBody"></tbody></table></div></section>
-    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KhunTest Lab" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Tests Count<input id="debugTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label></div></section>
+    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KhunTest Lab" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Test Source Used<input id="debugTestSource" readonly></label><label>Tests Loaded Count<input id="debugTestsCount" readonly></label><label>Firestore Tests Count<input id="debugFirestoreTestsCount" readonly></label><label>data/tests.json Count<input id="debugJsonTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label></div></section>
   </main>
+</div>
+<div id="parameterModal" class="admin-modal hidden">
+  <div class="admin-modal-box">
+    <div class="admin-modal-head"><b id="parameterModalTitle">Test Parameters</b><button type="button" onclick="closeParameterModal()">×</button></div>
+    <div class="admin-modal-body" id="parameterModalBody"></div>
+  </div>
 </div>
 <script src="app.js"></script>
 <script type="module">
@@ -209,8 +230,9 @@ import {
   getCurrentUserRole,
   getAllBookings,
   getReports,
-  getTests,
   getTestById,
+  getTestsLoadInfo,
+  loadAvailableTests,
   updateTest,
   createBooking,
   saveReportDraft,
@@ -221,7 +243,7 @@ import {
   deleteDataOlderThanTwoMonths
 } from "./firebase-service.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { collection, doc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
 let firebaseBookings = [];
@@ -232,36 +254,6 @@ let currentAdminUser = null;
 let currentAdminProfile = null;
 let lastFirestoreError = "";
 let adminEntryTests = [];
-
-function normalizeDashboardTestDoc(snap) {
-  const data = snap.data ? snap.data() : snap;
-  const name = data.name || data.testName || data.test_name || "";
-  const testCode = String(data.testCode || data.test_code || data.code || snap.id || name).trim();
-  return {
-    id: snap.id || data.id || data.slug || testCode,
-    slug: data.slug || snap.id || testCode,
-    sno: Number(data.sno || 0),
-    testCode,
-    name,
-    nameLower: String(data.nameLower || name).toLowerCase(),
-    category: data.category || "Lab Test",
-    price: Number(data.price || data.priceInr || data.price_inr || 0),
-    sample: data.sample || "",
-    reportTime: data.reportTime || data.report_time || "Same Day",
-    isActive: data.isActive !== false && data.is_active !== 0,
-    parameters: Array.isArray(data.parameters) ? data.parameters : [],
-    searchKeywords: Array.isArray(data.searchKeywords) ? data.searchKeywords : [],
-    needsParameterReview: data.needsParameterReview === true
-  };
-}
-
-async function loadFirestoreTestsDirect() {
-  const snap = await getDocs(collection(db, "tests"));
-  return snap.docs
-    .map(normalizeDashboardTestDoc)
-    .filter((test) => test.isActive !== false)
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
 
 function html(value) {
   return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -357,9 +349,9 @@ async function refreshFirebaseDashboard() {
     [firebaseBookings, firebaseReports, firebaseTests] = await Promise.all([
       getAllBookings(),
       getReports(),
-      loadFirestoreTestsDirect()
+      loadAvailableTests()
     ]);
-    lastFirestoreError = "";
+    lastFirestoreError = getTestsLoadInfo().error || "";
   } catch (err) {
     lastFirestoreError = err.message || String(err);
     console.error(err);
@@ -375,14 +367,18 @@ async function refreshFirebaseDashboard() {
 }
 
 function renderDebugPanel() {
+  const testInfo = getTestsLoadInfo();
   const values = {
     debugEmail: currentAdminUser?.email || currentAdminProfile?.email || "",
     debugUid: currentAdminUser?.uid || "",
     debugAdminLoaded: currentAdminProfile ? "yes" : "no",
+    debugTestSource: testInfo.source || "not loaded",
     debugTestsCount: firebaseTests.length,
+    debugFirestoreTestsCount: testInfo.firestoreCount || 0,
+    debugJsonTestsCount: testInfo.jsonCount || 0,
     debugBookingsCount: firebaseBookings.length,
     debugReportsCount: firebaseReports.length,
-    debugFirestoreError: lastFirestoreError || "none"
+    debugFirestoreError: lastFirestoreError || testInfo.error || "none"
   };
   Object.entries(values).forEach(([id, value]) => {
     const el = document.getElementById(id);
@@ -454,14 +450,24 @@ window.renderFirebaseTests = function() {
   document.getElementById("parameterLibraryCount").textContent = filtered.reduce((sum, t) => sum + (t.parameters?.length || 0), 0);
   const reviewCount = document.getElementById("reviewLibraryCount");
   if (reviewCount) reviewCount.textContent = filtered.filter((t) => t.needsParameterReview).length;
-  body.innerHTML = filtered.map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.isActive ? "reported" : "cancelled"}">${t.isActive ? "Active" : "Inactive"}</span></td><td><button class="btn btn-outline btn-small" onclick="viewTestParameters('${html(t.id || t.slug || t.testCode)}')">View Parameters</button> <button class="btn btn-navy btn-small" onclick="editFirestoreTest('${html(t.id || t.slug || t.testCode)}')">Edit</button></td></tr>`).join("") || `<tr><td colspan="6">No tests imported yet. <a class="btn btn-green btn-small" href="admin-import-tests.html">Click Import Tests</a></td></tr>`;
+  body.innerHTML = filtered.map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.needsParameterReview ? "review" : "reported"}">${t.needsParameterReview ? "Review" : "OK"}</span></td><td><button class="btn btn-outline btn-small" onclick="viewTestParameters('${html(t.id || t.slug || t.testCode)}')">View Parameters</button> <button class="btn btn-navy btn-small" onclick="editFirestoreTest('${html(t.id || t.slug || t.testCode)}')">Edit Test</button> <button class="btn btn-green btn-small" onclick="addLibraryTestToBooking('${html(t.id || t.slug || t.testCode)}')">Add to Booking</button></td></tr>`).join("") || `<tr><td colspan="6">No tests imported yet. <a class="btn btn-green btn-small" href="admin-import-tests.html">Click Import Tests</a></td></tr>`;
 };
 
 window.viewTestParameters = function(testId) {
   const test = firebaseTests.find((t) => [t.id, t.slug, t.testCode].includes(testId));
   if (!test) return alert("Test not found.");
-  const lines = (test.parameters || []).map((p) => `${p.name} | ${p.normalRange || ""} | ${p.unit || ""} | ${p.method || ""}`).join("\n");
-  alert(`${test.name}\n\n${lines || "No parameters found."}`);
+  document.getElementById("parameterModalTitle").textContent = `${test.name} Parameters`;
+  document.getElementById("parameterModalBody").innerHTML = (test.parameters || []).length ? `
+    <div class="notice"><b>${html(test.parameters.length)}</b> parameters • ${html(test.category)} • ${rupees(test.price)}</div>
+    <div class="table-card"><table><thead><tr><th>Parameter</th><th>Normal Range</th><th>Unit</th><th>Method</th><th>Sample</th></tr></thead><tbody>
+      ${test.parameters.map((p) => `<tr><td><b>${html(p.name)}</b></td><td>${html(p.normalRange || "")}</td><td>${html(p.unit || "")}</td><td>${html(p.method || "")}</td><td>${html(p.sample || test.sample || "")}</td></tr>`).join("")}
+    </tbody></table></div>
+  ` : `<div class="notice">No parameters found. Add parameter manually.</div>`;
+  document.getElementById("parameterModal").classList.remove("hidden");
+};
+
+window.closeParameterModal = function() {
+  document.getElementById("parameterModal")?.classList.add("hidden");
 };
 
 window.editFirestoreTest = async function(testId) {
@@ -483,6 +489,14 @@ window.editFirestoreTest = async function(testId) {
   });
   alert("Test updated in Firestore.");
   await refreshFirebaseDashboard();
+};
+
+window.addLibraryTestToBooking = async function(testId) {
+  const test = firebaseTests.find((t) => [t.id, t.slug, t.testCode].includes(testId));
+  if (!test) return alert("Test not found.");
+  setTab("patientEntry");
+  await window.preparePatientEntry();
+  addTestToEntry(test);
 };
 
 window.renderPatientsPanel = function() {
@@ -597,13 +611,88 @@ function populateEntryTestDatalist() {
     : "";
 }
 
+function testMatchesQuery(test, queryText) {
+  const q = String(queryText || "").trim().toLowerCase();
+  if (!q) return false;
+  return [
+    test.testCode,
+    test.name,
+    test.category,
+    ...(test.searchKeywords || []),
+    ...(test.parameters || []).map((p) => p.name)
+  ].join(" ").toLowerCase().includes(q);
+}
+
+function selectedTestSnapshot(test, packageName = "") {
+  return {
+    testId: test.id || test.slug || test.testCode,
+    id: test.id || test.slug || test.testCode,
+    testCode: test.testCode,
+    name: test.name,
+    category: test.category || "Lab Test",
+    price: Number(test.price || 0),
+    sample: test.sample || "",
+    reportTime: test.reportTime || "Same Day",
+    parameters: Array.isArray(test.parameters) ? test.parameters.map((p, index) => ({
+      name: p.name || p.parameterName || "Result",
+      normalRange: p.normalRange || p.normalValue || p.normal || "",
+      unit: p.unit || "",
+      method: p.method || "",
+      sample: p.sample || test.sample || "",
+      sortOrder: Number(p.sortOrder || index + 1)
+    })) : [],
+    package: packageName
+  };
+}
+
+function addTestToEntry(test, packageName = "") {
+  if (!test) return false;
+  if (adminEntryTests.some((item) => item.testCode === test.testCode && item.name === test.name)) return false;
+  adminEntryTests.push(selectedTestSnapshot(test, packageName));
+  renderAdminEntryTests();
+  window.refreshEntryTotals();
+  return true;
+}
+
+function hideEntrySuggestions() {
+  const box = document.getElementById("entryTestSuggestions");
+  if (!box) return;
+  box.classList.add("hidden");
+  box.innerHTML = "";
+}
+
+function renderEntrySuggestions(value) {
+  const box = document.getElementById("entryTestSuggestions");
+  if (!box) return;
+  const q = String(value || "").trim();
+  if (q.length < 2) {
+    hideEntrySuggestions();
+    return;
+  }
+  const matches = firebaseTests
+    .filter((test) => testMatchesQuery(test, q))
+    .slice(0, 12);
+  if (!matches.length) {
+    box.innerHTML = '<div class="entry-suggestion">No matching tests found</div>';
+    box.classList.remove("hidden");
+    return;
+  }
+  box.innerHTML = matches.map((test) => `
+    <button type="button" class="entry-suggestion" onclick="pickEntrySuggestion('${html(test.id || test.slug || test.testCode)}')">
+      <b>${html(test.name)}</b>
+      <span>${html(test.testCode)} • ${html(test.category || "Lab Test")} • ${rupees(test.price)}</span>
+    </button>
+  `).join("");
+  box.classList.remove("hidden");
+}
+
 window.preparePatientEntry = async function() {
   const f = document.getElementById("patientEntryForm");
   if (!f) return;
   if (!firebaseTests.length) {
     try {
-      firebaseTests = await loadFirestoreTestsDirect();
-      lastFirestoreError = "";
+      firebaseTests = await loadAvailableTests();
+      lastFirestoreError = getTestsLoadInfo().error || "";
       renderFirebaseTests();
       renderFirebaseMetrics();
       renderDebugPanel();
@@ -625,9 +714,21 @@ window.preparePatientEntry = async function() {
 };
 
 window.previewEntryTest = function() {
-  const test = findFirebaseCatalogTest(document.getElementById("entryTestSearch")?.value);
+  const value = document.getElementById("entryTestSearch")?.value || "";
+  const test = findFirebaseCatalogTest(value);
   const rate = document.getElementById("entryTestRate");
   if (rate) rate.value = test ? Number(test.price || 0).toFixed(2) : "";
+  renderEntrySuggestions(value);
+};
+
+window.pickEntrySuggestion = function(testId) {
+  const test = firebaseTests.find((t) => [t.id, t.slug, t.testCode].includes(testId));
+  if (!test) return;
+  const input = document.getElementById("entryTestSearch");
+  const rate = document.getElementById("entryTestRate");
+  if (input) input.value = entryTestLabel(test);
+  if (rate) rate.value = Number(test.price || 0).toFixed(2);
+  hideEntrySuggestions();
 };
 
 window.addEntryTest = function() {
@@ -636,31 +737,17 @@ window.addEntryTest = function() {
     alert(firebaseTests.length ? "Please search and select a valid Firestore test." : "No tests imported yet. Click Import Tests first.");
     return;
   }
-  adminEntryTests.push({
-    testId: test.id || test.slug || test.testCode,
-    testCode: test.testCode,
-    name: test.name,
-    category: test.category,
-    price: Number(test.price || 0),
-    sample: test.sample || "",
-    reportTime: test.reportTime || "Same Day",
-    parameters: test.parameters || []
-  });
+  addTestToEntry(test);
   document.getElementById("entryTestSearch").value = "";
-  window.previewEntryTest();
-  renderAdminEntryTests();
-  window.refreshEntryTotals();
+  document.getElementById("entryTestRate").value = "";
+  hideEntrySuggestions();
 };
 
 window.addEntryPackage = function() {
   ["CBC", "LIVER FUNCTION TEST", "KFT", "LIPID PROFILE", "Thyroid Profile"].forEach((name) => {
     const test = findFirebaseCatalogTest(name);
-    if (test && !adminEntryTests.some((item) => item.testCode === test.testCode)) {
-      adminEntryTests.push({ testId: test.id || test.slug || test.testCode, testCode: test.testCode, name: test.name, category: test.category, price: Number(test.price || 0), sample: test.sample || "", reportTime: test.reportTime || "Same Day", parameters: test.parameters || [], package: "Common Package" });
-    }
+    if (test) addTestToEntry(test, "Common Package");
   });
-  renderAdminEntryTests();
-  window.refreshEntryTotals();
 };
 
 function renderAdminEntryTests() {
@@ -732,10 +819,22 @@ window.loadReportEditor = async function(id) {
   });
   document.getElementById("rReportingDate").value = ktNowLocal();
   const testsWithParams = [];
+  let availableTests = firebaseTests;
   for (const t of bookingTests(b)) {
     let full = t;
     if (!Array.isArray(t.parameters) || !t.parameters.length) {
-      full = await getTestById(t.testCode || t.id || t.name).catch(() => t) || t;
+      if (!availableTests.length) {
+        availableTests = await loadAvailableTests().catch(() => []);
+        if (availableTests.length) firebaseTests = availableTests;
+      }
+      const key = String(t.testCode || t.id || t.name || "").toLowerCase();
+      const catalogMatch = availableTests.find((test) => (
+        String(test.testCode || "").toLowerCase() === key
+        || String(test.id || "").toLowerCase() === key
+        || String(test.slug || "").toLowerCase() === key
+        || String(test.name || "").toLowerCase() === String(t.name || t.testName || "").toLowerCase()
+      ));
+      full = catalogMatch || await getTestById(t.testCode || t.id || t.name).catch(() => t) || t;
     }
     testsWithParams.push(full);
   }

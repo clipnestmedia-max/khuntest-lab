@@ -138,7 +138,7 @@
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KhunTest%20Lab%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
 
   <script type="module">
-    import { createBooking, getTests } from "./firebase-service.js";
+    import { createBooking, loadAvailableTests } from "./firebase-service.js";
 
     let catalog = [];
     let selectedTests = [];
@@ -239,7 +239,7 @@
     };
 
     async function loadCatalog() {
-      catalog = await getTests();
+      catalog = await loadAvailableTests();
       $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
       renderCategories();
       renderCatalog();

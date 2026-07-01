@@ -39,7 +39,7 @@
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KhunTest%20Lab%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
   <script src="app.js"></script>
   <script type="module">
-    import { getTests } from "./firebase-service.js";
+    import { getTestsLoadInfo, loadAvailableTests } from "./firebase-service.js";
 
     let allTests = [];
     const $ = (id) => document.getElementById(id);
@@ -94,8 +94,9 @@
 
     async function load() {
       try {
-        allTests = await getTests();
-        $("catalogLead").textContent = `${allTests.length} active tests loaded from Firestore.`;
+        allTests = await loadAvailableTests();
+        const info = getTestsLoadInfo();
+        $("catalogLead").textContent = `${allTests.length} active tests loaded from ${info.source}.`;
         $("loadingText").textContent = "";
         renderCategories();
         renderTests();
