@@ -92,9 +92,9 @@ function normalizeTest(data) {
   const testCode = String(data.testCode || data.test_code || data.code || data.sourceId || safeSlug(name)).trim();
   const category = data.category || "Lab Test";
   const sample = data.sample || "";
-  const parameters = Array.isArray(data.parameters) && data.parameters.length
+  const parameters = Array.isArray(data.parameters)
     ? data.parameters.map((p) => normalizeParameter(p, { name, sample }))
-    : [normalizeParameter({ name, normalRange: data.normalRange || data.normalValue || "", unit: data.unit || "", method: data.method || "", sample }, { name, sample })];
+    : [];
   return {
     id: data.id || data.slug || safeSlug(`${testCode}-${name}`),
     testId: data.testId || data.id || data.slug || testCode,
@@ -298,6 +298,7 @@ async function loadTestsFromJson(activeOnly = true) {
   return rows
     .map((row) => normalizeTest(row))
     .filter((test) => !activeOnly || test.isActive)
+    .filter((test) => test.name)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -307,9 +308,9 @@ export async function loadAvailableTests({ activeOnly = true } = {}) {
   try {
     const snap = await getDocs(collection(db, C.tests));
     const firestoreTests = snap.docs
-      .map(normalizeDoc)
-      .map(normalizeTest)
+      .map((docSnap) => normalizeTest({ ...(docSnap.data() || {}), id: docSnap.id, testId: docSnap.id }))
       .filter((test) => !activeOnly || test.isActive)
+      .filter((test) => test.name)
       .sort((a, b) => a.name.localeCompare(b.name));
     if (firestoreTests.length) {
       lastTestsLoadInfo = {
@@ -333,16 +334,28 @@ export async function loadAvailableTests({ activeOnly = true } = {}) {
     firestoreError = err.message || String(err);
   }
 
-  const jsonTests = await loadTestsFromJson(activeOnly);
-  const source = "data/tests.json";
-  lastTestsLoadInfo = {
-    source,
-    count: jsonTests.length,
-    firestoreCount: 0,
-    jsonCount: jsonTests.length,
-    error: firestoreError
-  };
-  return { tests: jsonTests, source, error: firestoreError || (firestoreWasEmpty ? null : null) };
+  try {
+    const jsonTests = await loadTestsFromJson(activeOnly);
+    const source = "data/tests.json";
+    lastTestsLoadInfo = {
+      source,
+      count: jsonTests.length,
+      firestoreCount: 0,
+      jsonCount: jsonTests.length,
+      error: firestoreError
+    };
+    return { tests: jsonTests, source, error: firestoreError || (firestoreWasEmpty ? null : null) };
+  } catch (fallbackErr) {
+    const message = fallbackErr.message || String(fallbackErr);
+    lastTestsLoadInfo = {
+      source: "none",
+      count: 0,
+      firestoreCount: 0,
+      jsonCount: 0,
+      error: message
+    };
+    return { tests: [], source: "none", error: message };
+  }
 }
 
 export function getTestsLoadInfo() {
