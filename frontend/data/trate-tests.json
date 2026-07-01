@@ -1,0 +1,5474 @@
+[
+  {
+    "sno": 1,
+    "name": "1-5 Biopsy Sample ( May Call As Small Specimen)",
+    "price": 3500,
+    "nameLower": "1-5 biopsy sample ( may call as small specimen)",
+    "testCode": "KT0001",
+    "slug": "kt0001-1-5-biopsy-sample-may-call-as-small-specimen"
+  },
+  {
+    "sno": 2,
+    "name": "17-Alpha Hydroxyprogesterone",
+    "price": 2500,
+    "nameLower": "17-alpha hydroxyprogesterone",
+    "testCode": "KT0002",
+    "slug": "kt0002-17-alpha-hydroxyprogesterone"
+  },
+  {
+    "sno": 3,
+    "name": "21 Hydroxylase Ab",
+    "price": 20000,
+    "nameLower": "21 hydroxylase ab",
+    "testCode": "KT0003",
+    "slug": "kt0003-21-hydroxylase-ab"
+  },
+  {
+    "sno": 4,
+    "name": "24 hr Urine Protein Random",
+    "price": 500,
+    "nameLower": "24 hr urine protein random",
+    "testCode": "KT0004",
+    "slug": "kt0004-24-hr-urine-protein-random"
+  },
+  {
+    "sno": 5,
+    "name": "24 Hrs Urinary copper",
+    "price": 2200,
+    "nameLower": "24 hrs urinary copper",
+    "testCode": "KT0005",
+    "slug": "kt0005-24-hrs-urinary-copper"
+  },
+  {
+    "sno": 6,
+    "name": "24 Hrs Urinary Magnesium",
+    "price": 1000,
+    "nameLower": "24 hrs urinary magnesium",
+    "testCode": "KT0006",
+    "slug": "kt0006-24-hrs-urinary-magnesium"
+  },
+  {
+    "sno": 7,
+    "name": "24 Hrs urinary Microalbuminuria",
+    "price": 700,
+    "nameLower": "24 hrs urinary microalbuminuria",
+    "testCode": "KT0007",
+    "slug": "kt0007-24-hrs-urinary-microalbuminuria"
+  },
+  {
+    "sno": 8,
+    "name": "24 Hrs Urinary Oxalate",
+    "price": 2500,
+    "nameLower": "24 hrs urinary oxalate",
+    "testCode": "KT0008",
+    "slug": "kt0008-24-hrs-urinary-oxalate"
+  },
+  {
+    "sno": 9,
+    "name": "24 hrs Urinary Protein",
+    "price": 400,
+    "nameLower": "24 hrs urinary protein",
+    "testCode": "KT0009",
+    "slug": "kt0009-24-hrs-urinary-protein"
+  },
+  {
+    "sno": 10,
+    "name": "24 Hrs urine Metanephrins",
+    "price": 2500,
+    "nameLower": "24 hrs urine metanephrins",
+    "testCode": "KT0010",
+    "slug": "kt0010-24-hrs-urine-metanephrins"
+  },
+  {
+    "sno": 11,
+    "name": "24 Hrs urine Nor- Metanephrins",
+    "price": 2500,
+    "nameLower": "24 hrs urine nor- metanephrins",
+    "testCode": "KT0011",
+    "slug": "kt0011-24-hrs-urine-nor-metanephrins"
+  },
+  {
+    "sno": 12,
+    "name": "5 Alpha-Dihydro testosterone",
+    "price": 2000,
+    "nameLower": "5 alpha-dihydro testosterone",
+    "testCode": "KT0012",
+    "slug": "kt0012-5-alpha-dihydro-testosterone"
+  },
+  {
+    "sno": 13,
+    "name": "Aarogyam 1.3",
+    "price": 0,
+    "nameLower": "aarogyam 1.3",
+    "testCode": "KT0013",
+    "slug": "kt0013-aarogyam-1-3"
+  },
+  {
+    "sno": 14,
+    "name": "ABG TEST",
+    "price": 1300,
+    "nameLower": "abg test",
+    "testCode": "KT0014",
+    "slug": "kt0014-abg-test"
+  },
+  {
+    "sno": 15,
+    "name": "Abnormal Haemoglobin Studies Hb Variants Blood",
+    "price": 1500,
+    "nameLower": "abnormal haemoglobin studies hb variants blood",
+    "testCode": "KT0015",
+    "slug": "kt0015-abnormal-haemoglobin-studies-hb-variants-blood"
+  },
+  {
+    "sno": 16,
+    "name": "ABO GROUP & RH TYPING",
+    "price": 100,
+    "nameLower": "abo group & rh typing",
+    "testCode": "KT0016",
+    "slug": "kt0016-abo-group-and-rh-typing"
+  },
+  {
+    "sno": 17,
+    "name": "ABSOLUTE EOSINOPHIL COUNT",
+    "price": 400,
+    "nameLower": "absolute eosinophil count",
+    "testCode": "KT0017",
+    "slug": "kt0017-absolute-eosinophil-count"
+  },
+  {
+    "sno": 18,
+    "name": "Absolute Neutrophil count",
+    "price": 200,
+    "nameLower": "absolute neutrophil count",
+    "testCode": "KT0018",
+    "slug": "kt0018-absolute-neutrophil-count"
+  },
+  {
+    "sno": 19,
+    "name": "ACE (ANGIOTENSIN CONVERTING ENZYME )",
+    "price": 1500,
+    "nameLower": "ace (angiotensin converting enzyme )",
+    "testCode": "KT0019",
+    "slug": "kt0019-ace-angiotensin-converting-enzyme"
+  },
+  {
+    "sno": 20,
+    "name": "AChR Antibodies",
+    "price": 3200,
+    "nameLower": "achr antibodies",
+    "testCode": "KT0020",
+    "slug": "kt0020-achr-antibodies"
+  },
+  {
+    "sno": 21,
+    "name": "Acid Phosphatase",
+    "price": 500,
+    "nameLower": "acid phosphatase",
+    "testCode": "KT0021",
+    "slug": "kt0021-acid-phosphatase"
+  },
+  {
+    "sno": 22,
+    "name": "Acitic Fluid -Cell Type/ Cell Count /Albumin",
+    "price": 600,
+    "nameLower": "acitic fluid -cell type/ cell count /albumin",
+    "testCode": "KT0022",
+    "slug": "kt0022-acitic-fluid-cell-type-cell-count-albumin"
+  },
+  {
+    "sno": 23,
+    "name": "ACTH (Adreno Cortico Tropic Hormone)",
+    "price": 1500,
+    "nameLower": "acth (adreno cortico tropic hormone)",
+    "testCode": "KT0023",
+    "slug": "kt0023-acth-adreno-cortico-tropic-hormone"
+  },
+  {
+    "sno": 24,
+    "name": "ADA",
+    "price": 1000,
+    "nameLower": "ada",
+    "testCode": "KT0024",
+    "slug": "kt0024-ada"
+  },
+  {
+    "sno": 25,
+    "name": "Advance Electrolytes",
+    "price": 500,
+    "nameLower": "advance electrolytes",
+    "testCode": "KT0025",
+    "slug": "kt0025-advance-electrolytes"
+  },
+  {
+    "sno": 26,
+    "name": "Advance lipid (APO A+ APO B + LIPO)",
+    "price": 0,
+    "nameLower": "advance lipid (apo a+ apo b + lipo)",
+    "testCode": "KT0026",
+    "slug": "kt0026-advance-lipid-apo-a-apo-b-lipo"
+  },
+  {
+    "sno": 27,
+    "name": "AFB CULTURE/SENSETIVITY",
+    "price": 7500,
+    "nameLower": "afb culture/sensetivity",
+    "testCode": "KT0027",
+    "slug": "kt0027-afb-culture-sensetivity"
+  },
+  {
+    "sno": 28,
+    "name": "AFB STAINING (ZEIL NIELSON STAIN) 2 SAMPLES",
+    "price": 800,
+    "nameLower": "afb staining (zeil nielson stain) 2 samples",
+    "testCode": "KT0028",
+    "slug": "kt0028-afb-staining-zeil-nielson-stain-2-samples"
+  },
+  {
+    "sno": 29,
+    "name": "AFP (Alpha Feto Protein)",
+    "price": 1400,
+    "nameLower": "afp (alpha feto protein)",
+    "testCode": "KT0029",
+    "slug": "kt0029-afp-alpha-feto-protein"
+  },
+  {
+    "sno": 30,
+    "name": "Aldolase",
+    "price": 1500,
+    "nameLower": "aldolase",
+    "testCode": "KT0030",
+    "slug": "kt0030-aldolase"
+  },
+  {
+    "sno": 31,
+    "name": "Aldosterone -Plasma renin ratio",
+    "price": 7500,
+    "nameLower": "aldosterone -plasma renin ratio",
+    "testCode": "KT0031",
+    "slug": "kt0031-aldosterone-plasma-renin-ratio"
+  },
+  {
+    "sno": 32,
+    "name": "ALKALINE PHOSPHATE",
+    "price": 200,
+    "nameLower": "alkaline phosphate",
+    "testCode": "KT0032",
+    "slug": "kt0032-alkaline-phosphate"
+  },
+  {
+    "sno": 33,
+    "name": "Allergy Drug Panel Comprehensive",
+    "price": 13500,
+    "nameLower": "allergy drug panel comprehensive",
+    "testCode": "KT0033",
+    "slug": "kt0033-allergy-drug-panel-comprehensive"
+  },
+  {
+    "sno": 34,
+    "name": "ALPHA1 ANTI TRYPSIN",
+    "price": 2500,
+    "nameLower": "alpha1 anti trypsin",
+    "testCode": "KT0034",
+    "slug": "kt0034-alpha1-anti-trypsin"
+  },
+  {
+    "sno": 35,
+    "name": "AMH PLUS PREMIUM",
+    "price": 3700,
+    "nameLower": "amh plus premium",
+    "testCode": "KT0035",
+    "slug": "kt0035-amh-plus-premium"
+  },
+  {
+    "sno": 36,
+    "name": "Ammonia Level",
+    "price": 1600,
+    "nameLower": "ammonia level",
+    "testCode": "KT0036",
+    "slug": "kt0036-ammonia-level"
+  },
+  {
+    "sno": 37,
+    "name": "AMYLASE",
+    "price": 500,
+    "nameLower": "amylase",
+    "testCode": "KT0037",
+    "slug": "kt0037-amylase"
+  },
+  {
+    "sno": 38,
+    "name": "ANA (ANTI NUCLEAR ANTIBODY)",
+    "price": 1200,
+    "nameLower": "ana (anti nuclear antibody)",
+    "testCode": "KT0038",
+    "slug": "kt0038-ana-anti-nuclear-antibody"
+  },
+  {
+    "sno": 39,
+    "name": "ANA By IFA MATHOD",
+    "price": 2000,
+    "nameLower": "ana by ifa mathod",
+    "testCode": "KT0039",
+    "slug": "kt0039-ana-by-ifa-mathod"
+  },
+  {
+    "sno": 40,
+    "name": "ANA By IFA MATHOD TITER",
+    "price": 2500,
+    "nameLower": "ana by ifa mathod titer",
+    "testCode": "KT0040",
+    "slug": "kt0040-ana-by-ifa-mathod-titer"
+  },
+  {
+    "sno": 41,
+    "name": "ANA PROFILE",
+    "price": 5500,
+    "nameLower": "ana profile",
+    "testCode": "KT0041",
+    "slug": "kt0041-ana-profile"
+  },
+  {
+    "sno": 42,
+    "name": "ANCA (Vasculitis Screan IF)",
+    "price": 2500,
+    "nameLower": "anca (vasculitis screan if)",
+    "testCode": "KT0042",
+    "slug": "kt0042-anca-vasculitis-screan-if"
+  },
+  {
+    "sno": 43,
+    "name": "ANCA-C",
+    "price": 1600,
+    "nameLower": "anca-c",
+    "testCode": "KT0043",
+    "slug": "kt0043-anca-c"
+  },
+  {
+    "sno": 44,
+    "name": "ANCA-P",
+    "price": 1200,
+    "nameLower": "anca-p",
+    "testCode": "KT0044",
+    "slug": "kt0044-anca-p"
+  },
+  {
+    "sno": 45,
+    "name": "Androgen",
+    "price": 3000,
+    "nameLower": "androgen",
+    "testCode": "KT0045",
+    "slug": "kt0045-androgen"
+  },
+  {
+    "sno": 46,
+    "name": "Anemia Comprehensive panel",
+    "price": 6000,
+    "nameLower": "anemia comprehensive panel",
+    "testCode": "KT0046",
+    "slug": "kt0046-anemia-comprehensive-panel"
+  },
+  {
+    "sno": 47,
+    "name": "ANEMIA PANEL",
+    "price": 6900,
+    "nameLower": "anemia panel",
+    "testCode": "KT0047",
+    "slug": "kt0047-anemia-panel"
+  },
+  {
+    "sno": 48,
+    "name": "Antenatal Panel",
+    "price": 6980,
+    "nameLower": "antenatal panel",
+    "testCode": "KT0048",
+    "slug": "kt0048-antenatal-panel"
+  },
+  {
+    "sno": 49,
+    "name": "Anti CARDLOLIPIN ANTIBODY -Igg",
+    "price": 1500,
+    "nameLower": "anti cardlolipin antibody -igg",
+    "testCode": "KT0049",
+    "slug": "kt0049-anti-cardlolipin-antibody-igg"
+  },
+  {
+    "sno": 50,
+    "name": "Anti CARDLOLIPIN ANTIBODY -Igm",
+    "price": 1500,
+    "nameLower": "anti cardlolipin antibody -igm",
+    "testCode": "KT0050",
+    "slug": "kt0050-anti-cardlolipin-antibody-igm"
+  },
+  {
+    "sno": 51,
+    "name": "ANTI CCP (Antibody)",
+    "price": 1500,
+    "nameLower": "anti ccp (antibody)",
+    "testCode": "KT0051",
+    "slug": "kt0051-anti-ccp-antibody"
+  },
+  {
+    "sno": 52,
+    "name": "Anti Centromere Antibody",
+    "price": 3000,
+    "nameLower": "anti centromere antibody",
+    "testCode": "KT0052",
+    "slug": "kt0052-anti-centromere-antibody"
+  },
+  {
+    "sno": 53,
+    "name": "Anti DNase B",
+    "price": 4000,
+    "nameLower": "anti dnase b",
+    "testCode": "KT0053",
+    "slug": "kt0053-anti-dnase-b"
+  },
+  {
+    "sno": 54,
+    "name": "Anti Ds DNA",
+    "price": 2000,
+    "nameLower": "anti ds dna",
+    "testCode": "KT0054",
+    "slug": "kt0054-anti-ds-dna"
+  },
+  {
+    "sno": 55,
+    "name": "ANTI HAV Igm",
+    "price": 1200,
+    "nameLower": "anti hav igm",
+    "testCode": "KT0055",
+    "slug": "kt0055-anti-hav-igm"
+  },
+  {
+    "sno": 56,
+    "name": "ANTI HAV TOTAL (IgG&IgM)",
+    "price": 2400,
+    "nameLower": "anti hav total (igg&igm)",
+    "testCode": "KT0056",
+    "slug": "kt0056-anti-hav-total-igg-and-igm"
+  },
+  {
+    "sno": 57,
+    "name": "Anti HBC Ag-IgG",
+    "price": 1000,
+    "nameLower": "anti hbc ag-igg",
+    "testCode": "KT0057",
+    "slug": "kt0057-anti-hbc-ag-igg"
+  },
+  {
+    "sno": 58,
+    "name": "Anti HBC Ag-IgM",
+    "price": 1600,
+    "nameLower": "anti hbc ag-igm",
+    "testCode": "KT0058",
+    "slug": "kt0058-anti-hbc-ag-igm"
+  },
+  {
+    "sno": 59,
+    "name": "Anti HBC Total",
+    "price": 800,
+    "nameLower": "anti hbc total",
+    "testCode": "KT0059",
+    "slug": "kt0059-anti-hbc-total"
+  },
+  {
+    "sno": 60,
+    "name": "Anti HBe Antibody",
+    "price": 600,
+    "nameLower": "anti hbe antibody",
+    "testCode": "KT0060",
+    "slug": "kt0060-anti-hbe-antibody"
+  },
+  {
+    "sno": 61,
+    "name": "Anti HBS",
+    "price": 800,
+    "nameLower": "anti hbs",
+    "testCode": "KT0061",
+    "slug": "kt0061-anti-hbs"
+  },
+  {
+    "sno": 62,
+    "name": "Anti HBS Antibody",
+    "price": 700,
+    "nameLower": "anti hbs antibody",
+    "testCode": "KT0062",
+    "slug": "kt0062-anti-hbs-antibody"
+  },
+  {
+    "sno": 63,
+    "name": "Anti HBS IgG",
+    "price": 700,
+    "nameLower": "anti hbs igg",
+    "testCode": "KT0063",
+    "slug": "kt0063-anti-hbs-igg"
+  },
+  {
+    "sno": 64,
+    "name": "Anti HBS IgM",
+    "price": 700,
+    "nameLower": "anti hbs igm",
+    "testCode": "KT0064",
+    "slug": "kt0064-anti-hbs-igm"
+  },
+  {
+    "sno": 65,
+    "name": "ANTI HEPATITIS C VIRUS (ANTI HCV) - TOTAL",
+    "price": 4000,
+    "nameLower": "anti hepatitis c virus (anti hcv) - total",
+    "testCode": "KT0065",
+    "slug": "kt0065-anti-hepatitis-c-virus-anti-hcv-total"
+  },
+  {
+    "sno": 66,
+    "name": "ANTI HEPATITIS C VIRUS (ANTI HCV) - TOTAL",
+    "price": 600,
+    "nameLower": "anti hepatitis c virus (anti hcv) - total",
+    "testCode": "KT0066",
+    "slug": "kt0066-anti-hepatitis-c-virus-anti-hcv-total"
+  },
+  {
+    "sno": 67,
+    "name": "Anti Hepatitis E Virus (Anti HEV) - IgM",
+    "price": 1200,
+    "nameLower": "anti hepatitis e virus (anti hev) - igm",
+    "testCode": "KT0067",
+    "slug": "kt0067-anti-hepatitis-e-virus-anti-hev-igm"
+  },
+  {
+    "sno": 68,
+    "name": "Anti HEV Igg",
+    "price": 1200,
+    "nameLower": "anti hev igg",
+    "testCode": "KT0068",
+    "slug": "kt0068-anti-hev-igg"
+  },
+  {
+    "sno": 69,
+    "name": "Anti Insulin Antibody",
+    "price": 2800,
+    "nameLower": "anti insulin antibody",
+    "testCode": "KT0069",
+    "slug": "kt0069-anti-insulin-antibody"
+  },
+  {
+    "sno": 70,
+    "name": "Anti Mitochondrial A/B (AMA)",
+    "price": 2500,
+    "nameLower": "anti mitochondrial a/b (ama)",
+    "testCode": "KT0070",
+    "slug": "kt0070-anti-mitochondrial-a-b-ama"
+  },
+  {
+    "sno": 71,
+    "name": "ANTI MPO",
+    "price": 3000,
+    "nameLower": "anti mpo",
+    "testCode": "KT0071",
+    "slug": "kt0071-anti-mpo"
+  },
+  {
+    "sno": 72,
+    "name": "Anti Mullenium Hormone (AMH)",
+    "price": 2000,
+    "nameLower": "anti mullenium hormone (amh)",
+    "testCode": "KT0072",
+    "slug": "kt0072-anti-mullenium-hormone-amh"
+  },
+  {
+    "sno": 73,
+    "name": "ANTI MULLERIAN HORMONE (AMH)",
+    "price": 1800,
+    "nameLower": "anti mullerian hormone (amh)",
+    "testCode": "KT0073",
+    "slug": "kt0073-anti-mullerian-hormone-amh"
+  },
+  {
+    "sno": 74,
+    "name": "Anti PHOSPHOLIPID ANTIBODY -Igg",
+    "price": 1500,
+    "nameLower": "anti phospholipid antibody -igg",
+    "testCode": "KT0074",
+    "slug": "kt0074-anti-phospholipid-antibody-igg"
+  },
+  {
+    "sno": 75,
+    "name": "Anti PHOSPHOLIPID ANTIBODY -Igm",
+    "price": 1500,
+    "nameLower": "anti phospholipid antibody -igm",
+    "testCode": "KT0075",
+    "slug": "kt0075-anti-phospholipid-antibody-igm"
+  },
+  {
+    "sno": 76,
+    "name": "Anti Sm - Antibody",
+    "price": 2000,
+    "nameLower": "anti sm - antibody",
+    "testCode": "KT0076",
+    "slug": "kt0076-anti-sm-antibody"
+  },
+  {
+    "sno": 77,
+    "name": "Anti-HBc IgM (IgM Ab to Hep-B Core Ag)",
+    "price": 1200,
+    "nameLower": "anti-hbc igm (igm ab to hep-b core ag)",
+    "testCode": "KT0077",
+    "slug": "kt0077-anti-hbc-igm-igm-ab-to-hep-b-core-ag"
+  },
+  {
+    "sno": 78,
+    "name": "Anti-IA2",
+    "price": 2500,
+    "nameLower": "anti-ia2",
+    "testCode": "KT0078",
+    "slug": "kt0078-anti-ia2"
+  },
+  {
+    "sno": 79,
+    "name": "Anti-Smooth Muscle Antibody",
+    "price": 2100,
+    "nameLower": "anti-smooth muscle antibody",
+    "testCode": "KT0079",
+    "slug": "kt0079-anti-smooth-muscle-antibody"
+  },
+  {
+    "sno": 80,
+    "name": "Anti-TPO",
+    "price": 1200,
+    "nameLower": "anti-tpo",
+    "testCode": "KT0080",
+    "slug": "kt0080-anti-tpo"
+  },
+  {
+    "sno": 81,
+    "name": "Antibody To Hapatitis C Virus (ECI)",
+    "price": 1200,
+    "nameLower": "antibody to hapatitis c virus (eci)",
+    "testCode": "KT0081",
+    "slug": "kt0081-antibody-to-hapatitis-c-virus-eci"
+  },
+  {
+    "sno": 82,
+    "name": "Antithyroglobulin (ATG)",
+    "price": 2000,
+    "nameLower": "antithyroglobulin (atg)",
+    "testCode": "KT0082",
+    "slug": "kt0082-antithyroglobulin-atg"
+  },
+  {
+    "sno": 83,
+    "name": "APLA (Antiphospholipid antibody )- IgG",
+    "price": 1500,
+    "nameLower": "apla (antiphospholipid antibody )- igg",
+    "testCode": "KT0083",
+    "slug": "kt0083-apla-antiphospholipid-antibody-igg"
+  },
+  {
+    "sno": 84,
+    "name": "APLA (Antiphospholipid antibody )- IgM",
+    "price": 1500,
+    "nameLower": "apla (antiphospholipid antibody )- igm",
+    "testCode": "KT0084",
+    "slug": "kt0084-apla-antiphospholipid-antibody-igm"
+  },
+  {
+    "sno": 85,
+    "name": "Apolipoprotein A (APOA-1)",
+    "price": 1500,
+    "nameLower": "apolipoprotein a (apoa-1)",
+    "testCode": "KT0085",
+    "slug": "kt0085-apolipoprotein-a-apoa-1"
+  },
+  {
+    "sno": 86,
+    "name": "Apolipoprotein B (APOB)",
+    "price": 1500,
+    "nameLower": "apolipoprotein b (apob)",
+    "testCode": "KT0086",
+    "slug": "kt0086-apolipoprotein-b-apob"
+  },
+  {
+    "sno": 87,
+    "name": "APTT(Activated Partial Thromboplastin Time)",
+    "price": 500,
+    "nameLower": "aptt(activated partial thromboplastin time)",
+    "testCode": "KT0087",
+    "slug": "kt0087-aptt-activated-partial-thromboplastin-time"
+  },
+  {
+    "sno": 88,
+    "name": "Arthritis Panel",
+    "price": 5500,
+    "nameLower": "arthritis panel",
+    "testCode": "KT0088",
+    "slug": "kt0088-arthritis-panel"
+  },
+  {
+    "sno": 89,
+    "name": "Ascitic Fluid - Grams Stain",
+    "price": 300,
+    "nameLower": "ascitic fluid - grams stain",
+    "testCode": "KT0089",
+    "slug": "kt0089-ascitic-fluid-grams-stain"
+  },
+  {
+    "sno": 90,
+    "name": "Ascitic Fluid -AFB Stain",
+    "price": 400,
+    "nameLower": "ascitic fluid -afb stain",
+    "testCode": "KT0090",
+    "slug": "kt0090-ascitic-fluid-afb-stain"
+  },
+  {
+    "sno": 91,
+    "name": "ASCITIC Fluid Analysis- Cell,Sugar and Protein",
+    "price": 1000,
+    "nameLower": "ascitic fluid analysis- cell,sugar and protein",
+    "testCode": "KT0091",
+    "slug": "kt0091-ascitic-fluid-analysis-cell-sugar-and-protein"
+  },
+  {
+    "sno": 92,
+    "name": "Ascitic Fluid Analysis- Culture",
+    "price": 500,
+    "nameLower": "ascitic fluid analysis- culture",
+    "testCode": "KT0092",
+    "slug": "kt0092-ascitic-fluid-analysis-culture"
+  },
+  {
+    "sno": 93,
+    "name": "ASCITIC FLUID EXAM+ ASPIRATION CHARGE",
+    "price": 1650,
+    "nameLower": "ascitic fluid exam+ aspiration charge",
+    "testCode": "KT0093",
+    "slug": "kt0093-ascitic-fluid-exam-aspiration-charge"
+  },
+  {
+    "sno": 94,
+    "name": "Ascitic fluid For Cytology ( Cell Count & Cell Type)",
+    "price": 500,
+    "nameLower": "ascitic fluid for cytology ( cell count & cell type)",
+    "testCode": "KT0094",
+    "slug": "kt0094-ascitic-fluid-for-cytology-cell-count-and-cell-type"
+  },
+  {
+    "sno": 95,
+    "name": "ASO LATEX",
+    "price": 350,
+    "nameLower": "aso latex",
+    "testCode": "KT0095",
+    "slug": "kt0095-aso-latex"
+  },
+  {
+    "sno": 96,
+    "name": "ASO TITRE (Quantitative)",
+    "price": 500,
+    "nameLower": "aso titre (quantitative)",
+    "testCode": "KT0096",
+    "slug": "kt0096-aso-titre-quantitative"
+  },
+  {
+    "sno": 97,
+    "name": "Aspergillus IgG",
+    "price": 1400,
+    "nameLower": "aspergillus igg",
+    "testCode": "KT0097",
+    "slug": "kt0097-aspergillus-igg"
+  },
+  {
+    "sno": 98,
+    "name": "ASPIRATION CHARGE ANY SAMPLE",
+    "price": 600,
+    "nameLower": "aspiration charge any sample",
+    "testCode": "KT0098",
+    "slug": "kt0098-aspiration-charge-any-sample"
+  },
+  {
+    "sno": 99,
+    "name": "BACTERIAL CULTRUE & SENSITIVITY EXAMINATION",
+    "price": 1800,
+    "nameLower": "bacterial cultrue & sensitivity examination",
+    "testCode": "KT0099",
+    "slug": "kt0099-bacterial-cultrue-and-sensitivity-examination"
+  },
+  {
+    "sno": 100,
+    "name": "BAL FLUID ANALYSIS",
+    "price": 1500,
+    "nameLower": "bal fluid analysis",
+    "testCode": "KT0100",
+    "slug": "kt0100-bal-fluid-analysis"
+  },
+  {
+    "sno": 101,
+    "name": "BAL Fluid Analysis -Cytology For Malignant Cell",
+    "price": 1500,
+    "nameLower": "bal fluid analysis -cytology for malignant cell",
+    "testCode": "KT0101",
+    "slug": "kt0101-bal-fluid-analysis-cytology-for-malignant-cell"
+  },
+  {
+    "sno": 102,
+    "name": "BAL FLUID ANALYSIS-CYTOLOGY FOR MALIGNANT CELL",
+    "price": 800,
+    "nameLower": "bal fluid analysis-cytology for malignant cell",
+    "testCode": "KT0102",
+    "slug": "kt0102-bal-fluid-analysis-cytology-for-malignant-cell"
+  },
+  {
+    "sno": 103,
+    "name": "Bal For Culture & Sensitivity",
+    "price": 1600,
+    "nameLower": "bal for culture & sensitivity",
+    "testCode": "KT0103",
+    "slug": "kt0103-bal-for-culture-and-sensitivity"
+  },
+  {
+    "sno": 104,
+    "name": "BAND Cell",
+    "price": 200,
+    "nameLower": "band cell",
+    "testCode": "KT0104",
+    "slug": "kt0104-band-cell"
+  },
+  {
+    "sno": 105,
+    "name": "Basic Fever Panel",
+    "price": 3050,
+    "nameLower": "basic fever panel",
+    "testCode": "KT0105",
+    "slug": "kt0105-basic-fever-panel"
+  },
+  {
+    "sno": 106,
+    "name": "Basic infertility profile",
+    "price": 6000,
+    "nameLower": "basic infertility profile",
+    "testCode": "KT0106",
+    "slug": "kt0106-basic-infertility-profile"
+  },
+  {
+    "sno": 107,
+    "name": "Bence Jones Proteins urine",
+    "price": 600,
+    "nameLower": "bence jones proteins urine",
+    "testCode": "KT0107",
+    "slug": "kt0107-bence-jones-proteins-urine"
+  },
+  {
+    "sno": 108,
+    "name": "BETA HCG",
+    "price": 1100,
+    "nameLower": "beta hcg",
+    "testCode": "KT0108",
+    "slug": "kt0108-beta-hcg"
+  },
+  {
+    "sno": 109,
+    "name": "Beta Hcg Cancer Marker",
+    "price": 600,
+    "nameLower": "beta hcg cancer marker",
+    "testCode": "KT0109",
+    "slug": "kt0109-beta-hcg-cancer-marker"
+  },
+  {
+    "sno": 110,
+    "name": "Beta-2 Glycoprotein IgG",
+    "price": 1200,
+    "nameLower": "beta-2 glycoprotein igg",
+    "testCode": "KT0110",
+    "slug": "kt0110-beta-2-glycoprotein-igg"
+  },
+  {
+    "sno": 111,
+    "name": "Beta-2 Glycoprotein IgM",
+    "price": 1200,
+    "nameLower": "beta-2 glycoprotein igm",
+    "testCode": "KT0111",
+    "slug": "kt0111-beta-2-glycoprotein-igm"
+  },
+  {
+    "sno": 112,
+    "name": "BETA2 MICROGLOBULIN",
+    "price": 1500,
+    "nameLower": "beta2 microglobulin",
+    "testCode": "KT0112",
+    "slug": "kt0112-beta2-microglobulin"
+  },
+  {
+    "sno": 113,
+    "name": "Bile Acid",
+    "price": 1700,
+    "nameLower": "bile acid",
+    "testCode": "KT0113",
+    "slug": "kt0113-bile-acid"
+  },
+  {
+    "sno": 114,
+    "name": "Biopsy Bone Marrow (Procedure)",
+    "price": 3000,
+    "nameLower": "biopsy bone marrow (procedure)",
+    "testCode": "KT0114",
+    "slug": "kt0114-biopsy-bone-marrow-procedure"
+  },
+  {
+    "sno": 115,
+    "name": "Biopsy Nerve",
+    "price": 4500,
+    "nameLower": "biopsy nerve",
+    "testCode": "KT0115",
+    "slug": "kt0115-biopsy-nerve"
+  },
+  {
+    "sno": 116,
+    "name": "Biopsy Neuropathology",
+    "price": 1200,
+    "nameLower": "biopsy neuropathology",
+    "testCode": "KT0116",
+    "slug": "kt0116-biopsy-neuropathology"
+  },
+  {
+    "sno": 117,
+    "name": "Blood C And S",
+    "price": 1600,
+    "nameLower": "blood c and s",
+    "testCode": "KT0117",
+    "slug": "kt0117-blood-c-and-s"
+  },
+  {
+    "sno": 118,
+    "name": "Blood Culture",
+    "price": 1500,
+    "nameLower": "blood culture",
+    "testCode": "KT0118",
+    "slug": "kt0118-blood-culture"
+  },
+  {
+    "sno": 119,
+    "name": "BLOOD CULTURE (AEROBIC)",
+    "price": 1300,
+    "nameLower": "blood culture (aerobic)",
+    "testCode": "KT0119",
+    "slug": "kt0119-blood-culture-aerobic"
+  },
+  {
+    "sno": 120,
+    "name": "Blood Culture (Paired)",
+    "price": 2200,
+    "nameLower": "blood culture (paired)",
+    "testCode": "KT0120",
+    "slug": "kt0120-blood-culture-paired"
+  },
+  {
+    "sno": 121,
+    "name": "Blood Culture With Urine Culture and ET Secration",
+    "price": 2200,
+    "nameLower": "blood culture with urine culture and et secration",
+    "testCode": "KT0121",
+    "slug": "kt0121-blood-culture-with-urine-culture-and-et-secration"
+  },
+  {
+    "sno": 122,
+    "name": "Blood Culture With Urine Culture and Sputum Culture",
+    "price": 2200,
+    "nameLower": "blood culture with urine culture and sputum culture",
+    "testCode": "KT0122",
+    "slug": "kt0122-blood-culture-with-urine-culture-and-sputum-culture"
+  },
+  {
+    "sno": 123,
+    "name": "Blood Culture With Urine Culture and Tracheal Culture",
+    "price": 2200,
+    "nameLower": "blood culture with urine culture and tracheal culture",
+    "testCode": "KT0123",
+    "slug": "kt0123-blood-culture-with-urine-culture-and-tracheal-culture"
+  },
+  {
+    "sno": 124,
+    "name": "Blood Group & Rh Factor",
+    "price": 150,
+    "nameLower": "blood group & rh factor",
+    "testCode": "KT0124",
+    "slug": "kt0124-blood-group-and-rh-factor"
+  },
+  {
+    "sno": 125,
+    "name": "Blood Sugar (2 hrs. 75 g Glucose)",
+    "price": 100,
+    "nameLower": "blood sugar (2 hrs. 75 g glucose)",
+    "testCode": "KT0125",
+    "slug": "kt0125-blood-sugar-2-hrs-75-g-glucose"
+  },
+  {
+    "sno": 126,
+    "name": "Blood Sugar (2 hrs. PP)",
+    "price": 100,
+    "nameLower": "blood sugar (2 hrs. pp)",
+    "testCode": "KT0126",
+    "slug": "kt0126-blood-sugar-2-hrs-pp"
+  },
+  {
+    "sno": 127,
+    "name": "Blood Sugar (Fasting)",
+    "price": 100,
+    "nameLower": "blood sugar (fasting)",
+    "testCode": "KT0127",
+    "slug": "kt0127-blood-sugar-fasting"
+  },
+  {
+    "sno": 128,
+    "name": "Blood Sugar (Random)",
+    "price": 100,
+    "nameLower": "blood sugar (random)",
+    "testCode": "KT0128",
+    "slug": "kt0128-blood-sugar-random"
+  },
+  {
+    "sno": 129,
+    "name": "BLOOD SUGAR PP+DRUGS",
+    "price": 100,
+    "nameLower": "blood sugar pp+drugs",
+    "testCode": "KT0129",
+    "slug": "kt0129-blood-sugar-pp-drugs"
+  },
+  {
+    "sno": 130,
+    "name": "BLOOD UREA",
+    "price": 200,
+    "nameLower": "blood urea",
+    "testCode": "KT0130",
+    "slug": "kt0130-blood-urea"
+  },
+  {
+    "sno": 131,
+    "name": "Blood urea nitrogen (BUN)",
+    "price": 150,
+    "nameLower": "blood urea nitrogen (bun)",
+    "testCode": "KT0131",
+    "slug": "kt0131-blood-urea-nitrogen-bun"
+  },
+  {
+    "sno": 132,
+    "name": "Blood Urea Nitrogen(BUN)",
+    "price": 200,
+    "nameLower": "blood urea nitrogen(bun)",
+    "testCode": "KT0132",
+    "slug": "kt0132-blood-urea-nitrogen-bun"
+  },
+  {
+    "sno": 133,
+    "name": "BMI",
+    "price": 500,
+    "nameLower": "bmi",
+    "testCode": "KT0133",
+    "slug": "kt0133-bmi"
+  },
+  {
+    "sno": 134,
+    "name": "BODY FLUID FOR CULTURE(BACTEC)",
+    "price": 1600,
+    "nameLower": "body fluid for culture(bactec)",
+    "testCode": "KT0134",
+    "slug": "kt0134-body-fluid-for-culture-bactec"
+  },
+  {
+    "sno": 135,
+    "name": "BONE MARROW EXAMINATION",
+    "price": 2000,
+    "nameLower": "bone marrow examination",
+    "testCode": "KT0135",
+    "slug": "kt0135-bone-marrow-examination"
+  },
+  {
+    "sno": 136,
+    "name": "Brucella IgG",
+    "price": 1100,
+    "nameLower": "brucella igg",
+    "testCode": "KT0136",
+    "slug": "kt0136-brucella-igg"
+  },
+  {
+    "sno": 137,
+    "name": "Brucella IgM",
+    "price": 1100,
+    "nameLower": "brucella igm",
+    "testCode": "KT0137",
+    "slug": "kt0137-brucella-igm"
+  },
+  {
+    "sno": 138,
+    "name": "BT",
+    "price": 50,
+    "nameLower": "bt",
+    "testCode": "KT0138",
+    "slug": "kt0138-bt"
+  },
+  {
+    "sno": 139,
+    "name": "C S F",
+    "price": 1200,
+    "nameLower": "c s f",
+    "testCode": "KT0139",
+    "slug": "kt0139-c-s-f"
+  },
+  {
+    "sno": 140,
+    "name": "C-Peptide",
+    "price": 1500,
+    "nameLower": "c-peptide",
+    "testCode": "KT0140",
+    "slug": "kt0140-c-peptide"
+  },
+  {
+    "sno": 141,
+    "name": "C-Reactive Protein Quantitative",
+    "price": 500,
+    "nameLower": "c-reactive protein quantitative",
+    "testCode": "KT0141",
+    "slug": "kt0141-c-reactive-protein-quantitative"
+  },
+  {
+    "sno": 142,
+    "name": "C-Reactive Protein Quantitative",
+    "price": 500,
+    "nameLower": "c-reactive protein quantitative",
+    "testCode": "KT0142",
+    "slug": "kt0142-c-reactive-protein-quantitative"
+  },
+  {
+    "sno": 143,
+    "name": "C-Reactive Protein Quantitative",
+    "price": 500,
+    "nameLower": "c-reactive protein quantitative",
+    "testCode": "KT0143",
+    "slug": "kt0143-c-reactive-protein-quantitative"
+  },
+  {
+    "sno": 144,
+    "name": "CA 15.3",
+    "price": 1500,
+    "nameLower": "ca 15.3",
+    "testCode": "KT0144",
+    "slug": "kt0144-ca-15-3"
+  },
+  {
+    "sno": 145,
+    "name": "CA 242",
+    "price": 2500,
+    "nameLower": "ca 242",
+    "testCode": "KT0145",
+    "slug": "kt0145-ca-242"
+  },
+  {
+    "sno": 146,
+    "name": "CA 50",
+    "price": 2500,
+    "nameLower": "ca 50",
+    "testCode": "KT0146",
+    "slug": "kt0146-ca-50"
+  },
+  {
+    "sno": 147,
+    "name": "CA 72.4",
+    "price": 3000,
+    "nameLower": "ca 72.4",
+    "testCode": "KT0147",
+    "slug": "kt0147-ca-72-4"
+  },
+  {
+    "sno": 148,
+    "name": "CA-125",
+    "price": 1200,
+    "nameLower": "ca-125",
+    "testCode": "KT0148",
+    "slug": "kt0148-ca-125"
+  },
+  {
+    "sno": 149,
+    "name": "CA19.9",
+    "price": 1600,
+    "nameLower": "ca19.9",
+    "testCode": "KT0149",
+    "slug": "kt0149-ca19-9"
+  },
+  {
+    "sno": 150,
+    "name": "Calcitonin",
+    "price": 3000,
+    "nameLower": "calcitonin",
+    "testCode": "KT0150",
+    "slug": "kt0150-calcitonin"
+  },
+  {
+    "sno": 151,
+    "name": "Calcium",
+    "price": 150,
+    "nameLower": "calcium",
+    "testCode": "KT0151",
+    "slug": "kt0151-calcium"
+  },
+  {
+    "sno": 152,
+    "name": "CALCIUM IONISED",
+    "price": 350,
+    "nameLower": "calcium ionised",
+    "testCode": "KT0152",
+    "slug": "kt0152-calcium-ionised"
+  },
+  {
+    "sno": 153,
+    "name": "Carbamazepine (Tegretol, Mazetol)",
+    "price": 1200,
+    "nameLower": "carbamazepine (tegretol, mazetol)",
+    "testCode": "KT0153",
+    "slug": "kt0153-carbamazepine-tegretol-mazetol"
+  },
+  {
+    "sno": 154,
+    "name": "Carbamazepine (Tegretol, Mazetol)",
+    "price": 1200,
+    "nameLower": "carbamazepine (tegretol, mazetol)",
+    "testCode": "KT0154",
+    "slug": "kt0154-carbamazepine-tegretol-mazetol"
+  },
+  {
+    "sno": 155,
+    "name": "Cardic profile",
+    "price": 4500,
+    "nameLower": "cardic profile",
+    "testCode": "KT0155",
+    "slug": "kt0155-cardic-profile"
+  },
+  {
+    "sno": 156,
+    "name": "CATHETERTIP CULTURE+SENSITIVITY",
+    "price": 1600,
+    "nameLower": "cathetertip culture+sensitivity",
+    "testCode": "KT0156",
+    "slug": "kt0156-cathetertip-culture-sensitivity"
+  },
+  {
+    "sno": 157,
+    "name": "CBC",
+    "price": 400,
+    "nameLower": "cbc",
+    "testCode": "KT0157",
+    "slug": "kt0157-cbc"
+  },
+  {
+    "sno": 158,
+    "name": "CBC+COMMENT OF SMEAR",
+    "price": 800,
+    "nameLower": "cbc+comment of smear",
+    "testCode": "KT0158",
+    "slug": "kt0158-cbc-comment-of-smear"
+  },
+  {
+    "sno": 159,
+    "name": "CD3",
+    "price": 2500,
+    "nameLower": "cd3",
+    "testCode": "KT0159",
+    "slug": "kt0159-cd3"
+  },
+  {
+    "sno": 160,
+    "name": "CD4",
+    "price": 2500,
+    "nameLower": "cd4",
+    "testCode": "KT0160",
+    "slug": "kt0160-cd4"
+  },
+  {
+    "sno": 161,
+    "name": "CD4/CD8",
+    "price": 3000,
+    "nameLower": "cd4/cd8",
+    "testCode": "KT0161",
+    "slug": "kt0161-cd4-cd8"
+  },
+  {
+    "sno": 162,
+    "name": "CD5 ( Immunohistochemistry )",
+    "price": 2500,
+    "nameLower": "cd5 ( immunohistochemistry )",
+    "testCode": "KT0162",
+    "slug": "kt0162-cd5-immunohistochemistry"
+  },
+  {
+    "sno": 163,
+    "name": "CEA Levels(Carcino Embryonic Antigen)",
+    "price": 1500,
+    "nameLower": "cea levels(carcino embryonic antigen)",
+    "testCode": "KT0163",
+    "slug": "kt0163-cea-levels-carcino-embryonic-antigen"
+  },
+  {
+    "sno": 164,
+    "name": "CELL BLOCK",
+    "price": 1000,
+    "nameLower": "cell block",
+    "testCode": "KT0164",
+    "slug": "kt0164-cell-block"
+  },
+  {
+    "sno": 165,
+    "name": "Cell Block cytology",
+    "price": 1500,
+    "nameLower": "cell block cytology",
+    "testCode": "KT0165",
+    "slug": "kt0165-cell-block-cytology"
+  },
+  {
+    "sno": 166,
+    "name": "CENTRAL LINE TIP FOR CULTURE+SENSITIVITY",
+    "price": 1600,
+    "nameLower": "central line tip for culture+sensitivity",
+    "testCode": "KT0166",
+    "slug": "kt0166-central-line-tip-for-culture-sensitivity"
+  },
+  {
+    "sno": 167,
+    "name": "Chickun Guniya Serology",
+    "price": 1850,
+    "nameLower": "chickun guniya serology",
+    "testCode": "KT0167",
+    "slug": "kt0167-chickun-guniya-serology"
+  },
+  {
+    "sno": 168,
+    "name": "CHIKUNGUNIYA IGG",
+    "price": 1000,
+    "nameLower": "chikunguniya igg",
+    "testCode": "KT0168",
+    "slug": "kt0168-chikunguniya-igg"
+  },
+  {
+    "sno": 169,
+    "name": "CHIKUNGUNIYA IGM",
+    "price": 1000,
+    "nameLower": "chikunguniya igm",
+    "testCode": "KT0169",
+    "slug": "kt0169-chikunguniya-igm"
+  },
+  {
+    "sno": 170,
+    "name": "Chloride",
+    "price": 200,
+    "nameLower": "chloride",
+    "testCode": "KT0170",
+    "slug": "kt0170-chloride"
+  },
+  {
+    "sno": 171,
+    "name": "Cholesterol",
+    "price": 200,
+    "nameLower": "cholesterol",
+    "testCode": "KT0171",
+    "slug": "kt0171-cholesterol"
+  },
+  {
+    "sno": 172,
+    "name": "Chyle Qualitative Detection, Urine",
+    "price": 1000,
+    "nameLower": "chyle qualitative detection, urine",
+    "testCode": "KT0172",
+    "slug": "kt0172-chyle-qualitative-detection-urine"
+  },
+  {
+    "sno": 173,
+    "name": "CML Quest IRMA",
+    "price": 8000,
+    "nameLower": "cml quest irma",
+    "testCode": "KT0173",
+    "slug": "kt0173-cml-quest-irma"
+  },
+  {
+    "sno": 174,
+    "name": "CMV IgG (Cytomegalovirus antibodes)",
+    "price": 2000,
+    "nameLower": "cmv igg (cytomegalovirus antibodes)",
+    "testCode": "KT0174",
+    "slug": "kt0174-cmv-igg-cytomegalovirus-antibodes"
+  },
+  {
+    "sno": 175,
+    "name": "CMV(CYTOMEGGALO )IGM",
+    "price": 700,
+    "nameLower": "cmv(cytomeggalo )igm",
+    "testCode": "KT0175",
+    "slug": "kt0175-cmv-cytomeggalo-igm"
+  },
+  {
+    "sno": 176,
+    "name": "COAGULATION PROFILE",
+    "price": 1550,
+    "nameLower": "coagulation profile",
+    "testCode": "KT0176",
+    "slug": "kt0176-coagulation-profile"
+  },
+  {
+    "sno": 177,
+    "name": "collection charge",
+    "price": 100,
+    "nameLower": "collection charge",
+    "testCode": "KT0177",
+    "slug": "kt0177-collection-charge"
+  },
+  {
+    "sno": 178,
+    "name": "Complement Protein Concentration(c3)",
+    "price": 900,
+    "nameLower": "complement protein concentration(c3)",
+    "testCode": "KT0178",
+    "slug": "kt0178-complement-protein-concentration-c3"
+  },
+  {
+    "sno": 179,
+    "name": "Complement Protein Concentration(c4)",
+    "price": 900,
+    "nameLower": "complement protein concentration(c4)",
+    "testCode": "KT0179",
+    "slug": "kt0179-complement-protein-concentration-c4"
+  },
+  {
+    "sno": 180,
+    "name": "COMPLETE INFERTILITY Profile (female)",
+    "price": 2300,
+    "nameLower": "complete infertility profile (female)",
+    "testCode": "KT0180",
+    "slug": "kt0180-complete-infertility-profile-female"
+  },
+  {
+    "sno": 181,
+    "name": "Comprehensive Health panel (male)",
+    "price": 6970,
+    "nameLower": "comprehensive health panel (male)",
+    "testCode": "KT0181",
+    "slug": "kt0181-comprehensive-health-panel-male"
+  },
+  {
+    "sno": 182,
+    "name": "Comprehensive Health panel female",
+    "price": 5620,
+    "nameLower": "comprehensive health panel female",
+    "testCode": "KT0182",
+    "slug": "kt0182-comprehensive-health-panel-female"
+  },
+  {
+    "sno": 183,
+    "name": "Comprehensive Hormone Panel female",
+    "price": 6100,
+    "nameLower": "comprehensive hormone panel female",
+    "testCode": "KT0183",
+    "slug": "kt0183-comprehensive-hormone-panel-female"
+  },
+  {
+    "sno": 184,
+    "name": "CONJUNCTIVAL SWAB FOR C AND S",
+    "price": 400,
+    "nameLower": "conjunctival swab for c and s",
+    "testCode": "KT0184",
+    "slug": "kt0184-conjunctival-swab-for-c-and-s"
+  },
+  {
+    "sno": 185,
+    "name": "COOMBS TEST DIRECT",
+    "price": 900,
+    "nameLower": "coombs test direct",
+    "testCode": "KT0185",
+    "slug": "kt0185-coombs-test-direct"
+  },
+  {
+    "sno": 186,
+    "name": "COOMBS TEST INDIRECT",
+    "price": 900,
+    "nameLower": "coombs test indirect",
+    "testCode": "KT0186",
+    "slug": "kt0186-coombs-test-indirect"
+  },
+  {
+    "sno": 187,
+    "name": "COPPER Serum",
+    "price": 500,
+    "nameLower": "copper serum",
+    "testCode": "KT0187",
+    "slug": "kt0187-copper-serum"
+  },
+  {
+    "sno": 188,
+    "name": "Cortisol free 24 Hrs Urine",
+    "price": 1500,
+    "nameLower": "cortisol free 24 hrs urine",
+    "testCode": "KT0188",
+    "slug": "kt0188-cortisol-free-24-hrs-urine"
+  },
+  {
+    "sno": 189,
+    "name": "Cortisol Urine",
+    "price": 1500,
+    "nameLower": "cortisol urine",
+    "testCode": "KT0189",
+    "slug": "kt0189-cortisol-urine"
+  },
+  {
+    "sno": 190,
+    "name": "Covid 19 Package - 3",
+    "price": 6080,
+    "nameLower": "covid 19 package - 3",
+    "testCode": "KT0190",
+    "slug": "kt0190-covid-19-package-3"
+  },
+  {
+    "sno": 191,
+    "name": "Covid 19 Package -2",
+    "price": 13760,
+    "nameLower": "covid 19 package -2",
+    "testCode": "KT0191",
+    "slug": "kt0191-covid-19-package-2"
+  },
+  {
+    "sno": 192,
+    "name": "COVID-19 ANTIGEN",
+    "price": 800,
+    "nameLower": "covid-19 antigen",
+    "testCode": "KT0192",
+    "slug": "kt0192-covid-19-antigen"
+  },
+  {
+    "sno": 193,
+    "name": "COVID-19 TOTAL ANTIBODY",
+    "price": 4000,
+    "nameLower": "covid-19 total antibody",
+    "testCode": "KT0193",
+    "slug": "kt0193-covid-19-total-antibody"
+  },
+  {
+    "sno": 194,
+    "name": "COVID-19 TOTAL ANTIBODY (IgG)",
+    "price": 1500,
+    "nameLower": "covid-19 total antibody (igg)",
+    "testCode": "KT0194",
+    "slug": "kt0194-covid-19-total-antibody-igg"
+  },
+  {
+    "sno": 195,
+    "name": "COVID-19 TOTAL ANTIBODY (IgM+IgG+IgA)",
+    "price": 2500,
+    "nameLower": "covid-19 total antibody (igm+igg+iga)",
+    "testCode": "KT0195",
+    "slug": "kt0195-covid-19-total-antibody-igm-igg-iga"
+  },
+  {
+    "sno": 196,
+    "name": "CPK (MB)",
+    "price": 1200,
+    "nameLower": "cpk (mb)",
+    "testCode": "KT0196",
+    "slug": "kt0196-cpk-mb"
+  },
+  {
+    "sno": 197,
+    "name": "Creatine Kinase -MB",
+    "price": 1200,
+    "nameLower": "creatine kinase -mb",
+    "testCode": "KT0197",
+    "slug": "kt0197-creatine-kinase-mb"
+  },
+  {
+    "sno": 198,
+    "name": "Creatine PhosphoKinase (CPK) -NAC",
+    "price": 1200,
+    "nameLower": "creatine phosphokinase (cpk) -nac",
+    "testCode": "KT0198",
+    "slug": "kt0198-creatine-phosphokinase-cpk-nac"
+  },
+  {
+    "sno": 199,
+    "name": "Cross Match",
+    "price": 500,
+    "nameLower": "cross match",
+    "testCode": "KT0199",
+    "slug": "kt0199-cross-match"
+  },
+  {
+    "sno": 200,
+    "name": "Cryptococcus Antigen ,CSF",
+    "price": 1600,
+    "nameLower": "cryptococcus antigen ,csf",
+    "testCode": "KT0200",
+    "slug": "kt0200-cryptococcus-antigen-csf"
+  },
+  {
+    "sno": 201,
+    "name": "Cryptococcus Antigen, Serum",
+    "price": 1600,
+    "nameLower": "cryptococcus antigen, serum",
+    "testCode": "KT0201",
+    "slug": "kt0201-cryptococcus-antigen-serum"
+  },
+  {
+    "sno": 202,
+    "name": "CSF - AFB Stain",
+    "price": 400,
+    "nameLower": "csf - afb stain",
+    "testCode": "KT0202",
+    "slug": "kt0202-csf-afb-stain"
+  },
+  {
+    "sno": 203,
+    "name": "CSF -Culture",
+    "price": 500,
+    "nameLower": "csf -culture",
+    "testCode": "KT0203",
+    "slug": "kt0203-csf-culture"
+  },
+  {
+    "sno": 204,
+    "name": "CSF Electrophoresis",
+    "price": 2000,
+    "nameLower": "csf electrophoresis",
+    "testCode": "KT0204",
+    "slug": "kt0204-csf-electrophoresis"
+  },
+  {
+    "sno": 205,
+    "name": "CT",
+    "price": 50,
+    "nameLower": "ct",
+    "testCode": "KT0205",
+    "slug": "kt0205-ct"
+  },
+  {
+    "sno": 206,
+    "name": "CT GUIDED F.N.A.C",
+    "price": 2500,
+    "nameLower": "ct guided f.n.a.c",
+    "testCode": "KT0206",
+    "slug": "kt0206-ct-guided-f-n-a-c"
+  },
+  {
+    "sno": 207,
+    "name": "Culture & Sensitivity ( Other Specimen)",
+    "price": 450,
+    "nameLower": "culture & sensitivity ( other specimen)",
+    "testCode": "KT0207",
+    "slug": "kt0207-culture-and-sensitivity-other-specimen"
+  },
+  {
+    "sno": 208,
+    "name": "Culture, Body Fluid",
+    "price": 500,
+    "nameLower": "culture, body fluid",
+    "testCode": "KT0208",
+    "slug": "kt0208-culture-body-fluid"
+  },
+  {
+    "sno": 209,
+    "name": "CVP Line Tip For Culture & Sensitivity",
+    "price": 400,
+    "nameLower": "cvp line tip for culture & sensitivity",
+    "testCode": "KT0209",
+    "slug": "kt0209-cvp-line-tip-for-culture-and-sensitivity"
+  },
+  {
+    "sno": 210,
+    "name": "Cystatin C",
+    "price": 1500,
+    "nameLower": "cystatin c",
+    "testCode": "KT0210",
+    "slug": "kt0210-cystatin-c"
+  },
+  {
+    "sno": 211,
+    "name": "Cytogenetics",
+    "price": 9000,
+    "nameLower": "cytogenetics",
+    "testCode": "KT0211",
+    "slug": "kt0211-cytogenetics"
+  },
+  {
+    "sno": 212,
+    "name": "CYTOLOGY FOR MALIGNANT CELLS",
+    "price": 1000,
+    "nameLower": "cytology for malignant cells",
+    "testCode": "KT0212",
+    "slug": "kt0212-cytology-for-malignant-cells"
+  },
+  {
+    "sno": 213,
+    "name": "Cytology For Nipple Discharge",
+    "price": 1000,
+    "nameLower": "cytology for nipple discharge",
+    "testCode": "KT0213",
+    "slug": "kt0213-cytology-for-nipple-discharge"
+  },
+  {
+    "sno": 214,
+    "name": "D DIMER",
+    "price": 1200,
+    "nameLower": "d dimer",
+    "testCode": "KT0214",
+    "slug": "kt0214-d-dimer"
+  },
+  {
+    "sno": 215,
+    "name": "D Dimer(Quantitative)",
+    "price": 1200,
+    "nameLower": "d dimer(quantitative)",
+    "testCode": "KT0215",
+    "slug": "kt0215-d-dimer-quantitative"
+  },
+  {
+    "sno": 216,
+    "name": "D.L.C",
+    "price": 100,
+    "nameLower": "d.l.c",
+    "testCode": "KT0216",
+    "slug": "kt0216-d-l-c"
+  },
+  {
+    "sno": 217,
+    "name": "Dehydroepiandrosterone-sulfate(DHEAS)",
+    "price": 1500,
+    "nameLower": "dehydroepiandrosterone-sulfate(dheas)",
+    "testCode": "KT0217",
+    "slug": "kt0217-dehydroepiandrosterone-sulfate-dheas"
+  },
+  {
+    "sno": 218,
+    "name": "Dengue Ns1 Antigen",
+    "price": 700,
+    "nameLower": "dengue ns1 antigen",
+    "testCode": "KT0218",
+    "slug": "kt0218-dengue-ns1-antigen"
+  },
+  {
+    "sno": 219,
+    "name": "Dengue Profile",
+    "price": 1200,
+    "nameLower": "dengue profile",
+    "testCode": "KT0219",
+    "slug": "kt0219-dengue-profile"
+  },
+  {
+    "sno": 220,
+    "name": "Dengue Serology (Ig M & Ig G)",
+    "price": 800,
+    "nameLower": "dengue serology (ig m & ig g)",
+    "testCode": "KT0220",
+    "slug": "kt0220-dengue-serology-ig-m-and-ig-g"
+  },
+  {
+    "sno": 221,
+    "name": "DIABETIC PANEL",
+    "price": 450,
+    "nameLower": "diabetic panel",
+    "testCode": "KT0221",
+    "slug": "kt0221-diabetic-panel"
+  },
+  {
+    "sno": 222,
+    "name": "DIABETIC PROFILE",
+    "price": 3000,
+    "nameLower": "diabetic profile",
+    "testCode": "KT0222",
+    "slug": "kt0222-diabetic-profile"
+  },
+  {
+    "sno": 223,
+    "name": "Dual marker",
+    "price": 2500,
+    "nameLower": "dual marker",
+    "testCode": "KT0223",
+    "slug": "kt0223-dual-marker"
+  },
+  {
+    "sno": 224,
+    "name": "E GFR (estimated GFR)",
+    "price": 600,
+    "nameLower": "e gfr (estimated gfr)",
+    "testCode": "KT0224",
+    "slug": "kt0224-e-gfr-estimated-gfr"
+  },
+  {
+    "sno": 225,
+    "name": "EAR DISCHARGE C+S",
+    "price": 400,
+    "nameLower": "ear discharge c+s",
+    "testCode": "KT0225",
+    "slug": "kt0225-ear-discharge-c-s"
+  },
+  {
+    "sno": 226,
+    "name": "EAR SWAB C & S",
+    "price": 400,
+    "nameLower": "ear swab c & s",
+    "testCode": "KT0226",
+    "slug": "kt0226-ear-swab-c-and-s"
+  },
+  {
+    "sno": 227,
+    "name": "ECG",
+    "price": 300,
+    "nameLower": "ecg",
+    "testCode": "KT0227",
+    "slug": "kt0227-ecg"
+  },
+  {
+    "sno": 228,
+    "name": "Electrolytes (Na/K/Cl), Urine",
+    "price": 700,
+    "nameLower": "electrolytes (na/k/cl), urine",
+    "testCode": "KT0228",
+    "slug": "kt0228-electrolytes-na-k-cl-urine"
+  },
+  {
+    "sno": 229,
+    "name": "Elisa For H.Pylori (IgG,IgM,)",
+    "price": 3500,
+    "nameLower": "elisa for h.pylori (igg,igm,)",
+    "testCode": "KT0229",
+    "slug": "kt0229-elisa-for-h-pylori-igg-igm"
+  },
+  {
+    "sno": 230,
+    "name": "ELISA FOR H.PYLORI (IGM)",
+    "price": 2000,
+    "nameLower": "elisa for h.pylori (igm)",
+    "testCode": "KT0230",
+    "slug": "kt0230-elisa-for-h-pylori-igm"
+  },
+  {
+    "sno": 231,
+    "name": "ELISA FOR H.PYLORI RAPAID",
+    "price": 700,
+    "nameLower": "elisa for h.pylori rapaid",
+    "testCode": "KT0231",
+    "slug": "kt0231-elisa-for-h-pylori-rapaid"
+  },
+  {
+    "sno": 232,
+    "name": "ELISA FOR H.PYLORI(IgG)",
+    "price": 1500,
+    "nameLower": "elisa for h.pylori(igg)",
+    "testCode": "KT0232",
+    "slug": "kt0232-elisa-for-h-pylori-igg"
+  },
+  {
+    "sno": 233,
+    "name": "ELISA FOR MICROFILARIA",
+    "price": 1000,
+    "nameLower": "elisa for microfilaria",
+    "testCode": "KT0233",
+    "slug": "kt0233-elisa-for-microfilaria"
+  },
+  {
+    "sno": 234,
+    "name": "Elisa for Pro-Calcitonin",
+    "price": 2500,
+    "nameLower": "elisa for pro-calcitonin",
+    "testCode": "KT0234",
+    "slug": "kt0234-elisa-for-pro-calcitonin"
+  },
+  {
+    "sno": 235,
+    "name": "Entamoeba Histolytica Antibodies",
+    "price": 2500,
+    "nameLower": "entamoeba histolytica antibodies",
+    "testCode": "KT0235",
+    "slug": "kt0235-entamoeba-histolytica-antibodies"
+  },
+  {
+    "sno": 236,
+    "name": "ERYTHROPOIETIN",
+    "price": 2300,
+    "nameLower": "erythropoietin",
+    "testCode": "KT0236",
+    "slug": "kt0236-erythropoietin"
+  },
+  {
+    "sno": 237,
+    "name": "Erythropoietin (EPO) Level",
+    "price": 2300,
+    "nameLower": "erythropoietin (epo) level",
+    "testCode": "KT0237",
+    "slug": "kt0237-erythropoietin-epo-level"
+  },
+  {
+    "sno": 238,
+    "name": "Esnophil",
+    "price": 100,
+    "nameLower": "esnophil",
+    "testCode": "KT0238",
+    "slug": "kt0238-esnophil"
+  },
+  {
+    "sno": 239,
+    "name": "ESR",
+    "price": 100,
+    "nameLower": "esr",
+    "testCode": "KT0239",
+    "slug": "kt0239-esr"
+  },
+  {
+    "sno": 240,
+    "name": "ESTRADIOL(E2)",
+    "price": 900,
+    "nameLower": "estradiol(e2)",
+    "testCode": "KT0240",
+    "slug": "kt0240-estradiol-e2"
+  },
+  {
+    "sno": 241,
+    "name": "ET SECRETION FOR CULTURE SENSITIVITY",
+    "price": 400,
+    "nameLower": "et secretion for culture sensitivity",
+    "testCode": "KT0241",
+    "slug": "kt0241-et-secretion-for-culture-sensitivity"
+  },
+  {
+    "sno": 242,
+    "name": "EXTRA SLIDE",
+    "price": 160,
+    "nameLower": "extra slide",
+    "testCode": "KT0242",
+    "slug": "kt0242-extra-slide"
+  },
+  {
+    "sno": 243,
+    "name": "EYE SWAB CULTURE",
+    "price": 600,
+    "nameLower": "eye swab culture",
+    "testCode": "KT0243",
+    "slug": "kt0243-eye-swab-culture"
+  },
+  {
+    "sno": 244,
+    "name": "Factor 5 Functional",
+    "price": 6500,
+    "nameLower": "factor 5 functional",
+    "testCode": "KT0244",
+    "slug": "kt0244-factor-5-functional"
+  },
+  {
+    "sno": 245,
+    "name": "Factor 8 Studies",
+    "price": 3500,
+    "nameLower": "factor 8 studies",
+    "testCode": "KT0245",
+    "slug": "kt0245-factor-8-studies"
+  },
+  {
+    "sno": 246,
+    "name": "Factor 9 Studies",
+    "price": 3000,
+    "nameLower": "factor 9 studies",
+    "testCode": "KT0246",
+    "slug": "kt0246-factor-9-studies"
+  },
+  {
+    "sno": 247,
+    "name": "Factor VII Activit",
+    "price": 3500,
+    "nameLower": "factor vii activit",
+    "testCode": "KT0247",
+    "slug": "kt0247-factor-vii-activit"
+  },
+  {
+    "sno": 248,
+    "name": "FDP,FIBRINOGENDEGRADATION",
+    "price": 1700,
+    "nameLower": "fdp,fibrinogendegradation",
+    "testCode": "KT0248",
+    "slug": "kt0248-fdp-fibrinogendegradation"
+  },
+  {
+    "sno": 249,
+    "name": "Fecal Calprotectin",
+    "price": 3200,
+    "nameLower": "fecal calprotectin",
+    "testCode": "KT0249",
+    "slug": "kt0249-fecal-calprotectin"
+  },
+  {
+    "sno": 250,
+    "name": "Fine Needle Aspiration Cytology",
+    "price": 1500,
+    "nameLower": "fine needle aspiration cytology",
+    "testCode": "KT0250",
+    "slug": "kt0250-fine-needle-aspiration-cytology"
+  },
+  {
+    "sno": 251,
+    "name": "FISH & Cytogenetics(Aneuploidy Detection Products Of Conception (POC) Using Chromosomes 13 18 21 X & Y)",
+    "price": 6300,
+    "nameLower": "fish & cytogenetics(aneuploidy detection products of conception (poc) using chromosomes 13 18 21 x & y)",
+    "testCode": "KT0251",
+    "slug": "kt0251-fish-and-cytogenetics-aneuploidy-detection-products-of-conception-poc-using-chromosomes-13-18"
+  },
+  {
+    "sno": 252,
+    "name": "FISH FOR BCR / ABL",
+    "price": 6000,
+    "nameLower": "fish for bcr / abl",
+    "testCode": "KT0252",
+    "slug": "kt0252-fish-for-bcr-abl"
+  },
+  {
+    "sno": 253,
+    "name": "Fluid ADA",
+    "price": 800,
+    "nameLower": "fluid ada",
+    "testCode": "KT0253",
+    "slug": "kt0253-fluid-ada"
+  },
+  {
+    "sno": 254,
+    "name": "FLUID AMYLASE",
+    "price": 350,
+    "nameLower": "fluid amylase",
+    "testCode": "KT0254",
+    "slug": "kt0254-fluid-amylase"
+  },
+  {
+    "sno": 255,
+    "name": "Fluid Analysis -Cytology For Malignant Cell",
+    "price": 1000,
+    "nameLower": "fluid analysis -cytology for malignant cell",
+    "testCode": "KT0255",
+    "slug": "kt0255-fluid-analysis-cytology-for-malignant-cell"
+  },
+  {
+    "sno": 256,
+    "name": "FLUID ASPIRATION CHARGE",
+    "price": 500,
+    "nameLower": "fluid aspiration charge",
+    "testCode": "KT0256",
+    "slug": "kt0256-fluid-aspiration-charge"
+  },
+  {
+    "sno": 257,
+    "name": "Fluid Gram Stain",
+    "price": 500,
+    "nameLower": "fluid gram stain",
+    "testCode": "KT0257",
+    "slug": "kt0257-fluid-gram-stain"
+  },
+  {
+    "sno": 258,
+    "name": "Fluid LDH",
+    "price": 600,
+    "nameLower": "fluid ldh",
+    "testCode": "KT0258",
+    "slug": "kt0258-fluid-ldh"
+  },
+  {
+    "sno": 259,
+    "name": "FLUID LDH RATIO",
+    "price": 1200,
+    "nameLower": "fluid ldh ratio",
+    "testCode": "KT0259",
+    "slug": "kt0259-fluid-ldh-ratio"
+  },
+  {
+    "sno": 260,
+    "name": "FLUID-AFB",
+    "price": 500,
+    "nameLower": "fluid-afb",
+    "testCode": "KT0260",
+    "slug": "kt0260-fluid-afb"
+  },
+  {
+    "sno": 261,
+    "name": "FNAC OF BOTH AXILLARY GLAND",
+    "price": 2000,
+    "nameLower": "fnac of both axillary gland",
+    "testCode": "KT0261",
+    "slug": "kt0261-fnac-of-both-axillary-gland"
+  },
+  {
+    "sno": 262,
+    "name": "FNAC BOTH BREAST",
+    "price": 2000,
+    "nameLower": "fnac both breast",
+    "testCode": "KT0262",
+    "slug": "kt0262-fnac-both-breast"
+  },
+  {
+    "sno": 263,
+    "name": "FNAC-CLN",
+    "price": 1500,
+    "nameLower": "fnac-cln",
+    "testCode": "KT0263",
+    "slug": "kt0263-fnac-cln"
+  },
+  {
+    "sno": 264,
+    "name": "Foleys Catheter Tip For Culture & Sensitivity",
+    "price": 400,
+    "nameLower": "foleys catheter tip for culture & sensitivity",
+    "testCode": "KT0264",
+    "slug": "kt0264-foleys-catheter-tip-for-culture-and-sensitivity"
+  },
+  {
+    "sno": 265,
+    "name": "Folic Acid",
+    "price": 1300,
+    "nameLower": "folic acid",
+    "testCode": "KT0265",
+    "slug": "kt0265-folic-acid"
+  },
+  {
+    "sno": 266,
+    "name": "Folic Acid [Folate]",
+    "price": 1200,
+    "nameLower": "folic acid [folate]",
+    "testCode": "KT0266",
+    "slug": "kt0266-folic-acid-folate"
+  },
+  {
+    "sno": 267,
+    "name": "Free beta HCG",
+    "price": 1500,
+    "nameLower": "free beta hcg",
+    "testCode": "KT0267",
+    "slug": "kt0267-free-beta-hcg"
+  },
+  {
+    "sno": 268,
+    "name": "Free T3",
+    "price": 400,
+    "nameLower": "free t3",
+    "testCode": "KT0268",
+    "slug": "kt0268-free-t3"
+  },
+  {
+    "sno": 269,
+    "name": "FREE THYROID PROFILE",
+    "price": 1000,
+    "nameLower": "free thyroid profile",
+    "testCode": "KT0269",
+    "slug": "kt0269-free-thyroid-profile"
+  },
+  {
+    "sno": 270,
+    "name": "free-Testosterone",
+    "price": 2000,
+    "nameLower": "free-testosterone",
+    "testCode": "KT0270",
+    "slug": "kt0270-free-testosterone"
+  },
+  {
+    "sno": 271,
+    "name": "FSH (Follicle Stimulating Hormone)",
+    "price": 600,
+    "nameLower": "fsh (follicle stimulating hormone)",
+    "testCode": "KT0271",
+    "slug": "kt0271-fsh-follicle-stimulating-hormone"
+  },
+  {
+    "sno": 272,
+    "name": "FT3",
+    "price": 400,
+    "nameLower": "ft3",
+    "testCode": "KT0272",
+    "slug": "kt0272-ft3"
+  },
+  {
+    "sno": 273,
+    "name": "FT4",
+    "price": 400,
+    "nameLower": "ft4",
+    "testCode": "KT0273",
+    "slug": "kt0273-ft4"
+  },
+  {
+    "sno": 274,
+    "name": "Fungal Culture Test",
+    "price": 1000,
+    "nameLower": "fungal culture test",
+    "testCode": "KT0274",
+    "slug": "kt0274-fungal-culture-test"
+  },
+  {
+    "sno": 275,
+    "name": "FUNGAL STAINING",
+    "price": 400,
+    "nameLower": "fungal staining",
+    "testCode": "KT0275",
+    "slug": "kt0275-fungal-staining"
+  },
+  {
+    "sno": 276,
+    "name": "G6PD DEFICIENCY TEST",
+    "price": 800,
+    "nameLower": "g6pd deficiency test",
+    "testCode": "KT0276",
+    "slug": "kt0276-g6pd-deficiency-test"
+  },
+  {
+    "sno": 277,
+    "name": "GAD 65",
+    "price": 6500,
+    "nameLower": "gad 65",
+    "testCode": "KT0277",
+    "slug": "kt0277-gad-65"
+  },
+  {
+    "sno": 278,
+    "name": "GAD 65 Antibody",
+    "price": 7000,
+    "nameLower": "gad 65 antibody",
+    "testCode": "KT0278",
+    "slug": "kt0278-gad-65-antibody"
+  },
+  {
+    "sno": 279,
+    "name": "Gamma Gt",
+    "price": 300,
+    "nameLower": "gamma gt",
+    "testCode": "KT0279",
+    "slug": "kt0279-gamma-gt"
+  },
+  {
+    "sno": 280,
+    "name": "Gastrin-17",
+    "price": 3000,
+    "nameLower": "gastrin-17",
+    "testCode": "KT0280",
+    "slug": "kt0280-gastrin-17"
+  },
+  {
+    "sno": 281,
+    "name": "GENEXPERT ULTRA (NEXT GENERATION) MTB WITH RIFAMPICIN RESISTANCE",
+    "price": 4000,
+    "nameLower": "genexpert ultra (next generation) mtb with rifampicin resistance",
+    "testCode": "KT0281",
+    "slug": "kt0281-genexpert-ultra-next-generation-mtb-with-rifampicin-resistance"
+  },
+  {
+    "sno": 282,
+    "name": "GFR TEST",
+    "price": 600,
+    "nameLower": "gfr test",
+    "testCode": "KT0282",
+    "slug": "kt0282-gfr-test"
+  },
+  {
+    "sno": 283,
+    "name": "Globulin",
+    "price": 200,
+    "nameLower": "globulin",
+    "testCode": "KT0283",
+    "slug": "kt0283-globulin"
+  },
+  {
+    "sno": 284,
+    "name": "Glucose",
+    "price": 70,
+    "nameLower": "glucose",
+    "testCode": "KT0284",
+    "slug": "kt0284-glucose"
+  },
+  {
+    "sno": 285,
+    "name": "Glucose Challenge Test ( 50 gram glucose GCT)",
+    "price": 150,
+    "nameLower": "glucose challenge test ( 50 gram glucose gct)",
+    "testCode": "KT0285",
+    "slug": "kt0285-glucose-challenge-test-50-gram-glucose-gct"
+  },
+  {
+    "sno": 286,
+    "name": "Glucose Tolerance Test (75 gm Gluscose)",
+    "price": 300,
+    "nameLower": "glucose tolerance test (75 gm gluscose)",
+    "testCode": "KT0286",
+    "slug": "kt0286-glucose-tolerance-test-75-gm-gluscose"
+  },
+  {
+    "sno": 287,
+    "name": "Glucose Tolerence Test ( Gestation 100 Gm Glucose)",
+    "price": 350,
+    "nameLower": "glucose tolerence test ( gestation 100 gm glucose)",
+    "testCode": "KT0287",
+    "slug": "kt0287-glucose-tolerence-test-gestation-100-gm-glucose"
+  },
+  {
+    "sno": 288,
+    "name": "GRAM STAIN",
+    "price": 500,
+    "nameLower": "gram stain",
+    "testCode": "KT0288",
+    "slug": "kt0288-gram-stain"
+  },
+  {
+    "sno": 289,
+    "name": "Growth Hormone",
+    "price": 1500,
+    "nameLower": "growth hormone",
+    "testCode": "KT0289",
+    "slug": "kt0289-growth-hormone"
+  },
+  {
+    "sno": 290,
+    "name": "H Pylori Rapid Test",
+    "price": 600,
+    "nameLower": "h pylori rapid test",
+    "testCode": "KT0290",
+    "slug": "kt0290-h-pylori-rapid-test"
+  },
+  {
+    "sno": 291,
+    "name": "H.I.V BOTH",
+    "price": 700,
+    "nameLower": "h.i.v both",
+    "testCode": "KT0291",
+    "slug": "kt0291-h-i-v-both"
+  },
+  {
+    "sno": 292,
+    "name": "H.PYLORI QUANTITATIVE",
+    "price": 2000,
+    "nameLower": "h.pylori quantitative",
+    "testCode": "KT0292",
+    "slug": "kt0292-h-pylori-quantitative"
+  },
+  {
+    "sno": 293,
+    "name": "HAEMOGLOBIN",
+    "price": 200,
+    "nameLower": "haemoglobin",
+    "testCode": "KT0293",
+    "slug": "kt0293-haemoglobin"
+  },
+  {
+    "sno": 294,
+    "name": "HAEMOGLOBIN VARIANT ANALYSIS",
+    "price": 2500,
+    "nameLower": "haemoglobin variant analysis",
+    "testCode": "KT0294",
+    "slug": "kt0294-haemoglobin-variant-analysis"
+  },
+  {
+    "sno": 295,
+    "name": "Hapatitis B Profile",
+    "price": 4500,
+    "nameLower": "hapatitis b profile",
+    "testCode": "KT0295",
+    "slug": "kt0295-hapatitis-b-profile"
+  },
+  {
+    "sno": 296,
+    "name": "Hapatitis B Surface Antigen (ECI)",
+    "price": 650,
+    "nameLower": "hapatitis b surface antigen (eci)",
+    "testCode": "KT0296",
+    "slug": "kt0296-hapatitis-b-surface-antigen-eci"
+  },
+  {
+    "sno": 297,
+    "name": "HAV IgM",
+    "price": 1200,
+    "nameLower": "hav igm",
+    "testCode": "KT0297",
+    "slug": "kt0297-hav-igm"
+  },
+  {
+    "sno": 298,
+    "name": "HB Electrophoresis HPLC",
+    "price": 1500,
+    "nameLower": "hb electrophoresis hplc",
+    "testCode": "KT0298",
+    "slug": "kt0298-hb-electrophoresis-hplc"
+  },
+  {
+    "sno": 299,
+    "name": "HBA1C",
+    "price": 700,
+    "nameLower": "hba1c",
+    "testCode": "KT0299",
+    "slug": "kt0299-hba1c"
+  },
+  {
+    "sno": 300,
+    "name": "HBeAg-Hepatitis B Envelope Antigen",
+    "price": 1200,
+    "nameLower": "hbeag-hepatitis b envelope antigen",
+    "testCode": "KT0300",
+    "slug": "kt0300-hbeag-hepatitis-b-envelope-antigen"
+  },
+  {
+    "sno": 301,
+    "name": "HBsAg (Rapid)",
+    "price": 300,
+    "nameLower": "hbsag (rapid)",
+    "testCode": "KT0301",
+    "slug": "kt0301-hbsag-rapid"
+  },
+  {
+    "sno": 302,
+    "name": "HBsAg ELISA",
+    "price": 600,
+    "nameLower": "hbsag elisa",
+    "testCode": "KT0302",
+    "slug": "kt0302-hbsag-elisa"
+  },
+  {
+    "sno": 303,
+    "name": "HBV Viral Load By Real Time PCR",
+    "price": 4900,
+    "nameLower": "hbv viral load by real time pcr",
+    "testCode": "KT0303",
+    "slug": "kt0303-hbv-viral-load-by-real-time-pcr"
+  },
+  {
+    "sno": 304,
+    "name": "HCV (Rapid)",
+    "price": 400,
+    "nameLower": "hcv (rapid)",
+    "testCode": "KT0304",
+    "slug": "kt0304-hcv-rapid"
+  },
+  {
+    "sno": 305,
+    "name": "HCV RNA Qualitative (PCR)",
+    "price": 3900,
+    "nameLower": "hcv rna qualitative (pcr)",
+    "testCode": "KT0305",
+    "slug": "kt0305-hcv-rna-qualitative-pcr"
+  },
+  {
+    "sno": 306,
+    "name": "HCV RNA Quantitative (PCR)",
+    "price": 3900,
+    "nameLower": "hcv rna quantitative (pcr)",
+    "testCode": "KT0306",
+    "slug": "kt0306-hcv-rna-quantitative-pcr"
+  },
+  {
+    "sno": 307,
+    "name": "HDL Cholesterol",
+    "price": 250,
+    "nameLower": "hdl cholesterol",
+    "testCode": "KT0307",
+    "slug": "kt0307-hdl-cholesterol"
+  },
+  {
+    "sno": 308,
+    "name": "Health check-up silver (female)",
+    "price": 8400,
+    "nameLower": "health check-up silver (female)",
+    "testCode": "KT0308",
+    "slug": "kt0308-health-check-up-silver-female"
+  },
+  {
+    "sno": 309,
+    "name": "Health check-up silver (male)",
+    "price": 8800,
+    "nameLower": "health check-up silver (male)",
+    "testCode": "KT0309",
+    "slug": "kt0309-health-check-up-silver-male"
+  },
+  {
+    "sno": 310,
+    "name": "Helicobacter Pylori (H.pylori) Antigen, Stool",
+    "price": 2200,
+    "nameLower": "helicobacter pylori (h.pylori) antigen, stool",
+    "testCode": "KT0310",
+    "slug": "kt0310-helicobacter-pylori-h-pylori-antigen-stool"
+  },
+  {
+    "sno": 311,
+    "name": "Helicobacter Pylori (H.pylori) Antigen, Stool",
+    "price": 3500,
+    "nameLower": "helicobacter pylori (h.pylori) antigen, stool",
+    "testCode": "KT0311",
+    "slug": "kt0311-helicobacter-pylori-h-pylori-antigen-stool"
+  },
+  {
+    "sno": 312,
+    "name": "Helicobacter Pylori IgM Antibodies",
+    "price": 1900,
+    "nameLower": "helicobacter pylori igm antibodies",
+    "testCode": "KT0312",
+    "slug": "kt0312-helicobacter-pylori-igm-antibodies"
+  },
+  {
+    "sno": 313,
+    "name": "Hepatitis A (HAV) IgG",
+    "price": 1200,
+    "nameLower": "hepatitis a (hav) igg",
+    "testCode": "KT0313",
+    "slug": "kt0313-hepatitis-a-hav-igg"
+  },
+  {
+    "sno": 314,
+    "name": "Hepatitis A Virus IgM Antibodies",
+    "price": 1200,
+    "nameLower": "hepatitis a virus igm antibodies",
+    "testCode": "KT0314",
+    "slug": "kt0314-hepatitis-a-virus-igm-antibodies"
+  },
+  {
+    "sno": 315,
+    "name": "Hepatitis B core -Total Antibodies (HBc-T)",
+    "price": 1500,
+    "nameLower": "hepatitis b core -total antibodies (hbc-t)",
+    "testCode": "KT0315",
+    "slug": "kt0315-hepatitis-b-core-total-antibodies-hbc-t"
+  },
+  {
+    "sno": 316,
+    "name": "Hepatitis B Core IgG",
+    "price": 1200,
+    "nameLower": "hepatitis b core igg",
+    "testCode": "KT0316",
+    "slug": "kt0316-hepatitis-b-core-igg"
+  },
+  {
+    "sno": 317,
+    "name": "Hepatitis B Core IgM",
+    "price": 1000,
+    "nameLower": "hepatitis b core igm",
+    "testCode": "KT0317",
+    "slug": "kt0317-hepatitis-b-core-igm"
+  },
+  {
+    "sno": 318,
+    "name": "Hepatitis B envelope Antibodies (HBeAb)",
+    "price": 1000,
+    "nameLower": "hepatitis b envelope antibodies (hbeab)",
+    "testCode": "KT0318",
+    "slug": "kt0318-hepatitis-b-envelope-antibodies-hbeab"
+  },
+  {
+    "sno": 319,
+    "name": "Hepatitis B Profile",
+    "price": 2500,
+    "nameLower": "hepatitis b profile",
+    "testCode": "KT0319",
+    "slug": "kt0319-hepatitis-b-profile"
+  },
+  {
+    "sno": 320,
+    "name": "Hepatitis B Profile",
+    "price": 1500,
+    "nameLower": "hepatitis b profile",
+    "testCode": "KT0320",
+    "slug": "kt0320-hepatitis-b-profile"
+  },
+  {
+    "sno": 321,
+    "name": "Hepatitis B Surface Antibodies (HBsAb)",
+    "price": 1500,
+    "nameLower": "hepatitis b surface antibodies (hbsab)",
+    "testCode": "KT0321",
+    "slug": "kt0321-hepatitis-b-surface-antibodies-hbsab"
+  },
+  {
+    "sno": 322,
+    "name": "Hepatitis B surface antigen (HBsAg) ECLIA",
+    "price": 1200,
+    "nameLower": "hepatitis b surface antigen (hbsag) eclia",
+    "testCode": "KT0322",
+    "slug": "kt0322-hepatitis-b-surface-antigen-hbsag-eclia"
+  },
+  {
+    "sno": 323,
+    "name": "Hepatitis B Surface Total Antibodies",
+    "price": 1200,
+    "nameLower": "hepatitis b surface total antibodies",
+    "testCode": "KT0323",
+    "slug": "kt0323-hepatitis-b-surface-total-antibodies"
+  },
+  {
+    "sno": 324,
+    "name": "Hepatitis B Virus DNA Quantitative PCR",
+    "price": 4000,
+    "nameLower": "hepatitis b virus dna quantitative pcr",
+    "testCode": "KT0324",
+    "slug": "kt0324-hepatitis-b-virus-dna-quantitative-pcr"
+  },
+  {
+    "sno": 325,
+    "name": "Hepatitis B Virus Viral Load DNA LEVEL",
+    "price": 4000,
+    "nameLower": "hepatitis b virus viral load dna level",
+    "testCode": "KT0325",
+    "slug": "kt0325-hepatitis-b-virus-viral-load-dna-level"
+  },
+  {
+    "sno": 326,
+    "name": "Hepatitis B. MARKA",
+    "price": 4500,
+    "nameLower": "hepatitis b. marka",
+    "testCode": "KT0326",
+    "slug": "kt0326-hepatitis-b-marka"
+  },
+  {
+    "sno": 327,
+    "name": "Hepatitis C Antibody (HCV), Quantitative",
+    "price": 1200,
+    "nameLower": "hepatitis c antibody (hcv), quantitative",
+    "testCode": "KT0327",
+    "slug": "kt0327-hepatitis-c-antibody-hcv-quantitative"
+  },
+  {
+    "sno": 328,
+    "name": "Hepatitis C virus IgG",
+    "price": 1500,
+    "nameLower": "hepatitis c virus igg",
+    "testCode": "KT0328",
+    "slug": "kt0328-hepatitis-c-virus-igg"
+  },
+  {
+    "sno": 329,
+    "name": "Hepatitis C virus Igm",
+    "price": 1500,
+    "nameLower": "hepatitis c virus igm",
+    "testCode": "KT0329",
+    "slug": "kt0329-hepatitis-c-virus-igm"
+  },
+  {
+    "sno": 330,
+    "name": "Hepatitis E Virus IgM Antibodies",
+    "price": 1300,
+    "nameLower": "hepatitis e virus igm antibodies",
+    "testCode": "KT0330",
+    "slug": "kt0330-hepatitis-e-virus-igm-antibodies"
+  },
+  {
+    "sno": 331,
+    "name": "Hepatitis E Virus, IgG Antibodies",
+    "price": 1300,
+    "nameLower": "hepatitis e virus, igg antibodies",
+    "testCode": "KT0331",
+    "slug": "kt0331-hepatitis-e-virus-igg-antibodies"
+  },
+  {
+    "sno": 332,
+    "name": "Hepatitis E Virus, IgG Antibodies",
+    "price": 1200,
+    "nameLower": "hepatitis e virus, igg antibodies",
+    "testCode": "KT0332",
+    "slug": "kt0332-hepatitis-e-virus-igg-antibodies"
+  },
+  {
+    "sno": 333,
+    "name": "Hepatitis E Virus, IgM Antibodies",
+    "price": 1200,
+    "nameLower": "hepatitis e virus, igm antibodies",
+    "testCode": "KT0333",
+    "slug": "kt0333-hepatitis-e-virus-igm-antibodies"
+  },
+  {
+    "sno": 334,
+    "name": "High-Sensitivity C-Reactive Protein(hs-CRP)",
+    "price": 1000,
+    "nameLower": "high-sensitivity c-reactive protein(hs-crp)",
+    "testCode": "KT0334",
+    "slug": "kt0334-high-sensitivity-c-reactive-protein-hs-crp"
+  },
+  {
+    "sno": 335,
+    "name": "Histo Block Of Review",
+    "price": 1000,
+    "nameLower": "histo block of review",
+    "testCode": "KT0335",
+    "slug": "kt0335-histo-block-of-review"
+  },
+  {
+    "sno": 336,
+    "name": "HISTOPATHOLOGY EXTRA LARGE BIOPSY",
+    "price": 8000,
+    "nameLower": "histopathology extra large biopsy",
+    "testCode": "KT0336",
+    "slug": "kt0336-histopathology-extra-large-biopsy"
+  },
+  {
+    "sno": 337,
+    "name": "HISTOPATHOLOGY LARGE",
+    "price": 2500,
+    "nameLower": "histopathology large",
+    "testCode": "KT0337",
+    "slug": "kt0337-histopathology-large"
+  },
+  {
+    "sno": 338,
+    "name": "Histopathology Medium Specimen",
+    "price": 1600,
+    "nameLower": "histopathology medium specimen",
+    "testCode": "KT0338",
+    "slug": "kt0338-histopathology-medium-specimen"
+  },
+  {
+    "sno": 339,
+    "name": "Histopathology Small Specimen",
+    "price": 1200,
+    "nameLower": "histopathology small specimen",
+    "testCode": "KT0339",
+    "slug": "kt0339-histopathology-small-specimen"
+  },
+  {
+    "sno": 340,
+    "name": "HISTOPATHOLOGY/FNAC SLIDE AND BLOCK ISSUE",
+    "price": 600,
+    "nameLower": "histopathology/fnac slide and block issue",
+    "testCode": "KT0340",
+    "slug": "kt0340-histopathology-fnac-slide-and-block-issue"
+  },
+  {
+    "sno": 341,
+    "name": "Histopathology: Block/Slide For Review",
+    "price": 600,
+    "nameLower": "histopathology: block/slide for review",
+    "testCode": "KT0341",
+    "slug": "kt0341-histopathology-block-slide-for-review"
+  },
+  {
+    "sno": 342,
+    "name": "Histopathology: Radical Specimen",
+    "price": 4500,
+    "nameLower": "histopathology: radical specimen",
+    "testCode": "KT0342",
+    "slug": "kt0342-histopathology-radical-specimen"
+  },
+  {
+    "sno": 343,
+    "name": "HIV 1 & 2 Antibody (ECI)",
+    "price": 1000,
+    "nameLower": "hiv 1 & 2 antibody (eci)",
+    "testCode": "KT0343",
+    "slug": "kt0343-hiv-1-and-2-antibody-eci"
+  },
+  {
+    "sno": 344,
+    "name": "HIV 1 & 2 Antibody (Rapid)",
+    "price": 500,
+    "nameLower": "hiv 1 & 2 antibody (rapid)",
+    "testCode": "KT0344",
+    "slug": "kt0344-hiv-1-and-2-antibody-rapid"
+  },
+  {
+    "sno": 345,
+    "name": "HIV 4th Gen ELISA",
+    "price": 500,
+    "nameLower": "hiv 4th gen elisa",
+    "testCode": "KT0345",
+    "slug": "kt0345-hiv-4th-gen-elisa"
+  },
+  {
+    "sno": 346,
+    "name": "HIV I & II Quantitative (HIV)",
+    "price": 1200,
+    "nameLower": "hiv i & ii quantitative (hiv)",
+    "testCode": "KT0346",
+    "slug": "kt0346-hiv-i-and-ii-quantitative-hiv"
+  },
+  {
+    "sno": 347,
+    "name": "HIV RNA Qualitative (PCR)",
+    "price": 4000,
+    "nameLower": "hiv rna qualitative (pcr)",
+    "testCode": "KT0347",
+    "slug": "kt0347-hiv-rna-qualitative-pcr"
+  },
+  {
+    "sno": 348,
+    "name": "HLA-B27 (Flowcytometer)",
+    "price": 2500,
+    "nameLower": "hla-b27 (flowcytometer)",
+    "testCode": "KT0348",
+    "slug": "kt0348-hla-b27-flowcytometer"
+  },
+  {
+    "sno": 349,
+    "name": "HLA-B27 PCR,QUALITATIVE",
+    "price": 3200,
+    "nameLower": "hla-b27 pcr,qualitative",
+    "testCode": "KT0349",
+    "slug": "kt0349-hla-b27-pcr-qualitative"
+  },
+  {
+    "sno": 350,
+    "name": "Homocysteine (Serum)",
+    "price": 1450,
+    "nameLower": "homocysteine (serum)",
+    "testCode": "KT0350",
+    "slug": "kt0350-homocysteine-serum"
+  },
+  {
+    "sno": 351,
+    "name": "Hormonal Assay",
+    "price": 2400,
+    "nameLower": "hormonal assay",
+    "testCode": "KT0351",
+    "slug": "kt0351-hormonal-assay"
+  },
+  {
+    "sno": 352,
+    "name": "HPV",
+    "price": 3500,
+    "nameLower": "hpv",
+    "testCode": "KT0352",
+    "slug": "kt0352-hpv"
+  },
+  {
+    "sno": 353,
+    "name": "HPV (LBC)",
+    "price": 3500,
+    "nameLower": "hpv (lbc)",
+    "testCode": "KT0353",
+    "slug": "kt0353-hpv-lbc"
+  },
+  {
+    "sno": 354,
+    "name": "HPV DNA Hybrid capture",
+    "price": 2000,
+    "nameLower": "hpv dna hybrid capture",
+    "testCode": "KT0354",
+    "slug": "kt0354-hpv-dna-hybrid-capture"
+  },
+  {
+    "sno": 355,
+    "name": "HPV-Human Papilloma Virus DNA Detection And Typing LBC",
+    "price": 3500,
+    "nameLower": "hpv-human papilloma virus dna detection and typing lbc",
+    "testCode": "KT0355",
+    "slug": "kt0355-hpv-human-papilloma-virus-dna-detection-and-typing-lbc"
+  },
+  {
+    "sno": 356,
+    "name": "HSV-1/2 IgG (Herpes Simplex virus)",
+    "price": 1200,
+    "nameLower": "hsv-1/2 igg (herpes simplex virus)",
+    "testCode": "KT0356",
+    "slug": "kt0356-hsv-1-2-igg-herpes-simplex-virus"
+  },
+  {
+    "sno": 357,
+    "name": "HSV-1/2 IgM (Herpes Simplex virus)",
+    "price": 1200,
+    "nameLower": "hsv-1/2 igm (herpes simplex virus)",
+    "testCode": "KT0357",
+    "slug": "kt0357-hsv-1-2-igm-herpes-simplex-virus"
+  },
+  {
+    "sno": 358,
+    "name": "HSV-2 IgE (Herpes simplex virus)",
+    "price": 1000,
+    "nameLower": "hsv-2 ige (herpes simplex virus)",
+    "testCode": "KT0358",
+    "slug": "kt0358-hsv-2-ige-herpes-simplex-virus"
+  },
+  {
+    "sno": 359,
+    "name": "HSV-2 IgG (Herpes Simplex virus)",
+    "price": 1000,
+    "nameLower": "hsv-2 igg (herpes simplex virus)",
+    "testCode": "KT0359",
+    "slug": "kt0359-hsv-2-igg-herpes-simplex-virus"
+  },
+  {
+    "sno": 360,
+    "name": "HSV-2 IgM (Herpes simplex virus)",
+    "price": 1000,
+    "nameLower": "hsv-2 igm (herpes simplex virus)",
+    "testCode": "KT0360",
+    "slug": "kt0360-hsv-2-igm-herpes-simplex-virus"
+  },
+  {
+    "sno": 361,
+    "name": "Human Leukocyte Antigen B27 (HLA-B27)",
+    "price": 3200,
+    "nameLower": "human leukocyte antigen b27 (hla-b27)",
+    "testCode": "KT0361",
+    "slug": "kt0361-human-leukocyte-antigen-b27-hla-b27"
+  },
+  {
+    "sno": 362,
+    "name": "ICA",
+    "price": 2500,
+    "nameLower": "ica",
+    "testCode": "KT0362",
+    "slug": "kt0362-ica"
+  },
+  {
+    "sno": 363,
+    "name": "IgA (Urine)",
+    "price": 1200,
+    "nameLower": "iga (urine)",
+    "testCode": "KT0363",
+    "slug": "kt0363-iga-urine"
+  },
+  {
+    "sno": 364,
+    "name": "IgE TOTAL",
+    "price": 1000,
+    "nameLower": "ige total",
+    "testCode": "KT0364",
+    "slug": "kt0364-ige-total"
+  },
+  {
+    "sno": 365,
+    "name": "IGF-1",
+    "price": 5000,
+    "nameLower": "igf-1",
+    "testCode": "KT0365",
+    "slug": "kt0365-igf-1"
+  },
+  {
+    "sno": 366,
+    "name": "IgG (Serum)",
+    "price": 1200,
+    "nameLower": "igg (serum)",
+    "testCode": "KT0366",
+    "slug": "kt0366-igg-serum"
+  },
+  {
+    "sno": 367,
+    "name": "IgG (Urine)",
+    "price": 1200,
+    "nameLower": "igg (urine)",
+    "testCode": "KT0367",
+    "slug": "kt0367-igg-urine"
+  },
+  {
+    "sno": 368,
+    "name": "IgM",
+    "price": 1200,
+    "nameLower": "igm",
+    "testCode": "KT0368",
+    "slug": "kt0368-igm"
+  },
+  {
+    "sno": 369,
+    "name": "IL-6",
+    "price": 3500,
+    "nameLower": "il-6",
+    "testCode": "KT0369",
+    "slug": "kt0369-il-6"
+  },
+  {
+    "sno": 370,
+    "name": "Immature/Mature Neutrophil Ratio",
+    "price": 200,
+    "nameLower": "immature/mature neutrophil ratio",
+    "testCode": "KT0370",
+    "slug": "kt0370-immature-mature-neutrophil-ratio"
+  },
+  {
+    "sno": 371,
+    "name": "IMMUNOGLOBULIN A (IGA)",
+    "price": 1200,
+    "nameLower": "immunoglobulin a (iga)",
+    "testCode": "KT0371",
+    "slug": "kt0371-immunoglobulin-a-iga"
+  },
+  {
+    "sno": 372,
+    "name": "Immunoglobulin Profile",
+    "price": 3000,
+    "nameLower": "immunoglobulin profile",
+    "testCode": "KT0372",
+    "slug": "kt0372-immunoglobulin-profile"
+  },
+  {
+    "sno": 373,
+    "name": "IMMUNOGLOBULIN- IgA",
+    "price": 1000,
+    "nameLower": "immunoglobulin- iga",
+    "testCode": "KT0373",
+    "slug": "kt0373-immunoglobulin-iga"
+  },
+  {
+    "sno": 374,
+    "name": "Immunohistochemistry -Three Markers",
+    "price": 4400,
+    "nameLower": "immunohistochemistry -three markers",
+    "testCode": "KT0374",
+    "slug": "kt0374-immunohistochemistry-three-markers"
+  },
+  {
+    "sno": 375,
+    "name": "Immunohistochemistry Er/Pr",
+    "price": 2500,
+    "nameLower": "immunohistochemistry er/pr",
+    "testCode": "KT0375",
+    "slug": "kt0375-immunohistochemistry-er-pr"
+  },
+  {
+    "sno": 376,
+    "name": "Immunohistochemistry Her - 2 Neu",
+    "price": 1300,
+    "nameLower": "immunohistochemistry her - 2 neu",
+    "testCode": "KT0376",
+    "slug": "kt0376-immunohistochemistry-her-2-neu"
+  },
+  {
+    "sno": 377,
+    "name": "Immunohistochemistry- Two Markers",
+    "price": 3000,
+    "nameLower": "immunohistochemistry- two markers",
+    "testCode": "KT0377",
+    "slug": "kt0377-immunohistochemistry-two-markers"
+  },
+  {
+    "sno": 378,
+    "name": "Immunohistochemistry-OneMarker",
+    "price": 1500,
+    "nameLower": "immunohistochemistry-onemarker",
+    "testCode": "KT0378",
+    "slug": "kt0378-immunohistochemistry-onemarker"
+  },
+  {
+    "sno": 379,
+    "name": "Immunohistochemistry> Three Markers",
+    "price": 5100,
+    "nameLower": "immunohistochemistry> three markers",
+    "testCode": "KT0379",
+    "slug": "kt0379-immunohistochemistry-three-markers"
+  },
+  {
+    "sno": 380,
+    "name": "India Ink",
+    "price": 300,
+    "nameLower": "india ink",
+    "testCode": "KT0380",
+    "slug": "kt0380-india-ink"
+  },
+  {
+    "sno": 381,
+    "name": "INDIRECT COOMBS TEST",
+    "price": 900,
+    "nameLower": "indirect coombs test",
+    "testCode": "KT0381",
+    "slug": "kt0381-indirect-coombs-test"
+  },
+  {
+    "sno": 382,
+    "name": "Infertility Panel (Male)",
+    "price": 4850,
+    "nameLower": "infertility panel (male)",
+    "testCode": "KT0382",
+    "slug": "kt0382-infertility-panel-male"
+  },
+  {
+    "sno": 383,
+    "name": "INHIBIN A, Maternal Marker",
+    "price": 1200,
+    "nameLower": "inhibin a, maternal marker",
+    "testCode": "KT0383",
+    "slug": "kt0383-inhibin-a-maternal-marker"
+  },
+  {
+    "sno": 384,
+    "name": "Inorganic phosphorus",
+    "price": 200,
+    "nameLower": "inorganic phosphorus",
+    "testCode": "KT0384",
+    "slug": "kt0384-inorganic-phosphorus"
+  },
+  {
+    "sno": 385,
+    "name": "Insulin Fasting",
+    "price": 1500,
+    "nameLower": "insulin fasting",
+    "testCode": "KT0385",
+    "slug": "kt0385-insulin-fasting"
+  },
+  {
+    "sno": 386,
+    "name": "Insulin Fasting",
+    "price": 1200,
+    "nameLower": "insulin fasting",
+    "testCode": "KT0386",
+    "slug": "kt0386-insulin-fasting"
+  },
+  {
+    "sno": 387,
+    "name": "Insulin Like Growth Factor-1 (IGF-1)",
+    "price": 4300,
+    "nameLower": "insulin like growth factor-1 (igf-1)",
+    "testCode": "KT0387",
+    "slug": "kt0387-insulin-like-growth-factor-1-igf-1"
+  },
+  {
+    "sno": 388,
+    "name": "IRON DEFICIENCY BASIC PANEL",
+    "price": 1200,
+    "nameLower": "iron deficiency basic panel",
+    "testCode": "KT0388",
+    "slug": "kt0388-iron-deficiency-basic-panel"
+  },
+  {
+    "sno": 389,
+    "name": "IRON PROFILE with Ferritin",
+    "price": 2200,
+    "nameLower": "iron profile with ferritin",
+    "testCode": "KT0389",
+    "slug": "kt0389-iron-profile-with-ferritin"
+  },
+  {
+    "sno": 390,
+    "name": "IT Ratio",
+    "price": 200,
+    "nameLower": "it ratio",
+    "testCode": "KT0390",
+    "slug": "kt0390-it-ratio"
+  },
+  {
+    "sno": 391,
+    "name": "Karyotyping",
+    "price": 4000,
+    "nameLower": "karyotyping",
+    "testCode": "KT0391",
+    "slug": "kt0391-karyotyping"
+  },
+  {
+    "sno": 392,
+    "name": "KFT",
+    "price": 900,
+    "nameLower": "kft",
+    "testCode": "KT0392",
+    "slug": "kt0392-kft"
+  },
+  {
+    "sno": 393,
+    "name": "Kidney Stone Analysis",
+    "price": 1500,
+    "nameLower": "kidney stone analysis",
+    "testCode": "KT0393",
+    "slug": "kt0393-kidney-stone-analysis"
+  },
+  {
+    "sno": 394,
+    "name": "KOH Stanning ( Small Specimen)",
+    "price": 250,
+    "nameLower": "koh stanning ( small specimen)",
+    "testCode": "KT0394",
+    "slug": "kt0394-koh-stanning-small-specimen"
+  },
+  {
+    "sno": 395,
+    "name": "Lactate, Plasma",
+    "price": 1600,
+    "nameLower": "lactate, plasma",
+    "testCode": "KT0395",
+    "slug": "kt0395-lactate-plasma"
+  },
+  {
+    "sno": 396,
+    "name": "LDH -( LACTATE DEHYDROGENASE) - FLUID",
+    "price": 450,
+    "nameLower": "ldh -( lactate dehydrogenase) - fluid",
+    "testCode": "KT0396",
+    "slug": "kt0396-ldh-lactate-dehydrogenase-fluid"
+  },
+  {
+    "sno": 397,
+    "name": "LDH Total (Serum)",
+    "price": 800,
+    "nameLower": "ldh total (serum)",
+    "testCode": "KT0397",
+    "slug": "kt0397-ldh-total-serum"
+  },
+  {
+    "sno": 398,
+    "name": "LDL Cholestrol",
+    "price": 100,
+    "nameLower": "ldl cholestrol",
+    "testCode": "KT0398",
+    "slug": "kt0398-ldl-cholestrol"
+  },
+  {
+    "sno": 399,
+    "name": "Le Cells",
+    "price": 400,
+    "nameLower": "le cells",
+    "testCode": "KT0399",
+    "slug": "kt0399-le-cells"
+  },
+  {
+    "sno": 400,
+    "name": "LEPTOSPIRA IGM & ICG (BY RAPID METHOD)",
+    "price": 1000,
+    "nameLower": "leptospira igm & icg (by rapid method)",
+    "testCode": "KT0400",
+    "slug": "kt0400-leptospira-igm-and-icg-by-rapid-method"
+  },
+  {
+    "sno": 401,
+    "name": "LEPTOSPIRA-IgM",
+    "price": 2000,
+    "nameLower": "leptospira-igm",
+    "testCode": "KT0401",
+    "slug": "kt0401-leptospira-igm"
+  },
+  {
+    "sno": 402,
+    "name": "LH",
+    "price": 600,
+    "nameLower": "lh",
+    "testCode": "KT0402",
+    "slug": "kt0402-lh"
+  },
+  {
+    "sno": 403,
+    "name": "LIPASE",
+    "price": 600,
+    "nameLower": "lipase",
+    "testCode": "KT0403",
+    "slug": "kt0403-lipase"
+  },
+  {
+    "sno": 404,
+    "name": "LIPID PROFILE",
+    "price": 600,
+    "nameLower": "lipid profile",
+    "testCode": "KT0404",
+    "slug": "kt0404-lipid-profile"
+  },
+  {
+    "sno": 405,
+    "name": "Lipoprotein A",
+    "price": 1400,
+    "nameLower": "lipoprotein a",
+    "testCode": "KT0405",
+    "slug": "kt0405-lipoprotein-a"
+  },
+  {
+    "sno": 406,
+    "name": "Liquid Based Cytology (LBC),Sure path Cytology",
+    "price": 1300,
+    "nameLower": "liquid based cytology (lbc),sure path cytology",
+    "testCode": "KT0406",
+    "slug": "kt0406-liquid-based-cytology-lbc-sure-path-cytology"
+  },
+  {
+    "sno": 407,
+    "name": "LIVER FUNCTION TEST",
+    "price": 800,
+    "nameLower": "liver function test",
+    "testCode": "KT0407",
+    "slug": "kt0407-liver-function-test"
+  },
+  {
+    "sno": 408,
+    "name": "LKM-1 Antibodies",
+    "price": 1700,
+    "nameLower": "lkm-1 antibodies",
+    "testCode": "KT0408",
+    "slug": "kt0408-lkm-1-antibodies"
+  },
+  {
+    "sno": 409,
+    "name": "LKM1 Antibodies (Liver Kidney Microsomes)",
+    "price": 3200,
+    "nameLower": "lkm1 antibodies (liver kidney microsomes)",
+    "testCode": "KT0409",
+    "slug": "kt0409-lkm1-antibodies-liver-kidney-microsomes"
+  },
+  {
+    "sno": 410,
+    "name": "LUPUS ANTICOAGULANT SCREEN TIME",
+    "price": 2000,
+    "nameLower": "lupus anticoagulant screen time",
+    "testCode": "KT0410",
+    "slug": "kt0410-lupus-anticoagulant-screen-time"
+  },
+  {
+    "sno": 411,
+    "name": "Magnesium (Serum)",
+    "price": 600,
+    "nameLower": "magnesium (serum)",
+    "testCode": "KT0411",
+    "slug": "kt0411-magnesium-serum"
+  },
+  {
+    "sno": 412,
+    "name": "Malaria Antigen (Rapid Test For Malaria)",
+    "price": 400,
+    "nameLower": "malaria antigen (rapid test for malaria)",
+    "testCode": "KT0412",
+    "slug": "kt0412-malaria-antigen-rapid-test-for-malaria"
+  },
+  {
+    "sno": 413,
+    "name": "MALARIA PARASITE",
+    "price": 200,
+    "nameLower": "malaria parasite",
+    "testCode": "KT0413",
+    "slug": "kt0413-malaria-parasite"
+  },
+  {
+    "sno": 414,
+    "name": "Malaria Profile",
+    "price": 600,
+    "nameLower": "malaria profile",
+    "testCode": "KT0414",
+    "slug": "kt0414-malaria-profile"
+  },
+  {
+    "sno": 415,
+    "name": "Malaria Total Antibody",
+    "price": 600,
+    "nameLower": "malaria total antibody",
+    "testCode": "KT0415",
+    "slug": "kt0415-malaria-total-antibody"
+  },
+  {
+    "sno": 416,
+    "name": "Malaria Total Antibody",
+    "price": 600,
+    "nameLower": "malaria total antibody",
+    "testCode": "KT0416",
+    "slug": "kt0416-malaria-total-antibody"
+  },
+  {
+    "sno": 417,
+    "name": "Malignant Cells",
+    "price": 700,
+    "nameLower": "malignant cells",
+    "testCode": "KT0417",
+    "slug": "kt0417-malignant-cells"
+  },
+  {
+    "sno": 418,
+    "name": "MANTOUX TEST (MT)",
+    "price": 100,
+    "nameLower": "mantoux test (mt)",
+    "testCode": "KT0418",
+    "slug": "kt0418-mantoux-test-mt"
+  },
+  {
+    "sno": 419,
+    "name": "Microalbuminuria (MAU)",
+    "price": 450,
+    "nameLower": "microalbuminuria (mau)",
+    "testCode": "KT0419",
+    "slug": "kt0419-microalbuminuria-mau"
+  },
+  {
+    "sno": 420,
+    "name": "Microalbuminuria (MAU)",
+    "price": 0,
+    "nameLower": "microalbuminuria (mau)",
+    "testCode": "KT0420",
+    "slug": "kt0420-microalbuminuria-mau"
+  },
+  {
+    "sno": 421,
+    "name": "MICROFALARIA (RAPID TEST)",
+    "price": 800,
+    "nameLower": "microfalaria (rapid test)",
+    "testCode": "KT0421",
+    "slug": "kt0421-microfalaria-rapid-test"
+  },
+  {
+    "sno": 422,
+    "name": "Mini Diab Profile",
+    "price": 80,
+    "nameLower": "mini diab profile",
+    "testCode": "KT0422",
+    "slug": "kt0422-mini-diab-profile"
+  },
+  {
+    "sno": 423,
+    "name": "MTB WITH RIFAMPICIN AND ISONIAZID RESISTANCE",
+    "price": 3000,
+    "nameLower": "mtb with rifampicin and isoniazid resistance",
+    "testCode": "KT0423",
+    "slug": "kt0423-mtb-with-rifampicin-and-isoniazid-resistance"
+  },
+  {
+    "sno": 424,
+    "name": "Mucosal Scrapping for Cytology",
+    "price": 1000,
+    "nameLower": "mucosal scrapping for cytology",
+    "testCode": "KT0424",
+    "slug": "kt0424-mucosal-scrapping-for-cytology"
+  },
+  {
+    "sno": 425,
+    "name": "Mumps IgG",
+    "price": 2500,
+    "nameLower": "mumps igg",
+    "testCode": "KT0425",
+    "slug": "kt0425-mumps-igg"
+  },
+  {
+    "sno": 426,
+    "name": "Mumps IgM",
+    "price": 2500,
+    "nameLower": "mumps igm",
+    "testCode": "KT0426",
+    "slug": "kt0426-mumps-igm"
+  },
+  {
+    "sno": 427,
+    "name": "Mycobacterium Tuberculosis (Sputum)",
+    "price": 2200,
+    "nameLower": "mycobacterium tuberculosis (sputum)",
+    "testCode": "KT0427",
+    "slug": "kt0427-mycobacterium-tuberculosis-sputum"
+  },
+  {
+    "sno": 428,
+    "name": "Myeloma Profile",
+    "price": 9500,
+    "nameLower": "myeloma profile",
+    "testCode": "KT0428",
+    "slug": "kt0428-myeloma-profile"
+  },
+  {
+    "sno": 429,
+    "name": "Nail Clipping For Fungus",
+    "price": 250,
+    "nameLower": "nail clipping for fungus",
+    "testCode": "KT0429",
+    "slug": "kt0429-nail-clipping-for-fungus"
+  },
+  {
+    "sno": 430,
+    "name": "Nasal Swab For Culture & Sensitivity",
+    "price": 450,
+    "nameLower": "nasal swab for culture & sensitivity",
+    "testCode": "KT0430",
+    "slug": "kt0430-nasal-swab-for-culture-and-sensitivity"
+  },
+  {
+    "sno": 431,
+    "name": "Needle Stick Injury Panel",
+    "price": 2500,
+    "nameLower": "needle stick injury panel",
+    "testCode": "KT0431",
+    "slug": "kt0431-needle-stick-injury-panel"
+  },
+  {
+    "sno": 432,
+    "name": "Nicotine Metabolite",
+    "price": 2200,
+    "nameLower": "nicotine metabolite",
+    "testCode": "KT0432",
+    "slug": "kt0432-nicotine-metabolite"
+  },
+  {
+    "sno": 433,
+    "name": "NORMAL COVID PACKAGE",
+    "price": 5080,
+    "nameLower": "normal covid package",
+    "testCode": "KT0433",
+    "slug": "kt0433-normal-covid-package"
+  },
+  {
+    "sno": 434,
+    "name": "NT-Pro BNP",
+    "price": 2500,
+    "nameLower": "nt-pro bnp",
+    "testCode": "KT0434",
+    "slug": "kt0434-nt-pro-bnp"
+  },
+  {
+    "sno": 435,
+    "name": "OncqHaem IRMA",
+    "price": 13500,
+    "nameLower": "oncqhaem irma",
+    "testCode": "KT0435",
+    "slug": "kt0435-oncqhaem-irma"
+  },
+  {
+    "sno": 436,
+    "name": "OPTIMAL FOR MALARIA(RTMP)",
+    "price": 600,
+    "nameLower": "optimal for malaria(rtmp)",
+    "testCode": "KT0436",
+    "slug": "kt0436-optimal-for-malaria-rtmp"
+  },
+  {
+    "sno": 437,
+    "name": "Other Fluid Analysis - Cell Type & Cell Count",
+    "price": 400,
+    "nameLower": "other fluid analysis - cell type & cell count",
+    "testCode": "KT0437",
+    "slug": "kt0437-other-fluid-analysis-cell-type-and-cell-count"
+  },
+  {
+    "sno": 438,
+    "name": "Other Fluid Analysis - Culture",
+    "price": 1100,
+    "nameLower": "other fluid analysis - culture",
+    "testCode": "KT0438",
+    "slug": "kt0438-other-fluid-analysis-culture"
+  },
+  {
+    "sno": 439,
+    "name": "Other Fluid Analysis -LDH",
+    "price": 450,
+    "nameLower": "other fluid analysis -ldh",
+    "testCode": "KT0439",
+    "slug": "kt0439-other-fluid-analysis-ldh"
+  },
+  {
+    "sno": 440,
+    "name": "PAP SMEAE EXAMINATION.",
+    "price": 600,
+    "nameLower": "pap smeae examination.",
+    "testCode": "KT0440",
+    "slug": "kt0440-pap-smeae-examination"
+  },
+  {
+    "sno": 441,
+    "name": "PAP SMEAR",
+    "price": 600,
+    "nameLower": "pap smear",
+    "testCode": "KT0441",
+    "slug": "kt0441-pap-smear"
+  },
+  {
+    "sno": 442,
+    "name": "Pap Smear Examination",
+    "price": 500,
+    "nameLower": "pap smear examination",
+    "testCode": "KT0442",
+    "slug": "kt0442-pap-smear-examination"
+  },
+  {
+    "sno": 443,
+    "name": "PCR For Chlamydia- urine",
+    "price": 2500,
+    "nameLower": "pcr for chlamydia- urine",
+    "testCode": "KT0443",
+    "slug": "kt0443-pcr-for-chlamydia-urine"
+  },
+  {
+    "sno": 444,
+    "name": "PCR For Herpes simplex virus",
+    "price": 4000,
+    "nameLower": "pcr for herpes simplex virus",
+    "testCode": "KT0444",
+    "slug": "kt0444-pcr-for-herpes-simplex-virus"
+  },
+  {
+    "sno": 445,
+    "name": "PCV",
+    "price": 150,
+    "nameLower": "pcv",
+    "testCode": "KT0445",
+    "slug": "kt0445-pcv"
+  },
+  {
+    "sno": 446,
+    "name": "Pericardial Fluid ADA",
+    "price": 1200,
+    "nameLower": "pericardial fluid ada",
+    "testCode": "KT0446",
+    "slug": "kt0446-pericardial-fluid-ada"
+  },
+  {
+    "sno": 447,
+    "name": "Pericardiocentesis fluid analysis",
+    "price": 1500,
+    "nameLower": "pericardiocentesis fluid analysis",
+    "testCode": "KT0447",
+    "slug": "kt0447-pericardiocentesis-fluid-analysis"
+  },
+  {
+    "sno": 448,
+    "name": "Peripheral Smear Examination",
+    "price": 400,
+    "nameLower": "peripheral smear examination",
+    "testCode": "KT0448",
+    "slug": "kt0448-peripheral-smear-examination"
+  },
+  {
+    "sno": 449,
+    "name": "Phosphorus",
+    "price": 150,
+    "nameLower": "phosphorus",
+    "testCode": "KT0449",
+    "slug": "kt0449-phosphorus"
+  },
+  {
+    "sno": 450,
+    "name": "Plasma nor metanephrine",
+    "price": 4000,
+    "nameLower": "plasma nor metanephrine",
+    "testCode": "KT0450",
+    "slug": "kt0450-plasma-nor-metanephrine"
+  },
+  {
+    "sno": 451,
+    "name": "Plasma metanephrine",
+    "price": 4000,
+    "nameLower": "plasma metanephrine",
+    "testCode": "KT0451",
+    "slug": "kt0451-plasma-metanephrine"
+  },
+  {
+    "sno": 452,
+    "name": "PLATELET COUNT",
+    "price": 150,
+    "nameLower": "platelet count",
+    "testCode": "KT0452",
+    "slug": "kt0452-platelet-count"
+  },
+  {
+    "sno": 453,
+    "name": "Pleural Fluid",
+    "price": 1200,
+    "nameLower": "pleural fluid",
+    "testCode": "KT0453",
+    "slug": "kt0453-pleural-fluid"
+  },
+  {
+    "sno": 454,
+    "name": "Pleural Fluid - AFB Stain",
+    "price": 400,
+    "nameLower": "pleural fluid - afb stain",
+    "testCode": "KT0454",
+    "slug": "kt0454-pleural-fluid-afb-stain"
+  },
+  {
+    "sno": 455,
+    "name": "Pleural Fluid ADA",
+    "price": 1000,
+    "nameLower": "pleural fluid ada",
+    "testCode": "KT0455",
+    "slug": "kt0455-pleural-fluid-ada"
+  },
+  {
+    "sno": 456,
+    "name": "Pleural Fluid Analysis-Culture",
+    "price": 450,
+    "nameLower": "pleural fluid analysis-culture",
+    "testCode": "KT0456",
+    "slug": "kt0456-pleural-fluid-analysis-culture"
+  },
+  {
+    "sno": 457,
+    "name": "Pleural Fluid Analysis-Grams Stain",
+    "price": 500,
+    "nameLower": "pleural fluid analysis-grams stain",
+    "testCode": "KT0457",
+    "slug": "kt0457-pleural-fluid-analysis-grams-stain"
+  },
+  {
+    "sno": 458,
+    "name": "POTASSIUM",
+    "price": 200,
+    "nameLower": "potassium",
+    "testCode": "KT0458",
+    "slug": "kt0458-potassium"
+  },
+  {
+    "sno": 459,
+    "name": "Pre Dailysis Screen",
+    "price": 2500,
+    "nameLower": "pre dailysis screen",
+    "testCode": "KT0459",
+    "slug": "kt0459-pre-dailysis-screen"
+  },
+  {
+    "sno": 460,
+    "name": "PRO BNP",
+    "price": 1700,
+    "nameLower": "pro bnp",
+    "testCode": "KT0460",
+    "slug": "kt0460-pro-bnp"
+  },
+  {
+    "sno": 461,
+    "name": "Procalcitonin (Qualitative)",
+    "price": 3000,
+    "nameLower": "procalcitonin (qualitative)",
+    "testCode": "KT0461",
+    "slug": "kt0461-procalcitonin-qualitative"
+  },
+  {
+    "sno": 462,
+    "name": "Progesterone",
+    "price": 1500,
+    "nameLower": "progesterone",
+    "testCode": "KT0462",
+    "slug": "kt0462-progesterone"
+  },
+  {
+    "sno": 463,
+    "name": "Proinsulin",
+    "price": 1000,
+    "nameLower": "proinsulin",
+    "testCode": "KT0463",
+    "slug": "kt0463-proinsulin"
+  },
+  {
+    "sno": 464,
+    "name": "Protein 24 hrs Urine",
+    "price": 600,
+    "nameLower": "protein 24 hrs urine",
+    "testCode": "KT0464",
+    "slug": "kt0464-protein-24-hrs-urine"
+  },
+  {
+    "sno": 465,
+    "name": "Prothrombin Time ( With INR)",
+    "price": 400,
+    "nameLower": "prothrombin time ( with inr)",
+    "testCode": "KT0465",
+    "slug": "kt0465-prothrombin-time-with-inr"
+  },
+  {
+    "sno": 466,
+    "name": "PSA FREE",
+    "price": 1200,
+    "nameLower": "psa free",
+    "testCode": "KT0466",
+    "slug": "kt0466-psa-free"
+  },
+  {
+    "sno": 467,
+    "name": "PSA- Total (Prostate Specific Antigen total )",
+    "price": 1000,
+    "nameLower": "psa- total (prostate specific antigen total )",
+    "testCode": "KT0467",
+    "slug": "kt0467-psa-total-prostate-specific-antigen-total"
+  },
+  {
+    "sno": 468,
+    "name": "PTH-Intact (Parathormone Intact)",
+    "price": 1500,
+    "nameLower": "pth-intact (parathormone intact)",
+    "testCode": "KT0468",
+    "slug": "kt0468-pth-intact-parathormone-intact"
+  },
+  {
+    "sno": 469,
+    "name": "Pus C & S",
+    "price": 600,
+    "nameLower": "pus c & s",
+    "testCode": "KT0469",
+    "slug": "kt0469-pus-c-and-s"
+  },
+  {
+    "sno": 470,
+    "name": "PUS FOR AFB",
+    "price": 500,
+    "nameLower": "pus for afb",
+    "testCode": "KT0470",
+    "slug": "kt0470-pus-for-afb"
+  },
+  {
+    "sno": 471,
+    "name": "QUADRUPLE(MARKER)",
+    "price": 3600,
+    "nameLower": "quadruple(marker)",
+    "testCode": "KT0471",
+    "slug": "kt0471-quadruple-marker"
+  },
+  {
+    "sno": 472,
+    "name": "R H TITRE ANTIBODY",
+    "price": 1150,
+    "nameLower": "r h titre antibody",
+    "testCode": "KT0472",
+    "slug": "kt0472-r-h-titre-antibody"
+  },
+  {
+    "sno": 473,
+    "name": "R K -39 FOR KALAZAR",
+    "price": 600,
+    "nameLower": "r k -39 for kalazar",
+    "testCode": "KT0473",
+    "slug": "kt0473-r-k-39-for-kalazar"
+  },
+  {
+    "sno": 474,
+    "name": "R.P.R BOTH",
+    "price": 400,
+    "nameLower": "r.p.r both",
+    "testCode": "KT0474",
+    "slug": "kt0474-r-p-r-both"
+  },
+  {
+    "sno": 475,
+    "name": "R.P.R-H",
+    "price": 200,
+    "nameLower": "r.p.r-h",
+    "testCode": "KT0475",
+    "slug": "kt0475-r-p-r-h"
+  },
+  {
+    "sno": 476,
+    "name": "R.P.R-W",
+    "price": 200,
+    "nameLower": "r.p.r-w",
+    "testCode": "KT0476",
+    "slug": "kt0476-r-p-r-w"
+  },
+  {
+    "sno": 477,
+    "name": "RA FACTOR(Quantitative)",
+    "price": 500,
+    "nameLower": "ra factor(quantitative)",
+    "testCode": "KT0477",
+    "slug": "kt0477-ra-factor-quantitative"
+  },
+  {
+    "sno": 478,
+    "name": "RA LATEX",
+    "price": 350,
+    "nameLower": "ra latex",
+    "testCode": "KT0478",
+    "slug": "kt0478-ra-latex"
+  },
+  {
+    "sno": 479,
+    "name": "RBC Count",
+    "price": 150,
+    "nameLower": "rbc count",
+    "testCode": "KT0479",
+    "slug": "kt0479-rbc-count"
+  },
+  {
+    "sno": 480,
+    "name": "Renal Profile",
+    "price": 900,
+    "nameLower": "renal profile",
+    "testCode": "KT0480",
+    "slug": "kt0480-renal-profile"
+  },
+  {
+    "sno": 481,
+    "name": "Reticulocyte Count",
+    "price": 400,
+    "nameLower": "reticulocyte count",
+    "testCode": "KT0481",
+    "slug": "kt0481-reticulocyte-count"
+  },
+  {
+    "sno": 482,
+    "name": "Rh Antibody Titre",
+    "price": 1500,
+    "nameLower": "rh antibody titre",
+    "testCode": "KT0482",
+    "slug": "kt0482-rh-antibody-titre"
+  },
+  {
+    "sno": 483,
+    "name": "RPR (Rapid Plasma regin)",
+    "price": 150,
+    "nameLower": "rpr (rapid plasma regin)",
+    "testCode": "KT0483",
+    "slug": "kt0483-rpr-rapid-plasma-regin"
+  },
+  {
+    "sno": 484,
+    "name": "Rubella IgE",
+    "price": 1000,
+    "nameLower": "rubella ige",
+    "testCode": "KT0484",
+    "slug": "kt0484-rubella-ige"
+  },
+  {
+    "sno": 485,
+    "name": "Rubella IgG",
+    "price": 600,
+    "nameLower": "rubella igg",
+    "testCode": "KT0485",
+    "slug": "kt0485-rubella-igg"
+  },
+  {
+    "sno": 486,
+    "name": "Rubella IgM",
+    "price": 600,
+    "nameLower": "rubella igm",
+    "testCode": "KT0486",
+    "slug": "kt0486-rubella-igm"
+  },
+  {
+    "sno": 487,
+    "name": "S Prolactin",
+    "price": 500,
+    "nameLower": "s prolactin",
+    "testCode": "KT0487",
+    "slug": "kt0487-s-prolactin"
+  },
+  {
+    "sno": 488,
+    "name": "S TYPHI DOT",
+    "price": 400,
+    "nameLower": "s typhi dot",
+    "testCode": "KT0488",
+    "slug": "kt0488-s-typhi-dot"
+  },
+  {
+    "sno": 489,
+    "name": "S-100",
+    "price": 2500,
+    "nameLower": "s-100",
+    "testCode": "KT0489",
+    "slug": "kt0489-s-100"
+  },
+  {
+    "sno": 490,
+    "name": "S. Estradiol",
+    "price": 1500,
+    "nameLower": "s. estradiol",
+    "testCode": "KT0490",
+    "slug": "kt0490-s-estradiol"
+  },
+  {
+    "sno": 491,
+    "name": "S. Lithium",
+    "price": 1000,
+    "nameLower": "s. lithium",
+    "testCode": "KT0491",
+    "slug": "kt0491-s-lithium"
+  },
+  {
+    "sno": 492,
+    "name": "S. Valproate level",
+    "price": 1500,
+    "nameLower": "s. valproate level",
+    "testCode": "KT0492",
+    "slug": "kt0492-s-valproate-level"
+  },
+  {
+    "sno": 493,
+    "name": "SAAG(Serum Ascites Albumin Gradient",
+    "price": 400,
+    "nameLower": "saag(serum ascites albumin gradient",
+    "testCode": "KT0493",
+    "slug": "kt0493-saag-serum-ascites-albumin-gradient"
+  },
+  {
+    "sno": 494,
+    "name": "SATYAMEV ACTIVE",
+    "price": 1599,
+    "nameLower": "satyamev active",
+    "testCode": "KT0494",
+    "slug": "kt0494-satyamev-active"
+  },
+  {
+    "sno": 495,
+    "name": "Satyamev Advance",
+    "price": 3449,
+    "nameLower": "satyamev advance",
+    "testCode": "KT0495",
+    "slug": "kt0495-satyamev-advance"
+  },
+  {
+    "sno": 496,
+    "name": "SATYAMEV COMPLETE",
+    "price": 4149,
+    "nameLower": "satyamev complete",
+    "testCode": "KT0496",
+    "slug": "kt0496-satyamev-complete"
+  },
+  {
+    "sno": 497,
+    "name": "Satyamev Complte",
+    "price": 4149,
+    "nameLower": "satyamev complte",
+    "testCode": "KT0497",
+    "slug": "kt0497-satyamev-complte"
+  },
+  {
+    "sno": 498,
+    "name": "Satyamev Lite",
+    "price": 1099,
+    "nameLower": "satyamev lite",
+    "testCode": "KT0498",
+    "slug": "kt0498-satyamev-lite"
+  },
+  {
+    "sno": 499,
+    "name": "SATYAMEV LITE",
+    "price": 1099,
+    "nameLower": "satyamev lite",
+    "testCode": "KT0499",
+    "slug": "kt0499-satyamev-lite"
+  },
+  {
+    "sno": 500,
+    "name": "Satyamev Mini camp",
+    "price": 49,
+    "nameLower": "satyamev mini camp",
+    "testCode": "KT0500",
+    "slug": "kt0500-satyamev-mini-camp"
+  },
+  {
+    "sno": 501,
+    "name": "Satyamev Platinum",
+    "price": 5149,
+    "nameLower": "satyamev platinum",
+    "testCode": "KT0501",
+    "slug": "kt0501-satyamev-platinum"
+  },
+  {
+    "sno": 502,
+    "name": "Satyamev Screen",
+    "price": 999,
+    "nameLower": "satyamev screen",
+    "testCode": "KT0502",
+    "slug": "kt0502-satyamev-screen"
+  },
+  {
+    "sno": 503,
+    "name": "Satyamev Super",
+    "price": 2549,
+    "nameLower": "satyamev super",
+    "testCode": "KT0503",
+    "slug": "kt0503-satyamev-super"
+  },
+  {
+    "sno": 504,
+    "name": "SATYAMEV SUPER",
+    "price": 2549,
+    "nameLower": "satyamev super",
+    "testCode": "KT0504",
+    "slug": "kt0504-satyamev-super"
+  },
+  {
+    "sno": 505,
+    "name": "SATYAMEV TOTAL",
+    "price": 2149,
+    "nameLower": "satyamev total",
+    "testCode": "KT0505",
+    "slug": "kt0505-satyamev-total"
+  },
+  {
+    "sno": 506,
+    "name": "SCCA",
+    "price": 2500,
+    "nameLower": "scca",
+    "testCode": "KT0506",
+    "slug": "kt0506-scca"
+  },
+  {
+    "sno": 507,
+    "name": "Scrub Typhus IgM (ELISA)",
+    "price": 1200,
+    "nameLower": "scrub typhus igm (elisa)",
+    "testCode": "KT0507",
+    "slug": "kt0507-scrub-typhus-igm-elisa"
+  },
+  {
+    "sno": 508,
+    "name": "Scrub Typhus IgM (RAPID) CARD",
+    "price": 1200,
+    "nameLower": "scrub typhus igm (rapid) card",
+    "testCode": "KT0508",
+    "slug": "kt0508-scrub-typhus-igm-rapid-card"
+  },
+  {
+    "sno": 509,
+    "name": "SEMEN ANALYSIS (H.S.F)",
+    "price": 500,
+    "nameLower": "semen analysis (h.s.f)",
+    "testCode": "KT0509",
+    "slug": "kt0509-semen-analysis-h-s-f"
+  },
+  {
+    "sno": 510,
+    "name": "Semen C & S",
+    "price": 600,
+    "nameLower": "semen c & s",
+    "testCode": "KT0510",
+    "slug": "kt0510-semen-c-and-s"
+  },
+  {
+    "sno": 511,
+    "name": "Serum Ketone",
+    "price": 1800,
+    "nameLower": "serum ketone",
+    "testCode": "KT0511",
+    "slug": "kt0511-serum-ketone"
+  },
+  {
+    "sno": 512,
+    "name": "SERUM ADA",
+    "price": 1000,
+    "nameLower": "serum ada",
+    "testCode": "KT0512",
+    "slug": "kt0512-serum-ada"
+  },
+  {
+    "sno": 513,
+    "name": "SERUM ALBUMIN",
+    "price": 150,
+    "nameLower": "serum albumin",
+    "testCode": "KT0513",
+    "slug": "kt0513-serum-albumin"
+  },
+  {
+    "sno": 514,
+    "name": "Serum Aldosterone",
+    "price": 2800,
+    "nameLower": "serum aldosterone",
+    "testCode": "KT0514",
+    "slug": "kt0514-serum-aldosterone"
+  },
+  {
+    "sno": 515,
+    "name": "Serum Bilrubin Total and Direct",
+    "price": 200,
+    "nameLower": "serum bilrubin total and direct",
+    "testCode": "KT0515",
+    "slug": "kt0515-serum-bilrubin-total-and-direct"
+  },
+  {
+    "sno": 516,
+    "name": "SERUM CERULOPLASMIN",
+    "price": 1400,
+    "nameLower": "serum ceruloplasmin",
+    "testCode": "KT0516",
+    "slug": "kt0516-serum-ceruloplasmin"
+  },
+  {
+    "sno": 517,
+    "name": "Serum Cortisol 08 AM",
+    "price": 1000,
+    "nameLower": "serum cortisol 08 am",
+    "testCode": "KT0517",
+    "slug": "kt0517-serum-cortisol-08-am"
+  },
+  {
+    "sno": 518,
+    "name": "Serum Cortisol 8:00 PM",
+    "price": 1000,
+    "nameLower": "serum cortisol 8:00 pm",
+    "testCode": "KT0518",
+    "slug": "kt0518-serum-cortisol-8-00-pm"
+  },
+  {
+    "sno": 519,
+    "name": "SERUM CREATININE",
+    "price": 200,
+    "nameLower": "serum creatinine",
+    "testCode": "KT0519",
+    "slug": "kt0519-serum-creatinine"
+  },
+  {
+    "sno": 520,
+    "name": "SERUM FERRITIN",
+    "price": 1000,
+    "nameLower": "serum ferritin",
+    "testCode": "KT0520",
+    "slug": "kt0520-serum-ferritin"
+  },
+  {
+    "sno": 521,
+    "name": "SERUM IgE",
+    "price": 1000,
+    "nameLower": "serum ige",
+    "testCode": "KT0521",
+    "slug": "kt0521-serum-ige"
+  },
+  {
+    "sno": 522,
+    "name": "Serum Igg Aspergillus",
+    "price": 2400,
+    "nameLower": "serum igg aspergillus",
+    "testCode": "KT0522",
+    "slug": "kt0522-serum-igg-aspergillus"
+  },
+  {
+    "sno": 523,
+    "name": "SERUM INSULIN (PP)",
+    "price": 1000,
+    "nameLower": "serum insulin (pp)",
+    "testCode": "KT0523",
+    "slug": "kt0523-serum-insulin-pp"
+  },
+  {
+    "sno": 524,
+    "name": "SERUM INSULIN FASTING",
+    "price": 1000,
+    "nameLower": "serum insulin fasting",
+    "testCode": "KT0524",
+    "slug": "kt0524-serum-insulin-fasting"
+  },
+  {
+    "sno": 525,
+    "name": "Serum Iron",
+    "price": 200,
+    "nameLower": "serum iron",
+    "testCode": "KT0525",
+    "slug": "kt0525-serum-iron"
+  },
+  {
+    "sno": 526,
+    "name": "Serum Lysine level",
+    "price": 7600,
+    "nameLower": "serum lysine level",
+    "testCode": "KT0526",
+    "slug": "kt0526-serum-lysine-level"
+  },
+  {
+    "sno": 527,
+    "name": "Serum Osmolality",
+    "price": 800,
+    "nameLower": "serum osmolality",
+    "testCode": "KT0527",
+    "slug": "kt0527-serum-osmolality"
+  },
+  {
+    "sno": 528,
+    "name": "Serum Osmolality",
+    "price": 600,
+    "nameLower": "serum osmolality",
+    "testCode": "KT0528",
+    "slug": "kt0528-serum-osmolality"
+  },
+  {
+    "sno": 529,
+    "name": "Serum pH",
+    "price": 1000,
+    "nameLower": "serum ph",
+    "testCode": "KT0529",
+    "slug": "kt0529-serum-ph"
+  },
+  {
+    "sno": 530,
+    "name": "Serum Phenytoin",
+    "price": 1500,
+    "nameLower": "serum phenytoin",
+    "testCode": "KT0530",
+    "slug": "kt0530-serum-phenytoin"
+  },
+  {
+    "sno": 531,
+    "name": "SERUM PROLACTIN",
+    "price": 500,
+    "nameLower": "serum prolactin",
+    "testCode": "KT0531",
+    "slug": "kt0531-serum-prolactin"
+  },
+  {
+    "sno": 532,
+    "name": "SERUM PROTEIN",
+    "price": 150,
+    "nameLower": "serum protein",
+    "testCode": "KT0532",
+    "slug": "kt0532-serum-protein"
+  },
+  {
+    "sno": 533,
+    "name": "Serum protein Electrophoresis",
+    "price": 1500,
+    "nameLower": "serum protein electrophoresis",
+    "testCode": "KT0533",
+    "slug": "kt0533-serum-protein-electrophoresis"
+  },
+  {
+    "sno": 534,
+    "name": "SERUM SODIUM",
+    "price": 200,
+    "nameLower": "serum sodium",
+    "testCode": "KT0534",
+    "slug": "kt0534-serum-sodium"
+  },
+  {
+    "sno": 535,
+    "name": "Sex Hormone Binding Globulin (SHBG)",
+    "price": 2600,
+    "nameLower": "sex hormone binding globulin (shbg)",
+    "testCode": "KT0535",
+    "slug": "kt0535-sex-hormone-binding-globulin-shbg"
+  },
+  {
+    "sno": 536,
+    "name": "SGOT (AST)",
+    "price": 200,
+    "nameLower": "sgot (ast)",
+    "testCode": "KT0536",
+    "slug": "kt0536-sgot-ast"
+  },
+  {
+    "sno": 537,
+    "name": "SGPT (ALT)",
+    "price": 200,
+    "nameLower": "sgpt (alt)",
+    "testCode": "KT0537",
+    "slug": "kt0537-sgpt-alt"
+  },
+  {
+    "sno": 538,
+    "name": "SICKLING SCREENING TEST",
+    "price": 400,
+    "nameLower": "sickling screening test",
+    "testCode": "KT0538",
+    "slug": "kt0538-sickling-screening-test"
+  },
+  {
+    "sno": 539,
+    "name": "SKIN SCRAPPING FOR FUNGUS",
+    "price": 800,
+    "nameLower": "skin scrapping for fungus",
+    "testCode": "KT0539",
+    "slug": "kt0539-skin-scrapping-for-fungus"
+  },
+  {
+    "sno": 540,
+    "name": "SKIN SMEAR FOR -AFB (LEPROSY )1 SITE",
+    "price": 500,
+    "nameLower": "skin smear for -afb (leprosy )1 site",
+    "testCode": "KT0540",
+    "slug": "kt0540-skin-smear-for-afb-leprosy-1-site"
+  },
+  {
+    "sno": 541,
+    "name": "SLIDES FOR REVIEW",
+    "price": 550,
+    "nameLower": "slides for review",
+    "testCode": "KT0541",
+    "slug": "kt0541-slides-for-review"
+  },
+  {
+    "sno": 542,
+    "name": "SLIT SKIN SMEAR FOR AFB",
+    "price": 1500,
+    "nameLower": "slit skin smear for afb",
+    "testCode": "KT0542",
+    "slug": "kt0542-slit-skin-smear-for-afb"
+  },
+  {
+    "sno": 543,
+    "name": "SMEAR FOR FUNGUS",
+    "price": 300,
+    "nameLower": "smear for fungus",
+    "testCode": "KT0543",
+    "slug": "kt0543-smear-for-fungus"
+  },
+  {
+    "sno": 544,
+    "name": "Smear For Gram Staining",
+    "price": 300,
+    "nameLower": "smear for gram staining",
+    "testCode": "KT0544",
+    "slug": "kt0544-smear-for-gram-staining"
+  },
+  {
+    "sno": 545,
+    "name": "SPILENE PUNCTURE",
+    "price": 600,
+    "nameLower": "spilene puncture",
+    "testCode": "KT0545",
+    "slug": "kt0545-spilene-puncture"
+  },
+  {
+    "sno": 546,
+    "name": "SPIROMETRY",
+    "price": 400,
+    "nameLower": "spirometry",
+    "testCode": "KT0546",
+    "slug": "kt0546-spirometry"
+  },
+  {
+    "sno": 547,
+    "name": "Sputum For Eosinophils",
+    "price": 250,
+    "nameLower": "sputum for eosinophils",
+    "testCode": "KT0547",
+    "slug": "kt0547-sputum-for-eosinophils"
+  },
+  {
+    "sno": 548,
+    "name": "SPUTUM CULTURE",
+    "price": 600,
+    "nameLower": "sputum culture",
+    "testCode": "KT0548",
+    "slug": "kt0548-sputum-culture"
+  },
+  {
+    "sno": 549,
+    "name": "SPUTUM FOR AFB",
+    "price": 500,
+    "nameLower": "sputum for afb",
+    "testCode": "KT0549",
+    "slug": "kt0549-sputum-for-afb"
+  },
+  {
+    "sno": 550,
+    "name": "Sputum for AFB",
+    "price": 500,
+    "nameLower": "sputum for afb",
+    "testCode": "KT0550",
+    "slug": "kt0550-sputum-for-afb"
+  },
+  {
+    "sno": 551,
+    "name": "Sputum For Fungus",
+    "price": 400,
+    "nameLower": "sputum for fungus",
+    "testCode": "KT0551",
+    "slug": "kt0551-sputum-for-fungus"
+  },
+  {
+    "sno": 552,
+    "name": "Sputum for Garm Stain",
+    "price": 300,
+    "nameLower": "sputum for garm stain",
+    "testCode": "KT0552",
+    "slug": "kt0552-sputum-for-garm-stain"
+  },
+  {
+    "sno": 553,
+    "name": "Sputum For Malignant Cell & Cytology",
+    "price": 650,
+    "nameLower": "sputum for malignant cell & cytology",
+    "testCode": "KT0553",
+    "slug": "kt0553-sputum-for-malignant-cell-and-cytology"
+  },
+  {
+    "sno": 554,
+    "name": "Stone Analysis",
+    "price": 2500,
+    "nameLower": "stone analysis",
+    "testCode": "KT0554",
+    "slug": "kt0554-stone-analysis"
+  },
+  {
+    "sno": 555,
+    "name": "Stool Culture/Sensitivity",
+    "price": 500,
+    "nameLower": "stool culture/sensitivity",
+    "testCode": "KT0555",
+    "slug": "kt0555-stool-culture-sensitivity"
+  },
+  {
+    "sno": 556,
+    "name": "Stool For Ex Egg",
+    "price": 400,
+    "nameLower": "stool for ex egg",
+    "testCode": "KT0556",
+    "slug": "kt0556-stool-for-ex-egg"
+  },
+  {
+    "sno": 557,
+    "name": "Stool For Hanging Drop",
+    "price": 300,
+    "nameLower": "stool for hanging drop",
+    "testCode": "KT0557",
+    "slug": "kt0557-stool-for-hanging-drop"
+  },
+  {
+    "sno": 558,
+    "name": "Stool for occult blood",
+    "price": 400,
+    "nameLower": "stool for occult blood",
+    "testCode": "KT0558",
+    "slug": "kt0558-stool-for-occult-blood"
+  },
+  {
+    "sno": 559,
+    "name": "Stool For Reducing Substance",
+    "price": 300,
+    "nameLower": "stool for reducing substance",
+    "testCode": "KT0559",
+    "slug": "kt0559-stool-for-reducing-substance"
+  },
+  {
+    "sno": 560,
+    "name": "Stool pH",
+    "price": 150,
+    "nameLower": "stool ph",
+    "testCode": "KT0560",
+    "slug": "kt0560-stool-ph"
+  },
+  {
+    "sno": 561,
+    "name": "Stool Routine & Microscopy",
+    "price": 100,
+    "nameLower": "stool routine & microscopy",
+    "testCode": "KT0561",
+    "slug": "kt0561-stool-routine-and-microscopy"
+  },
+  {
+    "sno": 562,
+    "name": "SUPER ACTIVE",
+    "price": 1500,
+    "nameLower": "super active",
+    "testCode": "KT0562",
+    "slug": "kt0562-super-active"
+  },
+  {
+    "sno": 563,
+    "name": "SUPER HEALTH",
+    "price": 2350,
+    "nameLower": "super health",
+    "testCode": "KT0563",
+    "slug": "kt0563-super-health"
+  },
+  {
+    "sno": 564,
+    "name": "SUPER SCREEN",
+    "price": 899,
+    "nameLower": "super screen",
+    "testCode": "KT0564",
+    "slug": "kt0564-super-screen"
+  },
+  {
+    "sno": 565,
+    "name": "SUPER1",
+    "price": 880,
+    "nameLower": "super1",
+    "testCode": "KT0565",
+    "slug": "kt0565-super1"
+  },
+  {
+    "sno": 566,
+    "name": "SYNOVIAL C&S",
+    "price": 700,
+    "nameLower": "synovial c&s",
+    "testCode": "KT0566",
+    "slug": "kt0566-synovial-c-and-s"
+  },
+  {
+    "sno": 567,
+    "name": "SYNOVIAL CULTURE",
+    "price": 500,
+    "nameLower": "synovial culture",
+    "testCode": "KT0567",
+    "slug": "kt0567-synovial-culture"
+  },
+  {
+    "sno": 568,
+    "name": "SYNOVIAL FLUID EXAM",
+    "price": 1000,
+    "nameLower": "synovial fluid exam",
+    "testCode": "KT0568",
+    "slug": "kt0568-synovial-fluid-exam"
+  },
+  {
+    "sno": 569,
+    "name": "T.L.C",
+    "price": 100,
+    "nameLower": "t.l.c",
+    "testCode": "KT0569",
+    "slug": "kt0569-t-l-c"
+  },
+  {
+    "sno": 570,
+    "name": "T.P.H.A -W",
+    "price": 200,
+    "nameLower": "t.p.h.a -w",
+    "testCode": "KT0570",
+    "slug": "kt0570-t-p-h-a-w"
+  },
+  {
+    "sno": 571,
+    "name": "T.P.H.A- BOTH",
+    "price": 400,
+    "nameLower": "t.p.h.a- both",
+    "testCode": "KT0571",
+    "slug": "kt0571-t-p-h-a-both"
+  },
+  {
+    "sno": 572,
+    "name": "T.P.H.A-H",
+    "price": 200,
+    "nameLower": "t.p.h.a-h",
+    "testCode": "KT0572",
+    "slug": "kt0572-t-p-h-a-h"
+  },
+  {
+    "sno": 573,
+    "name": "T3",
+    "price": 300,
+    "nameLower": "t3",
+    "testCode": "KT0573",
+    "slug": "kt0573-t3"
+  },
+  {
+    "sno": 574,
+    "name": "T3,T4,TSH",
+    "price": 900,
+    "nameLower": "t3,t4,tsh",
+    "testCode": "KT0574",
+    "slug": "kt0574-t3-t4-tsh"
+  },
+  {
+    "sno": 575,
+    "name": "T4",
+    "price": 300,
+    "nameLower": "t4",
+    "testCode": "KT0575",
+    "slug": "kt0575-t4"
+  },
+  {
+    "sno": 576,
+    "name": "T4 TSH",
+    "price": 300,
+    "nameLower": "t4 tsh",
+    "testCode": "KT0576",
+    "slug": "kt0576-t4-tsh"
+  },
+  {
+    "sno": 577,
+    "name": "TB Gold (ECL)",
+    "price": 2500,
+    "nameLower": "tb gold (ecl)",
+    "testCode": "KT0577",
+    "slug": "kt0577-tb-gold-ecl"
+  },
+  {
+    "sno": 578,
+    "name": "TB PCR - Endometrium",
+    "price": 2400,
+    "nameLower": "tb pcr - endometrium",
+    "testCode": "KT0578",
+    "slug": "kt0578-tb-pcr-endometrium"
+  },
+  {
+    "sno": 579,
+    "name": "TB PCR - Semen",
+    "price": 2400,
+    "nameLower": "tb pcr - semen",
+    "testCode": "KT0579",
+    "slug": "kt0579-tb-pcr-semen"
+  },
+  {
+    "sno": 580,
+    "name": "TB PCR -BLOOD",
+    "price": 2600,
+    "nameLower": "tb pcr -blood",
+    "testCode": "KT0580",
+    "slug": "kt0580-tb-pcr-blood"
+  },
+  {
+    "sno": 581,
+    "name": "TB PCR -CSF",
+    "price": 2600,
+    "nameLower": "tb pcr -csf",
+    "testCode": "KT0581",
+    "slug": "kt0581-tb-pcr-csf"
+  },
+  {
+    "sno": 582,
+    "name": "TB PCR- Endometrium Blood",
+    "price": 2400,
+    "nameLower": "tb pcr- endometrium blood",
+    "testCode": "KT0582",
+    "slug": "kt0582-tb-pcr-endometrium-blood"
+  },
+  {
+    "sno": 583,
+    "name": "TB PCR- Tissue",
+    "price": 3000,
+    "nameLower": "tb pcr- tissue",
+    "testCode": "KT0583",
+    "slug": "kt0583-tb-pcr-tissue"
+  },
+  {
+    "sno": 584,
+    "name": "TB PCR- Urine",
+    "price": 2400,
+    "nameLower": "tb pcr- urine",
+    "testCode": "KT0584",
+    "slug": "kt0584-tb-pcr-urine"
+  },
+  {
+    "sno": 585,
+    "name": "TB PCR-Menstrual Blood",
+    "price": 2400,
+    "nameLower": "tb pcr-menstrual blood",
+    "testCode": "KT0585",
+    "slug": "kt0585-tb-pcr-menstrual-blood"
+  },
+  {
+    "sno": 586,
+    "name": "TB PCR-Other",
+    "price": 2400,
+    "nameLower": "tb pcr-other",
+    "testCode": "KT0586",
+    "slug": "kt0586-tb-pcr-other"
+  },
+  {
+    "sno": 587,
+    "name": "TB SURE",
+    "price": 4000,
+    "nameLower": "tb sure",
+    "testCode": "KT0587",
+    "slug": "kt0587-tb-sure"
+  },
+  {
+    "sno": 588,
+    "name": "Testosterone",
+    "price": 1200,
+    "nameLower": "testosterone",
+    "testCode": "KT0588",
+    "slug": "kt0588-testosterone"
+  },
+  {
+    "sno": 589,
+    "name": "TGA",
+    "price": 2800,
+    "nameLower": "tga",
+    "testCode": "KT0589",
+    "slug": "kt0589-tga"
+  },
+  {
+    "sno": 590,
+    "name": "Thalassemia",
+    "price": 2200,
+    "nameLower": "thalassemia",
+    "testCode": "KT0590",
+    "slug": "kt0590-thalassemia"
+  },
+  {
+    "sno": 591,
+    "name": "Throat swab C & S",
+    "price": 600,
+    "nameLower": "throat swab c & s",
+    "testCode": "KT0591",
+    "slug": "kt0591-throat-swab-c-and-s"
+  },
+  {
+    "sno": 592,
+    "name": "Thyroid Profile",
+    "price": 700,
+    "nameLower": "thyroid profile",
+    "testCode": "KT0592",
+    "slug": "kt0592-thyroid-profile"
+  },
+  {
+    "sno": 593,
+    "name": "Tip C & S",
+    "price": 450,
+    "nameLower": "tip c & s",
+    "testCode": "KT0593",
+    "slug": "kt0593-tip-c-and-s"
+  },
+  {
+    "sno": 594,
+    "name": "TISSUE CULTURE",
+    "price": 800,
+    "nameLower": "tissue culture",
+    "testCode": "KT0594",
+    "slug": "kt0594-tissue-culture"
+  },
+  {
+    "sno": 595,
+    "name": "Tissue For Culture & Sensitivity",
+    "price": 600,
+    "nameLower": "tissue for culture & sensitivity",
+    "testCode": "KT0595",
+    "slug": "kt0595-tissue-for-culture-and-sensitivity"
+  },
+  {
+    "sno": 596,
+    "name": "TISSUE TRANSGLUTAMINASE TTG ANTIBODY IGG IGM",
+    "price": 1600,
+    "nameLower": "tissue transglutaminase ttg antibody igg igm",
+    "testCode": "KT0596",
+    "slug": "kt0596-tissue-transglutaminase-ttg-antibody-igg-igm"
+  },
+  {
+    "sno": 597,
+    "name": "TLC+DLC+HB",
+    "price": 200,
+    "nameLower": "tlc+dlc+hb",
+    "testCode": "KT0597",
+    "slug": "kt0597-tlc-dlc-hb"
+  },
+  {
+    "sno": 598,
+    "name": "TLC/HB",
+    "price": 200,
+    "nameLower": "tlc/hb",
+    "testCode": "KT0598",
+    "slug": "kt0598-tlc-hb"
+  },
+  {
+    "sno": 599,
+    "name": "TMA",
+    "price": 2500,
+    "nameLower": "tma",
+    "testCode": "KT0599",
+    "slug": "kt0599-tma"
+  },
+  {
+    "sno": 600,
+    "name": "TORCH IGG",
+    "price": 1250,
+    "nameLower": "torch igg",
+    "testCode": "KT0600",
+    "slug": "kt0600-torch-igg"
+  },
+  {
+    "sno": 601,
+    "name": "TORCH IgG + IgM",
+    "price": 2500,
+    "nameLower": "torch igg + igm",
+    "testCode": "KT0601",
+    "slug": "kt0601-torch-igg-igm"
+  },
+  {
+    "sno": 602,
+    "name": "TORCH IgM",
+    "price": 1250,
+    "nameLower": "torch igm",
+    "testCode": "KT0602",
+    "slug": "kt0602-torch-igm"
+  },
+  {
+    "sno": 603,
+    "name": "TORCH PROFILE (10)",
+    "price": 3000,
+    "nameLower": "torch profile (10)",
+    "testCode": "KT0603",
+    "slug": "kt0603-torch-profile-10"
+  },
+  {
+    "sno": 604,
+    "name": "TORCH PROFILE (8)",
+    "price": 3000,
+    "nameLower": "torch profile (8)",
+    "testCode": "KT0604",
+    "slug": "kt0604-torch-profile-8"
+  },
+  {
+    "sno": 605,
+    "name": "TOTAL BILE ACID",
+    "price": 1700,
+    "nameLower": "total bile acid",
+    "testCode": "KT0605",
+    "slug": "kt0605-total-bile-acid"
+  },
+  {
+    "sno": 606,
+    "name": "Total Proteins With Albumin/Globulin/A/G",
+    "price": 400,
+    "nameLower": "total proteins with albumin/globulin/a/g",
+    "testCode": "KT0606",
+    "slug": "kt0606-total-proteins-with-albumin-globulin-a-g"
+  },
+  {
+    "sno": 607,
+    "name": "TOXO IgG",
+    "price": 750,
+    "nameLower": "toxo igg",
+    "testCode": "KT0607",
+    "slug": "kt0607-toxo-igg"
+  },
+  {
+    "sno": 608,
+    "name": "TOXO IgM",
+    "price": 750,
+    "nameLower": "toxo igm",
+    "testCode": "KT0608",
+    "slug": "kt0608-toxo-igm"
+  },
+  {
+    "sno": 609,
+    "name": "TOXO TEST",
+    "price": 1500,
+    "nameLower": "toxo test",
+    "testCode": "KT0609",
+    "slug": "kt0609-toxo-test"
+  },
+  {
+    "sno": 610,
+    "name": "TPHA",
+    "price": 650,
+    "nameLower": "tpha",
+    "testCode": "KT0610",
+    "slug": "kt0610-tpha"
+  },
+  {
+    "sno": 611,
+    "name": "Tracheal Secrations For Culture & Sensitivity",
+    "price": 450,
+    "nameLower": "tracheal secrations for culture & sensitivity",
+    "testCode": "KT0611",
+    "slug": "kt0611-tracheal-secrations-for-culture-and-sensitivity"
+  },
+  {
+    "sno": 612,
+    "name": "Triglycerides",
+    "price": 200,
+    "nameLower": "triglycerides",
+    "testCode": "KT0612",
+    "slug": "kt0612-triglycerides"
+  },
+  {
+    "sno": 613,
+    "name": "Triple Marker",
+    "price": 2500,
+    "nameLower": "triple marker",
+    "testCode": "KT0613",
+    "slug": "kt0613-triple-marker"
+  },
+  {
+    "sno": 614,
+    "name": "TROP- I",
+    "price": 1300,
+    "nameLower": "trop- i",
+    "testCode": "KT0614",
+    "slug": "kt0614-trop-i"
+  },
+  {
+    "sno": 615,
+    "name": "TROPONIN-I QUANTITATIVE",
+    "price": 1300,
+    "nameLower": "troponin-i quantitative",
+    "testCode": "KT0615",
+    "slug": "kt0615-troponin-i-quantitative"
+  },
+  {
+    "sno": 616,
+    "name": "TROPONIN-T",
+    "price": 1300,
+    "nameLower": "troponin-t",
+    "testCode": "KT0616",
+    "slug": "kt0616-troponin-t"
+  },
+  {
+    "sno": 617,
+    "name": "TSH",
+    "price": 350,
+    "nameLower": "tsh",
+    "testCode": "KT0617",
+    "slug": "kt0617-tsh"
+  },
+  {
+    "sno": 618,
+    "name": "TTg-IgA",
+    "price": 1500,
+    "nameLower": "ttg-iga",
+    "testCode": "KT0618",
+    "slug": "kt0618-ttg-iga"
+  },
+  {
+    "sno": 619,
+    "name": "TUMOR MARKERS",
+    "price": 9000,
+    "nameLower": "tumor markers",
+    "testCode": "KT0619",
+    "slug": "kt0619-tumor-markers"
+  },
+  {
+    "sno": 620,
+    "name": "Tzanck Smear",
+    "price": 200,
+    "nameLower": "tzanck smear",
+    "testCode": "KT0620",
+    "slug": "kt0620-tzanck-smear"
+  },
+  {
+    "sno": 621,
+    "name": "URETRIC STONE",
+    "price": 1500,
+    "nameLower": "uretric stone",
+    "testCode": "KT0621",
+    "slug": "kt0621-uretric-stone"
+  },
+  {
+    "sno": 622,
+    "name": "Uric Acid",
+    "price": 200,
+    "nameLower": "uric acid",
+    "testCode": "KT0622",
+    "slug": "kt0622-uric-acid"
+  },
+  {
+    "sno": 623,
+    "name": "Urinary Amylase",
+    "price": 500,
+    "nameLower": "urinary amylase",
+    "testCode": "KT0623",
+    "slug": "kt0623-urinary-amylase"
+  },
+  {
+    "sno": 624,
+    "name": "Urinary Calcium - 24 Hrs",
+    "price": 850,
+    "nameLower": "urinary calcium - 24 hrs",
+    "testCode": "KT0624",
+    "slug": "kt0624-urinary-calcium-24-hrs"
+  },
+  {
+    "sno": 625,
+    "name": "Urinary Calcium - Spot",
+    "price": 400,
+    "nameLower": "urinary calcium - spot",
+    "testCode": "KT0625",
+    "slug": "kt0625-urinary-calcium-spot"
+  },
+  {
+    "sno": 626,
+    "name": "Urinary Chloride (Spot Sample)",
+    "price": 400,
+    "nameLower": "urinary chloride (spot sample)",
+    "testCode": "KT0626",
+    "slug": "kt0626-urinary-chloride-spot-sample"
+  },
+  {
+    "sno": 627,
+    "name": "Urinary Chloride 24 Hrs",
+    "price": 850,
+    "nameLower": "urinary chloride 24 hrs",
+    "testCode": "KT0627",
+    "slug": "kt0627-urinary-chloride-24-hrs"
+  },
+  {
+    "sno": 628,
+    "name": "URINARY CREATININE-24HRS",
+    "price": 400,
+    "nameLower": "urinary creatinine-24hrs",
+    "testCode": "KT0628",
+    "slug": "kt0628-urinary-creatinine-24hrs"
+  },
+  {
+    "sno": 629,
+    "name": "Urinary Potassium -(Spot Sample)",
+    "price": 200,
+    "nameLower": "urinary potassium -(spot sample)",
+    "testCode": "KT0629",
+    "slug": "kt0629-urinary-potassium-spot-sample"
+  },
+  {
+    "sno": 630,
+    "name": "Urinary Potassium -24 Hrs",
+    "price": 850,
+    "nameLower": "urinary potassium -24 hrs",
+    "testCode": "KT0630",
+    "slug": "kt0630-urinary-potassium-24-hrs"
+  },
+  {
+    "sno": 631,
+    "name": "Urinary Protein (Spot)",
+    "price": 250,
+    "nameLower": "urinary protein (spot)",
+    "testCode": "KT0631",
+    "slug": "kt0631-urinary-protein-spot"
+  },
+  {
+    "sno": 632,
+    "name": "Urinary Uric Acid -24 Hrs",
+    "price": 550,
+    "nameLower": "urinary uric acid -24 hrs",
+    "testCode": "KT0632",
+    "slug": "kt0632-urinary-uric-acid-24-hrs"
+  },
+  {
+    "sno": 633,
+    "name": "URINE CYTOLOGY FOR MALIGNANT CELL",
+    "price": 800,
+    "nameLower": "urine cytology for malignant cell",
+    "testCode": "KT0633",
+    "slug": "kt0633-urine-cytology-for-malignant-cell"
+  },
+  {
+    "sno": 634,
+    "name": "URINE R/E +BILE",
+    "price": 110,
+    "nameLower": "urine r/e +bile",
+    "testCode": "KT0634",
+    "slug": "kt0634-urine-r-e-bile"
+  },
+  {
+    "sno": 635,
+    "name": "URINE ACR",
+    "price": 600,
+    "nameLower": "urine acr",
+    "testCode": "KT0635",
+    "slug": "kt0635-urine-acr"
+  },
+  {
+    "sno": 636,
+    "name": "Urine Albumin",
+    "price": 200,
+    "nameLower": "urine albumin",
+    "testCode": "KT0636",
+    "slug": "kt0636-urine-albumin"
+  },
+  {
+    "sno": 637,
+    "name": "URINE C&S",
+    "price": 400,
+    "nameLower": "urine c&s",
+    "testCode": "KT0637",
+    "slug": "kt0637-urine-c-and-s"
+  },
+  {
+    "sno": 638,
+    "name": "Urine Chyluria",
+    "price": 500,
+    "nameLower": "urine chyluria",
+    "testCode": "KT0638",
+    "slug": "kt0638-urine-chyluria"
+  },
+  {
+    "sno": 639,
+    "name": "Urine cotinine (Spot)",
+    "price": 1500,
+    "nameLower": "urine cotinine (spot)",
+    "testCode": "KT0639",
+    "slug": "kt0639-urine-cotinine-spot"
+  },
+  {
+    "sno": 640,
+    "name": "Urine Creatinine (Spot)",
+    "price": 400,
+    "nameLower": "urine creatinine (spot)",
+    "testCode": "KT0640",
+    "slug": "kt0640-urine-creatinine-spot"
+  },
+  {
+    "sno": 641,
+    "name": "URINE CULTURE",
+    "price": 400,
+    "nameLower": "urine culture",
+    "testCode": "KT0641",
+    "slug": "kt0641-urine-culture"
+  },
+  {
+    "sno": 642,
+    "name": "Urine Electrophoresis",
+    "price": 2000,
+    "nameLower": "urine electrophoresis",
+    "testCode": "KT0642",
+    "slug": "kt0642-urine-electrophoresis"
+  },
+  {
+    "sno": 643,
+    "name": "Urine Fat globules",
+    "price": 500,
+    "nameLower": "urine fat globules",
+    "testCode": "KT0643",
+    "slug": "kt0643-urine-fat-globules"
+  },
+  {
+    "sno": 644,
+    "name": "URINE FOR GLOBULIN",
+    "price": 200,
+    "nameLower": "urine for globulin",
+    "testCode": "KT0644",
+    "slug": "kt0644-urine-for-globulin"
+  },
+  {
+    "sno": 645,
+    "name": "Urine For AFB Smear",
+    "price": 400,
+    "nameLower": "urine for afb smear",
+    "testCode": "KT0645",
+    "slug": "kt0645-urine-for-afb-smear"
+  },
+  {
+    "sno": 646,
+    "name": "Urine For Bile Pigment",
+    "price": 150,
+    "nameLower": "urine for bile pigment",
+    "testCode": "KT0646",
+    "slug": "kt0646-urine-for-bile-pigment"
+  },
+  {
+    "sno": 647,
+    "name": "Urine For Bile Salt",
+    "price": 150,
+    "nameLower": "urine for bile salt",
+    "testCode": "KT0647",
+    "slug": "kt0647-urine-for-bile-salt"
+  },
+  {
+    "sno": 648,
+    "name": "Urine For Cast",
+    "price": 700,
+    "nameLower": "urine for cast",
+    "testCode": "KT0648",
+    "slug": "kt0648-urine-for-cast"
+  },
+  {
+    "sno": 649,
+    "name": "Urine For Dysmorphic RBC",
+    "price": 300,
+    "nameLower": "urine for dysmorphic rbc",
+    "testCode": "KT0649",
+    "slug": "kt0649-urine-for-dysmorphic-rbc"
+  },
+  {
+    "sno": 650,
+    "name": "Urine For Haematuria",
+    "price": 100,
+    "nameLower": "urine for haematuria",
+    "testCode": "KT0650",
+    "slug": "kt0650-urine-for-haematuria"
+  },
+  {
+    "sno": 651,
+    "name": "URINE FOR MALIGNANT CELLS",
+    "price": 400,
+    "nameLower": "urine for malignant cells",
+    "testCode": "KT0651",
+    "slug": "kt0651-urine-for-malignant-cells"
+  },
+  {
+    "sno": 652,
+    "name": "URINE FOR MICROALBUMIN",
+    "price": 450,
+    "nameLower": "urine for microalbumin",
+    "testCode": "KT0652",
+    "slug": "kt0652-urine-for-microalbumin"
+  },
+  {
+    "sno": 653,
+    "name": "Urine For Sodium ( Spot Sample)",
+    "price": 300,
+    "nameLower": "urine for sodium ( spot sample)",
+    "testCode": "KT0653",
+    "slug": "kt0653-urine-for-sodium-spot-sample"
+  },
+  {
+    "sno": 654,
+    "name": "Urine For Specefic Gravity",
+    "price": 150,
+    "nameLower": "urine for specefic gravity",
+    "testCode": "KT0654",
+    "slug": "kt0654-urine-for-specefic-gravity"
+  },
+  {
+    "sno": 655,
+    "name": "Urine Ketone",
+    "price": 200,
+    "nameLower": "urine ketone",
+    "testCode": "KT0655",
+    "slug": "kt0655-urine-ketone"
+  },
+  {
+    "sno": 656,
+    "name": "Urine NMP22",
+    "price": 3000,
+    "nameLower": "urine nmp22",
+    "testCode": "KT0656",
+    "slug": "kt0656-urine-nmp22"
+  },
+  {
+    "sno": 657,
+    "name": "Urine Pregnancy",
+    "price": 100,
+    "nameLower": "urine pregnancy",
+    "testCode": "KT0657",
+    "slug": "kt0657-urine-pregnancy"
+  },
+  {
+    "sno": 658,
+    "name": "Urine Protein (Spot)",
+    "price": 400,
+    "nameLower": "urine protein (spot)",
+    "testCode": "KT0658",
+    "slug": "kt0658-urine-protein-spot"
+  },
+  {
+    "sno": 659,
+    "name": "Urine Protein/Creatinine Ratio",
+    "price": 800,
+    "nameLower": "urine protein/creatinine ratio",
+    "testCode": "KT0659",
+    "slug": "kt0659-urine-protein-creatinine-ratio"
+  },
+  {
+    "sno": 660,
+    "name": "Urine Routine & Microscopy",
+    "price": 100,
+    "nameLower": "urine routine & microscopy",
+    "testCode": "KT0660",
+    "slug": "kt0660-urine-routine-and-microscopy"
+  },
+  {
+    "sno": 661,
+    "name": "Urine Sugar Fasting",
+    "price": 100,
+    "nameLower": "urine sugar fasting",
+    "testCode": "KT0661",
+    "slug": "kt0661-urine-sugar-fasting"
+  },
+  {
+    "sno": 662,
+    "name": "Urine Sugar (pp)",
+    "price": 30,
+    "nameLower": "urine sugar (pp)",
+    "testCode": "KT0662",
+    "slug": "kt0662-urine-sugar-pp"
+  },
+  {
+    "sno": 663,
+    "name": "Urine Sugar Fasting",
+    "price": 30,
+    "nameLower": "urine sugar fasting",
+    "testCode": "KT0663",
+    "slug": "kt0663-urine-sugar-fasting"
+  },
+  {
+    "sno": 664,
+    "name": "Urine Sugar PP",
+    "price": 20,
+    "nameLower": "urine sugar pp",
+    "testCode": "KT0664",
+    "slug": "kt0664-urine-sugar-pp"
+  },
+  {
+    "sno": 665,
+    "name": "Urine Sugar Random",
+    "price": 100,
+    "nameLower": "urine sugar random",
+    "testCode": "KT0665",
+    "slug": "kt0665-urine-sugar-random"
+  },
+  {
+    "sno": 666,
+    "name": "USG GUIDED F.N.A.C",
+    "price": 2000,
+    "nameLower": "usg guided f.n.a.c",
+    "testCode": "KT0666",
+    "slug": "kt0666-usg-guided-f-n-a-c"
+  },
+  {
+    "sno": 667,
+    "name": "Vaginal Swab Culture & Sensitivity",
+    "price": 600,
+    "nameLower": "vaginal swab culture & sensitivity",
+    "testCode": "KT0667",
+    "slug": "kt0667-vaginal-swab-culture-and-sensitivity"
+  },
+  {
+    "sno": 668,
+    "name": "VALPROIC ACID",
+    "price": 1200,
+    "nameLower": "valproic acid",
+    "testCode": "KT0668",
+    "slug": "kt0668-valproic-acid"
+  },
+  {
+    "sno": 669,
+    "name": "Varicella IgM",
+    "price": 2500,
+    "nameLower": "varicella igm",
+    "testCode": "KT0669",
+    "slug": "kt0669-varicella-igm"
+  },
+  {
+    "sno": 670,
+    "name": "VDRL",
+    "price": 150,
+    "nameLower": "vdrl",
+    "testCode": "KT0670",
+    "slug": "kt0670-vdrl"
+  },
+  {
+    "sno": 671,
+    "name": "VDRL (BOTH)",
+    "price": 300,
+    "nameLower": "vdrl (both)",
+    "testCode": "KT0671",
+    "slug": "kt0671-vdrl-both"
+  },
+  {
+    "sno": 672,
+    "name": "Viral Marker",
+    "price": 1100,
+    "nameLower": "viral marker",
+    "testCode": "KT0672",
+    "slug": "kt0672-viral-marker"
+  },
+  {
+    "sno": 673,
+    "name": "VITAMIN B2/RIBOFLAVIN",
+    "price": 2500,
+    "nameLower": "vitamin b2/riboflavin",
+    "testCode": "KT0673",
+    "slug": "kt0673-vitamin-b2-riboflavin"
+  },
+  {
+    "sno": 674,
+    "name": "Vitamin B6",
+    "price": 1200,
+    "nameLower": "vitamin b6",
+    "testCode": "KT0674",
+    "slug": "kt0674-vitamin-b6"
+  },
+  {
+    "sno": 675,
+    "name": "Vitamin D -Total",
+    "price": 1200,
+    "nameLower": "vitamin d -total",
+    "testCode": "KT0675",
+    "slug": "kt0675-vitamin-d-total"
+  },
+  {
+    "sno": 676,
+    "name": "VITAMIN D2",
+    "price": 1600,
+    "nameLower": "vitamin d2",
+    "testCode": "KT0676",
+    "slug": "kt0676-vitamin-d2"
+  },
+  {
+    "sno": 677,
+    "name": "VITAMIN D3",
+    "price": 1800,
+    "nameLower": "vitamin d3",
+    "testCode": "KT0677",
+    "slug": "kt0677-vitamin-d3"
+  },
+  {
+    "sno": 678,
+    "name": "VITAMIN E",
+    "price": 2500,
+    "nameLower": "vitamin e",
+    "testCode": "KT0678",
+    "slug": "kt0678-vitamin-e"
+  },
+  {
+    "sno": 679,
+    "name": "Vitamin K",
+    "price": 6000,
+    "nameLower": "vitamin k",
+    "testCode": "KT0679",
+    "slug": "kt0679-vitamin-k"
+  },
+  {
+    "sno": 680,
+    "name": "Vitamin-B12",
+    "price": 1000,
+    "nameLower": "vitamin-b12",
+    "testCode": "KT0680",
+    "slug": "kt0680-vitamin-b12"
+  },
+  {
+    "sno": 681,
+    "name": "VLDL",
+    "price": 800,
+    "nameLower": "vldl",
+    "testCode": "KT0681",
+    "slug": "kt0681-vldl"
+  },
+  {
+    "sno": 682,
+    "name": "WIDAL TEST",
+    "price": 200,
+    "nameLower": "widal test",
+    "testCode": "KT0682",
+    "slug": "kt0682-widal-test"
+  },
+  {
+    "sno": 683,
+    "name": "Wound Swab C+S",
+    "price": 450,
+    "nameLower": "wound swab c+s",
+    "testCode": "KT0683",
+    "slug": "kt0683-wound-swab-c-s"
+  },
+  {
+    "sno": 684,
+    "name": "Zinc Transporter 8 (ZNT8) Antibody",
+    "price": 4500,
+    "nameLower": "zinc transporter 8 (znt8) antibody",
+    "testCode": "KT0684",
+    "slug": "kt0684-zinc-transporter-8-znt8-antibody"
+  }
+]

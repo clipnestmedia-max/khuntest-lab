@@ -96,6 +96,7 @@ function normalizeTest(data) {
     sample,
     reportTime: data.reportTime || data.report_time || data.time || "Same Day",
     isActive: data.isActive !== false && data.is_active !== 0,
+    needsParameterReview: data.needsParameterReview === true,
     parameters,
     searchKeywords: Array.isArray(data.searchKeywords) && data.searchKeywords.length
       ? data.searchKeywords

@@ -186,9 +186,9 @@
 
     <section data-panel="tests" class="hidden">
       <h2>Tests Library</h2>
-      <div class="toolbar"><a class="btn btn-green btn-small" href="admin-import-tests.html">Import SQL Backup Tests</a></div>
+      <div class="toolbar"><a class="btn btn-green btn-small" href="admin-import-tests.html">Import 684 Tests</a></div>
       <div class="toolbar"><input id="testLibrarySearch" placeholder="Search tests..." oninput="renderFirebaseTests()"><select id="testCategoryFilter" onchange="renderFirebaseTests()"><option value="">All categories</option></select></div>
-      <div class="notice"><b id="testLibraryCount">0</b> tests • <b id="parameterLibraryCount">0</b> parameters</div>
+      <div class="notice"><b id="testLibraryCount">0</b> tests • <b id="parameterLibraryCount">0</b> parameters • <b id="reviewLibraryCount">0</b> need review</div>
       <div class="table-card"><table><thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Status</th></tr></thead><tbody id="testsBody"></tbody></table></div>
     </section>
 
@@ -381,7 +381,9 @@ window.renderFirebaseTests = function() {
   const filtered = firebaseTests.filter((t) => (!category || t.category === category) && (!q || [t.testCode, t.name, t.category, ...(t.searchKeywords || [])].join(" ").toLowerCase().includes(q)));
   document.getElementById("testLibraryCount").textContent = filtered.length;
   document.getElementById("parameterLibraryCount").textContent = filtered.reduce((sum, t) => sum + (t.parameters?.length || 0), 0);
-  body.innerHTML = filtered.slice(0, 250).map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small></td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.isActive ? "reported" : "cancelled"}">${t.isActive ? "Active" : "Inactive"}</span></td></tr>`).join("") || `<tr><td colspan="5">No tests found. Import tests first.</td></tr>`;
+  const reviewCount = document.getElementById("reviewLibraryCount");
+  if (reviewCount) reviewCount.textContent = filtered.filter((t) => t.needsParameterReview).length;
+  body.innerHTML = filtered.slice(0, 250).map((t) => `<tr><td><b>${html(t.name)}</b><br><small>${html(t.testCode)}</small>${t.needsParameterReview ? `<br><small>Parameter review needed</small>` : ""}</td><td>${html(t.category)}</td><td>${rupees(t.price)}</td><td>${t.parameters?.length || 0}</td><td><span class="status ${t.isActive ? "reported" : "cancelled"}">${t.isActive ? "Active" : "Inactive"}</span></td></tr>`).join("") || `<tr><td colspan="5">No tests found. Import tests first.</td></tr>`;
 };
 
 window.renderPatientsPanel = function() {

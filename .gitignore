@@ -8,7 +8,9 @@ frontend/backend/node_modules/
 node_modules/
 **/node_modules/
 *.zip
+*.pdf
 *.sql
+database/*.pdf
 database/*.sql
 backups/*.sql
 *.save

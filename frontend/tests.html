@@ -12,6 +12,7 @@
     .test-count-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; color: #42526b; margin-bottom: 12px; }
     .param-list { margin: 10px 0 0; padding-left: 18px; color: #334155; }
     .param-list li { margin: 4px 0; }
+    .review-pill { display: inline-block; margin: 0 0 8px; padding: 3px 8px; border-radius: 999px; background: #fff7ed; color: #9a3412; font-size: 12px; font-weight: 700; }
     .empty-tests { padding: 28px; text-align: center; color: #64748b; background: #fff; border: 1px solid #dce4f2; border-radius: 8px; }
     @media (max-width: 760px) { .test-toolbar { grid-template-columns: 1fr; } }
   </style>
@@ -76,6 +77,7 @@
       $("emptyTests").classList.toggle("hidden", allTests.length !== 0);
       $("testsGrid").innerHTML = rows.map((test, index) => `
         <div class="card test-card">
+          ${test.needsParameterReview ? `<span class="review-pill">Parameter review</span>` : ""}
           <h3>${safe(test.name)}</h3>
           <p>${safe(test.category)} • ${safe(test.reportTime || "Same Day")}</p>
           <p><b>${safe(test.parameters?.length || 0)}</b> parameters</p>

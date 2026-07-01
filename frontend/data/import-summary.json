@@ -1,0 +1,13 @@
+{
+  "trateTests": 684,
+  "sqlTests": 670,
+  "finalTests": 684,
+  "testsWithSqlParameters": 682,
+  "testsNeedingParameterReview": 2,
+  "totalParameters": 782,
+  "outputPaths": {
+    "tests": "data/tests.json",
+    "missingParameterReview": "data/missing-parameters-review.csv",
+    "importSummary": "data/import-summary.json"
+  }
+}

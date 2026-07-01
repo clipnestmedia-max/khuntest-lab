@@ -9,7 +9,7 @@
     .import-main { max-width: 1120px; margin: 0 auto; padding: 28px 18px 56px; }
     .import-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
     .import-card { background: #fff; border: 1px solid #dce4f2; border-radius: 8px; padding: 18px; box-shadow: 0 10px 28px rgba(18, 38, 63, 0.08); }
-    .import-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+    .import-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
     .import-stat { border: 1px solid #e3eaf5; border-radius: 8px; padding: 12px; background: #f8fbff; }
     .import-stat span { display: block; color: #5e6f86; font-size: 13px; }
     .import-stat b { display: block; margin-top: 4px; color: #0b2447; font-size: 22px; }
@@ -41,7 +41,7 @@
         <div class="import-head">
           <div>
             <h1>Import Tests</h1>
-            <p>Load the extracted SQL backup catalog into the Firestore <b>tests</b> collection.</p>
+            <p>Load the TRate master catalog with SQL-backed parameters into the Firestore <b>tests</b> collection.</p>
           </div>
           <a class="btn btn-red" href="admin-dashboard.html">Back to Admin</a>
         </div>
@@ -50,13 +50,14 @@
           <div class="import-stats">
             <div class="import-stat"><span>Tests in JSON</span><b id="testCount">0</b></div>
             <div class="import-stat"><span>Parameters</span><b id="parameterCount">0</b></div>
+            <div class="import-stat"><span>Needs Review</span><b id="reviewCount">0</b></div>
             <div class="import-stat"><span>Firestore</span><b id="remoteCount">-</b></div>
             <div class="import-stat"><span>Status</span><b id="statusText">Checking</b></div>
           </div>
 
           <div class="import-actions">
             <button class="btn btn-outline" id="reloadBtn" type="button">Reload JSON</button>
-            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update Firestore</button>
+            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update 684 Tests to Firestore</button>
           </div>
 
           <div class="import-progress"><div id="progressBar"></div></div>
@@ -64,8 +65,8 @@
 
           <div class="table-card preview-table">
             <table>
-              <thead><tr><th>Code</th><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th></tr></thead>
-              <tbody id="previewBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+              <thead><tr><th>Code</th><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Review</th></tr></thead>
+              <tbody id="previewBody"><tr><td colspan="6">Loading...</td></tr></tbody>
             </table>
           </div>
         </section>
@@ -145,6 +146,7 @@
     function renderPreview() {
       $("testCount").textContent = tests.length;
       $("parameterCount").textContent = tests.reduce((sum, test) => sum + (test.parameters?.length || 0), 0);
+      $("reviewCount").textContent = tests.filter((test) => test.needsParameterReview).length;
       $("previewBody").innerHTML = tests.slice(0, 25).map((test) => `
         <tr>
           <td>${safe(test.testCode)}</td>
@@ -152,8 +154,9 @@
           <td>${safe(test.category)}</td>
           <td>${rupees(test.price)}</td>
           <td>${safe(test.parameters?.length || 0)}</td>
+          <td>${test.needsParameterReview ? "Review" : "OK"}</td>
         </tr>
-      `).join("") || `<tr><td colspan="5">No tests found in JSON.</td></tr>`;
+      `).join("") || `<tr><td colspan="6">No tests found in JSON.</td></tr>`;
     }
 
     async function loadTests() {
@@ -200,6 +203,7 @@
               name: test.name,
               nameLower: test.nameLower || String(test.name).toLowerCase(),
               testCode: String(test.testCode || ""),
+              sno: Number(test.sno || 0),
               category: test.category || "Lab Test",
               price: Number(test.price || 0),
               sample: test.sample || "",
@@ -207,7 +211,9 @@
               isActive: test.isActive !== false,
               parameters: Array.isArray(test.parameters) ? test.parameters : [],
               searchKeywords: Array.isArray(test.searchKeywords) ? test.searchKeywords : [],
-              sourceId: test.sourceId || null,
+              needsParameterReview: test.needsParameterReview === true,
+              source: test.source || null,
+              sourceId: test.sourceId || test.source?.sqlSourceId || null,
               slug: docIdFor(test),
               updatedAt: serverTimestamp(),
               importedAt: serverTimestamp()
