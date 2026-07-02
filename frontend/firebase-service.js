@@ -75,6 +75,37 @@ function testKeywords(...values) {
     .filter((word) => word.length > 1)));
 }
 
+function isCBCTest(test) {
+  const text = `${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`.toLowerCase();
+  return text.includes("cbc") || text.includes("complete blood count");
+}
+
+function getFullCBCParameters() {
+  return [
+    { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
+    { name: "WBC Count", normalRange: "4000-11000", unit: "cmm", sample: "W.B. EDTA", method: "DC Detection" },
+    { name: "DIFFERENTIAL COUNT OF W.B.C", type: "heading", isHeading: true },
+    { name: "Neutrophils", normalRange: "40-75", unit: "%" },
+    { name: "Lymphocytes", normalRange: "20-50", unit: "%" },
+    { name: "Monocytes", normalRange: "2-8", unit: "%" },
+    { name: "Eosinophils", normalRange: "1-6", unit: "%" },
+    { name: "Basophils", normalRange: "0-1", unit: "%" },
+    { name: "RBC Count", normalRange: "3.5-5.5", unit: "mill/cumm" },
+    { name: "PCV/HCT", normalRange: "34-47", unit: "%" },
+    { name: "MCV", normalRange: "80-96", unit: "fL" },
+    { name: "MCH", normalRange: "27.5-33.2", unit: "pg" },
+    { name: "MCHC", normalRange: "33.4-35.5", unit: "%" },
+    { name: "RDW-CV", normalRange: "11.0-16.0", unit: "%" },
+    { name: "RDW-SD", normalRange: "35.0-56.0", unit: "fL" },
+    { name: "MPV", normalRange: "6.5-12.0", unit: "fL" },
+    { name: "Platelet Count", normalRange: "1,50,000-4,50,000", unit: "/µL" },
+    { name: "PCT", normalRange: "0.108-0.282", unit: "%" },
+    { name: "P-LCR", normalRange: "11.0-45.0", unit: "%" },
+    { name: "P-LCC", normalRange: "30-90", unit: "10^9/L" },
+    { name: "PDW", normalRange: "9.0-17.0", unit: "fL" }
+  ].map((parameter, index) => ({ ...parameter, sortOrder: index + 1 }));
+}
+
 function normalizeParameter(row, fallback = {}) {
   const name = row.name || row.parameterName || row.parameter_name || row.parameter || fallback.name || "Result";
   return {
@@ -83,6 +114,8 @@ function normalizeParameter(row, fallback = {}) {
     unit: row.unit || row.units || "",
     method: row.method || row.methodName || row.method_name || "",
     sample: row.sample || row.sampleType || row.sample_type || fallback.sample || "",
+    type: row.type || "",
+    isHeading: Boolean(row.isHeading || row.heading || row.type === "heading"),
     sortOrder: Number(row.sortOrder || row.sort_order || 0)
   };
 }
@@ -92,8 +125,10 @@ function normalizeTest(data) {
   const testCode = String(data.testCode || data.test_code || data.code || data.sourceId || safeSlug(name)).trim();
   const category = data.category || "Lab Test";
   const sample = data.sample || "";
-  const parameters = Array.isArray(data.parameters)
-    ? data.parameters.map((p) => normalizeParameter(p, { name, sample }))
+  const parameters = isCBCTest({ name, testCode })
+    ? getFullCBCParameters().map((p) => normalizeParameter(p, { name, sample }))
+    : Array.isArray(data.parameters)
+      ? data.parameters.map((p) => normalizeParameter(p, { name, sample }))
     : [];
   return {
     id: data.id || data.slug || safeSlug(`${testCode}-${name}`),

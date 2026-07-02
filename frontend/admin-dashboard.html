@@ -99,12 +99,12 @@
             <div>
               <label>PATHOLOGY NAME:</label><select name="pathologyName"><option>BN-MAIN</option><option>KHUNTEST MAIN</option></select>
               <label>PATIENT-NAME :</label><input name="patientName" required>
-              <label>PATIENT-AGE :</label><input name="age" placeholder="Ex: 54Y" required>
-              <label>CONTACT NO :</label><input name="phone" required>
+              <label>PATIENT-AGE :</label><input name="age" placeholder="Ex: 54Y">
+              <label>CONTACT NO :</label><input name="phone">
               <label>GENDER :</label><select name="gender"><option>Male</option><option>Female</option><option>Other</option></select>
             </div>
             <div>
-              <label>E-MAIL :</label><input name="email" type="email" required>
+              <label>E-MAIL :</label><input name="email" type="email">
               <label>REF. DOCTOR :</label><input name="doctor" value="Dr N.K SUMAN(MBBS, MD)">
               <label>C/O. Name :</label><input name="coName">
               <label>FIELD-BOY NAME :</label><select name="fieldBoy" id="entryStaffSelect"></select>
@@ -295,14 +295,107 @@ function bookingTests(b) {
       : [];
 }
 
+function isCBCTest(test) {
+  const text = `${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`.toLowerCase();
+  return text.includes("cbc") || text.includes("complete blood count");
+}
+
+function getFullCBCParameters() {
+  return [
+    { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
+    { name: "WBC Count", normalRange: "4000-11000", unit: "cmm", sample: "W.B. EDTA", method: "DC Detection" },
+    { name: "DIFFERENTIAL COUNT OF W.B.C", type: "heading", isHeading: true },
+    { name: "Neutrophils", normalRange: "40-75", unit: "%" },
+    { name: "Lymphocytes", normalRange: "20-50", unit: "%" },
+    { name: "Monocytes", normalRange: "2-8", unit: "%" },
+    { name: "Eosinophils", normalRange: "1-6", unit: "%" },
+    { name: "Basophils", normalRange: "0-1", unit: "%" },
+    { name: "RBC Count", normalRange: "3.5-5.5", unit: "mill/cumm" },
+    { name: "PCV/HCT", normalRange: "34-47", unit: "%" },
+    { name: "MCV", normalRange: "80-96", unit: "fL" },
+    { name: "MCH", normalRange: "27.5-33.2", unit: "pg" },
+    { name: "MCHC", normalRange: "33.4-35.5", unit: "%" },
+    { name: "RDW-CV", normalRange: "11.0-16.0", unit: "%" },
+    { name: "RDW-SD", normalRange: "35.0-56.0", unit: "fL" },
+    { name: "MPV", normalRange: "6.5-12.0", unit: "fL" },
+    { name: "Platelet Count", normalRange: "1,50,000-4,50,000", unit: "/µL" },
+    { name: "PCT", normalRange: "0.108-0.282", unit: "%" },
+    { name: "P-LCR", normalRange: "11.0-45.0", unit: "%" },
+    { name: "P-LCC", normalRange: "30-90", unit: "10^9/L" },
+    { name: "PDW", normalRange: "9.0-17.0", unit: "fL" }
+  ].map((parameter, index) => ({ ...parameter, sortOrder: index + 1 }));
+}
+
+function normalizeTestParameters(test) {
+  if (isCBCTest(test)) return getFullCBCParameters();
+  return Array.isArray(test?.parameters) && test.parameters.length
+    ? test.parameters.map((p, index) => ({
+        name: p.name || p.parameterName || "Result",
+        normalRange: p.normalRange || p.normalValue || p.normal || "",
+        unit: p.unit || "",
+        method: p.method || "",
+        sample: p.sample || test.sample || "",
+        type: p.type || "",
+        isHeading: Boolean(p.isHeading || p.heading || p.type === "heading"),
+        sortOrder: Number(p.sortOrder || index + 1)
+      }))
+    : [{
+        name: "Result",
+        normalRange: "As per lab method / reference range",
+        unit: "",
+        method: "",
+        sample: ""
+      }];
+}
+
+function cbcParameterKey(name) {
+  const key = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const aliases = {
+    wbc: "wbccount",
+    wbccount: "wbccount",
+    rbc: "rbccount",
+    rbccount: "rbccount",
+    pcv: "pcvhct",
+    hct: "pcvhct",
+    pcvhct: "pcvhct",
+    platelets: "plateletcount",
+    plateletscounts: "plateletcount",
+    plateletcount: "plateletcount",
+    rdwcv: "rdwcv",
+    rdw: "rdwcv",
+    rdwsd: "rdwsd",
+    differentialcount: "differentialcountofwbc",
+    differentialcountofwbc: "differentialcountofwbc"
+  };
+  return aliases[key] || key;
+}
+
+function normalizeIndianPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.length === 10) return "91" + digits;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+  return digits;
+}
+
+function openWhatsAppReport(phone, patientName, billNo) {
+  const clean = normalizeIndianPhone(phone);
+  if (!clean) {
+    alert("No WhatsApp/phone number available for this patient.");
+    return;
+  }
+  const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
+  const message = `Hello ${patientName || "Patient"},\n\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
+  window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
 function whatsappReportLink(b) {
   const bill = reportBill(b);
-  const phone = String(b.whatsapp || b.phone || "").replace(/\D/g, "");
+  const phone = normalizeIndianPhone(b.whatsapp || b.phone || b.contactNo);
   if (!phone || !bill) return "";
-  const fullPhone = phone.length === 10 ? "91" + phone : phone;
   const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(bill)}`;
   const message = `Hello ${b.patientName || "Patient"},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
-  return `https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`;
 }
 
 function createdText(value) {
@@ -937,6 +1030,23 @@ function currentFindingRows() {
 function reportResultsFromRows(rows) {
   const results = [];
   rows.forEach((row) => {
+    const isHeading = row.type === "heading" || row.isHeading === "true" || row.isHeading === true;
+    if (isHeading) {
+      results.push({
+        category: row.category || "",
+        testName: row.testName || row.name || "",
+        parameterName: row.name || "",
+        resultValue: "",
+        normalRange: "",
+        unit: "",
+        method: "",
+        sample: "",
+        type: "heading",
+        isHeading: true,
+        comment: row.comment || ""
+      });
+      return;
+    }
     if (Array.isArray(row.details) && row.details.length) {
       row.details.forEach((detail) => results.push({
         category: row.category || "",
@@ -979,7 +1089,23 @@ function paintFindingRows(rows) {
   const body = document.getElementById("findingRows");
   if (!body) return;
   reportResults = rows;
-  body.innerHTML = rows.length ? rows.map((row, index) => `
+  body.innerHTML = rows.length ? rows.map((row, index) => {
+    const isHeading = row.type === "heading" || row.isHeading === true;
+    if (isHeading) {
+      return `
+    <tr class="finding-heading-row">
+      <td colspan="4">
+        <b>${html(row.name || row.parameterName || "")}</b>
+        <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "")}">
+        <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
+        <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
+        <input type="hidden" data-r="type" data-i="${index}" value="heading">
+        <input type="hidden" data-r="isHeading" data-i="${index}" value="true">
+      </td>
+    </tr>
+      `;
+    }
+    return `
     <tr>
       <td>
         <b>${html(row.name || row.parameterName || "Result")}</b>
@@ -989,12 +1115,14 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
         <input type="hidden" data-r="method" data-i="${index}" value="${html(row.method || "")}">
         <input type="hidden" data-r="sample" data-i="${index}" value="${html(row.sample || "")}">
+        <input type="hidden" data-r="type" data-i="${index}" value="${html(row.type || "")}">
       </td>
       <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="Enter result"></td>
       <td><input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly></td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
-  `).join("") : `<tr><td colspan="4">No parameters found. A default result row is available after selecting a booking.</td></tr>`;
+  `;
+  }).join("") : `<tr><td colspan="4">No parameters found. A default result row is available after selecting a booking.</td></tr>`;
 }
 
 window.firebaseUpdateStatus = async function(bookingId, status) {
@@ -1057,14 +1185,16 @@ function selectedTestSnapshot(test, packageName = "") {
     price: Number(test.price || 0),
     sample: test.sample || "",
     reportTime: test.reportTime || "Same Day",
-    parameters: Array.isArray(test.parameters) ? test.parameters.map((p, index) => ({
+    parameters: normalizeTestParameters(test).map((p, index) => ({
       name: p.name || p.parameterName || "Result",
       normalRange: p.normalRange || p.normalValue || p.normal || "",
       unit: p.unit || "",
       method: p.method || "",
       sample: p.sample || test.sample || "",
+      type: p.type || "",
+      isHeading: Boolean(p.isHeading || p.heading || p.type === "heading"),
       sortOrder: Number(p.sortOrder || index + 1)
-    })) : [],
+    })),
     package: packageName
   };
 }
@@ -1273,6 +1403,43 @@ function renderAdminEntryTests() {
   if (count) count.textContent = adminEntryTests.length;
 }
 
+function reportRowsForTest(test, existingResults = []) {
+  const params = normalizeTestParameters(test);
+  if (!isCBCTest(test) && existingResults.length) {
+    return existingResults.map((result) => ({
+      name: result.parameterName || result.name || "Result",
+      category: result.category || test.category || "",
+      testName: result.testName || test.name || "",
+      normal: result.normalRange || result.normal || "",
+      finding: result.resultValue || result.finding || "",
+      unit: result.unit || "",
+      method: result.method || "",
+      sample: result.sample || "",
+      type: result.type || "",
+      isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
+      status: "Draft",
+      comment: result.comment || ""
+    }));
+  }
+  return params.map((p) => {
+    const existing = existingResults.find((result) => cbcParameterKey(result.parameterName || result.name) === cbcParameterKey(p.name));
+    return {
+      name: p.name || test.name || "Test",
+      category: test.category || existing?.category || "",
+      testName: test.name || existing?.testName || "",
+      normal: p.normalRange || p.normalValue || p.normal || existing?.normalRange || "",
+      finding: existing?.resultValue || existing?.finding || p.finding || "",
+      unit: p.unit || existing?.unit || "",
+      method: p.method || existing?.method || "",
+      sample: p.sample || test.sample || existing?.sample || "",
+      type: p.type || existing?.type || "",
+      isHeading: Boolean(p.isHeading || p.heading || p.type === "heading" || existing?.isHeading),
+      status: "Final",
+      comment: existing?.comment || ""
+    };
+  });
+}
+
 window.adminEntryTestsRemove = function(index) {
   adminEntryTests.splice(index, 1);
   selectedTests = adminEntryTests;
@@ -1359,32 +1526,31 @@ window.loadReportEditor = async function(id) {
     testsWithParams.push(full);
   }
   const existingReport = allReports.find((report) => String(report.billNo || report.id || "") === String(reportBill(b)));
-  const rows = Array.isArray(existingReport?.results) && existingReport.results.length ? existingReport.results.map((result) => ({
-    name: result.parameterName || result.name || "Result",
-    category: result.category || "",
-    testName: result.testName || "",
-    normal: result.normalRange || result.normal || "",
-    finding: result.resultValue || result.finding || "",
-    unit: result.unit || "",
-    method: result.method || "",
-    sample: result.sample || "",
-    status: existingReport.reportStatus || existingReport.status || "Draft",
-    comment: result.comment || ""
-  })) : testsWithParams.length ? testsWithParams.flatMap((t) => {
-    const params = Array.isArray(t.parameters) && t.parameters.length ? t.parameters : [{ name: t.name || "Result", normalRange: t.normal || "", unit: t.unit || "", method: t.method || "", sample: t.sample || "" }];
-    return params.map((p) => ({
-      name: p.name || t.name || "Test",
-      category: t.category || "",
-      testName: t.name || "",
-      normal: p.normalRange || p.normalValue || p.normal || "",
-      finding: p.finding || "",
-      unit: p.unit || "",
-      method: p.method || "",
-      sample: p.sample || t.sample || "",
-      status: "Final",
-      comment: ""
-    }));
-  }) : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
+  const existingResults = Array.isArray(existingReport?.results) ? existingReport.results : [];
+  const rows = testsWithParams.length
+    ? testsWithParams.flatMap((t) => {
+        const matchingResults = existingResults.filter((result) => (
+          String(result.testName || "").trim().toLowerCase() === String(t.name || t.testName || "").trim().toLowerCase()
+          || (isCBCTest(t) && isCBCTest({ name: result.testName || result.parameterName }))
+        ));
+        return reportRowsForTest(t, matchingResults);
+      })
+    : existingResults.length
+      ? existingResults.map((result) => ({
+          name: result.parameterName || result.name || "Result",
+          category: result.category || "",
+          testName: result.testName || "",
+          normal: result.normalRange || result.normal || "",
+          finding: result.resultValue || result.finding || "",
+          unit: result.unit || "",
+          method: result.method || "",
+          sample: result.sample || "",
+          type: result.type || "",
+          isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
+          status: existingReport.reportStatus || existingReport.status || "Draft",
+          comment: result.comment || ""
+        }))
+      : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
   paintFindingRows(rows);
   updateReportActionState();
 };
@@ -1424,9 +1590,9 @@ function reportPayload(status = "Draft") {
     billNo: bill,
     bookingId: currentReportBooking.id,
     patientName: currentReportBooking.patientName,
-    patientEmail: currentReportBooking.patientEmail || currentReportBooking.email,
-    phone: currentReportBooking.phone,
-    whatsapp: currentReportBooking.whatsapp || currentReportBooking.phone,
+    patientEmail: currentReportBooking.patientEmail || currentReportBooking.email || "",
+    phone: currentReportBooking.phone || "",
+    whatsapp: currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo || "",
     age: currentReportBooking.age,
     gender: currentReportBooking.gender,
     doctor: currentReportBooking.doctor,
@@ -1468,8 +1634,10 @@ function updateReportActionState() {
   const hint = document.getElementById("reportShareHint");
   if (!btn || !hint || !currentReportBooking) return;
   const released = hasFirestoreReport(currentReportBooking);
-  btn.disabled = !released;
-  hint.textContent = released ? "WhatsApp share is ready." : "Release report first to send WhatsApp.";
+  const hasPhone = Boolean(normalizeIndianPhone(currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo));
+  btn.disabled = !released || !hasPhone;
+  btn.textContent = hasPhone ? "Send WhatsApp" : "No WhatsApp number";
+  hint.textContent = !released ? "Release report first to send WhatsApp." : hasPhone ? "WhatsApp share is ready." : "Report released. No WhatsApp/phone number saved.";
 }
 
 window.sendCurrentReportWhatsApp = function() {
@@ -1478,8 +1646,8 @@ window.sendCurrentReportWhatsApp = function() {
     return;
   }
   const url = whatsappReportLink(currentReportBooking);
-  if (!url) return alert("Patient phone/WhatsApp number is missing.");
-  window.open(url, "_blank");
+  if (!url) return alert("No WhatsApp/phone number available for this patient.");
+  openWhatsAppReport(currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo, currentReportBooking.patientName, reportBill(currentReportBooking));
 };
 
 window.savePatientEntry = async function(e) {
@@ -1487,12 +1655,9 @@ window.savePatientEntry = async function(e) {
   const f = e.target;
   const patientName = f.patientName.value.trim();
   const phone = f.phone.value.trim();
+  const email = f.email.value.trim().toLowerCase();
   if (!patientName) {
     alert("Please enter patient name.");
-    return;
-  }
-  if (!phone) {
-    alert("Please enter contact number.");
     return;
   }
   const tests = adminEntryTests.map((test) => ({ ...test }));
@@ -1506,12 +1671,12 @@ window.savePatientEntry = async function(e) {
     remoteNo: f.remoteNo.value,
     dayNo: f.dayNo.value,
     patientName,
-    patientEmail: f.email.value.trim().toLowerCase(),
-    email: f.email.value.trim().toLowerCase(),
-    age: f.age.value,
-    gender: f.gender.value,
-    phone,
-    whatsapp: phone,
+    patientEmail: email,
+    email,
+    age: f.age.value || "",
+    gender: f.gender.value || "",
+    phone: phone || "",
+    whatsapp: phone || "",
     doctor: f.doctor.value,
     coName: f.coName.value,
     refBy: f.doctor.value,

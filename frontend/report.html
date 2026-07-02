@@ -679,6 +679,59 @@
       }).replace(",", "");
     }
 
+    function isCBCTest(test) {
+      const text = `${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`.toLowerCase();
+      return text.includes("cbc") || text.includes("complete blood count");
+    }
+
+    function getFullCBCParameters() {
+      return [
+        { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
+        { name: "WBC Count", normalRange: "4000-11000", unit: "cmm", sample: "W.B. EDTA", method: "DC Detection" },
+        { name: "DIFFERENTIAL COUNT OF W.B.C", type: "heading", isHeading: true },
+        { name: "Neutrophils", normalRange: "40-75", unit: "%" },
+        { name: "Lymphocytes", normalRange: "20-50", unit: "%" },
+        { name: "Monocytes", normalRange: "2-8", unit: "%" },
+        { name: "Eosinophils", normalRange: "1-6", unit: "%" },
+        { name: "Basophils", normalRange: "0-1", unit: "%" },
+        { name: "RBC Count", normalRange: "3.5-5.5", unit: "mill/cumm" },
+        { name: "PCV/HCT", normalRange: "34-47", unit: "%" },
+        { name: "MCV", normalRange: "80-96", unit: "fL" },
+        { name: "MCH", normalRange: "27.5-33.2", unit: "pg" },
+        { name: "MCHC", normalRange: "33.4-35.5", unit: "%" },
+        { name: "RDW-CV", normalRange: "11.0-16.0", unit: "%" },
+        { name: "RDW-SD", normalRange: "35.0-56.0", unit: "fL" },
+        { name: "MPV", normalRange: "6.5-12.0", unit: "fL" },
+        { name: "Platelet Count", normalRange: "1,50,000-4,50,000", unit: "/µL" },
+        { name: "PCT", normalRange: "0.108-0.282", unit: "%" },
+        { name: "P-LCR", normalRange: "11.0-45.0", unit: "%" },
+        { name: "P-LCC", normalRange: "30-90", unit: "10^9/L" },
+        { name: "PDW", normalRange: "9.0-17.0", unit: "fL" }
+      ];
+    }
+
+    function cbcParameterKey(name) {
+      const key = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const aliases = {
+        wbc: "wbccount",
+        wbccount: "wbccount",
+        rbc: "rbccount",
+        rbccount: "rbccount",
+        pcv: "pcvhct",
+        hct: "pcvhct",
+        pcvhct: "pcvhct",
+        platelets: "plateletcount",
+        plateletscounts: "plateletcount",
+        plateletcount: "plateletcount",
+        rdwcv: "rdwcv",
+        rdw: "rdwcv",
+        rdwsd: "rdwsd",
+        differentialcount: "differentialcountofwbc",
+        differentialcountofwbc: "differentialcountofwbc"
+      };
+      return aliases[key] || key;
+    }
+
     function normalizeResult(row) {
       const testName = pick(row, ["testName", "test_name", "test", "groupName", "group"], "");
       const parameterName = pick(row, ["parameterName", "parameter_name", "parameter", "test_parameter", "name"], testName);
@@ -703,6 +756,37 @@
       return results.map(normalizeResult).filter((row) => (
         row.category || row.testName || row.parameterName || row.resultValue || row.normalValue || row.unit || row.comment || row.details.length
       ));
+    }
+
+    function completeCBCResults(report, results) {
+      const tests = [
+        ...(Array.isArray(report.tests) ? report.tests : []),
+        ...(Array.isArray(report.selectedTests) ? report.selectedTests : [])
+      ];
+      const hasCBC = tests.some(isCBCTest) || results.some((row) => isCBCTest({ name: row.testName || row.parameterName }));
+      if (!hasCBC) return results;
+      const cbcTest = tests.find(isCBCTest) || results.find((row) => isCBCTest({ name: row.testName || row.parameterName })) || {};
+      const cbcName = cbcTest.name || cbcTest.testName || "COMPLETE BLOOD COUNT(CBC)";
+      const cbcCategory = cbcTest.category || results.find((row) => isCBCTest({ name: row.testName || row.parameterName }))?.category || "HAEMATOLOGY";
+      const cbcExisting = results.filter((row) => isCBCTest({ name: row.testName || row.parameterName }));
+      const cbcRows = getFullCBCParameters().map((parameter) => {
+        const existing = cbcExisting.find((row) => cbcParameterKey(row.parameterName) === cbcParameterKey(parameter.name));
+        return normalizeResult({
+          category: cbcCategory,
+          testName: cbcName,
+          parameterName: parameter.name,
+          resultValue: existing?.resultValue || "",
+          normalRange: parameter.normalRange || existing?.normalValue || "",
+          unit: parameter.unit || existing?.unit || "",
+          method: parameter.method || existing?.method || "",
+          sample: parameter.sample || existing?.sample || "",
+          type: parameter.type || existing?.type || "",
+          isHeading: Boolean(parameter.isHeading || existing?.isHeading),
+          comment: existing?.comment || ""
+        });
+      });
+      const nonCBC = results.filter((row) => !isCBCTest({ name: row.testName || row.parameterName }));
+      return [...nonCBC, ...cbcRows];
     }
 
     function groupResults(results) {
@@ -902,7 +986,7 @@
     }
 
     function renderReport(report, billNo) {
-      const results = normalizeResults(report.results || report.reportResults || []);
+      const results = completeCBCResults(report, normalizeResults(report.results || report.reportResults || []));
       if (!results.length) {
         showError(`Report is not released yet or result was not saved permanently.<br><br>Bill No: ${safe(billNo)}`);
         return;
@@ -922,22 +1006,21 @@
       app.className = "report-preview-wrap";
       app.innerHTML = pages.join("");
       window.currentReportForShare = { report, billNo };
-      document.getElementById("shareWhatsAppBtn").classList.remove("hidden");
+      const phone = String(report.whatsapp || report.phone || report.contactNo || "").replace(/\D/g, "");
+      document.getElementById("shareWhatsAppBtn").classList.toggle("hidden", !phone);
     }
 
     window.shareReportWhatsApp = function() {
       const current = window.currentReportForShare;
       if (!current) return;
       const { report, billNo } = current;
-      const phone = String(report.whatsapp || report.phone || "").replace(/\D/g, "");
+      const phone = String(report.whatsapp || report.phone || report.contactNo || "").replace(/\D/g, "");
+      if (!phone) return alert("No WhatsApp/phone number available for this patient.");
       const fullPhone = phone.length === 10 ? "91" + phone : phone;
       const patientName = pick(report, ["patientName", "patient_name", "name"], "Patient");
       const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
       const message = `Hello ${patientName},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
-      const waUrl = fullPhone
-        ? `https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`
-        : `https://wa.me/?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, "_blank");
+      window.open(`https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`, "_blank");
     };
 
     function showError(message) {
