@@ -61,8 +61,8 @@ async function sendWhatsAppDocument(to, documentUrl, filename, caption) {
     type: "document",
     document: {
       link: documentUrl,
-      filename: filename || "KhunTest_Report.pdf",
-      caption: caption || "Your KhunTest Lab report is ready."
+      filename: filename || "KHUNTEST_LABS_Report.pdf",
+      caption: caption || "Your KHUNTEST LABS report is ready."
     }
   };
 

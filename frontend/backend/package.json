@@ -1,7 +1,7 @@
 {
   "name": "khuntest-lab-backend",
   "version": "1.0.0",
-  "description": "KhunTest Lab backend API: bookings, patients, reports, Razorpay, WhatsApp Cloud API",
+  "description": "KHUNTEST LABS backend API: bookings, patients, reports, Razorpay, WhatsApp Cloud API",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",

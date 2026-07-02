@@ -18,10 +18,10 @@ async function sendOtpEmail(to, otp) {
   await transporter.sendMail({
     from: process.env.SMTP_FROM,
     to,
-    subject: "KhunTest Lab Password Reset OTP",
+    subject: "KHUNTEST LABS Password Reset OTP",
     html: `
       <div style="font-family:Arial,sans-serif;">
-        <h2>KhunTest Lab</h2>
+        <h2>KHUNTEST LABS</h2>
         <p>Your password reset OTP is:</p>
         <h1 style="letter-spacing:4px;">${otp}</h1>
         <p>This OTP is valid for 10 minutes.</p>

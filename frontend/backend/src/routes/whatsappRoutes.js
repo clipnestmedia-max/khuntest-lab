@@ -72,7 +72,7 @@ router.post("/send-report-ready", async (req, res) => {
     const message =
 `Dear ${patientName},
 
-Your KhunTest Lab report is ready.
+Your KHUNTEST LABS report is ready.
 
 Report Link:
 ${reportLink}
@@ -80,7 +80,7 @@ ${reportLink}
 Please click the link to view/download your report.
 
 Regards,
-KhunTest Lab`;
+KHUNTEST LABS`;
 
     const url = `https://graph.facebook.com/${API_VERSION}/${PHONE_NUMBER_ID}/messages`;
 

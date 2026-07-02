@@ -1,4 +1,4 @@
-# KhunTest Lab Firebase Migration
+# KHUNTEST LABS Firebase Migration
 
 This frontend now uses Firebase Auth and Firestore directly from static HTML/JS modules.
 
@@ -6,7 +6,7 @@ This frontend now uses Firebase Auth and Firestore directly from static HTML/JS 
 
 1. In Firebase Console, enable **Authentication > Sign-in method > Email/Password**.
 2. Create **Cloud Firestore** in production mode.
-3. Confirm `firebase-config.js` contains the KhunTest Firebase config.
+3. Confirm `firebase-config.js` contains the KHUNTEST LABS Firebase config.
 4. Deploy rules from this `frontend` folder:
    ```bash
    firebase deploy --only firestore:rules

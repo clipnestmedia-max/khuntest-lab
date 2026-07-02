@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KhunTest Lab - Admin Dashboard</title>
+<title>KHUNTEST LABS - Admin Dashboard</title>
 <link rel="stylesheet" href="styles.css">
 <style>
   .admin-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(8, 20, 40, 0.46); padding: 18px; }
@@ -30,7 +30,7 @@
 <body>
 <div class="dashboard">
   <aside class="sidebar">
-    <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KhunTest Lab"><span>KHUNTEST LAB</span></a>
+    <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KHUNTEST LABS"><span>KHUNTEST LABS</span></a>
     <div class="side-menu">
       <button class="active" data-tab="overview" onclick="setTab('overview')">Dashboard</button>
       <button data-tab="bookings" onclick="setTab('bookings')">Bookings</button>
@@ -236,7 +236,7 @@
         </table>
       </div>
     </section>
-    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KhunTest Lab" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Test Source Used<input id="debugTestSource" readonly></label><label>Public Tests Count<input id="debugPublicTestsCount" readonly></label><label>Admin Tests Count<input id="debugTestsCount" readonly></label><label>Firestore Tests Count<input id="debugFirestoreTestsCount" readonly></label><label>data/tests.json Count<input id="debugJsonTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label><label>Last Test Loading Error<input id="debugTestLoadError" readonly></label></div></section>
+    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KHUNTEST LABS" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KHUNTEST LABS. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Test Source Used<input id="debugTestSource" readonly></label><label>Public Tests Count<input id="debugPublicTestsCount" readonly></label><label>Admin Tests Count<input id="debugTestsCount" readonly></label><label>Firestore Tests Count<input id="debugFirestoreTestsCount" readonly></label><label>data/tests.json Count<input id="debugJsonTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label><label>Last Test Loading Error<input id="debugTestLoadError" readonly></label></div></section>
     <div id="adminDebugBox" class="admin-debug-box">
       <b>Admin Debug</b>
       <div class="admin-debug-grid">
@@ -402,7 +402,7 @@ function openWhatsAppReport(phone, patientName, billNo) {
     return;
   }
   const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
-  const message = `Hello ${patientName || "Patient"},\n\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
+  const message = `Hello ${patientName || "Patient"},\n\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
   window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, "_blank");
 }
 
@@ -411,7 +411,7 @@ function whatsappReportLink(b) {
   const phone = normalizeIndianPhone(b.whatsapp || b.phone || b.contactNo);
   if (!phone || !bill) return "";
   const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(bill)}`;
-  const message = `Hello ${b.patientName || "Patient"},\nYour KhunTest Lab report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKhunTest Lab\n+91 9234277007`;
+  const message = `Hello ${b.patientName || "Patient"},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
   return `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`;
 }
 

@@ -150,28 +150,28 @@ router.post("/bookings/:id/send-whatsapp-report", auth("admin"), async (req, res
       const caption =
 `Dear ${booking.patient_name},
 
-Your KhunTest Lab report is ready.
+Your KHUNTEST LABS report is ready.
 
 Bill No: ${booking.bill_no}
 Booking ID: ${booking.booking_code}
 
 Thank you,
-KhunTest Lab`;
+KHUNTEST LABS`;
 
-      providerResponse = await sendWhatsAppDocument(to, report.file_url, report.file_name || "KhunTest_Report.pdf", caption);
+      providerResponse = await sendWhatsAppDocument(to, report.file_url, report.file_name || "KHUNTEST_LABS_Report.pdf", caption);
     } else {
       const msg =
 `Dear ${booking.patient_name},
 
-Your KhunTest Lab report is ready.
+Your KHUNTEST LABS report is ready.
 
 Bill No: ${booking.bill_no}
 Booking ID: ${booking.booking_code}
 
-Please contact KhunTest Lab to collect/download your report.
+Please contact KHUNTEST LABS to collect/download your report.
 
 Thank you,
-KhunTest Lab`;
+KHUNTEST LABS`;
       providerResponse = await sendWhatsAppText(to, msg);
     }
 

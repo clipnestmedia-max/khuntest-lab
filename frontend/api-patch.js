@@ -1,8 +1,8 @@
-// KhunTest Lab API Patch - Clean Final Add Test Fix
+// KHUNTEST LABS API Patch - Clean Final Add Test Fix
 
 let KT_API_TESTS = [];
 
-async function loadKhunTestApiTests() {
+async function loadLabApiTests() {
   try {
     const res = await fetch("/api/tests");
     const tests = await res.json();
@@ -250,7 +250,7 @@ function renderTestsPage() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  loadKhunTestApiTests();
+  loadLabApiTests();
 
   const form = document.getElementById("patientEntryForm");
   if (form) {
@@ -669,7 +669,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }, true);
 })();
-// WhatsApp Report Button - KhunTest
+// WhatsApp Report Button - KHUNTEST LABS
 (function () {
   if (!location.pathname.includes("admin-dashboard.html")) return;
 

@@ -1,4 +1,4 @@
-# KhunTest Lab Flow
+# KHUNTEST LABS Flow
 
 ## Patient Flow
 1. Register/Login

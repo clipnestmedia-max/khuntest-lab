@@ -1,4 +1,4 @@
-# KhunTest Lab Complete Website
+# KHUNTEST LABS Complete Website
 
 This package contains a full working frontend prototype plus backend/API and MySQL schema scaffolding.
 

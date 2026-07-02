@@ -35,7 +35,7 @@ function filterAdminBookings(){const q=document.getElementById('bookingSearch').
 document.addEventListener('DOMContentLoaded',()=>populateTestSelect('testSelect'));
 
 
-// ===== KhunTest Lab advanced Patient Entry + Report Generate module =====
+// ===== KHUNTEST LABS advanced Patient Entry + Report Generate module =====
 const ktReportCatalog = [
   {id:'CBC', name:'CBC', price:400, rebate:100, lab:90, normal:'', unit:'', defaultFinding:''},
   {id:'CBCS', name:'CBC+COMMENT OF SMEAR', price:700, rebate:150, lab:300, normal:'', unit:'', defaultFinding:''},

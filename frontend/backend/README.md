@@ -1,6 +1,6 @@
-# KhunTest Lab Backend
+# KHUNTEST LABS Backend
 
-This is a working Node.js + Express + MySQL backend for KhunTest Lab.
+This is a working Node.js + Express + MySQL backend for KHUNTEST LABS.
 
 ## Features
 

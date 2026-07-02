@@ -199,8 +199,8 @@ function startHttpTestPage() {
 
   app.get("/", (_req, res) => {
     res.type("html").send(`<!doctype html>
-<html><head><title>KhunTest LIS Bridge</title><style>body{font-family:Arial;margin:24px;max-width:980px}textarea{width:100%;height:360px}button{padding:10px 16px;font-weight:700}</style></head>
-<body><h1>KhunTest LIS Bridge Test Parser</h1><p>Paste fake/demo HL7 or ASTM text only. Received raw messages are stored locally under raw-messages/ and ignored by Git.</p>
+<html><head><title>KHUNTEST LABS LIS Bridge</title><style>body{font-family:Arial;margin:24px;max-width:980px}textarea{width:100%;height:360px}button{padding:10px 16px;font-weight:700}</style></head>
+<body><h1>KHUNTEST LABS LIS Bridge Test Parser</h1><p>Paste fake/demo HL7 or ASTM text only. Received raw messages are stored locally under raw-messages/ and ignored by Git.</p>
 <form method="post" action="/parse"><textarea name="message" placeholder="Paste HL7 or ASTM message"></textarea><br><br><button>Parse and Upload Draft</button></form></body></html>`);
   });
 

@@ -1,10 +1,10 @@
-# KhunTest LIS Bridge for Mindray BC-5000
+# KHUNTEST LABS LIS Bridge for Mindray BC-5000
 
-This is a local-only Node.js bridge for importing CBC results from a Mindray BC-5000 hematology analyzer into KhunTest Firestore as draft reports.
+This is a local-only Node.js bridge for importing CBC results from a Mindray BC-5000 hematology analyzer into KHUNTEST LABS Firestore as draft reports.
 
 ## Architecture
 
-Mindray BC-5000 -> LAN HL7/LIS -> Local Node.js Bridge -> Firestore `machineResults` -> KhunTest Admin Dashboard -> Review -> Release Report
+Mindray BC-5000 -> LAN HL7/LIS -> Local Node.js Bridge -> Firestore `machineResults` -> KHUNTEST LABS Admin Dashboard -> Review -> Release Report
 
 The browser frontend must not connect directly to the analyzer. The bridge runs on the lab computer that is reachable by the analyzer over the lab LAN.
 
@@ -43,7 +43,7 @@ npm start
 7. Create a test sample on the analyzer.
 8. Watch bridge logs.
 9. Check Firestore `machineResults`.
-10. Open KhunTest Admin Dashboard -> Machine Results.
+10. Open KHUNTEST LABS Admin Dashboard -> Machine Results.
 
 ## Manual Test Parser
 

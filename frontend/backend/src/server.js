@@ -24,7 +24,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), uploadDir)));
 
 app.get("/", (req, res) => {
   res.json({
-    name: "KhunTest Lab Backend",
+    name: "KHUNTEST LABS Backend",
     status: "running",
     health: "/health"
   });
@@ -40,5 +40,5 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
-  console.log(`KhunTest Lab backend running on http://localhost:${port}`);
+  console.log(`KHUNTEST LABS backend running on http://localhost:${port}`);
 });

@@ -2,7 +2,7 @@
   "name": "khuntest-lis-bridge",
   "version": "1.0.0",
   "private": true,
-  "description": "Local LIS bridge for importing Mindray BC-5000 CBC results into KhunTest Firestore drafts.",
+  "description": "Local LIS bridge for importing Mindray BC-5000 CBC results into KHUNTEST LABS Firestore drafts.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
