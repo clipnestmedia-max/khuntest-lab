@@ -59,8 +59,16 @@ service cloud.firestore {
     }
 
     match /reports/{billNo} {
-      allow read: if isAdmin() || sameEmail(resource.data.patientEmail);
+      allow read: if isAdmin()
+        || (
+          sameEmail(resource.data.patientEmail)
+          && (resource.data.reportStatus == "Final" || resource.data.status == "Final")
+        );
       allow create, update, delete: if isAdmin();
+    }
+
+    match /machineResults/{machineResultId} {
+      allow read, write: if isAdmin();
     }
 
     match /tests/{testId} {

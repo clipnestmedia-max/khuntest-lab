@@ -32,3 +32,6 @@ frontend/backend/database/
 *service-account*.json
 *firebase*admin*.json
 *firebase-adminsdk*.json
+serviceAccountKey.json
+lis-bridge/serviceAccountKey.json
+lis-bridge/raw-messages/

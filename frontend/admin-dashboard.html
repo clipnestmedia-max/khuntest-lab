@@ -38,6 +38,7 @@
       <button data-tab="tests" onclick="showAdminTestsLibrary()">Tests Library</button>
       <button data-tab="patients" onclick="setTab('patients')">Patients</button>
       <button data-tab="reports" onclick="setTab('reports')">Reports</button>
+      <button data-tab="machineResults" onclick="setTab('machineResults');renderMachineResultsPanel()">Machine Results</button>
       <button data-tab="patientEntry" onclick="setTab('patientEntry');preparePatientEntry()">New Booking</button>
       <button data-tab="settings" onclick="setTab('settings')">Settings</button>
       <button onclick="logout()">Logout</button>
@@ -220,6 +221,20 @@
 
     <section data-panel="patients" class="hidden"><h2>Patients</h2><div class="toolbar"><input id="patientSearch" placeholder="Search patient, phone, email..." oninput="renderPatientsPanel()"></div><div class="table-card"><table><thead><tr><th>Patient</th><th>Contact</th><th>Bookings</th><th>Revenue</th><th>Last Visit</th></tr></thead><tbody id="patientsBody"></tbody></table></div></section>
     <section data-panel="reports" class="hidden"><h2>Released Reports</h2><div class="toolbar"><input id="reportSearch" placeholder="Search bill, patient, phone..." oninput="renderReportsPanel()"></div><div class="table-card"><table><thead><tr><th>Bill</th><th>Patient</th><th>Tests</th><th>Released</th><th>Actions</th></tr></thead><tbody id="reportsBody"></tbody></table></div></section>
+    <section data-panel="machineResults" class="hidden">
+      <h2>Machine Results</h2>
+      <div class="notice">Machine results are imported as draft. Verify before release.</div>
+      <div class="toolbar">
+        <input id="machineResultSearch" placeholder="Search sample, bill, patient..." oninput="renderMachineResultsPanel()">
+        <button class="btn btn-outline btn-small" type="button" onclick="refreshFirebaseDashboard()">Refresh</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Received</th><th>Sample ID</th><th>Bill No</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="machineResultsBody"></tbody>
+        </table>
+      </div>
+    </section>
     <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KhunTest Lab" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KhunTest Lab. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp Cloud API sending requires backend or Firebase Cloud Functions because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Test Source Used<input id="debugTestSource" readonly></label><label>Public Tests Count<input id="debugPublicTestsCount" readonly></label><label>Admin Tests Count<input id="debugTestsCount" readonly></label><label>Firestore Tests Count<input id="debugFirestoreTestsCount" readonly></label><label>data/tests.json Count<input id="debugJsonTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label><label>Last Test Loading Error<input id="debugTestLoadError" readonly></label></div></section>
     <div id="adminDebugBox" class="admin-debug-box">
       <b>Admin Debug</b>
@@ -263,6 +278,7 @@ let reportResults = [];
 let firebaseBookings = [];
 let firebaseReports = [];
 let firebaseTests = [];
+let machineResults = [];
 let currentReportBooking = null;
 let currentAdminUser = null;
 let lastFirestoreError = "";
@@ -475,6 +491,18 @@ async function getReports() {
   allReports = rows;
   firebaseReports = rows;
   return rows;
+}
+
+async function getMachineResults() {
+  try {
+    const snap = await getDocs(query(collection(db, "machineResults"), orderBy("receivedAt", "desc")));
+    machineResults = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+  } catch (err) {
+    console.warn("Falling back to unordered machineResults read:", err);
+    const snap = await getDocs(collection(db, "machineResults"));
+    machineResults = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+  }
+  return machineResults;
 }
 
 async function loadReports() {
@@ -772,6 +800,12 @@ async function refreshFirebaseDashboard() {
     console.error(err);
   }
   try {
+    machineResults = await getMachineResults();
+  } catch (err) {
+    errors.push(`machineResults: ${err.message || String(err)}`);
+    console.error(err);
+  }
+  try {
     const result = await loadAdminTestsCatalog();
     if (result.error) errors.push(`tests: ${String(result.error)}`);
   } catch (err) {
@@ -787,6 +821,7 @@ async function refreshFirebaseDashboard() {
   renderFirebaseTests();
   renderPatientsPanel();
   renderReportsPanel();
+  renderMachineResultsPanel();
   renderDebugPanel();
 }
 
@@ -847,6 +882,7 @@ function renderFirebaseBookings() {
       <td><select onchange="firebaseUpdateStatus('${html(b.id)}', this.value)">${["Pending","Reported","Completed","Cancelled"].map((x) => `<option ${b.status === x ? "selected" : ""}>${x}</option>`).join("")}</select></td>
       <td>
         <button class="btn btn-navy btn-small" type="button" onclick="openReportEntry('${html(b.id)}')">Report Entry</button>
+        ${b.machineResultReceived ? `<br><span class="status reported">Machine Result Received</span>` : ""}
         ${hasFirestoreReport(b) ? `<br>${reportActionsHtml(b)}` : ""}
         ${hasFirestoreReport(b) && wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">Send WhatsApp</a>` : ""}
       </td>
@@ -896,6 +932,148 @@ function renderAdminTestsLibrary(sourceTests = allLabTests) {
 
 window.renderFirebaseTests = function() {
   renderAdminTestsLibrary(allLabTests);
+};
+
+function machineResultRows() {
+  const q = (document.getElementById("machineResultSearch")?.value || "").toLowerCase();
+  return machineResults.filter((row) => {
+    const haystack = [row.sampleId, row.billNo, row.patientName, row.status, row.bookingId].join(" ").toLowerCase();
+    return !q || haystack.includes(q);
+  });
+}
+
+window.renderMachineResultsPanel = function() {
+  const body = document.getElementById("machineResultsBody");
+  if (!body) return;
+  const rows = machineResultRows();
+  body.innerHTML = rows.length ? rows.map((row) => {
+    const status = row.bookingId || row.status === "matched" ? "matched" : "unmatched";
+    return `<tr>
+      <td>${html(createdText(row.receivedAt))}</td>
+      <td><b>${html(row.sampleId || "")}</b><br><small>${html(row.source || "Mindray BC-5000")}</small></td>
+      <td>${html(row.billNo || "")}</td>
+      <td>${html(row.patientName || "")}</td>
+      <td><span class="status ${status === "matched" ? "reported" : "pending"}">${html(status)}</span></td>
+      <td>
+        <button class="btn btn-outline btn-small" type="button" onclick="viewMachineResult('${html(row.id)}')">View Result</button>
+        <button class="btn btn-navy btn-small" type="button" onclick="attachMachineResultToBooking('${html(row.id)}')">Attach to Booking</button>
+        <button class="btn btn-green btn-small" type="button" onclick="createDraftFromMachineResult('${html(row.id)}')">Create Draft Report</button>
+      </td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="6">No machine results found.</td></tr>`;
+};
+
+function machineResultById(id) {
+  return machineResults.find((row) => row.id === id);
+}
+
+function reportRowsFromMachineResult(row) {
+  const machineRows = Array.isArray(row.parsedResults) ? row.parsedResults : [];
+  const test = { name: "COMPLETE BLOOD COUNT(CBC)", testCode: "CBC", category: "HAEMATOLOGY" };
+  return getFullCBCParameters().map((parameter) => {
+    const match = machineRows.find((machineRow) => cbcParameterKey(machineRow.name || machineRow.code) === cbcParameterKey(parameter.name));
+    return {
+      category: "HAEMATOLOGY",
+      testName: "COMPLETE BLOOD COUNT(CBC)",
+      parameterName: parameter.name,
+      resultValue: match?.value || "",
+      normalRange: parameter.normalRange || match?.normalRange || "",
+      unit: parameter.unit || match?.unit || "",
+      method: parameter.method || "Mindray BC-5000",
+      sample: parameter.sample || "W.B. EDTA",
+      type: parameter.type || "",
+      isHeading: Boolean(parameter.isHeading),
+      abnormalFlag: match?.abnormalFlag || "",
+      code: match?.code || "",
+      source: "machine"
+    };
+  });
+}
+
+function bookingForMachineResult(row) {
+  return firebaseBookings.find((booking) => (
+    String(booking.id || "") === String(row.bookingId || "")
+    || String(reportBill(booking)) === String(row.billNo || "")
+    || String(reportBill(booking)) === String(row.sampleId || "")
+  ));
+}
+
+window.viewMachineResult = function(id) {
+  const row = machineResultById(id);
+  if (!row) return alert("Machine result not found.");
+  const results = Array.isArray(row.parsedResults) ? row.parsedResults : [];
+  document.getElementById("parameterModalTitle").textContent = `Machine Result ${row.sampleId || row.billNo || id}`;
+  document.getElementById("parameterModalBody").innerHTML = `
+    <div class="notice">Machine results are imported as draft. Verify before release.</div>
+    <div class="table-card"><table><thead><tr><th>Code</th><th>Parameter</th><th>Value</th><th>Unit</th><th>Range</th><th>Flag</th></tr></thead><tbody>
+      ${results.map((r) => `<tr><td>${html(r.code || "")}</td><td><b>${html(r.name || "")}</b></td><td>${html(r.value || "")}</td><td>${html(r.unit || "")}</td><td>${html(r.normalRange || "")}</td><td>${html(r.abnormalFlag || "")}</td></tr>`).join("") || `<tr><td colspan="6">No parsed results.</td></tr>`}
+    </tbody></table></div>
+  `;
+  document.getElementById("parameterModal").classList.remove("hidden");
+};
+
+window.attachMachineResultToBooking = async function(id) {
+  const row = machineResultById(id);
+  if (!row) return alert("Machine result not found.");
+  const bill = prompt("Enter booking bill number to attach this machine result", row.billNo || row.sampleId || "");
+  if (!bill) return;
+  const booking = firebaseBookings.find((b) => String(reportBill(b)) === String(bill));
+  if (!booking) return alert("Booking not found for bill " + bill);
+  await updateDoc(doc(db, "machineResults", id), {
+    billNo: reportBill(booking),
+    bookingId: booking.id,
+    status: "matched",
+    updatedAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, "bookings", booking.id), {
+    machineResultReceived: true,
+    machineResultId: id,
+    status: "Report Entry",
+    updatedAt: serverTimestamp()
+  });
+  alert("Machine result attached to booking.");
+  await refreshFirebaseDashboard();
+};
+
+window.createDraftFromMachineResult = async function(id) {
+  const row = machineResultById(id);
+  if (!row) return alert("Machine result not found.");
+  const booking = bookingForMachineResult(row);
+  if (!booking) return alert("Attach this machine result to a booking first.");
+  const bill = reportBill(booking);
+  await saveReportDraft({
+    billNo: bill,
+    bookingId: booking.id,
+    patientName: booking.patientName || row.patientName || "",
+    patientEmail: booking.patientEmail || booking.email || "",
+    phone: booking.phone || "",
+    whatsapp: booking.whatsapp || booking.phone || "",
+    age: booking.age || "",
+    gender: booking.gender || "",
+    doctor: booking.doctor || "",
+    refBy: booking.refBy || booking.doctor || "",
+    collectionDate: booking.collDate || booking.collectionDate || booking.date || "",
+    reportingDate: ktNowLocal(),
+    tests: bookingTests(booking).length ? bookingTests(booking) : [selectedTestSnapshot({ testCode: "CBC", name: "COMPLETE BLOOD COUNT(CBC)", category: "HAEMATOLOGY", price: 0 })],
+    selectedTests: bookingTests(booking),
+    results: reportRowsFromMachineResult(row),
+    source: "machine",
+    machineResultId: id
+  });
+  await updateDoc(doc(db, "machineResults", id), {
+    status: "draft-created",
+    billNo: bill,
+    bookingId: booking.id,
+    updatedAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, "bookings", booking.id), {
+    machineResultReceived: true,
+    machineResultId: id,
+    status: "Report Entry",
+    updatedAt: serverTimestamp()
+  });
+  alert("Draft report created. Review in Report Entry before release.");
+  await refreshFirebaseDashboard();
 };
 
 window.renderTestsLibrary = function(tests = allLabTests) {
