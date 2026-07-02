@@ -30,7 +30,7 @@ WhatsApp: Meta WhatsApp API
 
 ## WhatsApp Reports
 Report sharing uses safe manual `wa.me` links from the admin dashboard and report page.
-Automatic WhatsApp Cloud API sending requires a backend or Firebase Cloud Functions because the WhatsApp token is secret and must not be stored in frontend code.
+Automatic WhatsApp Cloud API sending requires a secure server because the WhatsApp token is secret and must not be stored in frontend code.
 
 
 ## Latest Admin Panel Update

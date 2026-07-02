@@ -34,97 +34,107 @@
     </div>
   </nav>
 
-  <section class="page-hero">
+  <main class="booking-page">
+  <section class="page-hero booking-hero">
     <div class="container">
       <h1>Book Test Online</h1>
-      <p>Register, select test, choose collection mode and track your report online.</p>
+      <p>Book lab tests at home or visit our centre.</p>
+      <div class="booking-hero-actions">
+        <a class="btn btn-red" href="tel:+919234277007">Call</a>
+        <a class="btn btn-green" href="https://wa.me/919234277007?text=Hello%20KHUNTEST%20LABS%2C%20I%20want%20to%20book%20a%20test" target="_blank">WhatsApp</a>
+      </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container form-wrap">
-      <div class="form-card">
+  <section class="section booking-section">
+    <div class="container booking-layout">
+      <div class="form-card booking-card">
         <h2>Booking Form</h2>
         <div id="bookingMsg" class="hidden"></div>
         <form onsubmit="bookTest(event)">
-          <div class="two">
+          <div class="booking-form-grid">
             <div>
               <label>Patient Name</label>
               <input name="patientName" required>
             </div>
             <div>
-              <label>Phone</label>
-              <input name="phone" required pattern="[0-9]{10}">
-            </div>
-          </div>
-          <div class="two">
-            <div>
-              <label>Age</label>
-              <input name="age" type="number" required>
+              <label>Phone / WhatsApp Number</label>
+              <input name="phone" inputmode="tel" pattern="[0-9]{10}" placeholder="Optional">
             </div>
             <div>
               <label>Gender</label>
               <select name="gender"><option>Male</option><option>Female</option><option>Other</option></select>
             </div>
-          </div>
-          <label>Email</label>
-          <input name="email" type="email" required placeholder="Use this email in patient login">
-          <div class="two">
             <div>
-              <label>Search Test</label>
-              <input id="testSearch" list="testCatalogList" placeholder="Search by test name or code">
-              <datalist id="testCatalogList"></datalist>
+              <label>Age</label>
+              <input name="age" type="number" min="0" placeholder="Optional">
             </div>
             <div>
-              <label>Booking Type</label>
+              <label>Email</label>
+              <input name="email" type="email" placeholder="Optional">
+            </div>
+            <div>
+              <label>Collection Type</label>
               <select name="bookingType"><option>Home Collection</option><option>Centre Visit</option></select>
             </div>
+            <div>
+              <label>Preferred Date</label>
+              <input name="date" type="date">
+            </div>
+            <div>
+              <label>Preferred Time</label>
+              <input name="time" type="time">
+            </div>
+            <div class="full">
+              <label>Address</label>
+              <textarea name="address" placeholder="Optional for centre visit"></textarea>
+            </div>
+            <div class="full booking-test-search">
+              <label>Search Tests</label>
+              <div class="booking-test-search-row">
+                <input id="testSearch" list="testCatalogList" placeholder="Search by test name, code or category">
+                <datalist id="testCatalogList"></datalist>
+                <button class="btn btn-outline btn-small" type="button" id="addTestBtn">Add Test</button>
+              </div>
+            </div>
           </div>
-          <button class="btn btn-outline btn-small" type="button" id="addTestBtn">Add Test</button>
-          <div id="categoryChips" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;"></div>
-          <div class="table-card" style="margin:14px 0;max-height:320px;overflow:auto;">
+          <div id="categoryChips" class="booking-category-chips"></div>
+          <div class="table-card booking-catalog-card">
             <table>
               <thead><tr><th>Available Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Select</th></tr></thead>
               <tbody id="catalogBody"><tr><td colspan="5">Loading tests...</td></tr></tbody>
             </table>
           </div>
-          <div class="table-card" style="margin:14px 0;">
+          <div class="table-card booking-selected-card">
             <table>
               <thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Action</th></tr></thead>
               <tbody id="selectedTestsBody"><tr><td colspan="5">No test selected.</td></tr></tbody>
             </table>
           </div>
-          <div class="notice">Total Amount: <b id="bookingTotal">₹0</b></div>
-          <div class="two">
-            <div>
-              <label>Date</label>
-              <input name="date" type="date" required>
-            </div>
-            <div>
-              <label>Time</label>
-              <input name="time" type="time" required>
-            </div>
-          </div>
-          <label>Address</label>
-          <textarea name="address" required></textarea>
+          <div class="booking-total-bar">Total Amount: <b id="bookingTotal">₹0</b></div>
           <label>Payment Option</label>
-          <select name="payment"><option>Pay at Lab / Cash</option><option>Online Payment - Razorpay Demo</option><option>UPI - Demo</option></select>
-          <br><br>
-          <button class="btn btn-red">Confirm Booking</button>
+          <select name="payment"><option>Pay at Lab / Cash</option><option>UPI at Centre</option></select>
+          <button class="btn btn-red booking-submit-btn">Submit Booking</button>
         </form>
       </div>
 
-      <div class="card">
-        <h2>Flow</h2>
-        <p><b>1.</b> Book test online</p>
-        <p><b>2.</b> Admin confirms booking</p>
-        <p><b>3.</b> Home collection staff assigned</p>
-        <p><b>4.</b> Report uploaded by admin</p>
-        <p><b>5.</b> Patient downloads PDF report</p>
-        <div class="notice">For online payment and notifications, use secure backend services or Firebase Cloud Functions.</div>
+      <div class="card booking-flow-card">
+        <h2>How it works</h2>
+        <div class="flow-step"><b>1.</b><span>Book test online</span></div>
+        <div class="flow-step"><b>2.</b><span>Admin confirms booking</span></div>
+        <div class="flow-step"><b>3.</b><span>Home collection staff assigned</span></div>
+        <div class="flow-step"><b>4.</b><span>Report generated and released</span></div>
+        <div class="flow-step"><b>5.</b><span>Patient downloads PDF report</span></div>
+        <div class="booking-contact-card">
+          <b>KHUNTEST LABS</b>
+          <span>Allalpatti, Laheriasarai, Darbhanga, Bihar</span>
+          <a href="tel:+919234277007">+91 9234277007</a>
+          <a href="mailto:khuntest@yahoo.com">khuntest@yahoo.com</a>
+        </div>
       </div>
     </div>
   </section>
+  </main>
 
   <footer class="footer">
     <div class="container footer-grid">
@@ -291,7 +301,7 @@
 
       try {
         const saved = await createBooking(booking);
-        showMessage("success", `Booking successful. Bill No is ${saved.billNo}. Login with same email to track reports.`);
+        showMessage("success", `Booking successful. Bill No is ${saved.billNo}. Keep this bill number to track reports.`);
         selectedTests = [];
         renderSelectedTests();
         f.reset();
