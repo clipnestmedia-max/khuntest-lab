@@ -194,6 +194,7 @@
             <button class="btn btn-navy" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Send WhatsApp</button>
             <span id="reportShareHint" class="notice" style="display:inline-block;margin:0;">Release report first to send WhatsApp.</span>
           </div>
+          <div id="machineReportNotice" class="notice hidden" style="margin:0 18px 18px;">Machine results imported as draft. Verify before release.</div>
         </div>
       </div>
     </section>
@@ -947,7 +948,7 @@ window.renderMachineResultsPanel = function() {
   if (!body) return;
   const rows = machineResultRows();
   body.innerHTML = rows.length ? rows.map((row) => {
-    const status = row.bookingId || row.status === "matched" ? "matched" : "unmatched";
+    const status = row.bookingId || row.matchStatus === "matched" ? "matched" : "unmatched";
     return `<tr>
       <td>${html(createdText(row.receivedAt))}</td>
       <td><b>${html(row.sampleId || "")}</b><br><small>${html(row.source || "Mindray BC-5000")}</small></td>
@@ -979,7 +980,7 @@ function reportRowsFromMachineResult(row) {
       resultValue: match?.value || "",
       normalRange: parameter.normalRange || match?.normalRange || "",
       unit: parameter.unit || match?.unit || "",
-      method: parameter.method || "Mindray BC-5000",
+      method: parameter.method || "Machine: Mindray BC-5000",
       sample: parameter.sample || "W.B. EDTA",
       type: parameter.type || "",
       isHeading: Boolean(parameter.isHeading),
@@ -1271,7 +1272,7 @@ function paintFindingRows(rows) {
     const isHeading = row.type === "heading" || row.isHeading === true;
     if (isHeading) {
       return `
-    <tr class="finding-heading-row">
+    <tr class="finding-heading-row ${row.source === "machine" ? "machine-filled-row" : ""}">
       <td colspan="4">
         <b>${html(row.name || row.parameterName || "")}</b>
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "")}">
@@ -1279,12 +1280,13 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="heading">
         <input type="hidden" data-r="isHeading" data-i="${index}" value="true">
+        <input type="hidden" data-r="source" data-i="${index}" value="${html(row.source || "")}">
       </td>
     </tr>
       `;
     }
     return `
-    <tr>
+    <tr class="${row.source === "machine" ? "machine-filled-row" : ""}">
       <td>
         <b>${html(row.name || row.parameterName || "Result")}</b>
         <br><small>${html(row.testName || row.category || "")}</small>
@@ -1294,6 +1296,7 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="method" data-i="${index}" value="${html(row.method || "")}">
         <input type="hidden" data-r="sample" data-i="${index}" value="${html(row.sample || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="${html(row.type || "")}">
+        <input type="hidden" data-r="source" data-i="${index}" value="${html(row.source || "")}">
       </td>
       <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="Enter result"></td>
       <td><input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly></td>
@@ -1596,7 +1599,8 @@ function reportRowsForTest(test, existingResults = []) {
       type: result.type || "",
       isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
       status: "Draft",
-      comment: result.comment || ""
+      comment: result.comment || "",
+      source: result.source || ""
     }));
   }
   return params.map((p) => {
@@ -1613,7 +1617,8 @@ function reportRowsForTest(test, existingResults = []) {
       type: p.type || existing?.type || "",
       isHeading: Boolean(p.isHeading || p.heading || p.type === "heading" || existing?.isHeading),
       status: "Final",
-      comment: existing?.comment || ""
+      comment: existing?.comment || "",
+      source: existing?.source || ""
     };
   });
 }
@@ -1726,10 +1731,12 @@ window.loadReportEditor = async function(id) {
           type: result.type || "",
           isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
           status: existingReport.reportStatus || existingReport.status || "Draft",
-          comment: result.comment || ""
+          comment: result.comment || "",
+          source: result.source || ""
         }))
       : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
   paintFindingRows(rows);
+  document.getElementById("machineReportNotice")?.classList.toggle("hidden", existingReport?.source !== "machine");
   updateReportActionState();
 };
 

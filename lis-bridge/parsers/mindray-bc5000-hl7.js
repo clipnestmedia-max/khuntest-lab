@@ -60,6 +60,7 @@ function parseHL7(rawMessage) {
   const segments = raw.split(/\r\n|\n|\r/).map((line) => line.trim()).filter(Boolean);
   const parsed = {
     protocol: "HL7",
+    analyzer: "Mindray BC-5000",
     source: "Mindray BC-5000",
     analyzerModel: "BC-5000",
     sampleId: "",
@@ -69,6 +70,7 @@ function parseHL7(rawMessage) {
     testDate: "",
     analyzerName: "",
     results: [],
+    rawMessage: raw,
     segments
   };
 
@@ -92,9 +94,11 @@ function parseHL7(rawMessage) {
       const codeField = fields[3] || "";
       const code = normalizeCode(codeField);
       const nameFromMessage = codeField.split("^").filter(Boolean)[1] || code;
+      const khunTestName = CBC_CODE_MAP[code] || nameFromMessage || code;
       parsed.results.push({
         code,
-        name: CBC_CODE_MAP[code] || nameFromMessage || code,
+        name: nameFromMessage || code,
+        khunTestName,
         value: fields[5] || "",
         unit: fields[6] || "",
         normalRange: fields[7] || "",

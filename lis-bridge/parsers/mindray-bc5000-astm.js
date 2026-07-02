@@ -14,6 +14,7 @@ function parseASTM(rawMessage) {
   const records = raw.split(/\r\n|\n|\r/).map((line) => line.trim()).filter(Boolean);
   const parsed = {
     protocol: "ASTM",
+    analyzer: "Mindray BC-5000",
     source: "Mindray BC-5000",
     analyzerModel: "BC-5000",
     sampleId: "",
@@ -23,6 +24,7 @@ function parseASTM(rawMessage) {
     testDate: "",
     analyzerName: "Mindray BC-5000",
     results: [],
+    rawMessage: raw,
     records
   };
 
@@ -44,9 +46,11 @@ function parseASTM(rawMessage) {
     if (type === "R") {
       const codeRaw = fields[2] || "";
       const code = codeRaw.split("^").filter(Boolean).pop() || codeRaw;
+      const khunTestName = CBC_CODE_MAP[code] || code;
       parsed.results.push({
         code,
-        name: CBC_CODE_MAP[code] || code,
+        name: code,
+        khunTestName,
         value: fields[3] || "",
         unit: fields[4] || "",
         normalRange: fields[5] || "",

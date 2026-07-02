@@ -23,15 +23,11 @@ The browser frontend must not connect directly to the analyzer. The bridge runs 
 
 ## Setup
 
-1. Ask the Mindray service engineer to enable LIS/HL7 output on the BC-5000.
-2. Connect the BC-5000 and the lab PC to the same LAN.
-3. Find the lab PC IP address.
-4. Set the analyzer LIS host/IP to the lab PC IP.
-5. Set the analyzer LIS port to `5001`.
-6. Set protocol to `HL7` if available.
-7. Create a Firebase service account JSON and place it at `lis-bridge/serviceAccountKey.json`.
-8. Copy `.env.example` to `.env` and adjust values if needed.
-9. Install and run:
+1. Install Node.js on the lab PC.
+2. Copy the `lis-bridge` folder to the lab PC.
+3. Create a Firebase service account JSON and place it at `lis-bridge/serviceAccountKey.json`.
+4. Copy `.env.example` to `.env` and adjust values if needed.
+5. Install and run:
 
 ```bash
 cd lis-bridge
@@ -39,10 +35,15 @@ npm install
 npm start
 ```
 
-10. Create a test sample on the analyzer.
-11. Watch bridge logs.
-12. Check Firestore `machineResults`.
-13. Open KhunTest Admin Dashboard -> Machine Results.
+6. Ask the Mindray service engineer to configure BC-5000:
+   - LIS protocol: HL7 preferred
+   - Host IP: lab PC IP
+   - Port: `5001`
+   - Result auto-send enabled
+7. Create a test sample on the analyzer.
+8. Watch bridge logs.
+9. Check Firestore `machineResults`.
+10. Open KhunTest Admin Dashboard -> Machine Results.
 
 ## Manual Test Parser
 
@@ -58,6 +59,12 @@ You can also run:
 
 ```bash
 npm run test:parse
+```
+
+This prints parsed JSON only. To upload the sample HL7 to Firestore, run:
+
+```bash
+npm run test:parse -- --upload
 ```
 
 ## Files Not To Commit

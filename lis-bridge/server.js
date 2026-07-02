@@ -14,6 +14,7 @@ const PORT = Number(process.env.PORT || 5001);
 const HTTP_PORT = Number(process.env.HTTP_PORT || 5050);
 const ENABLE_TCP = process.env.ENABLE_TCP !== "false";
 const ENABLE_HTTP_TEST_PAGE = process.env.ENABLE_HTTP_TEST_PAGE !== "false";
+const CONFIGURED_PROTOCOL = String(process.env.PROTOCOL || "HL7").toUpperCase();
 const RAW_DIR = path.join(__dirname, "raw-messages");
 
 function ensureRawDir() {
@@ -56,11 +57,11 @@ function mapMachineResultsToReport(parsed) {
   return (parsed.results || []).map((row) => ({
     category: "HAEMATOLOGY",
     testName: "COMPLETE BLOOD COUNT(CBC)",
-    parameterName: row.name || row.code || "Result",
+    parameterName: row.khunTestName || row.name || row.code || "Result",
     resultValue: row.value || "",
     normalRange: row.normalRange || "",
     unit: row.unit || "",
-    method: "Mindray BC-5000",
+    method: "Machine: Mindray BC-5000",
     sample: "W.B. EDTA",
     abnormalFlag: row.abnormalFlag || "",
     code: row.code || "",
@@ -78,7 +79,7 @@ async function findBooking(parsed) {
   return null;
 }
 
-async function saveRawMessage(rawMessage, reason = "parse-failed") {
+async function saveRawMessage(rawMessage, reason = "received") {
   ensureRawDir();
   const filename = `${Date.now()}-${reason}.txt`;
   const filePath = path.join(RAW_DIR, filename);
@@ -103,7 +104,8 @@ async function uploadParsedResult(rawMessage, parsed) {
     testDate: parsed.testDate || "",
     analyzerName: parsed.analyzerName || "Mindray BC-5000",
     receivedAt: admin.firestore.FieldValue.serverTimestamp(),
-    status: booking ? "matched" : "unmatched",
+    status: "received",
+    matchStatus: booking ? "matched" : "unmatched",
     bookingId: booking?.id || "",
     rawMessage,
     parsedResults: parsed.results || []
@@ -154,15 +156,15 @@ async function uploadParsedResult(rawMessage, parsed) {
 }
 
 async function handleAnalyzerMessage(rawMessage) {
+  const rawSavedTo = await saveRawMessage(rawMessage, "received");
   try {
     const parsed = parseMessage(rawMessage);
     const saved = await uploadParsedResult(rawMessage, parsed);
-    console.log("[message] parsed", parsed.protocol, "sample", parsed.sampleId, "results", parsed.results.length, saved);
-    return { ok: true, parsed, saved };
+    console.log("[message] parsed", parsed.protocol, "sample", parsed.sampleId, "results", parsed.results.length, "raw", rawSavedTo, saved);
+    return { ok: true, parsed, saved, rawSavedTo };
   } catch (err) {
-    const filePath = await saveRawMessage(rawMessage, "parse-failed");
-    console.error("[message] parse failed:", err.message, "raw saved:", filePath);
-    return { ok: false, error: err.message, rawSavedTo: filePath };
+    console.error("[message] parse failed:", err.message, "raw saved:", rawSavedTo);
+    return { ok: false, error: err.message, rawSavedTo };
   }
 }
 
@@ -198,7 +200,7 @@ function startHttpTestPage() {
   app.get("/", (_req, res) => {
     res.type("html").send(`<!doctype html>
 <html><head><title>KhunTest LIS Bridge</title><style>body{font-family:Arial;margin:24px;max-width:980px}textarea{width:100%;height:360px}button{padding:10px 16px;font-weight:700}</style></head>
-<body><h1>KhunTest LIS Bridge Test Parser</h1><p>Paste fake/demo HL7 or ASTM text only. Real patient raw messages are stored locally only when parsing fails.</p>
+<body><h1>KhunTest LIS Bridge Test Parser</h1><p>Paste fake/demo HL7 or ASTM text only. Received raw messages are stored locally under raw-messages/ and ignored by Git.</p>
 <form method="post" action="/parse"><textarea name="message" placeholder="Paste HL7 or ASTM message"></textarea><br><br><button>Parse and Upload Draft</button></form></body></html>`);
   });
 
@@ -213,9 +215,20 @@ function startHttpTestPage() {
   });
 }
 
-if (ENABLE_TCP) startTcpServer();
-if (ENABLE_HTTP_TEST_PAGE) startHttpTestPage();
+if (require.main === module) {
+  if (ENABLE_TCP) startTcpServer();
+  if (ENABLE_HTTP_TEST_PAGE) startHttpTestPage();
+  console.log(`[config] Preferred analyzer protocol: ${CONFIGURED_PROTOCOL}`);
 
-if (process.env.SERIAL_PORT_PATH) {
-  console.warn("[serial] SERIAL_PORT_PATH is set, but serial mode is intentionally a future hook. Use LAN/HL7 first; add a vetted serial library only after confirming analyzer configuration.");
+  if (process.env.SERIAL_PORT_PATH) {
+    console.warn("[serial] SERIAL_PORT_PATH is set, but serial mode is intentionally a future hook. Use LAN/HL7 first; add a vetted serial library only after confirming analyzer configuration.");
+  }
 }
+
+module.exports = {
+  detectProtocol,
+  parseMessage,
+  uploadParsedResult,
+  handleAnalyzerMessage,
+  mapMachineResultsToReport
+};
