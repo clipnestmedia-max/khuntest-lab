@@ -609,3 +609,200 @@ tr:hover td{background:#fbfdff}
 .attach-btn{background:#35b767;color:white;border:0;border-radius:4px;padding:7px 10px;font-weight:900;margin-right:6px;cursor:pointer;white-space:nowrap}
 .finding-modal{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.finding-modal.hidden{display:none!important}.finding-box{width:min(980px,96vw);max-height:90vh;background:#e6f7f6;border:2px solid #498d8a;box-shadow:0 25px 80px rgba(0,0,0,.35);display:flex;flex-direction:column}.finding-head{background:linear-gradient(90deg,#318d8c,#6cc4bd);color:white;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:22px;font-weight:900}.finding-head button{background:transparent;border:0;color:white;font-size:26px;cursor:pointer}.finding-table-wrap{overflow:auto;background:#f8fffd}.finding-table-wrap table{width:100%;border-collapse:collapse}.finding-table-wrap th{background:#d8eee9;color:#111827}.finding-table-wrap td,.finding-table-wrap th{border:1px solid #4f6367;padding:0}.finding-table-wrap input{width:100%;height:34px;border:0;background:#fffbe9;border-radius:0;padding:5px 8px;font-weight:800}.finding-table-wrap tr:nth-child(3) input{background:#e5e7eb;font-weight:900;color:#111827}.finding-footer{display:flex;gap:10px;align-items:center;padding:9px;background:#7dc8c1;flex-wrap:wrap}.finding-footer label{display:flex;align-items:center;gap:8px;margin:0;color:white;font-weight:900}.finding-footer input{height:32px;border:1px solid #698f94;border-radius:4px;padding:5px 8px;font-weight:900}.small-save{grid-column:auto!important;padding:9px 16px!important;font-size:14px!important;background:#df7489!important}
 @media(max-width:700px){.finding-head{font-size:16px}.finding-footer{display:grid}.attach-btn{margin-bottom:6px}}
+
+/* ===== Admin dashboard fixed-sidebar layout repair ===== */
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  overflow-x:hidden;
+}
+
+body{
+  background:#f3f6fb;
+}
+
+.admin-shell{
+  min-height:100vh;
+  width:100%;
+  display:flex;
+  align-items:stretch;
+  background:#f3f6fb;
+}
+
+.admin-sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:260px;
+  min-width:260px;
+  height:100vh;
+  background:linear-gradient(180deg,#06264a,#021b35);
+  color:#fff;
+  overflow-y:auto;
+  z-index:100;
+}
+
+.admin-main{
+  flex:1 1 auto;
+  min-width:0;
+  margin-left:260px;
+  width:calc(100% - 260px);
+  min-height:100vh;
+  background:#f3f6fb;
+  overflow-x:hidden;
+}
+
+.dashboard .admin-main{
+  margin-left:260px;
+}
+
+.admin-content,
+.dashboard-content,
+.main-content{
+  width:100%;
+  max-width:none;
+  box-sizing:border-box;
+  padding:28px 32px;
+}
+
+.admin-main.main{
+  padding:0;
+}
+
+.admin-topbar,
+.lab-header,
+.command-header{
+  width:100%;
+  box-sizing:border-box;
+}
+
+.admin-topbar{
+  margin:-28px -32px 22px;
+  padding:18px 32px;
+}
+
+.dashboard-section,
+.admin-section,
+.section-panel,
+.admin-main section{
+  width:100%;
+  max-width:none;
+  box-sizing:border-box;
+}
+
+.dashboard-grid,
+.stats-grid,
+.admin-metric-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
+
+.table-wrap,
+.admin-table-wrap,
+.table-card{
+  width:100%;
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.new-booking-layout,
+.entry-layout{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 310px;
+  gap:16px;
+  align-items:start;
+}
+
+.booking-form-card,
+.patient-entry-form,
+.machine-results-card,
+.tests-library-card,
+.legacy-shell,
+.form-card{
+  width:100%;
+  box-sizing:border-box;
+}
+
+.billing-summary-card,
+.billing-box{
+  position:sticky;
+  top:90px;
+  width:100%;
+  box-sizing:border-box;
+}
+
+.test-search-wrap,
+.test-search-box{
+  position:relative;
+  width:100%;
+}
+
+.test-suggestions{
+  position:absolute;
+  left:0;
+  right:0;
+  top:100%;
+  z-index:9999;
+  width:100%;
+}
+
+@media(max-width:1100px){
+  .entry-layout{
+    grid-template-columns:1fr;
+  }
+
+  .billing-box{
+    position:static;
+  }
+}
+
+@media(max-width:900px){
+  .admin-sidebar{
+    position:relative;
+    width:100%;
+    min-width:0;
+    height:auto;
+  }
+
+  .admin-main,
+  .dashboard .admin-main{
+    margin-left:0;
+    width:100%;
+  }
+
+  .admin-shell{
+    display:block;
+  }
+
+  .admin-content,
+  .dashboard-content,
+  .main-content{
+    padding:18px;
+  }
+
+  .admin-topbar{
+    position:static;
+    margin:0 0 18px;
+    padding:16px 0;
+  }
+
+  .new-booking-layout,
+  .entry-layout{
+    grid-template-columns:1fr;
+  }
+
+  .billing-summary-card,
+  .billing-box{
+    position:static;
+  }
+}

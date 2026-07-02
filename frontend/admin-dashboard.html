@@ -28,8 +28,8 @@
 </style>
 </head>
 <body>
-<div class="dashboard">
-  <aside class="sidebar">
+<div class="dashboard admin-shell">
+  <aside class="sidebar admin-sidebar">
     <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KHUNTEST LABS"><span>KHUNTEST LABS</span></a>
     <div class="side-menu">
       <button class="active" data-tab="overview" onclick="setTab('overview')">Dashboard</button>
@@ -46,6 +46,7 @@
   </aside>
 
   <main class="main admin-main">
+    <div class="admin-content">
     <div class="dash-top admin-topbar">
       <div><h1>Lab Command Center</h1><p>New booking → sample collection → report entry → release → WhatsApp share → print.</p></div>
       <div class="admin-top-actions">
@@ -250,6 +251,7 @@
         <span>Current URL: <strong id="adminDebugUrl">-</strong></span>
         <span>Firebase projectId: <strong id="adminDebugProject">khuntest-lab-e5966</strong></span>
       </div>
+    </div>
     </div>
   </main>
 </div>
