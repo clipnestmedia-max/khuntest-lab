@@ -1,0 +1,65 @@
+{
+  "name": "khuntest-lab-listener",
+  "version": "1.0.0",
+  "description": "Professional Windows desktop LIS listener for KhunTest Lab analyzers.",
+  "main": "src/main/main.js",
+  "author": "KhunTest Lab",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis --x64",
+    "test:parse": "node scripts/test-parser.js"
+  },
+  "dependencies": {
+    "electron-log": "^5.1.7",
+    "electron-updater": "^6.3.9",
+    "firebase": "^10.12.5",
+    "firebase-admin": "^12.5.0",
+    "sql.js": "^1.10.3"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.khuntest.lab.listener",
+    "productName": "KhunTest Lab Listener",
+    "artifactName": "KhunTestLab-Listener-Setup.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/sql.js/dist/sql-wasm.wasm",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KhunTest Lab Listener",
+      "runAfterFinish": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "KHUNTEST-LAB",
+        "repo": "khuntest-lab"
+      }
+    ]
+  }
+}

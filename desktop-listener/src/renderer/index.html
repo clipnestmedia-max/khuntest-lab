@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KhunTest Lab Listener</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="loginView" class="login-shell">
+    <section class="login-panel">
+      <img src="../assets/logo.png" alt="KhunTest Lab" class="logo">
+      <h1>KhunTest Lab</h1>
+      <p>Analyzer listener login</p>
+      <form id="loginForm" class="form-stack">
+        <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
+        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <label class="check-row"><input id="rememberMe" type="checkbox" checked>Remember Me</label>
+        <button class="primary" type="submit">Login</button>
+        <div id="loginMessage" class="message"></div>
+      </form>
+    </section>
+  </main>
+
+  <main id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/logo.png" alt="">
+        <div><b>KhunTest Lab</b><span>Listener</span></div>
+      </div>
+      <button data-tab="dashboard" class="nav active">Dashboard</button>
+      <button data-tab="analyzers" class="nav">Analyzers</button>
+      <button data-tab="settings" class="nav">Settings</button>
+      <button data-tab="logs" class="nav">Logs</button>
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="ghost">Logout</button>
+      </div>
+    </aside>
+
+    <section class="content">
+      <header class="topbar">
+        <div>
+          <h2 id="pageTitle">Dashboard</h2>
+          <span id="userEmail"></span>
+        </div>
+        <div class="toolbar">
+          <button id="stopBtn" class="ghost">Pause</button>
+          <button id="startBtn" class="primary">Start Listener</button>
+        </div>
+      </header>
+
+      <section id="dashboardTab" class="tab">
+        <div class="status-grid">
+          <div class="metric"><span>Computer Status</span><b id="computerStatus">Ready</b></div>
+          <div class="metric"><span>Firebase Connected</span><b id="firebaseStatus">No</b></div>
+          <div class="metric"><span>Internet Connected</span><b id="internetStatus">Checking</b></div>
+          <div class="metric"><span>Analyzer Connected</span><b id="analyzerStatus">No</b></div>
+          <div class="metric"><span>Listener Running</span><b id="listenerStatus">No</b></div>
+          <div class="metric"><span>Today's Imported Reports</span><b id="todayCount">0</b></div>
+          <div class="metric wide"><span>Last Sync Time</span><b id="lastSync">Never</b></div>
+          <div class="metric wide"><span>Offline Queue</span><b id="queueCount">0 pending</b></div>
+        </div>
+      </section>
+
+      <section id="analyzersTab" class="tab hidden">
+        <div class="section-head">
+          <h3>Analyzer Settings</h3>
+          <button id="addAnalyzerBtn" class="secondary">Add Analyzer</button>
+        </div>
+        <div id="analyzerList" class="analyzer-list"></div>
+        <button id="saveAnalyzersBtn" class="primary">Save</button>
+      </section>
+
+      <section id="settingsTab" class="tab hidden">
+        <div class="settings-grid">
+          <label>Firebase Project<input id="projectId"></label>
+          <label>API Key<input id="apiKey"></label>
+          <label>Lab ID<input id="labId"></label>
+          <label class="check-row"><input id="autoUpdate" type="checkbox">Auto Update</label>
+          <label class="check-row"><input id="darkMode" type="checkbox">Dark Mode</label>
+          <label class="check-row"><input id="autoStart" type="checkbox">Start listener after boot</label>
+        </div>
+        <button id="saveSettingsBtn" class="primary">Save Settings</button>
+      </section>
+
+      <section id="logsTab" class="tab hidden">
+        <div class="section-head">
+          <h3>Logs</h3>
+          <div>
+            <button id="exportLogsBtn" class="secondary">Export Logs</button>
+            <button id="openLogsBtn" class="ghost">Open Folder</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Level</th><th>Scope</th><th>Sample</th><th>Message</th></tr></thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="renderer.js"></script>
+</body>
+</html>
