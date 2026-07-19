@@ -33,13 +33,13 @@
     <a class="brand" href="index.html"><img src="assets/khuntest-logo.png" alt="KHUNTEST LABS"><span>KHUNTEST LABS</span></a>
     <div class="side-menu">
       <button class="active" data-tab="overview" onclick="setTab('overview')">Dashboard</button>
-      <button data-tab="bookings" onclick="setTab('bookings')">Bookings</button>
+      <button data-tab="patientEntry" onclick="setTab('patientEntry');preparePatientEntry()">New Booking</button>
       <button data-tab="reportGen" onclick="setTab('reportGen');renderReportBookingSelect()">Report Entry</button>
-      <button data-tab="tests" onclick="showAdminTestsLibrary()">Tests Library</button>
       <button data-tab="patients" onclick="setTab('patients')">Patients</button>
       <button data-tab="reports" onclick="setTab('reports')">Reports</button>
+      <button data-tab="bookings" onclick="setTab('bookings')">Bookings</button>
+      <button data-tab="tests" onclick="showAdminTestsLibrary()">Tests Library</button>
       <button data-tab="machineResults" onclick="setTab('machineResults');renderMachineResultsPanel()">Machine Results</button>
-      <button data-tab="patientEntry" onclick="setTab('patientEntry');preparePatientEntry()">New Booking</button>
       <button data-tab="settings" onclick="setTab('settings')">Settings</button>
       <button onclick="logout()">Logout</button>
     </div>
