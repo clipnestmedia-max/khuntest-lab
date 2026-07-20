@@ -253,10 +253,23 @@ th, td {
   border-bottom: 1px solid var(--line);
   text-align: left;
   font-size: 13px;
+  vertical-align: top;
 }
 
 th {
   color: var(--muted);
+}
+
+.raw-cell {
+  max-width: 420px;
+  max-height: 180px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--ink);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
 }
 
 @media (max-width: 900px) {

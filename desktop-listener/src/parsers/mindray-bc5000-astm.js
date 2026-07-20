@@ -26,7 +26,8 @@ function parseASTM(rawMessage, analyzer = {}) {
   };
 
   for (const record of records) {
-    const fields = record.split("|");
+    const normalizedRecord = record.replace(/^\d+(?=[A-Z]\|)/, "");
+    const fields = normalizedRecord.split("|");
     const type = fields[0];
     if (type === "H") parsed.analyzerName = fields[4] || parsed.analyzerName;
     if (type === "P") {

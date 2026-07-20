@@ -168,7 +168,8 @@ function renderLogs(logs) {
     <td>${escapeHtml(line.scope)}</td>
     <td>${escapeHtml(line.sample)}</td>
     <td>${escapeHtml(line.message)}</td>
-  </tr>`).join("") || `<tr><td colspan="5">No logs yet.</td></tr>`;
+    <td><pre class="raw-cell">${escapeHtml(truncateRaw(formatRawForDisplay(line.rawMessage || "")))}</pre></td>
+  </tr>`).join("") || `<tr><td colspan="6">No logs yet.</td></tr>`;
 }
 
 async function exportLogs() {
@@ -199,4 +200,19 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/`/g, "&#96;");
+}
+
+function truncateRaw(value) {
+  const text = String(value || "");
+  return text.length > 1200 ? `${text.slice(0, 1200)}\n... truncated ${text.length - 1200} chars` : text;
+}
+
+function formatRawForDisplay(value) {
+  return String(value || "")
+    .replace(/\x0b/g, "\\x0b")
+    .replace(/\x1c/g, "\\x1c")
+    .replace(/\x02/g, "\\x02")
+    .replace(/\x03/g, "\\x03")
+    .replace(/\x04/g, "\\x04")
+    .replace(/\r/g, "\\r\n");
 }

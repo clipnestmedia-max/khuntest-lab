@@ -62,34 +62,59 @@ class ListenerService {
   handleSocket(socket, analyzer) {
     this.analyzerConnected = true;
     this.logger.info("tcp", "Analyzer connected", { analyzer: analyzer.name, details: `${socket.remoteAddress}:${socket.remotePort}` });
-    let buffer = "";
+    let buffer = Buffer.alloc(0);
+    let handling = false;
 
     socket.on("data", async (chunk) => {
-      buffer += chunk.toString("utf8");
+      this.logger.rawPacket(chunk, {
+        analyzer: analyzer.name,
+        remote: `${socket.remoteAddress}:${socket.remotePort}`
+      });
+      buffer = Buffer.concat([buffer, chunk]);
       if (!this.messageLooksComplete(buffer)) return;
       const rawMessage = buffer;
-      buffer = "";
+      buffer = Buffer.alloc(0);
+      handling = true;
       const result = await this.handleMessage(rawMessage, analyzer);
+      handling = false;
       if (this.detectProtocol(rawMessage, analyzer) === "HL7") socket.write(buildAck(rawMessage, result.ok ? "AA" : "AE"));
     });
 
-    socket.on("close", () => {
+    socket.on("close", async () => {
       this.analyzerConnected = false;
+      if (buffer.length && !handling) {
+        const rawMessage = buffer;
+        buffer = Buffer.alloc(0);
+        this.logger.warn("tcp", "Analyzer disconnected with buffered data; parsing remaining bytes", {
+          analyzer: analyzer.name,
+          details: `${rawMessage.length} bytes`,
+          rawMessage: rawMessage.toString("utf8")
+        });
+        await this.handleMessage(rawMessage, analyzer);
+      }
       this.logger.info("tcp", "Analyzer disconnected", { analyzer: analyzer.name });
     });
     socket.on("error", (err) => this.logger.error("tcp", err.message, { analyzer: analyzer.name }));
   }
 
   messageLooksComplete(buffer) {
-    return buffer.includes("\x1c\r")
-      || buffer.includes("\x1c\n")
-      || (!buffer.startsWith("\x0b") && (/\rOBX\|/.test(buffer) || /\rL\|/.test(buffer)));
+    const text = buffer.toString("utf8");
+    return text.includes("\x1c\r")
+      || text.includes("\x1c\n")
+      || (!text.startsWith("\x0b") && (/\rOBX\|/.test(text) || /\r\d?L\|/.test(text) || /\n\d?L\|/.test(text)));
   }
 
   async handleMessage(rawMessage, analyzer) {
+    const rawText = this.rawText(rawMessage);
+    const protocol = this.detectProtocol(rawMessage);
     try {
+      this.logger.info("message", `Detected ${protocol} analyzer message`, {
+        analyzer: analyzer.name,
+        details: `${Buffer.byteLength(rawText, "utf8")} bytes`,
+        rawMessage: rawText
+      });
       const parsed = this.parseMessage(rawMessage, analyzer);
-      const payload = { rawMessage, parsed, analyzer, receivedAt: new Date().toISOString() };
+      const payload = { rawMessage: rawText, parsed, analyzer, receivedAt: new Date().toISOString() };
       try {
         await this.firebase.uploadMachineResult(payload);
       } catch (err) {
@@ -106,23 +131,35 @@ class ListenerService {
       return { ok: true, parsed };
     } catch (err) {
       this.errors.unshift(err.message);
-      this.logger.error("message", "Unable to parse analyzer message", { analyzer: analyzer.name, details: err.message });
+      this.logger.rawParserError(rawText, err.message, {
+        analyzer: analyzer.name,
+        protocol
+      });
+      this.logger.error("message", "Unable to parse analyzer message", {
+        analyzer: analyzer.name,
+        details: `protocol=${protocol}; error=${err.message}`,
+        rawMessage: rawText
+      });
       return { ok: false, error: err.message };
     }
   }
 
-  detectProtocol(message, analyzer = {}) {
-    const clean = stripMllp(message).trim();
-    if (clean.startsWith("MSH|")) return "HL7";
-    if (/^H\|/m.test(clean) || /^P\|/m.test(clean) || /^O\|/m.test(clean)) return "ASTM";
-    return String(analyzer.protocol || "HL7").toUpperCase();
+  detectProtocol(message) {
+    const clean = stripMllp(this.rawText(message)).replace(/[\x02\x03\x04\x05\x06\x15\x17]/g, "").trim();
+    if (/(^|\r|\n)MSH\|/.test(clean)) return "HL7";
+    if (/(^|\r|\n)\d?[HPOCRL]\|/.test(clean)) return "ASTM";
+    return "UNKNOWN";
   }
 
   parseMessage(rawMessage, analyzer = {}) {
-    const protocol = this.detectProtocol(rawMessage, analyzer);
+    const protocol = this.detectProtocol(rawMessage);
     if (protocol === "HL7") return parseHL7(rawMessage, analyzer);
     if (protocol === "ASTM") return parseASTM(rawMessage, analyzer);
-    throw new Error("Unsupported analyzer message format.");
+    throw new Error("Unsupported analyzer message format. Raw data is neither HL7 nor ASTM.");
+  }
+
+  rawText(rawMessage) {
+    return Buffer.isBuffer(rawMessage) ? rawMessage.toString("utf8") : String(rawMessage || "");
   }
 
   async testConnection(analyzer) {
