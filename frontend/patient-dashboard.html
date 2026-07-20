@@ -122,7 +122,15 @@
       border-radius: 8px;
       font-size: 13px;
       font-weight: 800;
+      border: 0;
+      cursor: pointer;
     }
+    .btn-red { background:#d60000; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+    .profile-grid { display:grid; grid-template-columns:repeat(2,minmax(220px,1fr)); gap:12px; margin-top:14px; }
+    .profile-grid .full { grid-column:1/-1; }
+    input,select,textarea{width:100%;padding:10px;border:1px solid #d9e2ef;border-radius:8px;margin-top:6px}
+    .msg{margin-top:10px;font-weight:800;color:#166534}
 
     .empty {
       padding: 20px;
@@ -142,6 +150,7 @@
       table {
         font-size: 12px;
       }
+      .profile-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -156,6 +165,24 @@
     <div class="welcome">
       <h1 id="welcomeName">Welcome Patient</h1>
       <p id="patientEmail">Loading...</p>
+      <div class="toolbar">
+        <a class="btn btn-red" href="booking.html">New Booking</a>
+        <button class="btn" type="button" onclick="toggleProfile()">Edit Profile</button>
+        <button class="btn" type="button" onclick="changePassword()">Change Password</button>
+      </div>
+      <form id="profileForm" class="profile-grid" style="display:none;">
+        <label>Full Name<input name="name"></label>
+        <label>Age<input name="age"></label>
+        <label>Gender<select name="gender"><option></option><option>Male</option><option>Female</option><option>Other</option></select></label>
+        <label>Mobile<input name="phone"></label>
+        <label>WhatsApp<input name="whatsapp"></label>
+        <label>Email<input name="email" readonly></label>
+        <label class="full">Address<textarea name="address"></textarea></label>
+        <label>City<input name="city"></label>
+        <label>Pincode<input name="pincode"></label>
+        <div class="full"><button class="btn btn-red" type="submit">Save Profile</button></div>
+        <div id="profileMsg" class="msg full"></div>
+      </form>
     </div>
 
     <div class="cards">
@@ -182,7 +209,7 @@
   </div>
 
   <script type="module">
-    import { auth, getCurrentUserRole, getPatientBookings, getReportByBillNo, logoutUser } from "./firebase-service.js";
+    import { auth, getCurrentUserRole, getPatientBookings, getReportByBillNo, listenMyOnlineBookings, logoutUser, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
     function safe(value) {
@@ -192,6 +219,9 @@
     function getUser() {
       try { return JSON.parse(localStorage.getItem("auth_user") || "{}"); } catch (e) { return {}; }
     }
+    let currentAuthUser = null;
+    let currentProfile = {};
+    let onlineRows = [];
 
     window.logout = async function() {
       await logoutUser();
@@ -206,6 +236,8 @@
         });
       });
       const user = getUser();
+      currentAuthUser = current;
+      currentProfile = user;
       const role = current ? await getCurrentUserRole() : null;
       if (!current || role !== "patient") {
         window.location.href = "patient-login.html";
@@ -213,6 +245,46 @@
       }
       return user;
     }
+
+    window.toggleProfile = function() {
+      const form = document.getElementById("profileForm");
+      form.style.display = form.style.display === "none" ? "grid" : "none";
+    };
+
+    window.changePassword = async function() {
+      const email = currentProfile.email || currentAuthUser?.email;
+      if (!email) return alert("Email not found.");
+      await resetPatientPassword(email);
+      alert("Password reset email sent.");
+    };
+
+    function fillProfileForm(user) {
+      const f = document.getElementById("profileForm");
+      ["name","age","gender","phone","whatsapp","email","address","city","pincode"].forEach((key) => {
+        if (f.elements[key]) f.elements[key].value = user[key] || "";
+      });
+    }
+
+    document.getElementById("profileForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      await savePatientProfile(currentAuthUser.uid, { ...data, role: "patient", isActive: true, uid: currentAuthUser.uid });
+      localStorage.setItem("auth_user", JSON.stringify({ ...currentProfile, ...data }));
+      currentProfile = { ...currentProfile, ...data };
+      document.getElementById("profileMsg").textContent = "Profile updated.";
+    });
+
+    async function requestOnlineEdit(id) {
+      alert("This booking is already confirmed. Please call or WhatsApp KHUNTEST LABS to request changes.");
+    }
+
+    window.editOnlineBooking = function(id) {
+      const row = onlineRows.find((b) => String(b.id || b.bookingId) === String(id));
+      if (!row) return;
+      const status = String(row.bookingStatus || row.status || "New");
+      if (!["New", "Pending Confirmation"].includes(status)) return requestOnlineEdit(id);
+      window.location.href = "booking.html";
+    };
 
     async function loadPatientDashboard() {
       const user = await protectPage();
@@ -223,6 +295,7 @@
 
       document.getElementById("patientEmail").innerText =
         user.email || "";
+      fillProfileForm(user);
 
       try {
         const patientBookings = await getPatientBookings(user.email, user.phone);
@@ -231,16 +304,42 @@
           return bill ? Boolean(await getReportByBillNo(bill)) : false;
         }));
 
+        if (currentAuthUser) {
+          listenMyOnlineBookings(currentAuthUser.uid, (rows) => {
+            onlineRows = rows;
+            document.getElementById("totalBookings").innerText = patientBookings.length + onlineRows.length;
+            renderBookings(patientBookings, reportFlags);
+          }, (err) => console.error(err));
+        }
         document.getElementById("totalBookings").innerText = patientBookings.length;
         document.getElementById("totalReports").innerText = reportFlags.filter(Boolean).length;
 
-        const area = document.getElementById("bookingArea");
-
-        if (!patientBookings.length) {
+        if (!patientBookings.length && !onlineRows.length) {
+          const area = document.getElementById("bookingArea");
           area.innerHTML = "<div class='empty'>No booking found for this account.</div>";
           return;
         }
 
+        renderBookings(patientBookings, reportFlags);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("bookingArea").innerHTML =
+          "<div class='empty'>Unable to load bookings.</div>";
+      }
+    }
+
+    function renderBookings(patientBookings, reportFlags) {
+        const area = document.getElementById("bookingArea");
+        const onlineHtml = onlineRows.map((b) => `
+          <tr>
+            <td>${safe(b.bookingId || b.id || "-")}</td>
+            <td>${safe(b.patientName || currentProfile.name || "-")}</td>
+            <td>${safe((b.tests || b.selectedTests || []).map(t => t.name || t.testName).join(", "))}</td>
+            <td>₹${Number(b.totalAmount || 0).toFixed(2)}</td>
+            <td>${safe(b.bookingStatus || b.status || "New")}<br><small>Payment: ${safe(b.paymentStatus || "Pending")}</small></td>
+            <td><button class="btn" onclick="editOnlineBooking('${safe(b.id || b.bookingId)}')">Edit</button></td>
+          </tr>
+        `).join("");
         area.innerHTML = `
           <table>
             <thead>
@@ -274,14 +373,10 @@
                   </td>
                 </tr>
               `}).join("")}
+              ${onlineHtml}
             </tbody>
           </table>
         `;
-      } catch (err) {
-        console.error(err);
-        document.getElementById("bookingArea").innerHTML =
-          "<div class='empty'>Unable to load bookings.</div>";
-      }
     }
 
     document.addEventListener("DOMContentLoaded", loadPatientDashboard);

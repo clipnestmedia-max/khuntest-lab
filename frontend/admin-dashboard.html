@@ -25,6 +25,15 @@
   .admin-debug-box b { display: block; margin-bottom: 6px; color: #062b59; }
   .admin-debug-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px 14px; }
   .status.review { background: #fff7ed; color: #9a3412; }
+  .nav-badge { float:right; min-width:20px; padding:1px 6px; border-radius:999px; background:#d60000; color:#fff; font-size:12px; text-align:center; }
+  .admin-toast { position: fixed; right: 18px; top: 18px; z-index: 80; width: min(360px, calc(100vw - 36px)); background:#fff; border-left:5px solid #d60000; border-radius:8px; box-shadow:0 18px 42px rgba(8,20,40,.22); padding:14px; }
+  .admin-toast.hidden { display:none; }
+  .admin-toast-actions { display:flex; gap:8px; margin-top:10px; }
+  .online-filter-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .edit-grid { display:grid; grid-template-columns:repeat(2,minmax(220px,1fr)); gap:12px; }
+  .edit-grid .full { grid-column:1/-1; }
+  .sticky-actions { position: sticky; bottom:0; background:#fff; border-top:1px solid #dce4f2; padding-top:12px; display:flex; gap:10px; justify-content:flex-end; }
+  @media(max-width:780px){.edit-grid{grid-template-columns:1fr}.admin-toast{left:18px;right:18px;width:auto}}
 </style>
 </head>
 <body>
@@ -34,6 +43,7 @@
     <div class="side-menu">
       <button class="active" data-tab="overview" onclick="setTab('overview')">Dashboard</button>
       <button data-tab="patientEntry" onclick="setTab('patientEntry');preparePatientEntry()">New Booking</button>
+      <button data-tab="onlineBookings" onclick="setTab('onlineBookings');renderOnlineBookingsPanel()">Online Bookings <span id="onlineBookingBadge" class="nav-badge hidden">0</span></button>
       <button data-tab="reportGen" onclick="setTab('reportGen');renderReportBookingSelect()">Report Entry</button>
       <button data-tab="patients" onclick="setTab('patients')">Patients</button>
       <button data-tab="reports" onclick="setTab('reports')">Reports</button>
@@ -67,6 +77,10 @@
         <div class="metric"><span>Patients</span><b id="mPatients">0</b></div>
         <div class="metric"><span>Total Revenue</span><b id="mRevenue">₹0</b></div>
         <div class="metric"><span>Tests Available</span><b id="mTests">0</b></div>
+        <div class="metric" onclick="setTab('onlineBookings');setOnlineStatusFilter('')"><span>Online Bookings Today</span><b id="mOnlineToday">0</b></div>
+        <div class="metric" onclick="setTab('onlineBookings');setOnlineStatusFilter('New')"><span>New Online Bookings</span><b id="mOnlineNew">0</b></div>
+        <div class="metric" onclick="setTab('onlineBookings');setOnlineCollectionFilter('Home Collection')"><span>Home Collections Pending</span><b id="mHomePending">0</b></div>
+        <div class="metric" onclick="setTab('onlineBookings');setOnlinePaymentFilter('Pending')"><span>Online Payments Pending</span><b id="mPaymentPending">0</b></div>
       </div>
       <div class="quick-actions">
         <button class="btn btn-red" onclick="setTab('patientEntry');preparePatientEntry()">New Booking</button>
@@ -76,7 +90,20 @@
         <button class="btn btn-outline" type="button" id="overviewCleanup">Old Data Cleanup</button>
       </div>
       <div class="notice">New flow added: Patient Entry → Add Tests/Package → Save Billing → Report Generate → Fill Findings → Release Report → Patient Download.</div>
+      <div class="table-card"><table><thead><tr><th>Recent Online Booking</th><th>Patient</th><th>Collection</th><th>Action</th></tr></thead><tbody id="recentOnlineBookingsBody"></tbody></table></div>
       <div class="table-card"><table><thead><tr><th>Pending Report</th><th>Patient</th><th>Tests</th><th>Action</th></tr></thead><tbody id="pendingReportsBody"></tbody></table></div>
+    </section>
+
+    <section data-panel="onlineBookings" class="hidden">
+      <h2>Online Bookings</h2>
+      <div class="toolbar online-filter-grid">
+        <input id="onlineBookingSearch" placeholder="Booking, patient, phone..." oninput="renderOnlineBookingsPanel()">
+        <input id="onlineDateFilter" type="date" onchange="renderOnlineBookingsPanel()">
+        <select id="onlineStatusFilter" onchange="renderOnlineBookingsPanel()"><option value="">All booking status</option><option>New</option><option>Pending Confirmation</option><option>Confirmed</option><option>Assigned</option><option>Sample Collected</option><option>Processing</option><option>Report Ready</option><option>Completed</option><option>Cancelled</option></select>
+        <select id="onlinePaymentFilter" onchange="renderOnlineBookingsPanel()"><option value="">All payment status</option><option>Pending</option><option>Paid</option><option>Partial</option><option>Failed</option></select>
+        <select id="onlineCollectionFilter" onchange="renderOnlineBookingsPanel()"><option value="">All collection types</option><option>Home Collection</option><option>Visit Lab</option></select>
+      </div>
+      <div class="table-card"><table><thead><tr><th>Booking</th><th>Patient</th><th>Phone</th><th>Collection</th><th>Tests</th><th>Total</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead><tbody id="onlineBookingsBody"></tbody></table></div>
     </section>
 
     <section data-panel="patientEntry" class="hidden">
@@ -157,6 +184,7 @@
           <select id="reportBookingSelect" onchange="loadReportEditor(this.value)"></select>
         </div>
         <div id="reportEditor" class="hidden">
+          <div class="toolbar"><button class="btn btn-outline btn-small" type="button" onclick="editCurrentReportBooking()">Edit Patient / Booking Details</button></div>
           <div class="legacy-form-grid report-info-grid">
             <div>
               <label>REMOTE- NO :</label><input id="rRemoteNo" readonly>
@@ -221,7 +249,7 @@
       <div class="table-card"><table><thead><tr><th>Test</th><th>Category</th><th>Price</th><th>Parameters</th><th>Status</th><th>Actions</th></tr></thead><tbody id="testsLibraryBody"></tbody></table></div>
     </section>
 
-    <section data-panel="patients" class="hidden"><h2>Patients</h2><div class="toolbar"><input id="patientSearch" placeholder="Search patient, phone, email..." oninput="renderPatientsPanel()"></div><div class="table-card"><table><thead><tr><th>Patient</th><th>Contact</th><th>Bookings</th><th>Revenue</th><th>Last Visit</th></tr></thead><tbody id="patientsBody"></tbody></table></div></section>
+    <section data-panel="patients" class="hidden"><h2>Patients</h2><div class="toolbar"><input id="patientSearch" placeholder="Search patient, phone, email..." oninput="renderPatientsPanel()"></div><div class="table-card"><table><thead><tr><th>Patient</th><th>Contact</th><th>Bookings</th><th>Revenue</th><th>Last Visit</th><th>Actions</th></tr></thead><tbody id="patientsBody"></tbody></table></div></section>
     <section data-panel="reports" class="hidden"><h2>Released Reports</h2><div class="toolbar"><input id="reportSearch" placeholder="Search bill, patient, phone..." oninput="renderReportsPanel()"></div><div class="table-card"><table><thead><tr><th>Bill</th><th>Patient</th><th>Tests</th><th>Released</th><th>Actions</th></tr></thead><tbody id="reportsBody"></tbody></table></div></section>
     <section data-panel="machineResults" class="hidden">
       <h2>Machine Results</h2>
@@ -255,16 +283,23 @@
     </div>
   </main>
 </div>
+<div id="adminToast" class="admin-toast hidden"></div>
 <div id="parameterModal" class="admin-modal hidden">
   <div class="admin-modal-box">
     <div class="admin-modal-head"><b id="parameterModalTitle">Test Parameters</b><button type="button" onclick="closeParameterModal()">×</button></div>
     <div class="admin-modal-body" id="parameterModalBody"></div>
   </div>
 </div>
+<div id="bookingEditModal" class="admin-modal hidden">
+  <div class="admin-modal-box">
+    <div class="admin-modal-head"><b id="bookingEditTitle">Edit Booking</b><button type="button" onclick="closeBookingEditModal()">×</button></div>
+    <div class="admin-modal-body" id="bookingEditBody"></div>
+  </div>
+</div>
 <script type="module">
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { collection, getDocs, getDoc, addDoc, updateDoc, doc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, getDocs, getDoc, addDoc, updateDoc, setDoc, doc, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 console.log("Admin dashboard loading...");
 console.log("Firebase db:", db);
@@ -282,6 +317,11 @@ let firebaseBookings = [];
 let firebaseReports = [];
 let firebaseTests = [];
 let machineResults = [];
+let onlineBookings = [];
+let adminNotifications = [];
+let onlineBookingsUnsub = null;
+let notificationsUnsub = null;
+let seenNotificationIds = new Set(JSON.parse(localStorage.getItem("khuntest_seen_notifications") || "[]"));
 let currentReportBooking = null;
 let currentAdminUser = null;
 let lastFirestoreError = "";
@@ -507,6 +547,95 @@ async function getMachineResults() {
   }
   return machineResults;
 }
+
+function listenRealtimeAdminCollections() {
+  if (!onlineBookingsUnsub) {
+    onlineBookingsUnsub = onSnapshot(query(collection(db, "onlineBookings"), orderBy("createdAt", "desc")), (snap) => {
+      onlineBookings = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+      renderFirebaseMetrics();
+      renderOnlineBookingsPanel();
+      renderRecentOnlineBookings();
+      renderPatientsPanel();
+      renderDebugPanel();
+    }, (err) => showAdminError(err.message || String(err)));
+  }
+  if (!notificationsUnsub) {
+    notificationsUnsub = onSnapshot(query(collection(db, "adminNotifications"), orderBy("createdAt", "desc")), (snap) => {
+      adminNotifications = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+      renderNotificationBadge();
+      showLatestOnlineBookingToast();
+    }, (err) => console.warn("Notifications listener failed", err));
+  }
+}
+
+function onlineTests(row) {
+  return Array.isArray(row.selectedTests) && row.selectedTests.length
+    ? row.selectedTests
+    : Array.isArray(row.tests)
+      ? row.tests
+      : [];
+}
+
+function onlineStatus(row) {
+  return row.bookingStatus || row.status || "New";
+}
+
+function onlineDate(row) {
+  return row.preferredDate || row.date || createdDateKey(row.createdAt);
+}
+
+function renderNotificationBadge() {
+  const unread = adminNotifications.filter((n) => !n.isRead && n.type === "online_booking").length;
+  const badge = document.getElementById("onlineBookingBadge");
+  if (!badge) return;
+  badge.textContent = unread;
+  badge.classList.toggle("hidden", unread === 0);
+}
+
+function showLatestOnlineBookingToast() {
+  const latest = adminNotifications.find((n) => n.type === "online_booking" && !n.isRead && !seenNotificationIds.has(n.id));
+  if (!latest) return;
+  seenNotificationIds.add(latest.id);
+  localStorage.setItem("khuntest_seen_notifications", JSON.stringify(Array.from(seenNotificationIds).slice(-200)));
+  const box = document.getElementById("adminToast");
+  if (!box) return;
+  box.innerHTML = `<b>${html(latest.title || "New Online Booking")}</b><p>${html(latest.message || "")}</p><div class="admin-toast-actions"><button class="btn btn-red btn-small" onclick="viewOnlineBookingFromNotification('${html(latest.bookingId)}','${html(latest.id)}')">View Booking</button><button class="btn btn-outline btn-small" onclick="dismissAdminNotification('${html(latest.id)}')">Dismiss</button></div>`;
+  box.classList.remove("hidden");
+  playAdminNotificationSound();
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("New Online Booking", { body: "A new patient booking needs admin review." });
+  }
+}
+
+function playAdminNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.05;
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start();
+    setTimeout(() => { oscillator.stop(); ctx.close(); }, 180);
+  } catch (_err) {}
+}
+
+window.dismissAdminNotification = async function(notificationId) {
+  await setDoc(doc(db, "adminNotifications", notificationId), {
+    isRead: true,
+    readAt: serverTimestamp(),
+    readBy: currentAdmin?.email || currentAdmin?.uid || ""
+  }, { merge: true });
+  document.getElementById("adminToast")?.classList.add("hidden");
+};
+
+window.viewOnlineBookingFromNotification = async function(bookingId, notificationId) {
+  if (notificationId) await window.dismissAdminNotification(notificationId);
+  window.setTab("onlineBookings");
+  document.getElementById("onlineBookingSearch").value = bookingId || "";
+  renderOnlineBookingsPanel();
+};
 
 async function loadReports() {
   return getReports();
@@ -825,6 +954,8 @@ async function refreshFirebaseDashboard() {
   renderPatientsPanel();
   renderReportsPanel();
   renderMachineResultsPanel();
+  renderOnlineBookingsPanel();
+  renderRecentOnlineBookings();
   renderDebugPanel();
 }
 
@@ -855,6 +986,7 @@ function renderDebugPanel() {
 function renderFirebaseMetrics() {
   const today = new Date().toISOString().slice(0, 10);
   const todayBookings = firebaseBookings.filter((b) => (b.date || createdDateKey(b.createdAt)) === today);
+  const onlineToday = onlineBookings.filter((b) => onlineDate(b) === today || createdDateKey(b.createdAt) === today);
   const releasedCount = firebaseReports.filter((r) => (r.reportStatus || r.status || "") === "Final").length;
   const pendingStatuses = new Set(["pending", "confirmed", "sample collected", "report entry"]);
   document.getElementById("mBookings").textContent = firebaseBookings.length;
@@ -866,7 +998,253 @@ function renderFirebaseMetrics() {
   document.getElementById("mReports").textContent = releasedCount;
   document.getElementById("mReportPending").textContent = Math.max(firebaseBookings.length - releasedCount, 0);
   document.getElementById("mTests").textContent = allLabTests.length;
+  document.getElementById("mOnlineToday").textContent = onlineToday.length;
+  document.getElementById("mOnlineNew").textContent = onlineBookings.filter((b) => ["new", "pending confirmation"].includes(String(onlineStatus(b)).toLowerCase())).length;
+  document.getElementById("mHomePending").textContent = onlineBookings.filter((b) => b.collectionType === "Home Collection" && !["completed", "cancelled"].includes(String(onlineStatus(b)).toLowerCase())).length;
+  document.getElementById("mPaymentPending").textContent = onlineBookings.filter((b) => String(b.paymentStatus || "Pending").toLowerCase() === "pending").length;
 }
+
+window.setOnlineStatusFilter = function(status) {
+  document.getElementById("onlineStatusFilter").value = status || "";
+  renderOnlineBookingsPanel();
+};
+
+window.setOnlineCollectionFilter = function(collectionType) {
+  document.getElementById("onlineCollectionFilter").value = collectionType || "";
+  renderOnlineBookingsPanel();
+};
+
+window.setOnlinePaymentFilter = function(paymentStatus) {
+  document.getElementById("onlinePaymentFilter").value = paymentStatus || "";
+  renderOnlineBookingsPanel();
+};
+
+function onlineBookingRows() {
+  const q = (document.getElementById("onlineBookingSearch")?.value || "").toLowerCase();
+  const date = document.getElementById("onlineDateFilter")?.value || "";
+  const status = document.getElementById("onlineStatusFilter")?.value || "";
+  const payment = document.getElementById("onlinePaymentFilter")?.value || "";
+  const collectionType = document.getElementById("onlineCollectionFilter")?.value || "";
+  return onlineBookings.filter((b) => {
+    const tests = onlineTests(b).map((test) => test.name || test.testName || "").join(", ");
+    const haystack = [b.bookingId, b.id, b.patientName, b.phone, b.whatsapp, tests].join(" ").toLowerCase();
+    return (!q || haystack.includes(q))
+      && (!date || onlineDate(b) === date || createdDateKey(b.createdAt) === date)
+      && (!status || onlineStatus(b) === status)
+      && (!payment || (b.paymentStatus || "Pending") === payment)
+      && (!collectionType || b.collectionType === collectionType);
+  });
+}
+
+window.renderOnlineBookingsPanel = function() {
+  const body = document.getElementById("onlineBookingsBody");
+  if (!body) return;
+  const rows = onlineBookingRows();
+  body.innerHTML = rows.length ? rows.map((b) => {
+    const tests = onlineTests(b).map((test) => test.name || test.testName || "").join(", ");
+    const id = b.id || b.bookingId;
+    return `<tr>
+      <td><b>${html(b.bookingId || id)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
+      <td>${html(b.patientName || "")}<br><small>${html(b.email || b.patientEmail || "")}</small></td>
+      <td>${html(b.phone || "")}<br><small>${html(b.whatsapp || "")}</small></td>
+      <td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || b.time || "")}</small></td>
+      <td>${html(tests)}</td>
+      <td>${rupees(b.totalAmount || 0)}</td>
+      <td>${html(b.paymentMode || "")}<br><span class="status ${String(b.paymentStatus || "Pending").toLowerCase() === "paid" ? "reported" : "pending"}">${html(b.paymentStatus || "Pending")}</span></td>
+      <td><select onchange="updateOnlineBookingStatus('${html(id)}', this.value)">${["New","Pending Confirmation","Confirmed","Assigned","Sample Collected","Processing","Report Ready","Completed","Cancelled"].map((x) => `<option ${onlineStatus(b) === x ? "selected" : ""}>${x}</option>`).join("")}</select></td>
+      <td>
+        <button class="btn btn-outline btn-small" onclick="viewOnlineBooking('${html(id)}')">View details</button>
+        <button class="btn btn-navy btn-small" onclick="openBookingEditModal('online','${html(id)}')">Edit</button>
+        <button class="btn btn-green btn-small" onclick="confirmOnlineBooking('${html(id)}')">Confirm</button>
+        <button class="btn btn-outline btn-small" onclick="assignOnlineFieldBoy('${html(id)}')">Assign field boy</button>
+        <button class="btn btn-outline btn-small" onclick="moveOnlineToReportEntry('${html(id)}')">Move to report entry</button>
+        <a class="report-link" href="tel:${html(b.phone || "")}">Call patient</a>
+        <a class="report-link" target="_blank" href="https://wa.me/${html(normalizeIndianPhone(b.whatsapp || b.phone))}">Send WhatsApp</a>
+        <button class="btn btn-red btn-small" onclick="cancelOnlineBooking('${html(id)}')">Cancel</button>
+      </td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="9">No online bookings found.</td></tr>`;
+};
+
+function renderRecentOnlineBookings() {
+  const body = document.getElementById("recentOnlineBookingsBody");
+  if (!body) return;
+  const rows = onlineBookings.slice(0, 6);
+  body.innerHTML = rows.length ? rows.map((b) => `<tr><td><b>${html(b.bookingId || b.id)}</b><br><small>${html(onlineStatus(b))}</small></td><td>${html(b.patientName || "")}<br><small>${html(b.phone || "")}</small></td><td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || "")}</small></td><td><button class="btn btn-navy btn-small" onclick="setTab('onlineBookings');document.getElementById('onlineBookingSearch').value='${html(b.bookingId || b.id)}';renderOnlineBookingsPanel()">View</button></td></tr>`).join("") : `<tr><td colspan="4">No online bookings yet.</td></tr>`;
+}
+
+function bookingByKind(kind, id) {
+  return kind === "online"
+    ? onlineBookings.find((b) => String(b.id || b.bookingId) === String(id))
+    : firebaseBookings.find((b) => String(b.id) === String(id));
+}
+
+function testsTextareaValue(row) {
+  return onlineTests(row).length
+    ? onlineTests(row).map((test) => `${test.name || test.testName || ""} | ${test.price || 0} | ${test.category || ""} | ${test.testCode || ""}`).join("\n")
+    : "";
+}
+
+function parseTestsTextarea(text, previousCount) {
+  const rows = String(text || "").split(/\n+/).map((line) => {
+    const [name, price, category, testCode] = line.split("|").map((part) => part.trim());
+    return name ? selectedTestSnapshot({ name, price: Number(price || 0), category: category || "Lab Test", testCode: testCode || name }) : null;
+  }).filter(Boolean);
+  if (rows.length < previousCount && !confirm("You removed one or more tests. Continue?")) return null;
+  return rows;
+}
+
+window.openBookingEditModal = function(kind, id) {
+  const row = bookingByKind(kind, id);
+  if (!row) return alert("Booking not found.");
+  const modal = document.getElementById("bookingEditModal");
+  const body = document.getElementById("bookingEditBody");
+  const title = document.getElementById("bookingEditTitle");
+  title.textContent = kind === "online" ? `Edit Online Booking ${row.bookingId || row.id}` : `Edit Booking ${reportBill(row)}`;
+  body.innerHTML = `
+    <form id="bookingEditForm" class="edit-grid">
+      <label>Patient name<input name="patientName" value="${html(row.patientName || "")}"></label>
+      <label>Age<input name="age" value="${html(row.age || "")}"></label>
+      <label>Gender<select name="gender">${["Male","Female","Other"].map((x) => `<option ${row.gender === x ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+      <label>Phone<input name="phone" value="${html(row.phone || "")}"></label>
+      <label>WhatsApp<input name="whatsapp" value="${html(row.whatsapp || row.phone || "")}"></label>
+      <label>Email<input name="email" type="email" value="${html(row.email || row.patientEmail || "")}"></label>
+      <label class="full">Full address<textarea name="address">${html(row.address || "")}</textarea></label>
+      <label>Referring doctor<input name="doctor" value="${html(row.referringDoctor || row.doctor || row.refBy || "")}"></label>
+      <label>Collection date<input name="collectionDate" type="date" value="${html(row.preferredDate || row.collectionDate || row.date || "")}"></label>
+      <label>Reporting date<input name="reportingDate" type="datetime-local" value="${html(row.reportingDate || "")}"></label>
+      <label>Field boy<input name="staff" value="${html(row.staff || row.fieldBoyName || "")}"></label>
+      <label>Associate lab<input name="associateLab" value="${html(row.associateLab || "")}"></label>
+      <label>Discount<input name="discount" type="number" value="${Number(row.discount || 0)}"></label>
+      <label>Payment mode<input name="paymentMode" value="${html(row.paymentMode || row.payment || "")}"></label>
+      <label>Payment status<select name="paymentStatus">${["Pending","Paid","Partial","Failed"].map((x) => `<option ${row.paymentStatus === x ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+      <label class="full">Remarks<textarea name="remarks">${html(row.remarks || row.notes || "")}</textarea></label>
+      <label class="full">Selected tests and prices<textarea name="tests" rows="6">${html(testsTextareaValue(row))}</textarea></label>
+      <div class="sticky-actions full"><button class="btn btn-outline" type="button" onclick="closeBookingEditModal()">Cancel</button><button class="btn btn-red" type="submit">Save Changes</button></div>
+    </form>`;
+  document.getElementById("bookingEditForm").addEventListener("submit", (event) => saveBookingEdit(event, kind, id, onlineTests(row).length));
+  modal.classList.remove("hidden");
+};
+
+window.closeBookingEditModal = function() {
+  document.getElementById("bookingEditModal")?.classList.add("hidden");
+};
+
+async function saveBookingEdit(event, kind, id, previousTestCount) {
+  event.preventDefault();
+  const f = event.target;
+  const tests = parseTestsTextarea(f.tests.value, previousTestCount);
+  if (!tests) return;
+  const subtotal = tests.reduce((sum, test) => sum + Number(test.price || 0), 0);
+  const discount = Number(f.discount.value || 0);
+  const patch = {
+    patientName: f.patientName.value.trim(),
+    age: f.age.value,
+    gender: f.gender.value,
+    phone: f.phone.value.trim(),
+    whatsapp: f.whatsapp.value.trim(),
+    email: f.email.value.trim().toLowerCase(),
+    patientEmail: f.email.value.trim().toLowerCase(),
+    address: f.address.value.trim(),
+    doctor: f.doctor.value.trim(),
+    referringDoctor: f.doctor.value.trim(),
+    refBy: f.doctor.value.trim(),
+    collectionDate: f.collectionDate.value,
+    preferredDate: f.collectionDate.value,
+    date: f.collectionDate.value,
+    reportingDate: f.reportingDate.value,
+    staff: f.staff.value.trim(),
+    fieldBoyName: f.staff.value.trim(),
+    associateLab: f.associateLab.value.trim(),
+    selectedTests: tests,
+    tests,
+    test: tests.map((test) => test.name).join(", "),
+    subtotal,
+    grossTotal: Math.max(subtotal - discount, 0),
+    totalAmount: Math.max(subtotal - discount, 0),
+    discount,
+    paymentMode: f.paymentMode.value,
+    payment: f.paymentMode.value,
+    paymentStatus: f.paymentStatus.value,
+    remarks: f.remarks.value.trim(),
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+  };
+  const collectionName = kind === "online" ? "onlineBookings" : "bookings";
+  const before = bookingByKind(kind, id) || {};
+  await setDoc(doc(db, collectionName, id), patch, { merge: true });
+  await addDoc(collection(db, "bookingAuditTrail"), {
+    bookingCollection: collectionName,
+    bookingId: id,
+    before,
+    after: patch,
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+  });
+  alert("Booking details updated.");
+  closeBookingEditModal();
+  await refreshFirebaseDashboard();
+};
+
+window.viewOnlineBooking = function(id) {
+  const row = bookingByKind("online", id);
+  if (!row) return alert("Online booking not found.");
+  document.getElementById("parameterModalTitle").textContent = `Online Booking ${row.bookingId || row.id}`;
+  document.getElementById("parameterModalBody").innerHTML = `<div class="notice">Status: <b>${html(onlineStatus(row))}</b> • Payment: <b>${html(row.paymentStatus || "Pending")}</b></div><div class="table-card"><table><tbody>
+    <tr><th>Patient</th><td>${html(row.patientName)}<br>${html(row.phone)}<br>${html(row.email || row.patientEmail)}</td></tr>
+    <tr><th>Collection</th><td>${html(row.collectionType)} • ${html(onlineDate(row))} ${html(row.preferredTime || "")}<br>${html(row.address || "")}, ${html(row.city || "")} ${html(row.pincode || "")}</td></tr>
+    <tr><th>Tests</th><td>${html(onlineTests(row).map((test) => `${test.name || test.testName} (${rupees(test.price)})`).join(", "))}</td></tr>
+    <tr><th>Payment</th><td>${html(row.paymentMode || "")} • ${html(row.paymentStatus || "Pending")} • ${rupees(row.totalAmount || 0)}</td></tr>
+    <tr><th>Notes</th><td>${html(row.notes || row.remarks || "")}</td></tr>
+  </tbody></table></div>`;
+  document.getElementById("parameterModal").classList.remove("hidden");
+};
+
+window.updateOnlineBookingStatus = async function(id, status) {
+  await setDoc(doc(db, "onlineBookings", id), { bookingStatus: status, status, updatedAt: serverTimestamp(), updatedBy: currentAdmin?.email || "" }, { merge: true });
+};
+
+window.confirmOnlineBooking = function(id) {
+  return window.updateOnlineBookingStatus(id, "Confirmed");
+};
+
+window.assignOnlineFieldBoy = async function(id) {
+  const name = prompt("Assign field boy");
+  if (name === null) return;
+  await setDoc(doc(db, "onlineBookings", id), { staff: name || "Not Assigned", fieldBoyName: name || "Not Assigned", bookingStatus: "Assigned", status: "Assigned", updatedAt: serverTimestamp() }, { merge: true });
+};
+
+window.cancelOnlineBooking = async function(id) {
+  if (!confirm("Cancel this online booking?")) return;
+  await window.updateOnlineBookingStatus(id, "Cancelled");
+};
+
+window.moveOnlineToReportEntry = async function(id) {
+  const row = bookingByKind("online", id);
+  if (!row) return alert("Online booking not found.");
+  const bill = row.billNo || String(Math.floor(100000 + Math.random() * 900000));
+  const tests = onlineTests(row);
+  const docRef = await addDoc(collection(db, "bookings"), {
+    ...row,
+    billNo: bill,
+    patientEmail: row.email || row.patientEmail || "",
+    selectedTests: tests,
+    tests,
+    bookingType: row.collectionType,
+    date: row.preferredDate || row.date || "",
+    time: row.preferredTime || row.time || "",
+    payment: row.paymentMode || "",
+    status: "Report Entry",
+    source: "online",
+    onlineBookingId: id,
+    reportReleased: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  await setDoc(doc(db, "onlineBookings", id), { linkedBookingId: docRef.id, billNo: bill, bookingStatus: "Processing", status: "Processing", updatedAt: serverTimestamp() }, { merge: true });
+  alert("Moved to Report Entry. Bill No: " + bill);
+  await refreshFirebaseDashboard();
+};
 
 function renderFirebaseBookings() {
   const body = document.getElementById("adminBookings");
@@ -885,6 +1263,7 @@ function renderFirebaseBookings() {
       <td><select onchange="firebaseUpdateStatus('${html(b.id)}', this.value)">${["Pending","Reported","Completed","Cancelled"].map((x) => `<option ${b.status === x ? "selected" : ""}>${x}</option>`).join("")}</select></td>
       <td>
         <button class="btn btn-navy btn-small" type="button" onclick="openReportEntry('${html(b.id)}')">Report Entry</button>
+        <button class="btn btn-outline btn-small" type="button" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit</button>
         ${b.machineResultReceived ? `<br><span class="status reported">Machine Result Received</span>` : ""}
         ${hasFirestoreReport(b) ? `<br>${reportActionsHtml(b)}` : ""}
         ${hasFirestoreReport(b) && wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">Send WhatsApp</a>` : ""}
@@ -1165,8 +1544,21 @@ window.renderPatientsPanel = function() {
     row.revenue += Number(b.totalAmount || b.grossTotal || b.price || 0);
     row.last = b.createdAt || row.last;
   });
+  onlineBookings.forEach((b) => {
+    const key = b.email || b.patientEmail || b.phone || b.patientName;
+    if (!map.has(key)) map.set(key, { name: b.patientName, email: b.email || b.patientEmail, phone: b.phone, count: 0, revenue: 0, last: b.createdAt });
+    const row = map.get(key);
+    row.count++;
+    row.revenue += Number(b.totalAmount || 0);
+    row.last = b.createdAt || row.last;
+  });
   const rows = Array.from(map.values()).filter((p) => !q || [p.name, p.email, p.phone].join(" ").toLowerCase().includes(q));
-  body.innerHTML = rows.map((p) => `<tr><td><b>${html(p.name)}</b></td><td>${html(p.phone)}<br><small>${html(p.email)}</small></td><td>${p.count}</td><td>${rupees(p.revenue)}</td><td>${html(createdText(p.last))}</td></tr>`).join("") || `<tr><td colspan="5">No patients found.</td></tr>`;
+  body.innerHTML = rows.map((p) => {
+    const booking = firebaseBookings.find((b) => (b.patientEmail || b.email || b.phone || b.patientName) === (p.email || p.phone || p.name));
+    const online = onlineBookings.find((b) => (b.email || b.patientEmail || b.phone || b.patientName) === (p.email || p.phone || p.name));
+    const edit = booking ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(booking.id)}')">Edit</button>` : online ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('online','${html(online.id || online.bookingId)}')">Edit</button>` : "";
+    return `<tr><td><b>${html(p.name)}</b></td><td>${html(p.phone)}<br><small>${html(p.email)}</small></td><td>${p.count}</td><td>${rupees(p.revenue)}</td><td>${html(createdText(p.last))}</td><td>${edit}</td></tr>`;
+  }).join("") || `<tr><td colspan="6">No patients found.</td></tr>`;
 };
 
 window.renderReportsPanel = function() {
@@ -1177,7 +1569,8 @@ window.renderReportsPanel = function() {
   body.innerHTML = rows.map((r) => {
     const b = firebaseBookings.find((booking) => String(reportBill(booking)) === String(r.billNo || r.id)) || r;
     const wa = whatsappReportLink(b);
-    return `<tr><td><b>${html(r.billNo || r.id)}</b></td><td>${html(r.patientName)}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(r.billNo || r.id)}">View/Print</a>${wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">WhatsApp</a>` : ""}</td></tr>`;
+    const editButton = firebaseBookings.some((booking) => booking.id === b?.id) ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
+    return `<tr><td><b>${html(r.billNo || r.id)}</b></td><td>${html(r.patientName)}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(r.billNo || r.id)}">View/Print</a>${wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">WhatsApp</a>` : ""}${editButton}</td></tr>`;
   }).join("") || `<tr><td colspan="5">No released reports found.</td></tr>`;
 };
 
@@ -1750,6 +2143,11 @@ window.openReportEntry = async function(bookingId) {
   await window.loadReportEditor(bookingId);
 };
 
+window.editCurrentReportBooking = function() {
+  if (!currentReportBooking) return alert("Please select a booking first.");
+  openBookingEditModal("booking", currentReportBooking.id);
+};
+
 window.openReportPreview = function() {
   if (!currentReportBooking) {
     alert("Please select booking.");
@@ -1922,8 +2320,12 @@ document.addEventListener("DOMContentLoaded", async function() {
     await loadAllTests();
     await loadBookings();
     await loadReports();
+    listenRealtimeAdminCollections();
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
     renderFirebaseMetrics();
     renderFirebaseBookings();
+    renderOnlineBookingsPanel();
+    renderRecentOnlineBookings();
     renderFirebaseReportSelect();
     renderPendingReports();
     renderFirebaseTests();

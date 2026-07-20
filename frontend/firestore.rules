@@ -39,6 +39,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /patients/{uid} {
+      allow create, read, update: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
     match /bookings/{bookingId} {
       allow create: if isAdmin()
         || (
@@ -69,6 +74,36 @@ service cloud.firestore {
 
     match /machineResults/{machineResultId} {
       allow read, write: if isAdmin();
+    }
+
+    match /onlineBookings/{bookingId} {
+      allow create: if isPatient()
+        && request.resource.data.patientUid == request.auth.uid
+        && request.resource.data.patientName is string
+        && request.resource.data.phone is string
+        && request.resource.data.email == userDoc().data.email;
+      allow read: if isAdmin()
+        || (isPatient() && resource.data.patientUid == request.auth.uid);
+      allow update: if isAdmin()
+        || (
+          isPatient()
+          && resource.data.patientUid == request.auth.uid
+          && (resource.data.bookingStatus in ["New", "Pending Confirmation"] || resource.data.status in ["New", "Pending Confirmation"])
+          && request.resource.data.patientUid == resource.data.patientUid
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /adminNotifications/{notificationId} {
+      allow create: if isPatient()
+        && request.resource.data.type == "online_booking"
+        && request.resource.data.bookingId is string;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /bookingAuditTrail/{auditId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
     }
 
     match /tests/{testId} {

@@ -6,6 +6,17 @@
   <title>Book Test Online - KHUNTEST LABS</title>
   <meta name="description" content="Book KHUNTEST LABS diagnostic tests online for home sample collection or centre visit.">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .booking-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+    .booking-progress span{padding:10px;border-radius:8px;background:#eef3f9;color:#062b5f;font-weight:800;text-align:center}
+    .booking-progress span.active{background:#d60000;color:#fff}
+    .booking-auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+    .booking-auth-box{border:1px solid #dce4f2;border-radius:8px;padding:14px;background:#f8fbff}
+    .booking-form-grid .third{grid-column:span 1}
+    .booking-summary-box{background:#f8fbff;border:1px solid #dce4f2;border-radius:8px;padding:14px;margin:14px 0}
+    .booking-confirmation{border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;border-radius:8px;padding:14px;margin-top:14px}
+    @media(max-width:760px){.booking-progress,.booking-auth-grid{grid-template-columns:1fr}.booking-card{padding:16px}.booking-form-grid{grid-template-columns:1fr}.booking-test-search-row{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
   <div class="topbar">
@@ -50,16 +61,39 @@
     <div class="container booking-layout">
       <div class="form-card booking-card">
         <h2>Booking Form</h2>
+        <div class="booking-progress"><span id="stepAuth" class="active">Account</span><span id="stepProfile">Patient Details</span><span id="stepTests">Tests</span><span id="stepPayment">Payment</span></div>
         <div id="bookingMsg" class="hidden"></div>
-        <form onsubmit="bookTest(event)">
+        <div id="bookingAuthArea" class="booking-auth-grid">
+          <div class="booking-auth-box">
+            <h3>Login</h3>
+            <label>Email</label><input id="bookingLoginEmail" type="email">
+            <label>Password</label><input id="bookingLoginPassword" type="password">
+            <button class="btn btn-navy btn-small" type="button" id="bookingLoginBtn">Login</button>
+            <button class="btn btn-outline btn-small" type="button" id="bookingForgotBtn">Forgot Password</button>
+          </div>
+          <div class="booking-auth-box">
+            <h3>Create Account</h3>
+            <label>Full Name</label><input id="bookingRegName">
+            <label>Email</label><input id="bookingRegEmail" type="email">
+            <label>Phone</label><input id="bookingRegPhone" inputmode="tel">
+            <label>Password</label><input id="bookingRegPassword" type="password">
+            <button class="btn btn-red btn-small" type="button" id="bookingRegisterBtn">Create Account</button>
+          </div>
+        </div>
+        <div id="bookingUserBar" class="notice hidden"></div>
+        <form id="onlineBookingForm" onsubmit="bookTest(event)" class="hidden">
           <div class="booking-form-grid">
             <div>
-              <label>Patient Name</label>
+              <label>Full Name</label>
               <input name="patientName" required>
             </div>
             <div>
-              <label>Phone / WhatsApp Number</label>
-              <input name="phone" inputmode="tel" pattern="[0-9]{10}" placeholder="Optional">
+              <label>Mobile Number</label>
+              <input name="phone" inputmode="tel" pattern="[0-9]{10}" required>
+            </div>
+            <div>
+              <label>WhatsApp Number</label>
+              <input name="whatsapp" inputmode="tel" pattern="[0-9]{10}">
             </div>
             <div>
               <label>Gender</label>
@@ -70,24 +104,40 @@
               <input name="age" type="number" min="0" placeholder="Optional">
             </div>
             <div>
+              <label>Date of Birth</label>
+              <input name="dob" type="date">
+            </div>
+            <div>
               <label>Email</label>
-              <input name="email" type="email" placeholder="Optional">
+              <input name="email" type="email" required>
             </div>
             <div>
               <label>Collection Type</label>
-              <select name="bookingType"><option>Home Collection</option><option>Centre Visit</option></select>
+              <select name="bookingType"><option>Home Collection</option><option>Visit Lab</option></select>
             </div>
             <div>
               <label>Preferred Date</label>
-              <input name="date" type="date">
+              <input name="date" type="date" required>
             </div>
             <div>
-              <label>Preferred Time</label>
-              <input name="time" type="time">
+              <label>Preferred Time Slot</label>
+              <select name="time"><option>07:00 AM - 09:00 AM</option><option>09:00 AM - 11:00 AM</option><option>11:00 AM - 01:00 PM</option><option>04:00 PM - 06:00 PM</option></select>
             </div>
             <div class="full">
-              <label>Address</label>
-              <textarea name="address" placeholder="Optional for centre visit"></textarea>
+              <label>Full Address</label>
+              <textarea name="address" required></textarea>
+            </div>
+            <div>
+              <label>City</label><input name="city" value="Darbhanga">
+            </div>
+            <div>
+              <label>Pincode</label><input name="pincode" inputmode="numeric">
+            </div>
+            <div>
+              <label>Referring Doctor</label><input name="referringDoctor" placeholder="Optional">
+            </div>
+            <div>
+              <label>Notes</label><input name="notes" placeholder="Optional">
             </div>
             <div class="full booking-test-search">
               <label>Search Tests</label>
@@ -111,11 +161,19 @@
               <tbody id="selectedTestsBody"><tr><td colspan="5">No test selected.</td></tr></tbody>
             </table>
           </div>
-          <div class="booking-total-bar">Total Amount: <b id="bookingTotal">₹0</b></div>
-          <label>Payment Option</label>
-          <select name="payment"><option>Pay at Lab / Cash</option><option>UPI at Centre</option></select>
+          <div class="booking-summary-box">
+            <div>Subtotal: <b id="bookingSubtotal">₹0</b></div>
+            <div>Home Collection Charge: <b id="bookingCollectionCharge">₹0</b></div>
+            <div>Discount: <b id="bookingDiscount">₹0</b></div>
+            <div class="booking-total-bar">Grand Total: <b id="bookingTotal">₹0</b></div>
+          </div>
+          <label>Payment Mode</label>
+          <select name="payment"><option>Cash at Lab</option><option>Cash during Home Collection</option><option>UPI</option><option>Online Payment</option><option>Pay Later</option></select>
+          <label>Transaction ID</label>
+          <input name="transactionId" placeholder="Optional">
           <button class="btn btn-red booking-submit-btn">Submit Booking</button>
         </form>
+        <div id="bookingConfirmation" class="booking-confirmation hidden"></div>
       </div>
 
       <div class="card booking-flow-card">
@@ -148,11 +206,14 @@
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KHUNTEST%20LABS%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
 
   <script type="module">
-    import { createBooking, loadAvailableTests } from "./firebase-service.js";
+    import { auth, createOnlineBooking, loadAvailableTests, loginUser, registerPatient, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
     let catalog = [];
     let selectedTests = [];
     let selectedCategory = "";
+    let currentUser = null;
+    let currentProfile = {};
     const $ = (id) => document.getElementById(id);
     const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
@@ -170,6 +231,59 @@
 
     function selectedTotal() {
       return selectedTests.reduce((sum, test) => sum + Number(test.price || 0), 0);
+    }
+
+    function collectionCharge(form) {
+      return form?.bookingType?.value === "Home Collection" ? 100 : 0;
+    }
+
+    function grandTotal(form) {
+      return Math.max(selectedTotal() + collectionCharge(form) - 0, 0);
+    }
+
+    function setStep(step) {
+      ["stepAuth", "stepProfile", "stepTests", "stepPayment"].forEach((id) => $(id).classList.remove("active"));
+      $(step).classList.add("active");
+    }
+
+    function saveDraft() {
+      const form = $("onlineBookingForm");
+      if (!form || form.classList.contains("hidden")) return;
+      const data = Object.fromEntries(new FormData(form).entries());
+      localStorage.setItem("khuntest_online_booking_draft", JSON.stringify({ data, selectedTests }));
+    }
+
+    function restoreDraft() {
+      try {
+        const draft = JSON.parse(localStorage.getItem("khuntest_online_booking_draft") || "{}");
+        const form = $("onlineBookingForm");
+        Object.entries(draft.data || {}).forEach(([name, value]) => {
+          if (form.elements[name]) form.elements[name].value = value;
+        });
+        if (Array.isArray(draft.selectedTests)) selectedTests = draft.selectedTests;
+        renderSelectedTests();
+      } catch (_err) {}
+    }
+
+    function showBookingForm(user, profile = {}) {
+      currentUser = user;
+      currentProfile = profile || {};
+      $("bookingAuthArea").classList.add("hidden");
+      $("onlineBookingForm").classList.remove("hidden");
+      $("bookingUserBar").classList.remove("hidden");
+      $("bookingUserBar").innerHTML = `Logged in as <b>${safe(user.email || profile.email || "")}</b>`;
+      const f = $("onlineBookingForm");
+      f.patientName.value = profile.name || profile.patientName || f.patientName.value || "";
+      f.email.value = profile.email || user.email || f.email.value || "";
+      f.phone.value = profile.phone || f.phone.value || "";
+      f.whatsapp.value = profile.whatsapp || profile.phone || f.whatsapp.value || "";
+      f.age.value = profile.age || f.age.value || "";
+      f.gender.value = profile.gender || f.gender.value || "Male";
+      f.address.value = profile.address || f.address.value || "";
+      f.city.value = profile.city || f.city.value || "Darbhanga";
+      f.pincode.value = profile.pincode || f.pincode.value || "";
+      setStep("stepProfile");
+      restoreDraft();
     }
 
     function renderCategories() {
@@ -199,7 +313,11 @@
     }
 
     function renderSelectedTests() {
-      $("bookingTotal").textContent = rupees(selectedTotal());
+      const form = $("onlineBookingForm");
+      $("bookingSubtotal").textContent = rupees(selectedTotal());
+      $("bookingCollectionCharge").textContent = rupees(collectionCharge(form));
+      $("bookingDiscount").textContent = rupees(0);
+      $("bookingTotal").textContent = rupees(grandTotal(form));
       $("selectedTestsBody").innerHTML = selectedTests.length ? selectedTests.map((test, index) => `
         <tr>
           <td><b>${safe(test.name)}</b><br><small>${safe(test.testCode)}</small></td>
@@ -268,43 +386,74 @@
     window.bookTest = async function(e) {
       e.preventDefault();
       const f = e.target;
+      if (!currentUser) {
+        showMessage("error", "Please login or create an account before booking.");
+        return;
+      }
       if (!selectedTests.length) {
         showMessage("error", "Please add at least one test.");
         return;
       }
-      const price = selectedTotal();
+      const subtotal = selectedTotal();
+      const charge = collectionCharge(f);
+      const total = grandTotal(f);
       const booking = {
-        billNo: String(Math.floor(100000 + Math.random() * 900000)),
+        bookingId: `OB${Date.now()}`,
         patientName: f.patientName.value.trim(),
+        patientUid: currentUser.uid,
         patientEmail: f.email.value.trim().toLowerCase(),
         email: f.email.value.trim().toLowerCase(),
         phone: f.phone.value.trim(),
-        whatsapp: f.phone.value.trim(),
+        whatsapp: f.whatsapp.value.trim() || f.phone.value.trim(),
         age: f.age.value,
+        dob: f.dob.value,
         gender: f.gender.value,
-        selectedTests,
         tests: selectedTests,
-        test: selectedTests.map((test) => test.name).join(", "),
-        totalAmount: price,
-        grossTotal: price,
-        bookingType: f.bookingType.value,
         collectionType: f.bookingType.value,
-        date: f.date.value,
-        time: f.time.value,
-        collectionDate: f.date.value,
+        preferredDate: f.date.value,
+        preferredTime: f.time.value,
         address: f.address.value.trim(),
-        refBy: "",
-        payment: f.payment.value,
-        status: "Pending",
-        reportReleased: false
+        city: f.city.value.trim(),
+        pincode: f.pincode.value.trim(),
+        referringDoctor: f.referringDoctor.value.trim(),
+        notes: f.notes.value.trim(),
+        subtotal,
+        collectionCharge: charge,
+        discount: 0,
+        totalAmount: total,
+        paymentMode: f.payment.value,
+        paymentStatus: ["Cash at Lab", "Cash during Home Collection", "Pay Later"].includes(f.payment.value) ? "Pending" : "Pending",
+        transactionId: f.transactionId.value.trim(),
+        paidAmount: 0,
+        dueAmount: total,
+        bookingStatus: "New"
       };
 
       try {
-        const saved = await createBooking(booking);
-        showMessage("success", `Booking successful. Bill No is ${saved.billNo}. Keep this bill number to track reports.`);
+        await savePatientProfile(currentUser.uid, {
+          uid: currentUser.uid,
+          name: booking.patientName,
+          email: booking.email,
+          phone: booking.phone,
+          whatsapp: booking.whatsapp,
+          age: booking.age,
+          dob: booking.dob,
+          gender: booking.gender,
+          address: booking.address,
+          city: booking.city,
+          pincode: booking.pincode,
+          role: "patient",
+          isActive: true
+        });
+        const saved = await createOnlineBooking(booking);
+        showMessage("success", `Booking successful. Booking No is ${saved.bookingId}.`);
+        $("bookingConfirmation").classList.remove("hidden");
+        $("bookingConfirmation").innerHTML = `<b>Booking confirmed:</b> ${safe(saved.bookingId)}<br>Patient: ${safe(saved.patientName)}<br>Tests: ${safe(selectedTests.map((test) => test.name).join(", "))}<br>Total: ${rupees(saved.totalAmount)}<br>Status: ${safe(saved.bookingStatus)}`;
+        localStorage.removeItem("khuntest_online_booking_draft");
         selectedTests = [];
         renderSelectedTests();
         f.reset();
+        setStep("stepAuth");
       } catch (err) {
         console.error(err);
         showMessage("error", err.message || "Booking could not be saved.");
@@ -312,6 +461,41 @@
     };
 
     $("addTestBtn").addEventListener("click", addSelectedTest);
+    $("onlineBookingForm").addEventListener("input", () => {
+      saveDraft();
+      renderSelectedTests();
+      setStep(selectedTests.length ? "stepPayment" : "stepProfile");
+    });
+    $("bookingLoginBtn").addEventListener("click", async () => {
+      try {
+        const profile = await loginUser($("bookingLoginEmail").value, $("bookingLoginPassword").value);
+        if (profile.role !== "patient") throw new Error("Please login with a patient account.");
+        showMessage("success", "Login successful. Complete booking details.");
+        showBookingForm(auth.currentUser, profile);
+      } catch (err) {
+        showMessage("error", err.message || "Login failed.");
+      }
+    });
+    $("bookingRegisterBtn").addEventListener("click", async () => {
+      try {
+        const profile = await registerPatient({
+          name: $("bookingRegName").value.trim(),
+          email: $("bookingRegEmail").value.trim(),
+          phone: $("bookingRegPhone").value.trim(),
+          password: $("bookingRegPassword").value
+        });
+        showMessage("success", "Account created. Complete booking details.");
+        showBookingForm(auth.currentUser, profile);
+      } catch (err) {
+        showMessage("error", err.message || "Registration failed.");
+      }
+    });
+    $("bookingForgotBtn").addEventListener("click", async () => {
+      const email = $("bookingLoginEmail").value.trim();
+      if (!email) return showMessage("error", "Enter email first.");
+      await resetPatientPassword(email);
+      showMessage("success", "Password reset email sent.");
+    });
     $("testSearch").addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -319,6 +503,10 @@
       }
     });
     $("testSearch").addEventListener("input", renderCatalog);
+    onAuthStateChanged(auth, () => {
+      const profile = JSON.parse(localStorage.getItem("auth_user") || "{}");
+      if (auth.currentUser && profile.role === "patient") showBookingForm(auth.currentUser, profile);
+    });
     loadCatalog().catch((err) => showMessage("error", err.message || "Could not load tests."));
   </script>
 </body>

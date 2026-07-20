@@ -2,6 +2,7 @@ import { auth, db } from "./firebase-config.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -13,6 +14,7 @@ import {
   getDoc,
   getDocs,
   limit,
+  onSnapshot,
   orderBy,
   query,
   serverTimestamp,
@@ -27,7 +29,11 @@ const C = {
   bookings: "bookings",
   reports: "reports",
   tests: "tests",
-  packages: "packages"
+  packages: "packages",
+  patients: "patients",
+  onlineBookings: "onlineBookings",
+  adminNotifications: "adminNotifications",
+  bookingAuditTrail: "bookingAuditTrail"
 };
 
 let lastTestsLoadInfo = {
@@ -303,10 +309,29 @@ export async function registerPatient({ name, email, phone, password, age, gende
     gender: gender || "",
     address: address || "",
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
     isActive: true
   };
   await setDoc(doc(db, C.users, cred.user.uid), profile);
+  await setDoc(doc(db, C.patients, cred.user.uid), profile, { merge: true });
+  localStorage.setItem("auth_user", JSON.stringify(profile));
+  localStorage.setItem("auth_token", cred.user.uid);
   return profile;
+}
+
+export async function resetPatientPassword(email) {
+  await sendPasswordResetEmail(auth, cleanEmail(email));
+}
+
+export async function savePatientProfile(uid, profilePatch) {
+  const clean = {
+    ...profilePatch,
+    email: cleanEmail(profilePatch.email),
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(doc(db, C.users, uid), clean, { merge: true });
+  await setDoc(doc(db, C.patients, uid), clean, { merge: true });
+  return clean;
 }
 
 export async function createBooking(bookingData) {
@@ -319,6 +344,159 @@ export async function createBooking(bookingData) {
   });
   await updateDoc(docRef, { id: docRef.id });
   return { id: docRef.id, ...booking };
+}
+
+export async function createOnlineBooking(bookingData) {
+  const user = await requireAuth();
+  const bookingId = bookingData.bookingId || `OB${Date.now()}`;
+  const tests = Array.isArray(bookingData.tests) ? bookingData.tests.map(normalizeSelectedTest) : [];
+  const subtotal = Number(bookingData.subtotal || tests.reduce((sum, test) => sum + Number(test.price || 0), 0));
+  const collectionCharge = Number(bookingData.collectionCharge || 0);
+  const discount = Number(bookingData.discount || 0);
+  const totalAmount = Number(bookingData.totalAmount || Math.max(subtotal + collectionCharge - discount, 0));
+  const paymentStatus = bookingData.paymentStatus || (Number(bookingData.paidAmount || 0) >= totalAmount ? "Paid" : "Pending");
+  const payload = {
+    bookingId,
+    patientUid: user.uid,
+    patientName: bookingData.patientName || "",
+    age: bookingData.age || "",
+    dob: bookingData.dob || "",
+    gender: bookingData.gender || "",
+    phone: String(bookingData.phone || "").trim(),
+    whatsapp: String(bookingData.whatsapp || bookingData.phone || "").trim(),
+    email: cleanEmail(bookingData.email || user.email),
+    patientEmail: cleanEmail(bookingData.email || user.email),
+    address: bookingData.address || "",
+    city: bookingData.city || "",
+    pincode: bookingData.pincode || "",
+    collectionType: bookingData.collectionType || "Home Collection",
+    bookingType: bookingData.collectionType || "Home Collection",
+    preferredDate: bookingData.preferredDate || "",
+    preferredTime: bookingData.preferredTime || "",
+    date: bookingData.preferredDate || "",
+    time: bookingData.preferredTime || "",
+    referringDoctor: bookingData.referringDoctor || "",
+    doctor: bookingData.referringDoctor || "",
+    refBy: bookingData.referringDoctor || "",
+    notes: bookingData.notes || "",
+    remarks: bookingData.remarks || bookingData.notes || "",
+    tests,
+    selectedTests: tests,
+    test: tests.map((test) => test.name).join(", "),
+    subtotal,
+    collectionCharge,
+    discount,
+    totalAmount,
+    grossTotal: totalAmount,
+    paidAmount: Number(bookingData.paidAmount || 0),
+    dueAmount: Number(bookingData.dueAmount ?? Math.max(totalAmount - Number(bookingData.paidAmount || 0), 0)),
+    paymentMode: bookingData.paymentMode || "Pay Later",
+    paymentStatus,
+    transactionId: bookingData.transactionId || "",
+    bookingStatus: bookingData.bookingStatus || "New",
+    status: bookingData.bookingStatus || "New",
+    source: "online",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(doc(db, C.onlineBookings, bookingId), payload);
+  await savePatientProfile(user.uid, {
+    uid: user.uid,
+    name: payload.patientName,
+    email: payload.email,
+    phone: payload.phone,
+    whatsapp: payload.whatsapp,
+    age: payload.age,
+    dob: payload.dob,
+    gender: payload.gender,
+    address: payload.address,
+    city: payload.city,
+    pincode: payload.pincode,
+    role: "patient",
+    isActive: true
+  });
+  await setDoc(doc(db, C.adminNotifications, `online-${bookingId}`), {
+    type: "online_booking",
+    bookingId,
+    title: "New Online Booking",
+    message: `${payload.patientName || "Patient"} requested ${tests.map((test) => test.name).join(", ") || "lab tests"}.`,
+    isRead: false,
+    createdAt: serverTimestamp()
+  }, { merge: true });
+  return { id: bookingId, ...payload };
+}
+
+export function listenMyOnlineBookings(uid, callback, onError) {
+  return onSnapshot(
+    query(collection(db, C.onlineBookings), where("patientUid", "==", uid)),
+    (snap) => callback(snap.docs.map(normalizeDoc).sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))),
+    onError
+  );
+}
+
+export function listenOnlineBookings(callback, onError) {
+  return onSnapshot(query(collection(db, C.onlineBookings), orderBy("createdAt", "desc")), (snap) => callback(snap.docs.map(normalizeDoc)), onError);
+}
+
+export function listenAdminNotifications(callback, onError) {
+  return onSnapshot(query(collection(db, C.adminNotifications), orderBy("createdAt", "desc")), (snap) => callback(snap.docs.map(normalizeDoc)), onError);
+}
+
+export async function markAdminNotificationRead(notificationId, readBy = "") {
+  await setDoc(doc(db, C.adminNotifications, notificationId), {
+    isRead: true,
+    readAt: serverTimestamp(),
+    readBy
+  }, { merge: true });
+}
+
+export async function updateOnlineBooking(bookingId, patch, actor = {}) {
+  const ref = doc(db, C.onlineBookings, bookingId);
+  const before = await getDoc(ref);
+  const previous = before.exists() ? before.data() : {};
+  await setDoc(ref, {
+    ...patch,
+    updatedAt: serverTimestamp(),
+    updatedBy: actor.email || actor.uid || ""
+  }, { merge: true });
+  await addDoc(collection(db, C.bookingAuditTrail), {
+    bookingCollection: C.onlineBookings,
+    bookingId,
+    before: previous,
+    after: patch,
+    updatedAt: serverTimestamp(),
+    updatedBy: actor.email || actor.uid || ""
+  });
+}
+
+export async function convertOnlineBookingToBooking(onlineBooking, actor = {}) {
+  const bill = onlineBooking.billNo || String(Math.floor(100000 + Math.random() * 900000));
+  const payload = normalizeBooking({
+    ...onlineBooking,
+    billNo: bill,
+    patientEmail: onlineBooking.email || onlineBooking.patientEmail,
+    bookingType: onlineBooking.collectionType,
+    collectionDate: onlineBooking.preferredDate || onlineBooking.collectionDate,
+    date: onlineBooking.preferredDate || onlineBooking.date,
+    time: onlineBooking.preferredTime || onlineBooking.time,
+    payment: onlineBooking.paymentMode,
+    status: "Report Entry"
+  });
+  const docRef = await addDoc(collection(db, C.bookings), {
+    ...payload,
+    onlineBookingId: onlineBooking.id || onlineBooking.bookingId,
+    source: "online",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    updatedBy: actor.email || actor.uid || ""
+  });
+  await updateOnlineBooking(onlineBooking.id || onlineBooking.bookingId, {
+    linkedBookingId: docRef.id,
+    billNo: bill,
+    bookingStatus: "Processing",
+    status: "Processing"
+  }, actor);
+  return { id: docRef.id, ...payload };
 }
 
 export async function getTests({ activeOnly = true } = {}) {
@@ -728,7 +906,16 @@ export const KTFirebase = {
   logoutUser,
   getCurrentUserRole,
   registerPatient,
+  resetPatientPassword,
+  savePatientProfile,
   createBooking,
+  createOnlineBooking,
+  listenMyOnlineBookings,
+  listenOnlineBookings,
+  listenAdminNotifications,
+  markAdminNotificationRead,
+  updateOnlineBooking,
+  convertOnlineBookingToBooking,
   getAllBookings,
   getTodayBookings,
   getPatientBookings,
