@@ -6,12 +6,20 @@
 <title>KHUNTEST LABS - Admin Dashboard</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-  .admin-modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgba(8, 20, 40, 0.46); padding: 18px; }
-  .admin-modal.hidden { display: none; }
-  .admin-modal-box { width: min(980px, 100%); max-height: 86vh; overflow: auto; background: #fff; border-radius: 8px; box-shadow: 0 22px 60px rgba(5, 20, 44, 0.24); }
-  .admin-modal-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; background: #062b59; color: #fff; }
-  .admin-modal-head button { border: 0; background: #d60000; color: #fff; width: 34px; height: 34px; border-radius: 8px; font-size: 22px; cursor: pointer; }
-  .admin-modal-body { padding: 16px; }
+  .modal-overlay, .admin-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 9999; }
+  .modal-overlay.hidden, .admin-modal.hidden { display: none; }
+  .modal-dialog, .admin-modal-box { width: min(760px, calc(100vw - 48px)); max-height: calc(100vh - 48px); background: #fff; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 24px 70px rgba(0,0,0,.25); }
+  .modal-dialog.modal-wide, .admin-modal-box.modal-wide { width: min(900px, calc(100vw - 48px)); }
+  .modal-header, .modal-footer, .admin-modal-head { flex: 0 0 auto; position: sticky; background: #fff; z-index: 2; }
+  .modal-header, .admin-modal-head { top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #dce4f2; color: #062b59; }
+  .modal-footer { bottom: 0; padding: 14px 16px; border-top: 1px solid #dce4f2; display: flex; justify-content: flex-end; gap: 10px; }
+  .modal-header button, .admin-modal-head button { border: 0; background: #d60000; color: #fff; width: 34px; height: 34px; border-radius: 8px; font-size: 22px; cursor: pointer; }
+  .modal-body, .admin-modal-body { overflow-y: auto; padding: 20px; }
+  .modal-form-grid, .edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .modal-form-grid .full, .edit-grid .full { grid-column: 1 / -1; }
+  .patient-name-field, input[name="patientName"], #rPatientName { text-transform: uppercase; }
+  .parameter-table td, .parameter-table th { white-space: normal; overflow-wrap: anywhere; }
+  .parameter-table td:first-child { min-width: 180px; }
   .entry-suggestions { margin-top: 6px; max-height: 240px; overflow: auto; border: 1px solid #dce4f2; border-radius: 8px; background: #fff; box-shadow: 0 12px 24px rgba(18, 38, 63, 0.08); }
   .entry-suggestions.hidden { display: none; }
   .entry-suggestion { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 9px 11px; border: 0; border-bottom: 1px solid #edf2f8; background: #fff; text-align: left; cursor: pointer; }
@@ -30,10 +38,19 @@
   .admin-toast.hidden { display:none; }
   .admin-toast-actions { display:flex; gap:8px; margin-top:10px; }
   .online-filter-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
-  .edit-grid { display:grid; grid-template-columns:repeat(2,minmax(220px,1fr)); gap:12px; }
-  .edit-grid .full { grid-column:1/-1; }
   .sticky-actions { position: sticky; bottom:0; background:#fff; border-top:1px solid #dce4f2; padding-top:12px; display:flex; gap:10px; justify-content:flex-end; }
-  @media(max-width:780px){.edit-grid{grid-template-columns:1fr}.admin-toast{left:18px;right:18px;width:auto}}
+  @media(max-width:700px){
+    .modal-overlay,.admin-modal{padding:12px}
+    .modal-dialog,.admin-modal-box,.modal-dialog.modal-wide,.admin-modal-box.modal-wide{width:calc(100vw - 24px);max-height:calc(100vh - 24px);border-radius:12px}
+    .modal-form-grid,.edit-grid{grid-template-columns:1fr}
+    .modal-footer{display:grid;grid-template-columns:1fr;gap:10px}
+    .modal-footer button{width:100%}
+    .admin-toast{left:18px;right:18px;width:auto}
+    .parameter-table thead{display:none}
+    .parameter-table tr{display:grid;border:1px solid #dce4f2;border-radius:10px;margin:10px 0;padding:10px;background:#fff}
+    .parameter-table td{display:grid;grid-template-columns:120px 1fr;gap:8px;border:0!important;padding:6px!important}
+    .parameter-table td::before{content:attr(data-label);font-weight:800;color:#062b59}
+  }
 </style>
 </head>
 <body>
@@ -169,6 +186,7 @@
               <label>BALANCE/DUES :</label><input id="balanceDueInput" readonly value="0.00">
               <label>REMARKS :</label><input name="remarks">
               <button class="save-strip" id="saveBookingBtn" type="submit">&lt;&lt; SAVE &gt;&gt;</button>
+              <div id="patientEntryBillActions" class="action-buttons"></div>
               <div class="test-count">NO. OF TEST : <span id="noOfTestDisplay">0</span></div>
             </div>
           </div>
@@ -219,6 +237,9 @@
             <button class="btn btn-outline" onclick="saveGeneratedDraft()">Save Draft</button>
             <button class="btn btn-outline" onclick="openReportPreview()">Preview Report</button>
             <button class="btn btn-outline" onclick="printGeneratedReport()">Print Report</button>
+            <button class="btn btn-outline" onclick="printCurrentBookingBill()">Print Bill</button>
+            <button class="btn btn-outline" onclick="downloadCurrentBookingBillPdf()">Download Bill PDF</button>
+            <button class="btn btn-outline" onclick="shareCurrentBookingBill()">Share Bill</button>
             <button class="btn btn-green" onclick="releaseGeneratedReport()">RELEASE REPORT</button>
             <button class="btn btn-navy" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Send WhatsApp</button>
             <span id="reportShareHint" class="notice" style="display:inline-block;margin:0;">Release report first to send WhatsApp.</span>
@@ -285,7 +306,7 @@
 </div>
 <div id="adminToast" class="admin-toast hidden"></div>
 <div id="parameterModal" class="admin-modal hidden">
-  <div class="admin-modal-box">
+  <div class="admin-modal-box modal-wide">
     <div class="admin-modal-head"><b id="parameterModalTitle">Test Parameters</b><button type="button" onclick="closeParameterModal()">×</button></div>
     <div class="admin-modal-body" id="parameterModalBody"></div>
   </div>
@@ -294,6 +315,20 @@
   <div class="admin-modal-box">
     <div class="admin-modal-head"><b id="bookingEditTitle">Edit Booking</b><button type="button" onclick="closeBookingEditModal()">×</button></div>
     <div class="admin-modal-body" id="bookingEditBody"></div>
+  </div>
+</div>
+
+<div id="reportDetailsEditModal" class="admin-modal hidden">
+  <div class="admin-modal-box">
+    <div class="admin-modal-head"><b>Edit Patient / Booking Details</b><button type="button" onclick="closeReportDetailsEditModal()">×</button></div>
+    <div class="admin-modal-body" id="reportDetailsEditBody"></div>
+  </div>
+</div>
+
+<div id="testEditModal" class="admin-modal hidden">
+  <div class="admin-modal-box modal-wide">
+    <div class="admin-modal-head"><b id="testEditTitle">Edit Test</b><button type="button" onclick="closeTestEditModal()">×</button></div>
+    <div class="admin-modal-body" id="testEditBody"></div>
   </div>
 </div>
 <script type="module">
@@ -334,6 +369,29 @@ window.selectedCurrentTest = null;
 
 function html(value) {
   return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+}
+
+function normalizePatientName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+}
+
+function displayPatientName(value) {
+  return normalizePatientName(value);
+}
+
+function bindPatientNameUppercase(root = document) {
+  root.querySelectorAll('input[name="patientName"], .patient-name-field').forEach((input) => {
+    input.classList.add("patient-name-field");
+    input.value = displayPatientName(input.value);
+    input.addEventListener("input", () => {
+      const cursor = input.selectionStart;
+      input.value = input.value.toUpperCase();
+      if (cursor !== null) input.setSelectionRange(cursor, cursor);
+    });
+    input.addEventListener("blur", () => {
+      input.value = normalizePatientName(input.value);
+    });
+  });
 }
 
 function rupees(value) {
@@ -444,7 +502,7 @@ function openWhatsAppReport(phone, patientName, billNo) {
     return;
   }
   const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
-  const message = `Hello ${patientName || "Patient"},\n\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
+  const message = `Hello ${displayPatientName(patientName) || "Patient"},\n\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
   window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, "_blank");
 }
 
@@ -453,7 +511,7 @@ function whatsappReportLink(b) {
   const phone = normalizeIndianPhone(b.whatsapp || b.phone || b.contactNo);
   if (!phone || !bill) return "";
   const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(bill)}`;
-  const message = `Hello ${b.patientName || "Patient"},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
+  const message = `Hello ${displayPatientName(b.patientName) || "Patient"},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
   return `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`;
 }
 
@@ -497,6 +555,14 @@ function reportActionsHtml(b) {
     return `<a class="report-link" target="_blank" href="${html(uploaded)}">View Uploaded File</a>`;
   }
   return "No report available";
+}
+
+function billActionsHtml(row, kind = "booking", label = "Print Bill") {
+  const id = row?.id || row?.bookingId || row?.onlineBookingId || "";
+  if (!id) return "";
+  return `<button class="btn btn-outline btn-small" type="button" onclick="openBillPrintOptions('${kind}','${html(id)}')">${label}</button>
+    <button class="btn btn-outline btn-small" type="button" onclick="downloadBookingBillPdf('${kind}','${html(id)}')">Download Bill PDF</button>
+    <button class="btn btn-outline btn-small" type="button" onclick="shareBookingBillWhatsApp('${kind}','${html(id)}')">Share Bill</button>`;
 }
 
 async function logoutUser() {
@@ -637,6 +703,17 @@ function playAdminNotificationSound() {
   } catch (_err) {}
 }
 
+function showAdminToast(message) {
+  const box = document.getElementById("adminToast");
+  if (!box) {
+    alert(message);
+    return;
+  }
+  box.innerHTML = `<b>${html(message)}</b>`;
+  box.classList.remove("hidden");
+  setTimeout(() => box.classList.add("hidden"), 2600);
+}
+
 window.dismissAdminNotification = async function(notificationId) {
   await setDoc(doc(db, "adminNotifications", notificationId), {
     isRead: true,
@@ -688,6 +765,7 @@ async function updateTest(testId, data) {
 async function createBooking(data) {
   const payload = {
     ...data,
+    patientName: normalizePatientName(data.patientName),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
@@ -757,6 +835,244 @@ async function updateBookingStatus(bookingId, status) {
     updatedAt: serverTimestamp()
   });
 }
+
+function bookingMetadataPatch(row, source = {}) {
+  const patientName = normalizePatientName(source.patientName ?? row.patientName);
+  return {
+    patientName,
+    age: source.age ?? row.age ?? "",
+    gender: source.gender ?? row.gender ?? "",
+    phone: String(source.phone ?? row.phone ?? "").trim(),
+    whatsapp: String(source.whatsapp ?? row.whatsapp ?? row.phone ?? "").trim(),
+    email: String(source.email ?? source.patientEmail ?? row.email ?? row.patientEmail ?? "").trim().toLowerCase(),
+    patientEmail: String(source.email ?? source.patientEmail ?? row.email ?? row.patientEmail ?? "").trim().toLowerCase(),
+    address: String(source.address ?? row.address ?? "").trim(),
+    doctor: String(source.doctor ?? source.referringDoctor ?? row.doctor ?? row.referringDoctor ?? "").trim(),
+    referringDoctor: String(source.doctor ?? source.referringDoctor ?? row.doctor ?? row.referringDoctor ?? "").trim(),
+    refBy: String(source.doctor ?? source.refBy ?? row.doctor ?? row.refBy ?? "").trim(),
+    collectionDate: source.collectionDate ?? row.collectionDate ?? row.collDate ?? row.date ?? "",
+    collDate: source.collectionDate ?? row.collDate ?? row.collectionDate ?? "",
+    date: String(source.collectionDate ?? row.collectionDate ?? row.date ?? "").slice(0, 10),
+    reportingDate: source.reportingDate ?? row.reportingDate ?? "",
+    staff: String(source.staff ?? source.fieldBoyName ?? row.staff ?? row.fieldBoyName ?? "").trim(),
+    fieldBoyName: String(source.staff ?? source.fieldBoyName ?? row.staff ?? row.fieldBoyName ?? "").trim(),
+    associateLab: String(source.associateLab ?? row.associateLab ?? "").trim(),
+    remarks: String(source.remarks ?? row.remarks ?? row.notes ?? "").trim()
+  };
+}
+
+async function syncPatientMetadata(row, patch) {
+  const patientPatch = {
+    name: patch.patientName,
+    patientName: patch.patientName,
+    email: patch.email || patch.patientEmail || "",
+    phone: patch.phone || "",
+    whatsapp: patch.whatsapp || patch.phone || "",
+    age: patch.age || "",
+    gender: patch.gender || "",
+    address: patch.address || "",
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+  };
+  const uid = row.patientUid || row.uid || "";
+  if (uid) {
+    await setDoc(doc(db, "patients", uid), patientPatch, { merge: true }).catch(() => {});
+    await setDoc(doc(db, "users", uid), { ...patientPatch, role: "patient" }, { merge: true }).catch(() => {});
+    return;
+  }
+  const email = patch.patientEmail || patch.email || row.patientEmail || row.email || "";
+  if (email) {
+    const snap = await getDocs(query(collection(db, "patients"), where("email", "==", email))).catch(() => null);
+    await Promise.all((snap?.docs || []).map((patientDoc) => setDoc(doc(db, "patients", patientDoc.id), patientPatch, { merge: true }).catch(() => {})));
+    return;
+  }
+  const phone = patch.phone || row.phone || "";
+  if (phone) {
+    const snap = await getDocs(query(collection(db, "patients"), where("phone", "==", phone))).catch(() => null);
+    await Promise.all((snap?.docs || []).map((patientDoc) => setDoc(doc(db, "patients", patientDoc.id), patientPatch, { merge: true }).catch(() => {})));
+  }
+}
+
+async function syncReportMetadata(row, patch) {
+  const bill = reportBill(row);
+  const existing = await findReportForBill(bill);
+  if (!existing?.id) return;
+  await setDoc(doc(db, "reports", existing.id), {
+    patientName: patch.patientName,
+    patientEmail: patch.patientEmail || patch.email || "",
+    phone: patch.phone || "",
+    whatsapp: patch.whatsapp || patch.phone || "",
+    age: patch.age || "",
+    gender: patch.gender || "",
+    doctor: patch.doctor || patch.referringDoctor || "",
+    refBy: patch.refBy || patch.doctor || "",
+    collectionDate: patch.collectionDate || "",
+    reportingDate: patch.reportingDate || existing.reportingDate || "",
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+  }, { merge: true });
+}
+
+function billNoForBooking(row) {
+  return String(row.billNo || row.reportBillNo || row.bookingId || row.id || Math.floor(100000 + Math.random() * 900000));
+}
+
+function billToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(18))).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function billingTestsSnapshot(row) {
+  const tests = row.onlineCollection ? onlineTests(row) : bookingTests(row);
+  const list = tests.length ? tests : (row.test ? String(row.test).split(",").map((name) => ({ name: name.trim(), price: row.price || 0 })) : []);
+  return list.filter((test) => test.name || test.testName).map((test) => ({
+    name: test.name || test.testName || "",
+    testCode: test.testCode || test.id || "",
+    category: test.category || "",
+    quantity: Number(test.quantity || 1),
+    price: Number(test.price || test.rate || 0),
+    packageName: test.packageName || test.package || ""
+  }));
+}
+
+function billingSummary(row) {
+  const tests = billingTestsSnapshot(row);
+  const subtotal = Number(row.subtotal ?? tests.reduce((sum, test) => sum + (Number(test.price || 0) * Number(test.quantity || 1)), 0));
+  const collectionCharge = Number(row.collectionCharge || 0);
+  const discount = Number(row.discount || 0);
+  const grandTotal = Number(row.grandTotal ?? row.totalAmount ?? row.grossTotal ?? Math.max(subtotal + collectionCharge - discount, 0));
+  const amountPaid = Number(row.amountPaid ?? row.paidAmount ?? (Number(row.cashReceived || 0) + Number(row.cardReceived || 0)));
+  const balanceDue = Number(row.balanceDue ?? row.dueAmount ?? Math.max(grandTotal - amountPaid, 0));
+  return { tests, subtotal, collectionCharge, discount, grandTotal, amountPaid, balanceDue };
+}
+
+function billPayloadFromBooking(row, existing = null) {
+  const summary = billingSummary(row);
+  const billNo = existing?.billNo || row.customerBillNo || billNoForBooking(row);
+  const token = existing?.accessToken || billToken();
+  return {
+    billId: existing?.billId || billNo,
+    billNo,
+    bookingId: row.id || row.linkedBookingId || "",
+    bookingNo: row.bookingId || row.onlineBookingId || row.id || "",
+    patientId: row.patientUid || row.uid || "",
+    patientName: normalizePatientName(row.patientName),
+    patientEmail: row.patientEmail || row.email || "",
+    phone: row.phone || "",
+    whatsapp: row.whatsapp || row.phone || "",
+    age: row.age || "",
+    gender: row.gender || "",
+    referringDoctor: row.referringDoctor || row.doctor || row.refBy || "",
+    collectionType: row.collectionType || row.bookingType || "",
+    tests: summary.tests,
+    packages: summary.tests.filter((test) => test.packageName).map((test) => test.packageName),
+    subtotal: summary.subtotal,
+    collectionCharge: summary.collectionCharge,
+    discount: summary.discount,
+    grandTotal: summary.grandTotal,
+    amountPaid: summary.amountPaid,
+    balanceDue: summary.balanceDue,
+    paymentMode: row.paymentMode || row.payment || "",
+    paymentStatus: row.paymentStatus || (summary.balanceDue <= 0 ? "Paid" : "Pending"),
+    transactionId: row.transactionId || "",
+    cashierName: currentAdmin?.email || currentAdminProfile?.name || "Admin",
+    remarks: row.remarks || row.notes || "",
+    billDate: existing?.billDate || new Date().toISOString(),
+    accessToken: token,
+    revised: Boolean(existing?.revised),
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+  };
+}
+
+async function findBillForBooking(row) {
+  const billNo = String(row.customerBillNo || row.billNo || row.bookingId || "");
+  if (billNo) {
+    const direct = await getDoc(doc(db, "bills", billNo)).catch(() => null);
+    if (direct?.exists()) return { id: direct.id, ...(direct.data() || {}) };
+  }
+  const bookingId = row.id || row.linkedBookingId || "";
+  if (bookingId) {
+    const snap = await getDocs(query(collection(db, "bills"), where("bookingId", "==", bookingId))).catch(() => null);
+    if (snap && !snap.empty) return { id: snap.docs[0].id, ...(snap.docs[0].data() || {}) };
+  }
+  return null;
+}
+
+async function ensureBillForBooking(row, options = {}) {
+  const existing = await findBillForBooking(row);
+  const payload = billPayloadFromBooking(row, existing);
+  const financialChanged = existing && ["subtotal","collectionCharge","discount","grandTotal","amountPaid","balanceDue","paymentMode","paymentStatus","transactionId"]
+    .some((key) => String(existing[key] ?? "") !== String(payload[key] ?? ""));
+  if (financialChanged) {
+    if (!confirm("Financial values changed after bill creation. Save a revised bill?")) return existing;
+    payload.revised = true;
+    await addDoc(collection(db, "billAuditTrail"), {
+      billNo: payload.billNo,
+      bookingId: payload.bookingId,
+      before: existing,
+      after: payload,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+    }).catch(() => {});
+  }
+  const reprintCount = Number(existing?.reprintCount || 0) + (options.reprint ? 1 : 0);
+  await setDoc(doc(db, "bills", payload.billNo), {
+    ...payload,
+    reprintCount,
+    createdAt: existing?.createdAt || serverTimestamp(),
+    createdBy: existing?.createdBy || currentAdmin?.email || currentAdmin?.uid || ""
+  }, { merge: true });
+  await setDoc(doc(db, "billAccess", payload.accessToken), {
+    ...payload,
+    publicToken: payload.accessToken,
+    reprintCount,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  if (row.id && !row.onlineCollection) await setDoc(doc(db, "bookings", row.id), { customerBillNo: payload.billNo, updatedAt: serverTimestamp() }, { merge: true }).catch(() => {});
+  return { ...existing, ...payload, id: payload.billNo, reprintCount };
+}
+
+function billUrl(bill) {
+  return `bill.html?bill=${encodeURIComponent(bill.billNo)}&token=${encodeURIComponent(bill.accessToken || "")}`;
+}
+
+function bookingForBilling(kind, id) {
+  return kind === "online" ? bookingByKind("online", id) : bookingByKind("booking", id);
+}
+
+window.openBillPrintOptions = async function(kind, id) {
+  const row = bookingForBilling(kind, id);
+  if (!row) return alert("Booking not found.");
+  const choice = prompt("Choose bill print size:\n1. A4 Bill\n2. 80mm Thermal Receipt", "1");
+  if (choice === null) return;
+  const layout = String(choice).trim() === "2" ? "thermal" : "a4";
+  const bill = await ensureBillForBooking(row, { reprint: true });
+  if (!bill) return;
+  window.open(`${billUrl(bill)}&print=1&layout=${layout}`, "_blank");
+};
+
+window.downloadBookingBillPdf = async function(kind, id) {
+  const row = bookingForBilling(kind, id);
+  if (!row) return alert("Booking not found.");
+  const bill = await ensureBillForBooking(row);
+  if (bill) window.open(`${billUrl(bill)}&download=1`, "_blank");
+};
+
+window.shareBookingBillWhatsApp = async function(kind, id) {
+  const row = bookingForBilling(kind, id);
+  if (!row) return alert("Booking not found.");
+  const bill = await ensureBillForBooking(row);
+  if (!bill) return;
+  let phone = normalizeIndianPhone(bill.whatsapp || bill.phone || row.whatsapp || row.phone);
+  if (!phone) {
+    const entered = prompt("Enter patient WhatsApp number to share bill");
+    phone = normalizeIndianPhone(entered);
+  }
+  const link = `https://khuntest.com/${billUrl(bill)}`;
+  const message = `Hello ${bill.patientName || "PATIENT"},\n\nYour KhunTest Lab bill is ready.\n\nBill No: ${bill.billNo}\nTotal Amount: ${rupees(bill.grandTotal)}\nPaid: ${rupees(bill.amountPaid)}\nDue: ${rupees(bill.balanceDue)}\n\nView/Download Bill:\n${link}\n\nThank you,\nKhunTest Lab`;
+  if (!phone) return prompt("Copy bill link", link);
+  window.open(`https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`, "_blank");
+};
 
 function csvCell(value) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
@@ -1062,7 +1378,7 @@ window.renderOnlineBookingsPanel = function() {
     const id = b.id || b.bookingId;
     return `<tr>
       <td><b>${html(b.bookingId || id)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
-      <td>${html(b.patientName || "")}<br><small>${html(b.email || b.patientEmail || "")}</small></td>
+      <td>${html(displayPatientName(b.patientName || ""))}<br><small>${html(b.email || b.patientEmail || "")}</small></td>
       <td>${html(b.phone || "")}<br><small>${html(b.whatsapp || "")}</small></td>
       <td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || b.time || "")}</small></td>
       <td>${html(tests)}</td>
@@ -1072,6 +1388,7 @@ window.renderOnlineBookingsPanel = function() {
       <td>
         <button class="btn btn-outline btn-small" onclick="viewOnlineBooking('${html(id)}')">View details</button>
         <button class="btn btn-navy btn-small" onclick="openBookingEditModal('online','${html(id)}')">Edit</button>
+        ${billActionsHtml(b, "online")}
         <button class="btn btn-green btn-small" onclick="confirmOnlineBooking('${html(id)}')">Confirm</button>
         <button class="btn btn-outline btn-small" onclick="assignOnlineFieldBoy('${html(id)}')">Assign field boy</button>
         <button class="btn btn-outline btn-small" onclick="moveOnlineToReportEntry('${html(id)}')">Move to report entry</button>
@@ -1087,7 +1404,7 @@ function renderRecentOnlineBookings() {
   const body = document.getElementById("recentOnlineBookingsBody");
   if (!body) return;
   const rows = allOnlineRows().slice(0, 6);
-  body.innerHTML = rows.length ? rows.map((b) => `<tr><td><b>${html(b.bookingId || b.id)}</b><br><small>${html(onlineStatus(b))}</small></td><td>${html(b.patientName || "")}<br><small>${html(b.phone || "")}</small></td><td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || "")}</small></td><td><button class="btn btn-navy btn-small" onclick="setTab('onlineBookings');document.getElementById('onlineBookingSearch').value='${html(b.bookingId || b.id)}';renderOnlineBookingsPanel()">View</button></td></tr>`).join("") : `<tr><td colspan="4">No online bookings yet.</td></tr>`;
+  body.innerHTML = rows.length ? rows.map((b) => `<tr><td><b>${html(b.bookingId || b.id)}</b><br><small>${html(onlineStatus(b))}</small></td><td>${html(displayPatientName(b.patientName || ""))}<br><small>${html(b.phone || "")}</small></td><td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || "")}</small></td><td><button class="btn btn-navy btn-small" onclick="setTab('onlineBookings');document.getElementById('onlineBookingSearch').value='${html(b.bookingId || b.id)}';renderOnlineBookingsPanel()">View</button></td></tr>`).join("") : `<tr><td colspan="4">No online bookings yet.</td></tr>`;
 }
 
 function bookingByKind(kind, id) {
@@ -1124,7 +1441,7 @@ window.openBookingEditModal = function(kind, id) {
   title.textContent = kind === "online" ? `Edit Online Booking ${row.bookingId || row.id}` : `Edit Booking ${reportBill(row)}`;
   body.innerHTML = `
     <form id="bookingEditForm" class="edit-grid">
-      <label>Patient name<input name="patientName" value="${html(row.patientName || "")}"></label>
+      <label>Patient name<input name="patientName" value="${html(displayPatientName(row.patientName || ""))}"></label>
       <label>Age<input name="age" value="${html(row.age || "")}"></label>
       <label>Gender<select name="gender">${["Male","Female","Other"].map((x) => `<option ${row.gender === x ? "selected" : ""}>${x}</option>`).join("")}</select></label>
       <label>Phone<input name="phone" value="${html(row.phone || "")}"></label>
@@ -1145,6 +1462,7 @@ window.openBookingEditModal = function(kind, id) {
     </form>`;
   document.getElementById("bookingEditForm").addEventListener("submit", (event) => saveBookingEdit(event, kind, id, onlineTests(row).length));
   modal.classList.remove("hidden");
+  bindPatientNameUppercase(body);
 };
 
 window.closeBookingEditModal = function() {
@@ -1156,10 +1474,12 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
   const f = event.target;
   const tests = parseTestsTextarea(f.tests.value, previousTestCount);
   if (!tests) return;
+  const before = bookingByKind(kind, id) || {};
   const subtotal = tests.reduce((sum, test) => sum + Number(test.price || 0), 0);
   const discount = Number(f.discount.value || 0);
+  const patientName = normalizePatientName(f.patientName.value);
   const patch = {
-    patientName: f.patientName.value.trim(),
+    patientName,
     age: f.age.value,
     gender: f.gender.value,
     phone: f.phone.value.trim(),
@@ -1192,8 +1512,28 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
     updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
   };
   const collectionName = kind === "online" ? onlineCollectionFor(before) : "bookings";
-  const before = bookingByKind(kind, id) || {};
+  const existingBill = await findBillForBooking(before);
+  if (existingBill) {
+    const oldSummary = billingSummary(before);
+    const nextSummary = billingSummary({ ...before, ...patch });
+    const financialChanged = ["subtotal","collectionCharge","discount","grandTotal","amountPaid","balanceDue"].some((key) => String(oldSummary[key] ?? "") !== String(nextSummary[key] ?? ""))
+      || ["paymentMode","paymentStatus","transactionId"].some((key) => String(before[key] ?? "") !== String(patch[key] ?? ""));
+    if (financialChanged) {
+      if (!confirm("This booking already has a finalized bill. Continue and mark the next bill as revised?")) return;
+      await addDoc(collection(db, "billAuditTrail"), {
+        billNo: existingBill.billNo,
+        bookingId: id,
+        before,
+        after: patch,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+      }).catch(() => {});
+      await setDoc(doc(db, "bills", existingBill.billNo), { revised: true, updatedAt: serverTimestamp() }, { merge: true }).catch(() => {});
+    }
+  }
   await setDoc(doc(db, collectionName, id), patch, { merge: true });
+  await syncPatientMetadata({ ...before, ...patch, id }, patch);
+  if (collectionName === "bookings") await syncReportMetadata({ ...before, ...patch, id }, patch);
   await addDoc(collection(db, "bookingAuditTrail"), {
     bookingCollection: collectionName,
     bookingId: id,
@@ -1212,12 +1552,12 @@ window.viewOnlineBooking = function(id) {
   if (!row) return alert("Online booking not found.");
   document.getElementById("parameterModalTitle").textContent = `Online Booking ${row.bookingId || row.id}`;
   document.getElementById("parameterModalBody").innerHTML = `<div class="notice">Status: <b>${html(onlineStatus(row))}</b> • Payment: <b>${html(row.paymentStatus || "Pending")}</b></div><div class="table-card"><table><tbody>
-    <tr><th>Patient</th><td>${html(row.patientName)}<br>${html(row.phone)}<br>${html(row.email || row.patientEmail)}</td></tr>
+    <tr><th>Patient</th><td>${html(displayPatientName(row.patientName))}<br>${html(row.phone)}<br>${html(row.email || row.patientEmail)}</td></tr>
     <tr><th>Collection</th><td>${html(row.collectionType)} • ${html(onlineDate(row))} ${html(row.preferredTime || "")}<br>${html(row.address || "")}, ${html(row.city || "")} ${html(row.pincode || "")}</td></tr>
     <tr><th>Tests</th><td>${html(onlineTests(row).map((test) => `${test.name || test.testName} (${rupees(test.price)})`).join(", "))}</td></tr>
     <tr><th>Payment</th><td>${html(row.paymentMode || "")} • ${html(row.paymentStatus || "Pending")} • ${rupees(row.totalAmount || 0)}</td></tr>
     <tr><th>Notes</th><td>${html(row.notes || row.remarks || "")}</td></tr>
-  </tbody></table></div>`;
+  </tbody></table></div><div class="sticky-actions">${billActionsHtml(row, "online")}<button class="btn btn-outline" type="button" onclick="closeParameterModal()">Close</button></div>`;
   document.getElementById("parameterModal").classList.remove("hidden");
 };
 
@@ -1249,6 +1589,7 @@ window.moveOnlineToReportEntry = async function(id) {
   const tests = onlineTests(row);
   const docRef = await addDoc(collection(db, "bookings"), {
     ...row,
+    patientName: normalizePatientName(row.patientName),
     billNo: bill,
     patientEmail: row.email || row.patientEmail || "",
     selectedTests: tests,
@@ -1279,7 +1620,7 @@ function renderFirebaseBookings() {
     const rowText = `${bill} ${b.patientName || ""} ${b.phone || ""} ${tests}`.toLowerCase();
     return `<tr data-status="${html(b.status || "Pending")}" data-date="${html(b.date || createdDateKey(b.createdAt))}" data-search="${html(rowText)}">
       <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
-      <td>${html(b.patientName)}<br><small>${html(b.age || "")} ${html(b.gender || "")}<br>${html(b.phone)}<br>${html(b.patientEmail || b.email || "")}</small></td>
+      <td>${html(displayPatientName(b.patientName))}<br><small>${html(b.age || "")} ${html(b.gender || "")}<br>${html(b.phone)}<br>${html(b.patientEmail || b.email || "")}</small></td>
       <td>${html(b.phone || "")}</td>
       <td>${html(tests)}</td>
       <td><b>${rupees(b.totalAmount || b.grossTotal || b.price)}</b></td>
@@ -1287,6 +1628,7 @@ function renderFirebaseBookings() {
       <td>
         <button class="btn btn-navy btn-small" type="button" onclick="openReportEntry('${html(b.id)}')">Report Entry</button>
         <button class="btn btn-outline btn-small" type="button" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit</button>
+        ${billActionsHtml(b, "booking")}
         ${b.machineResultReceived ? `<br><span class="status reported">Machine Result Received</span>` : ""}
         ${hasFirestoreReport(b) ? `<br>${reportActionsHtml(b)}` : ""}
         ${hasFirestoreReport(b) && wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">Send WhatsApp</a>` : ""}
@@ -1301,7 +1643,7 @@ function renderPendingReports() {
   const rows = firebaseBookings.filter((b) => !hasFirestoreReport(b)).slice(0, 8);
   body.innerHTML = rows.length ? rows.map((b) => {
     const tests = bookingTests(b).map((t) => t.name).join(", ") || b.test || "";
-    return `<tr><td><b>${html(reportBill(b))}</b><br><small>${html(b.status || "Pending")}</small></td><td>${html(b.patientName)}<br><small>${html(b.phone)}</small></td><td>${html(tests)}</td><td><button class="btn btn-navy btn-small" onclick="setTab('reportGen');renderReportBookingSelect();loadReportEditor('${html(b.id)}')">Start Report</button></td></tr>`;
+    return `<tr><td><b>${html(reportBill(b))}</b><br><small>${html(b.status || "Pending")}</small></td><td>${html(displayPatientName(b.patientName))}<br><small>${html(b.phone)}</small></td><td>${html(tests)}</td><td><button class="btn btn-navy btn-small" onclick="setTab('reportGen');renderReportBookingSelect();loadReportEditor('${html(b.id)}')">Start Report</button></td></tr>`;
   }).join("") : `<tr><td colspan="4">No pending reports.</td></tr>`;
 }
 
@@ -1357,7 +1699,7 @@ window.renderMachineResultsPanel = function() {
       <td>${html(createdText(row.receivedAt))}</td>
       <td><b>${html(row.sampleId || "")}</b><br><small>${html(row.source || "Mindray BC-5000")}</small></td>
       <td>${html(row.billNo || "")}</td>
-      <td>${html(row.patientName || "")}</td>
+      <td>${html(displayPatientName(row.patientName || ""))}</td>
       <td><span class="status ${status === "matched" ? "reported" : "pending"}">${html(status)}</span></td>
       <td>
         <button class="btn btn-outline btn-small" type="button" onclick="viewMachineResult('${html(row.id)}')">View Result</button>
@@ -1449,7 +1791,7 @@ window.createDraftFromMachineResult = async function(id) {
   await saveReportDraft({
     billNo: bill,
     bookingId: booking.id,
-    patientName: booking.patientName || row.patientName || "",
+    patientName: normalizePatientName(booking.patientName || row.patientName || ""),
     patientEmail: booking.patientEmail || booking.email || "",
     phone: booking.phone || "",
     whatsapp: booking.whatsapp || booking.phone || "",
@@ -1513,9 +1855,9 @@ window.viewTestParameters = function(testId) {
   if (!test) return alert("Test not found.");
   document.getElementById("parameterModalTitle").textContent = `${test.name} Parameters`;
   document.getElementById("parameterModalBody").innerHTML = (test.parameters || []).length ? `
-    <div class="notice"><b>${html(test.parameters.length)}</b> parameters • ${html(test.category)} • ${rupees(test.price)}</div>
-    <div class="table-card"><table><thead><tr><th>Parameter</th><th>Normal Range</th><th>Unit</th><th>Method</th><th>Sample</th></tr></thead><tbody>
-      ${test.parameters.map((p) => `<tr><td><b>${html(p.name)}</b></td><td>${html(p.normalRange || "")}</td><td>${html(p.unit || "")}</td><td>${html(p.method || "")}</td><td>${html(p.sample || test.sample || "")}</td></tr>`).join("")}
+    <div class="notice"><b>${html(test.parameters.length)}</b> parameters • ${html(test.category || "Lab Test")} • ${rupees(test.price)}</div>
+    <div class="table-card"><table class="parameter-table"><thead><tr><th>Parameter</th><th>Normal Range</th><th>Unit</th><th>Method</th><th>Sample</th></tr></thead><tbody>
+      ${test.parameters.map((p) => `<tr><td data-label="Parameter"><b>${html(p.name)}</b></td><td data-label="Normal Range">${html(p.normalRange || "")}</td><td data-label="Unit">${html(p.unit || "")}</td><td data-label="Method">${html(p.method || "")}</td><td data-label="Sample">${html(p.sample || test.sample || "")}</td></tr>`).join("")}
     </tbody></table></div>
   ` : `<div class="notice">No parameters found. Add parameter manually.</div>`;
   document.getElementById("parameterModal").classList.remove("hidden");
@@ -1528,23 +1870,44 @@ window.closeParameterModal = function() {
 window.editFirestoreTest = async function(testId) {
   const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
   if (!test) return alert("Test not found.");
-  const priceValue = prompt(`Edit price for ${test.name}`, String(test.price || 0));
-  if (priceValue === null) return;
-  const paramsText = prompt("Edit parameters as one per line: name | normal range | unit | method | sample", (test.parameters || []).map((p) => `${p.name || ""} | ${p.normalRange || ""} | ${p.unit || ""} | ${p.method || ""} | ${p.sample || ""}`).join("\n"));
-  if (paramsText === null) return;
+  document.getElementById("testEditTitle").textContent = `Edit Test - ${test.name}`;
+  document.getElementById("testEditBody").innerHTML = `
+    <form id="testEditForm" class="modal-form-grid">
+      <label>Price<input name="price" type="number" value="${Number(test.price || 0)}"></label>
+      <label>Category<input name="category" value="${html(test.category || "")}"></label>
+      <label class="full">Parameters<textarea name="parameters" rows="12">${html((test.parameters || []).map((p) => `${p.name || ""} | ${p.normalRange || ""} | ${p.unit || ""} | ${p.method || ""} | ${p.sample || ""}`).join("\n"))}</textarea></label>
+      <div class="notice full">Enter one parameter per line: name | normal range | unit | method | sample</div>
+      <div class="sticky-actions full"><button class="btn btn-outline" type="button" onclick="closeTestEditModal()">Cancel</button><button class="btn btn-red" type="submit">Save Changes</button></div>
+    </form>`;
+  document.getElementById("testEditForm").addEventListener("submit", (event) => saveFirestoreTestEdit(event, test));
+  document.getElementById("testEditModal").classList.remove("hidden");
+};
+
+window.closeTestEditModal = function() {
+  document.getElementById("testEditModal")?.classList.add("hidden");
+};
+
+async function saveFirestoreTestEdit(event, test) {
+  event.preventDefault();
+  const f = event.target;
+  const priceValue = f.price.value;
+  const category = f.category.value.trim() || test.category || "Lab Test";
+  const paramsText = f.parameters.value;
   const parameters = paramsText.split(/\n+/).map((line, index) => {
     const [name, normalRange, unit, method, sample] = line.split("|").map((part) => part.trim());
     return name ? { name, normalRange: normalRange || "", unit: unit || "", method: method || "", sample: sample || "", sortOrder: index + 1 } : null;
   }).filter(Boolean);
   await updateTest(test.id || test.slug || test.testCode, {
     price: Number(priceValue || 0),
+    category,
     parameters,
     needsParameterReview: false,
-    searchKeywords: [test.testCode, test.name, test.category, ...parameters.map((p) => p.name)].join(" ").toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 1)
+    searchKeywords: [test.testCode, test.name, category, ...parameters.map((p) => p.name)].join(" ").toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 1)
   });
-  alert("Test updated in Firestore.");
+  closeTestEditModal();
+  showAdminToast("Test updated in Firestore.");
   await refreshFirebaseDashboard();
-};
+}
 
 window.addLibraryTestToBooking = async function(testId) {
   const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
@@ -1579,8 +1942,8 @@ window.renderPatientsPanel = function() {
   body.innerHTML = rows.map((p) => {
     const booking = firebaseBookings.find((b) => (b.patientEmail || b.email || b.phone || b.patientName) === (p.email || p.phone || p.name));
     const online = allOnlineRows().find((b) => (b.email || b.patientEmail || b.phone || b.patientName) === (p.email || p.phone || p.name));
-    const edit = booking ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(booking.id)}')">Edit</button>` : online ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('online','${html(online.id || online.bookingId)}')">Edit</button>` : "";
-    return `<tr><td><b>${html(p.name)}</b></td><td>${html(p.phone)}<br><small>${html(p.email)}</small></td><td>${p.count}</td><td>${rupees(p.revenue)}</td><td>${html(createdText(p.last))}</td><td>${edit}</td></tr>`;
+    const edit = booking ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(booking.id)}')">Edit</button> ${billActionsHtml(booking, "booking")}` : online ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('online','${html(online.id || online.bookingId)}')">Edit</button> ${billActionsHtml(online, "online")}` : "";
+    return `<tr><td><b>${html(displayPatientName(p.name))}</b></td><td>${html(p.phone)}<br><small>${html(p.email)}</small></td><td>${p.count}</td><td>${rupees(p.revenue)}</td><td>${html(createdText(p.last))}</td><td>${edit}</td></tr>`;
   }).join("") || `<tr><td colspan="6">No patients found.</td></tr>`;
 };
 
@@ -1593,7 +1956,8 @@ window.renderReportsPanel = function() {
     const b = firebaseBookings.find((booking) => String(reportBill(booking)) === String(r.billNo || r.id)) || r;
     const wa = whatsappReportLink(b);
     const editButton = firebaseBookings.some((booking) => booking.id === b?.id) ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
-    return `<tr><td><b>${html(r.billNo || r.id)}</b></td><td>${html(r.patientName)}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(r.billNo || r.id)}">View/Print</a>${wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">WhatsApp</a>` : ""}${editButton}</td></tr>`;
+    const billButtons = b?.id ? `<br>${billActionsHtml(b, "booking", "Reprint Bill")}` : "";
+    return `<tr><td><b>${html(r.billNo || r.id)}</b></td><td>${html(displayPatientName(r.patientName))}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(r.billNo || r.id)}">View/Print</a>${wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">WhatsApp</a>` : ""}${editButton}${billButtons}</td></tr>`;
   }).join("") || `<tr><td colspan="5">No released reports found.</td></tr>`;
 };
 
@@ -1602,7 +1966,7 @@ function renderFirebaseReportSelect() {
   if (!sel) return;
   sel.innerHTML = '<option value="">Select patient / bill</option>' + firebaseBookings.map((b) => {
     const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
-    return `<option value="${html(b.id)}">${html(b.billNo || b.id)} - ${html(b.patientName)} - ${html(tests)}</option>`;
+    return `<option value="${html(b.id)}">${html(b.billNo || b.id)} - ${html(displayPatientName(b.patientName))} - ${html(tests)}</option>`;
   }).join("");
 }
 
@@ -1916,6 +2280,7 @@ window.setupSaveBooking = function() {
   if (form && form.dataset.bound !== "true") {
     form.dataset.bound = "true";
     form.addEventListener("submit", window.savePatientEntry);
+    bindPatientNameUppercase(form);
   }
 };
 
@@ -2082,27 +2447,8 @@ window.loadReportEditor = async function(id) {
   }
   box.classList.remove("hidden");
   const b = currentReportBooking;
-  const map = {
-    rRemoteNo: b.remoteNo || "0",
-    rBillNo: b.billNo || b.id,
-    rAdmDate: b.admDate || b.date || "",
-    rCollDate: b.collDate || b.date || "",
-    rDayNo: b.dayNo || "0",
-    rPathology: b.pathologyName || "BN-MAIN",
-    rPatientName: b.patientName || "",
-    rAge: b.age || "",
-    rPhone: b.phone || "",
-    rGender: b.gender || "",
-    rEmail: b.patientEmail || b.email || "",
-    rDoctor: b.doctor || "",
-    rCoName: b.coName || "",
-    rFieldBoy: b.staff || ""
-  };
-  Object.entries(map).forEach(([id, val]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  });
-  document.getElementById("rReportingDate").value = ktNowLocal();
+  updateReportEditorMetadataFields(b);
+  document.getElementById("rReportingDate").value = b.reportingDate || ktNowLocal();
   const testsWithParams = [];
   let availableTests = allLabTests;
   for (const t of bookingTests(b)) {
@@ -2158,6 +2504,31 @@ window.loadReportEditor = async function(id) {
   updateReportActionState();
 };
 
+function updateReportEditorMetadataFields(b) {
+  const map = {
+    rRemoteNo: b.remoteNo || "0",
+    rBillNo: b.billNo || b.id,
+    rAdmDate: b.admDate || b.date || "",
+    rCollDate: b.collDate || b.collectionDate || b.date || "",
+    rDayNo: b.dayNo || "0",
+    rPathology: b.pathologyName || "BN-MAIN",
+    rPatientName: displayPatientName(b.patientName || ""),
+    rAge: b.age || "",
+    rPhone: b.phone || "",
+    rGender: b.gender || "",
+    rEmail: b.patientEmail || b.email || "",
+    rDoctor: b.doctor || b.referringDoctor || "",
+    rCoName: b.coName || "",
+    rFieldBoy: b.staff || b.fieldBoyName || ""
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  const reporting = document.getElementById("rReportingDate");
+  if (reporting && b.reportingDate) reporting.value = b.reportingDate;
+}
+
 window.openReportEntry = async function(bookingId) {
   window.setTab("reportGen");
   renderFirebaseReportSelect();
@@ -2168,8 +2539,74 @@ window.openReportEntry = async function(bookingId) {
 
 window.editCurrentReportBooking = function() {
   if (!currentReportBooking) return alert("Please select a booking first.");
-  openBookingEditModal("booking", currentReportBooking.id);
+  openReportDetailsEditModal();
 };
+
+window.openReportDetailsEditModal = function() {
+  if (!currentReportBooking) return alert("Please select a booking first.");
+  const b = currentReportBooking;
+  const body = document.getElementById("reportDetailsEditBody");
+  body.innerHTML = `
+    <form id="reportDetailsEditForm" class="modal-form-grid">
+      <label>Patient name<input class="patient-name-field" name="patientName" value="${html(displayPatientName(b.patientName || ""))}"></label>
+      <label>Age<input name="age" value="${html(b.age || "")}"></label>
+      <label>Gender<select name="gender">${["Male","Female","Other"].map((x) => `<option ${b.gender === x ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+      <label>Phone<input name="phone" value="${html(b.phone || "")}"></label>
+      <label>WhatsApp<input name="whatsapp" value="${html(b.whatsapp || b.phone || "")}"></label>
+      <label>Email<input name="email" type="email" value="${html(b.patientEmail || b.email || "")}"></label>
+      <label class="full">Full address<textarea name="address">${html(b.address || "")}</textarea></label>
+      <label>Referring doctor<input name="doctor" value="${html(b.referringDoctor || b.doctor || b.refBy || "")}"></label>
+      <label>Collection date<input name="collectionDate" type="datetime-local" value="${html((b.collDate || b.collectionDate || b.date || "").slice(0, 16))}"></label>
+      <label>Reporting date<input name="reportingDate" type="datetime-local" value="${html(document.getElementById("rReportingDate")?.value || b.reportingDate || "")}"></label>
+      <label>Field boy<input name="staff" value="${html(b.staff || b.fieldBoyName || "")}"></label>
+      <label>Associate lab<input name="associateLab" value="${html(b.associateLab || "")}"></label>
+      <label class="full">Remarks<textarea name="remarks">${html(b.remarks || b.notes || "")}</textarea></label>
+      <div class="sticky-actions full"><button class="btn btn-outline" type="button" onclick="closeReportDetailsEditModal()">Cancel</button><button class="btn btn-red" type="submit">Save Changes</button></div>
+    </form>`;
+  document.getElementById("reportDetailsEditForm").addEventListener("submit", saveReportDetailsEdit);
+  bindPatientNameUppercase(body);
+  document.getElementById("reportDetailsEditModal").classList.remove("hidden");
+};
+
+window.closeReportDetailsEditModal = function() {
+  document.getElementById("reportDetailsEditModal")?.classList.add("hidden");
+};
+
+async function saveReportDetailsEdit(event) {
+  event.preventDefault();
+  if (!currentReportBooking) return;
+  const f = event.target;
+  const patch = {
+    ...bookingMetadataPatch(currentReportBooking, {
+      patientName: f.patientName.value,
+      age: f.age.value,
+      gender: f.gender.value,
+      phone: f.phone.value,
+      whatsapp: f.whatsapp.value,
+      email: f.email.value,
+      address: f.address.value,
+      doctor: f.doctor.value,
+      collectionDate: f.collectionDate.value,
+      reportingDate: f.reportingDate.value,
+      staff: f.staff.value,
+      associateLab: f.associateLab.value,
+      remarks: f.remarks.value
+    }),
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+  };
+  await setDoc(doc(db, "bookings", currentReportBooking.id), patch, { merge: true });
+  await syncPatientMetadata(currentReportBooking, patch);
+  await syncReportMetadata(currentReportBooking, patch);
+  currentReportBooking = { ...currentReportBooking, ...patch };
+  selectedBookingForReport = currentReportBooking;
+  const localIndex = firebaseBookings.findIndex((booking) => booking.id === currentReportBooking.id);
+  if (localIndex >= 0) firebaseBookings[localIndex] = { ...firebaseBookings[localIndex], ...patch };
+  updateReportEditorMetadataFields(currentReportBooking);
+  updateReportActionState();
+  closeReportDetailsEditModal();
+  showAdminToast("Patient details updated successfully.");
+}
 
 window.openReportPreview = function() {
   if (!currentReportBooking) {
@@ -2197,7 +2634,7 @@ function reportPayload(status = "Draft") {
   return {
     billNo: bill,
     bookingId: currentReportBooking.id,
-    patientName: currentReportBooking.patientName,
+    patientName: normalizePatientName(currentReportBooking.patientName),
     patientEmail: currentReportBooking.patientEmail || currentReportBooking.email || "",
     phone: currentReportBooking.phone || "",
     whatsapp: currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo || "",
@@ -2258,10 +2695,25 @@ window.sendCurrentReportWhatsApp = function() {
   openWhatsAppReport(currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo, currentReportBooking.patientName, reportBill(currentReportBooking));
 };
 
+window.printCurrentBookingBill = function() {
+  if (!currentReportBooking) return alert("Please select booking.");
+  return window.openBillPrintOptions("booking", currentReportBooking.id);
+};
+
+window.downloadCurrentBookingBillPdf = function() {
+  if (!currentReportBooking) return alert("Please select booking.");
+  return window.downloadBookingBillPdf("booking", currentReportBooking.id);
+};
+
+window.shareCurrentBookingBill = function() {
+  if (!currentReportBooking) return alert("Please select booking.");
+  return window.shareBookingBillWhatsApp("booking", currentReportBooking.id);
+};
+
 window.savePatientEntry = async function(e) {
   e.preventDefault();
   const f = e.target;
-  const patientName = f.patientName.value.trim();
+  const patientName = normalizePatientName(f.patientName.value);
   const phone = f.phone.value.trim();
   const email = f.email.value.trim().toLowerCase();
   if (!patientName) {
@@ -2314,6 +2766,8 @@ window.savePatientEntry = async function(e) {
     balanceDue: Number((document.getElementById("balanceDueInput") || document.getElementById("balanceDue"))?.value || 0),
     remarks: f.remarks.value
   });
+  const actionBox = document.getElementById("patientEntryBillActions");
+  if (actionBox) actionBox.innerHTML = billActionsHtml(booking, "booking");
   alert("Patient entry saved to Firestore. Bill No: " + booking.billNo);
   f.reset();
   window.preparePatientEntry();

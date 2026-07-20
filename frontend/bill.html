@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KhunTest Lab Bill</title>
+  <style>
+    :root { --ink:#111827; --muted:#64748b; --line:#d7deea; --red:#d60000; --blue:#062b59; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#eef2f7; color:var(--ink); font-family:Arial, Helvetica, sans-serif; }
+    .no-print { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; padding:14px; background:#fff; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+    button, .btn { border:0; border-radius:8px; padding:10px 14px; background:var(--blue); color:#fff; font-weight:800; cursor:pointer; text-decoration:none; }
+    .btn-red { background:var(--red); }
+    .bill-page { width:210mm; min-height:297mm; margin:18px auto; padding:10mm; background:#fff; box-shadow:0 14px 45px rgba(15,23,42,.18); }
+    .bill-head { display:grid; grid-template-columns:80px 1fr auto; gap:16px; align-items:center; border-bottom:3px solid var(--blue); padding-bottom:14px; }
+    .logo { width:74px; height:74px; object-fit:contain; }
+    h1, h2, p { margin:0; }
+    h1 { color:var(--blue); font-size:28px; letter-spacing:.5px; }
+    .muted { color:var(--muted); }
+    .invoice-title { text-align:right; }
+    .invoice-title b { display:block; font-size:24px; color:var(--red); }
+    .revised { color:var(--red); font-weight:900; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:18px 0; }
+    .box { border:1px solid var(--line); border-radius:10px; padding:12px; }
+    .box h2 { font-size:14px; color:var(--blue); margin-bottom:8px; text-transform:uppercase; }
+    .line { display:grid; grid-template-columns:145px 1fr; gap:8px; padding:3px 0; }
+    table { width:100%; border-collapse:collapse; margin:14px 0; }
+    th, td { border:1px solid var(--line); padding:9px; text-align:left; vertical-align:top; }
+    th { background:#f8fafc; color:var(--blue); }
+    .num { text-align:right; white-space:nowrap; }
+    .summary { width:min(360px, 100%); margin-left:auto; }
+    .summary .line { grid-template-columns:1fr auto; border-bottom:1px solid var(--line); padding:8px 0; }
+    .summary .total { font-size:18px; font-weight:900; color:var(--blue); }
+    .thanks { margin-top:22px; text-align:center; color:var(--blue); font-weight:900; }
+    .signature { margin-top:34px; display:flex; justify-content:flex-end; }
+    .signature div { width:180px; border-top:1px solid var(--ink); text-align:center; padding-top:8px; }
+    body.thermal { background:#fff; }
+    body.thermal .bill-page { width:80mm; min-height:auto; margin:0 auto; padding:3mm; box-shadow:none; font-size:11px; }
+    body.thermal .bill-head { grid-template-columns:1fr; text-align:center; gap:4px; border-bottom:1px dashed #111; }
+    body.thermal .logo { width:42px; height:42px; margin:auto; }
+    body.thermal h1 { font-size:17px; }
+    body.thermal .invoice-title { text-align:center; }
+    body.thermal .info-grid { grid-template-columns:1fr; gap:6px; margin:8px 0; }
+    body.thermal .box { border:0; border-bottom:1px dashed #111; border-radius:0; padding:6px 0; }
+    body.thermal .line { grid-template-columns:82px 1fr; gap:4px; }
+    body.thermal th, body.thermal td { border:0; border-bottom:1px dotted #bbb; padding:5px 2px; }
+    body.thermal th { background:#fff; color:#111; }
+    body.thermal .summary { width:100%; }
+    @page { size: A4; margin: 10mm; }
+    body.thermal.printing { --page-size: 80mm auto; }
+    @media print {
+      .no-print, .sidebar, .admin-header, .action-buttons { display:none!important; }
+      body { background:#fff; }
+      .bill-page { width:auto; min-height:auto; margin:0; padding:0; box-shadow:none; }
+      body.thermal .bill-page { width:74mm; padding:0; }
+    }
+  </style>
+  <style id="printPageStyle">@page { size: A4; margin: 10mm; }</style>
+</head>
+<body>
+  <div class="no-print action-buttons">
+    <button onclick="setLayout('a4')">A4 Bill</button>
+    <button onclick="setLayout('thermal')">80mm Thermal Receipt</button>
+    <button onclick="printBill()">Print</button>
+    <button onclick="downloadPdf()">Download PDF</button>
+    <button onclick="shareWhatsApp()">Share on WhatsApp</button>
+    <a class="btn btn-red" href="admin-dashboard.html">Back to Dashboard</a>
+  </div>
+  <main id="billRoot" class="bill-page">Loading bill...</main>
+
+  <script type="module">
+    import { getCustomerBill } from "./firebase-service.js";
+
+    let currentBill = null;
+    const params = new URLSearchParams(location.search);
+    const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
+    const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[m]));
+    const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+    const phone = (value) => {
+      const digits = String(value || "").replace(/\D/g, "");
+      return digits.length === 10 ? "91" + digits : digits;
+    };
+
+    function formatDate(value) {
+      const d = value?.toDate ? value.toDate() : new Date(value || Date.now());
+      return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("en-IN");
+    }
+
+    function renderBill(bill) {
+      const tests = Array.isArray(bill.tests) ? bill.tests : [];
+      document.getElementById("billRoot").innerHTML = `
+        <header class="bill-head">
+          <img class="logo" src="assets/khuntest-logo.png" alt="KhunTest Lab">
+          <div>
+            <h1>KHUNTEST LABS</h1>
+            <p>Allalpatti, Laheriasarai, Darbhanga, Bihar</p>
+            <p>Phone: +91 9234277007 | WhatsApp: +91 9234277007</p>
+            <p>Email: khuntest@yahoo.com | Website: khuntest.com</p>
+          </div>
+          <div class="invoice-title"><b>BILL</b><span>${bill.revised ? '<span class="revised">Revised Bill</span>' : ''}</span></div>
+        </header>
+        <section class="info-grid">
+          <div class="box">
+            <h2>Bill Details</h2>
+            <div class="line"><span>Bill No</span><b>${safe(bill.billNo)}</b></div>
+            <div class="line"><span>Booking No</span><span>${safe(bill.bookingNo || bill.bookingId)}</span></div>
+            <div class="line"><span>Date</span><span>${safe(formatDate(bill.billDate || bill.createdAt))}</span></div>
+            <div class="line"><span>Cashier</span><span>${safe(bill.cashierName || "")}</span></div>
+          </div>
+          <div class="box">
+            <h2>Patient Details</h2>
+            <div class="line"><span>Patient</span><b>${safe(normalizePatientName(bill.patientName))}</b></div>
+            <div class="line"><span>Age / Gender</span><span>${safe(bill.age || "")}${bill.age && bill.gender ? " / " : ""}${safe(bill.gender || "")}</span></div>
+            <div class="line"><span>Phone</span><span>${safe(bill.phone || "")}</span></div>
+            <div class="line"><span>Ref. Doctor</span><span>${safe(bill.referringDoctor || "")}</span></div>
+            <div class="line"><span>Collection</span><span>${safe(bill.collectionType || "")}</span></div>
+          </div>
+        </section>
+        <table>
+          <thead><tr><th>Selected Test / Package</th><th>Qty</th><th class="num">Price</th><th class="num">Amount</th></tr></thead>
+          <tbody>${tests.map((test) => `<tr><td>${safe(test.name)}${test.packageName ? `<br><small>Package: ${safe(test.packageName)}</small>` : ""}</td><td>${safe(test.quantity || 1)}</td><td class="num">${rupees(test.price)}</td><td class="num">${rupees(Number(test.price || 0) * Number(test.quantity || 1))}</td></tr>`).join("") || `<tr><td colspan="4">No tests listed.</td></tr>`}</tbody>
+        </table>
+        <section class="summary box">
+          <div class="line"><span>Subtotal</span><span>${rupees(bill.subtotal)}</span></div>
+          <div class="line"><span>Home Collection Charge</span><span>${rupees(bill.collectionCharge)}</span></div>
+          <div class="line"><span>Discount</span><span>${rupees(bill.discount)}</span></div>
+          <div class="line total"><span>Grand Total</span><span>${rupees(bill.grandTotal)}</span></div>
+          <div class="line"><span>Amount Paid</span><span>${rupees(bill.amountPaid)}</span></div>
+          <div class="line"><span>Balance Due</span><b>${rupees(bill.balanceDue)}</b></div>
+          <div class="line"><span>Payment Mode</span><span>${safe(bill.paymentMode)}</span></div>
+          <div class="line"><span>Payment Status</span><span>${safe(bill.paymentStatus)}</span></div>
+          <div class="line"><span>Transaction ID</span><span>${safe(bill.transactionId)}</span></div>
+        </section>
+        ${bill.remarks ? `<section class="box"><h2>Remarks</h2><p>${safe(bill.remarks)}</p></section>` : ""}
+        <div class="signature"><div>Authorized Signature</div></div>
+        <p class="thanks">Thank you for choosing KhunTest Lab</p>
+      `;
+    }
+
+    window.setLayout = function(layout) {
+      document.body.classList.toggle("thermal", layout === "thermal");
+      document.getElementById("printPageStyle").textContent = layout === "thermal"
+        ? "@page { size: 80mm auto; margin: 3mm; }"
+        : "@page { size: A4; margin: 10mm; }";
+      params.set("layout", layout);
+    };
+
+    window.printBill = function() {
+      window.print();
+    };
+
+    window.downloadPdf = function() {
+      alert("Choose 'Save as PDF' in the print dialog to download the bill PDF.");
+      window.print();
+    };
+
+    window.shareWhatsApp = function() {
+      if (!currentBill) return;
+      const link = `https://khuntest.com/bill.html?bill=${encodeURIComponent(currentBill.billNo)}&token=${encodeURIComponent(currentBill.accessToken || "")}`;
+      const message = `Hello ${normalizePatientName(currentBill.patientName) || "PATIENT"},\n\nYour KhunTest Lab bill is ready.\n\nBill No: ${currentBill.billNo}\nTotal Amount: ${rupees(currentBill.grandTotal)}\nPaid: ${rupees(currentBill.amountPaid)}\nDue: ${rupees(currentBill.balanceDue)}\n\nView/Download Bill:\n${link}\n\nThank you,\nKhunTest Lab`;
+      const clean = phone(currentBill.whatsapp || currentBill.phone);
+      if (!clean) return prompt("Copy bill link", link);
+      window.open(`https://wa.me/${encodeURIComponent(clean)}?text=${encodeURIComponent(message)}`, "_blank");
+    };
+
+    async function boot() {
+      try {
+        setLayout(params.get("layout") === "thermal" ? "thermal" : "a4");
+        currentBill = await getCustomerBill(params.get("bill"), params.get("token") || "");
+        renderBill(currentBill);
+        if (params.get("print") === "1") setTimeout(() => window.print(), 400);
+        if (params.get("download") === "1") setTimeout(() => window.print(), 400);
+      } catch (err) {
+        document.getElementById("billRoot").innerHTML = `<div class="box"><h1>Bill unavailable</h1><p>${safe(err.message || "Unable to load bill.")}</p></div>`;
+      }
+    }
+    boot();
+  </script>
+</body>
+</html>

@@ -72,6 +72,36 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /bills/{billNo} {
+      allow read: if isAdmin()
+        || sameEmail(resource.data.patientEmail)
+        || (isPatient() && resource.data.patientId == request.auth.uid);
+      allow create: if isAdmin()
+        || (
+          isPatient()
+          && (
+            request.resource.data.patientId == request.auth.uid
+            || request.resource.data.patientEmail == userDoc().data.email
+          )
+        );
+      allow update: if isAdmin()
+        || (isPatient() && resource.data.patientId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /billAccess/{token} {
+      allow read: if resource.data.publicToken == token;
+      allow create, update: if isAdmin()
+        || (
+          isPatient()
+          && (
+            request.resource.data.patientId == request.auth.uid
+            || request.resource.data.patientEmail == userDoc().data.email
+          )
+        );
+      allow delete: if isAdmin();
+    }
+
     match /machineResults/{machineResultId} {
       allow read, write: if isAdmin();
     }
@@ -102,6 +132,11 @@ service cloud.firestore {
     }
 
     match /bookingAuditTrail/{auditId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /billAuditTrail/{auditId} {
       allow read, create: if isAdmin();
       allow update, delete: if false;
     }

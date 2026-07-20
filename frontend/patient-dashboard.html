@@ -209,7 +209,7 @@
   </div>
 
   <script type="module">
-    import { auth, getCurrentUserRole, getPatientBookings, getReportByBillNo, listenMyOnlineBookings, logoutUser, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
+    import { auth, createCustomerBillForBooking, getCurrentUserRole, getPatientBookings, getReportByBillNo, listenMyOnlineBookings, logoutUser, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
     function safe(value) {
@@ -222,6 +222,7 @@
     let currentAuthUser = null;
     let currentProfile = {};
     let onlineRows = [];
+    const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
 
     window.logout = async function() {
       await logoutUser();
@@ -261,13 +262,26 @@
     function fillProfileForm(user) {
       const f = document.getElementById("profileForm");
       ["name","age","gender","phone","whatsapp","email","address","city","pincode"].forEach((key) => {
-        if (f.elements[key]) f.elements[key].value = user[key] || "";
+        if (f.elements[key]) f.elements[key].value = key === "name" ? normalizePatientName(user[key]) : (user[key] || "");
       });
     }
+
+    const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+    const profileNameInput = document.querySelector('#profileForm [name="name"]');
+    profileNameInput?.classList.add("patient-name-field");
+    profileNameInput?.addEventListener("input", function() {
+      const cursor = profileNameInput.selectionStart;
+      profileNameInput.value = profileNameInput.value.toUpperCase();
+      if (cursor !== null) profileNameInput.setSelectionRange(cursor, cursor);
+    });
+    profileNameInput?.addEventListener("blur", function() {
+      profileNameInput.value = normalizePatientName(profileNameInput.value);
+    });
 
     document.getElementById("profileForm").addEventListener("submit", async function(e) {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target).entries());
+      data.name = normalizePatientName(data.name);
       await savePatientProfile(currentAuthUser.uid, { ...data, role: "patient", isActive: true, uid: currentAuthUser.uid });
       localStorage.setItem("auth_user", JSON.stringify({ ...currentProfile, ...data }));
       currentProfile = { ...currentProfile, ...data };
@@ -277,6 +291,19 @@
     async function requestOnlineEdit(id) {
       alert("This booking is already confirmed. Please call or WhatsApp KHUNTEST LABS to request changes.");
     }
+
+    function billButtonHtml(source, id) {
+      return `<button class="btn" onclick="openPatientBill('${source}','${safe(id)}')">Print Bill</button>`;
+    }
+
+    window.openPatientBill = async function(source, id) {
+      const row = source === "online"
+        ? onlineRows.find((booking) => String(booking.id || booking.bookingId) === String(id))
+        : window.patientBookingRows?.find((booking) => String(booking.id || booking.billNo || booking.bill_no) === String(id));
+      if (!row) return alert("Booking not found.");
+      const bill = await createCustomerBillForBooking(row, { reprint: true });
+      window.open(`bill.html?bill=${encodeURIComponent(bill.billNo)}&token=${encodeURIComponent(bill.accessToken || "")}`, "_blank");
+    };
 
     window.editOnlineBooking = function(id) {
       const row = onlineRows.find((b) => String(b.id || b.bookingId) === String(id));
@@ -291,7 +318,7 @@
       if (!user) return;
 
       document.getElementById("welcomeName").innerText =
-        "Welcome, " + (user.name || "Patient");
+        "Welcome, " + (normalizePatientName(user.name) || "Patient");
 
       document.getElementById("patientEmail").innerText =
         user.email || "";
@@ -329,15 +356,16 @@
     }
 
     function renderBookings(patientBookings, reportFlags) {
+        window.patientBookingRows = patientBookings;
         const area = document.getElementById("bookingArea");
         const onlineHtml = onlineRows.map((b) => `
           <tr>
             <td>${safe(b.bookingId || b.id || "-")}</td>
-            <td>${safe(b.patientName || currentProfile.name || "-")}</td>
+            <td>${safe(normalizePatientName(b.patientName || currentProfile.name || "-"))}</td>
             <td>${safe((b.tests || b.selectedTests || []).map(t => t.name || t.testName).join(", "))}</td>
             <td>₹${Number(b.totalAmount || 0).toFixed(2)}</td>
             <td>${safe(b.bookingStatus || b.status || "New")}<br><small>Payment: ${safe(b.paymentStatus || "Pending")}</small></td>
-            <td><button class="btn" onclick="editOnlineBooking('${safe(b.id || b.bookingId)}')">Edit</button></td>
+            <td><button class="btn" onclick="editOnlineBooking('${safe(b.id || b.bookingId)}')">Edit</button> ${billButtonHtml("online", b.id || b.bookingId)}</td>
           </tr>
         `).join("");
         area.innerHTML = `
@@ -362,7 +390,7 @@
                 return `
                 <tr>
                   <td>${safe(bill || "-")}</td>
-                  <td>${safe(b.patient_name || b.patientName || user.name || "-")}</td>
+                  <td>${safe(normalizePatientName(b.patient_name || b.patientName || currentProfile.name || "-"))}</td>
                   <td>${safe(tests)}</td>
                   <td>₹${Number(b.totalAmount || b.gross_total || b.grossTotal || b.price || 0).toFixed(2)}</td>
                   <td>${safe(b.status || "Pending")}</td>
@@ -370,6 +398,7 @@
                     ${reportFlags[index]
                       ? `<a class="btn" href="report.html?bill=${encodeURIComponent(bill)}" target="_blank">View Report</a>`
                       : "Not released"}
+                    ${billButtonHtml("booking", b.id || bill)}
                   </td>
                 </tr>
               `}).join("")}

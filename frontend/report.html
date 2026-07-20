@@ -657,6 +657,10 @@
         .replaceAll("'", "&#039;");
     }
 
+    function normalizePatientName(value) {
+      return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+    }
+
     function pick(obj, keys, fallback = "") {
       if (!obj) return fallback;
       for (const key of keys) {
@@ -888,7 +892,7 @@
     }
 
     function patientBlock(report, billNo) {
-      const patientName = pick(report, ["patientName", "patient_name", "name"], "");
+      const patientName = normalizePatientName(pick(report, ["patientName", "patient_name", "name"], ""));
       const age = pick(report, ["age", "patient_age"], "");
       const gender = pick(report, ["gender", "patient_gender"], "");
       const refBy = pick(report, ["refBy", "ref_by", "doctor", "refDoctor", "ref_doctor"], "");
@@ -1017,7 +1021,7 @@
       const phone = String(report.whatsapp || report.phone || report.contactNo || "").replace(/\D/g, "");
       if (!phone) return alert("No WhatsApp/phone number available for this patient.");
       const fullPhone = phone.length === 10 ? "91" + phone : phone;
-      const patientName = pick(report, ["patientName", "patient_name", "name"], "Patient");
+      const patientName = normalizePatientName(pick(report, ["patientName", "patient_name", "name"], "Patient")) || "Patient";
       const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
       const message = `Hello ${patientName},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
       window.open(`https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`, "_blank");

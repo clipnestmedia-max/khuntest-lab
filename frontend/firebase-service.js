@@ -28,6 +28,8 @@ const C = {
   users: "users",
   bookings: "bookings",
   reports: "reports",
+  bills: "bills",
+  billAccess: "billAccess",
   tests: "tests",
   packages: "packages",
   patients: "patients",
@@ -48,8 +50,16 @@ function cleanEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+function normalizePatientName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+}
+
 function billNo() {
   return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function accessToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(18))).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function toDate(value) {
@@ -186,7 +196,7 @@ function normalizeBooking(data) {
 
   return {
     billNo: data.billNo || data.bill_no || billNo(),
-    patientName: data.patientName || data.patient_name || data.name || "",
+    patientName: normalizePatientName(data.patientName || data.patient_name || data.name || ""),
     patientEmail: cleanEmail(data.patientEmail || data.email),
     email: cleanEmail(data.patientEmail || data.email),
     phone: String(data.phone || data.contactNo || "").trim(),
@@ -223,6 +233,81 @@ function normalizeBooking(data) {
     balanceDue: Number(data.balanceDue || 0),
     remarks: data.remarks || ""
   };
+}
+
+function billTestsSnapshot(data) {
+  const tests = Array.isArray(data.selectedTests) && data.selectedTests.length
+    ? data.selectedTests
+    : Array.isArray(data.tests)
+      ? data.tests
+      : data.test
+        ? String(data.test).split(",").map((name) => ({ name: name.trim(), price: data.price || 0 }))
+        : [];
+  return tests.filter((test) => test.name || test.testName).map((test) => ({
+    name: test.name || test.testName || "",
+    testCode: test.testCode || test.id || "",
+    category: test.category || "",
+    quantity: Number(test.quantity || 1),
+    price: Number(test.price || test.rate || 0),
+    packageName: test.packageName || test.package || ""
+  }));
+}
+
+function billSnapshot(data, existing = null) {
+  const tests = billTestsSnapshot(data);
+  const subtotal = Number(data.subtotal ?? tests.reduce((sum, test) => sum + (test.price * test.quantity), 0));
+  const collectionCharge = Number(data.collectionCharge || 0);
+  const discount = Number(data.discount || 0);
+  const grandTotal = Number(data.grandTotal ?? data.totalAmount ?? data.grossTotal ?? Math.max(subtotal + collectionCharge - discount, 0));
+  const amountPaid = Number(data.amountPaid ?? data.paidAmount ?? (Number(data.cashReceived || 0) + Number(data.cardReceived || 0)));
+  const balanceDue = Number(data.balanceDue ?? data.dueAmount ?? Math.max(grandTotal - amountPaid, 0));
+  const billNumber = existing?.billNo || data.customerBillNo || data.billNo || data.bookingId || billNo();
+  return {
+    billId: existing?.billId || billNumber,
+    billNo: billNumber,
+    bookingId: data.id || data.bookingId || "",
+    bookingNo: data.bookingId || data.onlineBookingId || data.id || "",
+    patientId: data.patientUid || data.uid || "",
+    patientName: normalizePatientName(data.patientName),
+    patientEmail: cleanEmail(data.patientEmail || data.email),
+    phone: data.phone || "",
+    whatsapp: data.whatsapp || data.phone || "",
+    age: data.age || "",
+    gender: data.gender || "",
+    referringDoctor: data.referringDoctor || data.doctor || data.refBy || "",
+    collectionType: data.collectionType || data.bookingType || "",
+    tests,
+    packages: tests.filter((test) => test.packageName).map((test) => test.packageName),
+    subtotal,
+    collectionCharge,
+    discount,
+    grandTotal,
+    amountPaid,
+    balanceDue,
+    paymentMode: data.paymentMode || data.payment || "",
+    paymentStatus: data.paymentStatus || (balanceDue <= 0 ? "Paid" : "Pending"),
+    transactionId: data.transactionId || "",
+    cashierName: data.cashierName || "",
+    remarks: data.remarks || data.notes || "",
+    billDate: existing?.billDate || new Date().toISOString(),
+    accessToken: existing?.accessToken || accessToken(),
+    revised: Boolean(existing?.revised),
+    updatedAt: serverTimestamp()
+  };
+}
+
+async function findBillForBooking(data) {
+  const billNumber = String(data.customerBillNo || data.billNo || data.bookingId || "");
+  if (billNumber) {
+    const direct = await getDoc(doc(db, C.bills, billNumber)).catch(() => null);
+    if (direct?.exists()) return normalizeDoc(direct);
+  }
+  const bookingId = data.id || data.bookingId || "";
+  if (bookingId) {
+    const snap = await getDocs(query(collection(db, C.bills), where("bookingId", "==", bookingId), limit(1))).catch(() => null);
+    if (snap && !snap.empty) return normalizeDoc(snap.docs[0]);
+  }
+  return null;
 }
 
 function normalizeResult(row) {
@@ -301,7 +386,7 @@ export async function registerPatient({ name, email, phone, password, age, gende
   const cred = await createUserWithEmailAndPassword(auth, cleanEmail(email), password);
   const profile = {
     uid: cred.user.uid,
-    name: name || "",
+    name: normalizePatientName(name),
     email: cleanEmail(email),
     phone: phone || "",
     role: "patient",
@@ -326,6 +411,8 @@ export async function resetPatientPassword(email) {
 export async function savePatientProfile(uid, profilePatch) {
   const clean = {
     ...profilePatch,
+    name: normalizePatientName(profilePatch.name || profilePatch.patientName || ""),
+    patientName: normalizePatientName(profilePatch.patientName || profilePatch.name || ""),
     email: cleanEmail(profilePatch.email),
     updatedAt: serverTimestamp()
   };
@@ -358,7 +445,7 @@ export async function createOnlineBooking(bookingData) {
   const payload = {
     bookingId,
     patientUid: user.uid,
-    patientName: bookingData.patientName || "",
+    patientName: normalizePatientName(bookingData.patientName || ""),
     age: bookingData.age || "",
     dob: bookingData.dob || "",
     gender: bookingData.gender || "",
@@ -626,7 +713,7 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, wha
   const report = {
     billNo: String(billNo || ""),
     bookingId: bookingId || "",
-    patientName: patientName || "",
+    patientName: normalizePatientName(patientName),
     patientEmail: cleanEmail(patientEmail),
     phone: phone || "",
     whatsapp: whatsapp || phone || "",
@@ -704,7 +791,7 @@ export async function getReportByBillNo(billNoValue) {
     ...booking,
     billNo: booking.billNo || bill,
     bookingId: booking.id,
-    patientName: booking.patientName || booking.patient_name || "",
+    patientName: normalizePatientName(booking.patientName || booking.patient_name || ""),
     patientEmail: cleanEmail(booking.patientEmail || booking.email),
     refBy: booking.refBy || booking.doctor || booking.refDoctor || "",
     doctor: booking.doctor || booking.refBy || booking.refDoctor || "",
@@ -723,6 +810,48 @@ export async function getBookingByBillNo(billNoValue) {
   if (direct.exists()) return normalizeDoc(direct);
   const snap = await getDocs(query(collection(db, C.bookings), where("billNo", "==", bill), limit(1)));
   return snap.empty ? null : normalizeDoc(snap.docs[0]);
+}
+
+export async function createCustomerBillForBooking(bookingData, options = {}) {
+  const existing = await findBillForBooking(bookingData);
+  const bill = billSnapshot(bookingData, existing);
+  const reprintCount = Number(existing?.reprintCount || 0) + (options.reprint ? 1 : 0);
+  await setDoc(doc(db, C.bills, bill.billNo), {
+    ...bill,
+    reprintCount,
+    createdAt: existing?.createdAt || serverTimestamp(),
+    createdBy: existing?.createdBy || bookingData.patientUid || ""
+  }, { merge: true });
+  await setDoc(doc(db, C.billAccess, bill.accessToken), {
+    ...bill,
+    publicToken: bill.accessToken,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+  return { ...existing, ...bill, id: bill.billNo, reprintCount };
+}
+
+export async function getCustomerBill(billNoValue, token = "") {
+  const billNumber = String(billNoValue || "").trim();
+  if (!billNumber) throw new Error("Bill number is required.");
+  if (token) {
+    const accessSnap = await getDoc(doc(db, C.billAccess, token)).catch(() => null);
+    if (accessSnap?.exists()) {
+      const accessBill = normalizeDoc(accessSnap);
+      if (String(accessBill.billNo) === billNumber) return accessBill;
+    }
+  }
+  const snap = await getDoc(doc(db, C.bills, billNumber));
+  if (!snap.exists()) throw new Error("Bill not found.");
+  const bill = normalizeDoc(snap);
+  if (token && token === bill.accessToken) return bill;
+  const user = auth.currentUser;
+  if (!user) throw new Error("Please login to view this bill.");
+  const profileSnap = await getDoc(doc(db, C.users, user.uid)).catch(() => null);
+  const profile = profileSnap?.exists() ? profileSnap.data() : {};
+  const isAdminUser = profile?.role === "admin" && profile?.isActive !== false;
+  const isPatientOwner = bill.patientId === user.uid || cleanEmail(bill.patientEmail) === cleanEmail(user.email);
+  if (!isAdminUser && !isPatientOwner) throw new Error("You are not authorized to view this bill.");
+  return bill;
 }
 
 export async function updateBookingStatus(bookingId, status) {

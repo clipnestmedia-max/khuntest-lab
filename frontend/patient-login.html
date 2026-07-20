@@ -145,6 +145,18 @@
       msg.textContent = "";
     }
 
+    const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+    const regName = document.getElementById("regName");
+    regName.classList.add("patient-name-field");
+    regName.addEventListener("input", function() {
+      const cursor = regName.selectionStart;
+      regName.value = regName.value.toUpperCase();
+      if (cursor !== null) regName.setSelectionRange(cursor, cursor);
+    });
+    regName.addEventListener("blur", function() {
+      regName.value = normalizePatientName(regName.value);
+    });
+
     document.getElementById("loginTab").addEventListener("click", function() {
       showTab("login");
     });
@@ -189,7 +201,7 @@
     document.getElementById("patientRegisterForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      const name = document.getElementById("regName").value.trim();
+      const name = normalizePatientName(document.getElementById("regName").value);
       const email = document.getElementById("regEmail").value.trim();
       const phone = document.getElementById("regPhone").value.trim();
       const password = document.getElementById("regPassword").value;

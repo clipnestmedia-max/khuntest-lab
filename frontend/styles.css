@@ -349,7 +349,22 @@ input,select,textarea{
   transition:border-color .18s ease, box-shadow .18s ease;
 }
 input:focus,select:focus,textarea:focus{border-color:rgba(227,6,19,.55);box-shadow:0 0 0 4px rgba(227,6,19,.08)}
+.patient-name-field,input[name="patientName"]{text-transform:uppercase}
 textarea{min-height:104px;resize:vertical}
+
+@media print{
+  .no-print,
+  .sidebar,
+  .admin-header,
+  .action-buttons,
+  .modal-overlay,
+  .admin-modal,
+  .admin-sidebar,
+  .admin-topbar,
+  button{
+    display:none!important;
+  }
+}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .notice,.success,.error{border-radius:18px;padding:15px;margin:14px 0;font-weight:650}
 .notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}

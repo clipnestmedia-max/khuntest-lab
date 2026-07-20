@@ -206,7 +206,7 @@
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KHUNTEST%20LABS%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
 
   <script type="module">
-    import { auth, createOnlineBooking, loadAvailableTests, loginUser, registerPatient, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
+    import { auth, createCustomerBillForBooking, createOnlineBooking, loadAvailableTests, loginUser, registerPatient, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
     let catalog = [];
@@ -214,9 +214,30 @@
     let selectedCategory = "";
     let currentUser = null;
     let currentProfile = {};
+    let lastSavedBooking = null;
     const $ = (id) => document.getElementById(id);
     const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
+    const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+
+    function bindUppercaseName(input) {
+      if (!input) return;
+      input.classList.add("patient-name-field");
+      input.addEventListener("input", () => {
+        const cursor = input.selectionStart;
+        input.value = input.value.toUpperCase();
+        if (cursor !== null) input.setSelectionRange(cursor, cursor);
+      });
+      input.addEventListener("blur", () => {
+        input.value = normalizePatientName(input.value);
+      });
+    }
+
+    const billLink = (bill) => `bill.html?bill=${encodeURIComponent(bill.billNo)}&token=${encodeURIComponent(bill.accessToken || "")}`;
+    const normalizePhone = (value) => {
+      const digits = String(value || "").replace(/\D/g, "");
+      return digits.length === 10 ? "91" + digits : digits;
+    };
 
     function showMessage(kind, message) {
       const el = $("bookingMsg");
@@ -273,7 +294,7 @@
       $("bookingUserBar").classList.remove("hidden");
       $("bookingUserBar").innerHTML = `Logged in as <b>${safe(user.email || profile.email || "")}</b>`;
       const f = $("onlineBookingForm");
-      f.patientName.value = profile.name || profile.patientName || f.patientName.value || "";
+      f.patientName.value = normalizePatientName(profile.name || profile.patientName || f.patientName.value || "");
       f.email.value = profile.email || user.email || f.email.value || "";
       f.phone.value = profile.phone || f.phone.value || "";
       f.whatsapp.value = profile.whatsapp || profile.phone || f.whatsapp.value || "";
@@ -399,7 +420,7 @@
       const total = grandTotal(f);
       const booking = {
         bookingId: `OB${Date.now()}`,
-        patientName: f.patientName.value.trim(),
+        patientName: normalizePatientName(f.patientName.value),
         patientUid: currentUser.uid,
         patientEmail: f.email.value.trim().toLowerCase(),
         email: f.email.value.trim().toLowerCase(),
@@ -446,9 +467,10 @@
           isActive: true
         });
         const saved = await createOnlineBooking(booking);
+        lastSavedBooking = saved;
         showMessage("success", `Booking successful. Booking No is ${saved.bookingId}.`);
         $("bookingConfirmation").classList.remove("hidden");
-        $("bookingConfirmation").innerHTML = `<b>Booking confirmed:</b> ${safe(saved.bookingId)}<br>Patient: ${safe(saved.patientName)}<br>Tests: ${safe(selectedTests.map((test) => test.name).join(", "))}<br>Total: ${rupees(saved.totalAmount)}<br>Status: ${safe(saved.bookingStatus)}`;
+        $("bookingConfirmation").innerHTML = `<b>Booking confirmed:</b> ${safe(saved.bookingId)}<br>Patient: ${safe(normalizePatientName(saved.patientName))}<br>Tests: ${safe(selectedTests.map((test) => test.name).join(", "))}<br>Total: ${rupees(saved.totalAmount)}<br>Status: ${safe(saved.bookingStatus)}<div class="toolbar" style="margin-top:12px;"><button class="btn btn-outline btn-small" type="button" onclick="printLastBookingBill()">Print Bill</button><button class="btn btn-outline btn-small" type="button" onclick="downloadLastBookingBillPdf()">Download Bill PDF</button><button class="btn btn-outline btn-small" type="button" onclick="shareLastBookingBillWhatsApp()">Share Bill on WhatsApp</button></div>`;
         localStorage.removeItem("khuntest_online_booking_draft");
         selectedTests = [];
         renderSelectedTests();
@@ -461,6 +483,34 @@
     };
 
     $("addTestBtn").addEventListener("click", addSelectedTest);
+    bindUppercaseName(document.querySelector('[name="patientName"]'));
+
+    async function ensureLastBill(reprint = false) {
+      if (!lastSavedBooking) throw new Error("No booking found for bill.");
+      return createCustomerBillForBooking(lastSavedBooking, { reprint });
+    }
+
+    window.printLastBookingBill = async function() {
+      const choice = prompt("Choose bill print size:\n1. A4 Bill\n2. 80mm Thermal Receipt", "1");
+      if (choice === null) return;
+      const layout = String(choice).trim() === "2" ? "thermal" : "a4";
+      const bill = await ensureLastBill(true);
+      window.open(`${billLink(bill)}&print=1&layout=${layout}`, "_blank");
+    };
+
+    window.downloadLastBookingBillPdf = async function() {
+      const bill = await ensureLastBill(false);
+      window.open(`${billLink(bill)}&download=1`, "_blank");
+    };
+
+    window.shareLastBookingBillWhatsApp = async function() {
+      const bill = await ensureLastBill(false);
+      const link = `https://khuntest.com/${billLink(bill)}`;
+      const message = `Hello ${normalizePatientName(bill.patientName) || "PATIENT"},\n\nYour KhunTest Lab bill is ready.\n\nBill No: ${bill.billNo}\nTotal Amount: ${rupees(bill.grandTotal)}\nPaid: ${rupees(bill.amountPaid)}\nDue: ${rupees(bill.balanceDue)}\n\nView/Download Bill:\n${link}\n\nThank you,\nKhunTest Lab`;
+      const phone = normalizePhone(bill.whatsapp || bill.phone);
+      if (!phone) return prompt("Copy bill link", link);
+      window.open(`https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`, "_blank");
+    };
     $("onlineBookingForm").addEventListener("input", () => {
       saveDraft();
       renderSelectedTests();
