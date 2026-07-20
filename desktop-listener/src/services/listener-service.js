@@ -1,8 +1,64 @@
 "use strict";
 
 const net = require("net");
+const os = require("os");
 const { parseHL7, buildAck, stripMllp } = require("../parsers/mindray-bc5000-hl7");
 const { parseASTM } = require("../parsers/mindray-bc5000-astm");
+
+const MLLP_START = 0x0b;
+const MLLP_END = 0x1c;
+const MAX_RECONNECT_DELAY_MS = 30000;
+
+function indexOfMllpEnd(buffer) {
+  for (let index = 0; index < buffer.length - 1; index += 1) {
+    if (buffer[index] === MLLP_END && (buffer[index + 1] === 0x0d || buffer[index + 1] === 0x0a)) return index;
+  }
+  for (let index = 0; index < buffer.length; index += 1) {
+    if (buffer[index] === MLLP_END) return index;
+  }
+  return -1;
+}
+
+function extractCompleteMessages(buffer) {
+  const messages = [];
+  let remainder = Buffer.from(buffer || Buffer.alloc(0));
+
+  while (remainder.length) {
+    const mllpStart = remainder.indexOf(MLLP_START);
+    if (mllpStart >= 0) {
+      if (mllpStart > 0) remainder = remainder.slice(mllpStart);
+      const mllpEnd = indexOfMllpEnd(remainder);
+      if (mllpEnd < 0) break;
+      const hasTrailerCr = remainder[mllpEnd + 1] === 0x0d || remainder[mllpEnd + 1] === 0x0a;
+      const messageEnd = mllpEnd + (hasTrailerCr ? 2 : 1);
+      messages.push(remainder.slice(0, messageEnd));
+      remainder = remainder.slice(messageEnd);
+      continue;
+    }
+
+    const text = remainder.toString("utf8");
+    const astmTerminator = text.match(/(?:\r|\n)\d?L\|[^\r\n]*(?:\r|\n|$)/);
+    const hl7LooksComplete = /(?:^|\r|\n)MSH\|/.test(text) && /(?:\r|\n)OBX\|/.test(text) && /(?:\r|\n)$/.test(text);
+    if (astmTerminator || hl7LooksComplete) {
+      messages.push(remainder);
+      remainder = Buffer.alloc(0);
+      continue;
+    }
+    break;
+  }
+
+  return { messages, remainder };
+}
+
+function localEthernetIp() {
+  const interfaces = os.networkInterfaces();
+  for (const rows of Object.values(interfaces)) {
+    for (const row of rows || []) {
+      if (row.family === "IPv4" && !row.internal) return row.address;
+    }
+  }
+  return "Not detected";
+}
 
 class ListenerService {
   constructor(appStore, firebase, queue, logger) {
@@ -11,11 +67,24 @@ class ListenerService {
     this.queue = queue;
     this.logger = logger;
     this.servers = new Map();
+    this.sockets = new Map();
+    this.reconnectTimers = new Map();
     this.running = false;
     this.analyzerConnected = false;
     this.todayCount = 0;
     this.lastMessageAt = "";
     this.errors = [];
+    this.diagnostics = {
+      localPcIp: localEthernetIp(),
+      analyzerIp: "10.0.0.2",
+      analyzerPort: 5001,
+      tcpMode: "TCP Client",
+      socketState: "Disconnected",
+      lastReceivedByteTime: "",
+      lastRawMessage: "",
+      lastParserError: "",
+      connectionInfo: ""
+    };
   }
 
   async start() {
@@ -26,13 +95,26 @@ class ListenerService {
         this.logger.warn("listener", `${analyzer.connectionType} is configured as a future adapter`, { analyzer: analyzer.name });
         continue;
       }
-      await this.startTcp(analyzer);
+      if (this.connectionMode(analyzer) === "TCP Client") {
+        this.startTcpClient(analyzer, 0);
+      } else {
+        await this.startTcpServer(analyzer);
+      }
     }
-    this.running = this.servers.size > 0;
+    this.running = this.servers.size > 0 || this.sockets.size > 0 || analyzers.length > 0;
     return this.status();
   }
 
   async stop() {
+    for (const timer of this.reconnectTimers.values()) clearTimeout(timer);
+    this.reconnectTimers.clear();
+
+    for (const socket of this.sockets.values()) {
+      socket.removeAllListeners("close");
+      socket.destroy();
+    }
+    this.sockets.clear();
+
     const closing = [];
     for (const server of this.servers.values()) {
       closing.push(new Promise((resolve) => server.close(resolve)));
@@ -41,43 +123,145 @@ class ListenerService {
     this.servers.clear();
     this.running = false;
     this.analyzerConnected = false;
+    this.updateDiagnostics({ socketState: "Disconnected", connectionInfo: "" });
   }
 
-  startTcp(analyzer) {
+  startTcpClient(analyzer, attempt) {
+    const key = this.analyzerKey(analyzer);
+    const host = this.analyzerHost(analyzer);
+    const port = this.analyzerPort(analyzer);
+    this.updateDiagnostics({
+      analyzerIp: host,
+      analyzerPort: port,
+      tcpMode: "TCP Client",
+      socketState: attempt > 0 ? "Reconnecting" : "Connecting",
+      connectionInfo: `${host}:${port}`
+    });
+    this.logger.info("tcp", `Connecting to ${host}:${port}`, { analyzer: analyzer.name });
+
+    const socket = net.createConnection({ host, port });
+    this.sockets.set(key, socket);
+
+    socket.on("connect", () => {
+      this.analyzerConnected = true;
+      this.updateDiagnostics({ socketState: "Connected", connectionInfo: `${host}:${port}` });
+      this.logger.info("tcp", "TCP connection established", { analyzer: analyzer.name, details: `${host}:${port}` });
+      this.handleSocket(socket, analyzer, { mode: "TCP Client", remote: `${host}:${port}` });
+      this.updateDiagnostics({ socketState: "Waiting for result" });
+    });
+
+    socket.on("error", (err) => {
+      this.errors.unshift(err.message);
+      this.updateDiagnostics({ lastParserError: "", socketState: "Disconnected" });
+      this.logger.error("tcp", err.message, { analyzer: analyzer.name, details: `${host}:${port}` });
+    });
+
+    socket.on("close", () => {
+      this.sockets.delete(key);
+      this.analyzerConnected = false;
+      this.updateDiagnostics({ socketState: "Disconnected" });
+      this.logger.info("tcp", "Analyzer disconnected", { analyzer: analyzer.name, details: `${host}:${port}` });
+      if (this.running && analyzer.reconnectAutomatically !== false) this.scheduleReconnect(analyzer, attempt + 1);
+    });
+  }
+
+  scheduleReconnect(analyzer, attempt) {
+    const key = this.analyzerKey(analyzer);
+    if (this.reconnectTimers.has(key)) return;
+    const delay = Math.min(MAX_RECONNECT_DELAY_MS, 1000 * Math.pow(2, Math.max(0, attempt - 1)));
+    this.updateDiagnostics({ socketState: "Reconnecting" });
+    this.logger.warn("tcp", `Reconnecting in ${Math.round(delay / 1000)}s`, {
+      analyzer: analyzer.name,
+      details: `${this.analyzerHost(analyzer)}:${this.analyzerPort(analyzer)}`
+    });
+    const timer = setTimeout(() => {
+      this.reconnectTimers.delete(key);
+      if (this.running) this.startTcpClient(analyzer, attempt);
+    }, delay);
+    this.reconnectTimers.set(key, timer);
+  }
+
+  startTcpServer(analyzer) {
     return new Promise((resolve, reject) => {
-      const server = net.createServer((socket) => this.handleSocket(socket, analyzer));
+      const host = analyzer.host || "0.0.0.0";
+      const port = this.localPort(analyzer);
+      const server = net.createServer((socket) => {
+        this.analyzerConnected = true;
+        this.updateDiagnostics({
+          analyzerIp: socket.remoteAddress || this.analyzerHost(analyzer),
+          analyzerPort: socket.remotePort || this.analyzerPort(analyzer),
+          tcpMode: "TCP Server",
+          socketState: "Connected",
+          connectionInfo: `${socket.remoteAddress}:${socket.remotePort}`
+        });
+        this.logger.info("tcp", "Analyzer connected", {
+          analyzer: analyzer.name,
+          details: `${socket.remoteAddress}:${socket.remotePort}`
+        });
+        this.handleSocket(socket, analyzer, { mode: "TCP Server", remote: `${socket.remoteAddress}:${socket.remotePort}` });
+      });
       server.on("error", (err) => {
         this.errors.unshift(err.message);
+        this.updateDiagnostics({ socketState: "Disconnected" });
         this.logger.error("tcp", err.message, { analyzer: analyzer.name });
         reject(err);
       });
-      server.listen(Number(analyzer.port || 5001), analyzer.host || "0.0.0.0", () => {
-        this.logger.info("tcp", `Listening on ${analyzer.host || "0.0.0.0"}:${analyzer.port || 5001}`, { analyzer: analyzer.name });
-        this.servers.set(analyzer.id || analyzer.name, server);
+      server.listen(port, host, () => {
+        this.updateDiagnostics({
+          analyzerIp: this.analyzerHost(analyzer),
+          analyzerPort: this.analyzerPort(analyzer),
+          tcpMode: "TCP Server",
+          socketState: "Waiting for result",
+          connectionInfo: `${host}:${port}`
+        });
+        this.logger.info("tcp", `Listening on ${host}:${port}`, { analyzer: analyzer.name });
+        this.servers.set(this.analyzerKey(analyzer), server);
         resolve();
       });
     });
   }
 
-  handleSocket(socket, analyzer) {
-    this.analyzerConnected = true;
-    this.logger.info("tcp", "Analyzer connected", { analyzer: analyzer.name, details: `${socket.remoteAddress}:${socket.remotePort}` });
+  handleSocket(socket, analyzer, context = {}) {
     let buffer = Buffer.alloc(0);
     let handling = false;
 
     socket.on("data", async (chunk) => {
+      const remote = context.remote || `${socket.remoteAddress}:${socket.remotePort}`;
+      this.updateDiagnostics({
+        socketState: "Message received",
+        lastReceivedByteTime: new Date().toISOString(),
+        lastRawMessage: this.rawText(chunk),
+        connectionInfo: remote,
+        tcpMode: context.mode || this.connectionMode(analyzer)
+      });
       this.logger.rawPacket(chunk, {
         analyzer: analyzer.name,
-        remote: `${socket.remoteAddress}:${socket.remotePort}`
+        remote,
+        mode: context.mode || this.connectionMode(analyzer),
+        analyzerIp: this.analyzerHost(analyzer),
+        analyzerPort: this.analyzerPort(analyzer)
+      });
+      this.logger.info("tcp", "Raw bytes received", {
+        analyzer: analyzer.name,
+        details: `${chunk.length} bytes from ${remote}`,
+        rawMessage: this.rawText(chunk)
       });
       buffer = Buffer.concat([buffer, chunk]);
-      if (!this.messageLooksComplete(buffer)) return;
-      const rawMessage = buffer;
-      buffer = Buffer.alloc(0);
+      const extracted = extractCompleteMessages(buffer);
+      buffer = extracted.remainder;
+      if (!extracted.messages.length) return;
       handling = true;
-      const result = await this.handleMessage(rawMessage, analyzer);
+      for (const rawMessage of extracted.messages) {
+        const protocol = this.detectProtocol(rawMessage);
+        this.logger.info("message", "Message type detected", { analyzer: analyzer.name, details: protocol });
+        const result = await this.handleMessage(rawMessage, analyzer, { remote, mode: context.mode });
+        if (protocol === "HL7") {
+          socket.write(buildAck(rawMessage, result.ok ? "AA" : "AE"));
+          this.logger.info("tcp", "ACK sent", { analyzer: analyzer.name, details: result.ok ? "AA" : "AE" });
+        }
+      }
       handling = false;
-      if (this.detectProtocol(rawMessage, analyzer) === "HL7") socket.write(buildAck(rawMessage, result.ok ? "AA" : "AE"));
+      if (!socket.destroyed) this.updateDiagnostics({ socketState: "Waiting for result" });
     });
 
     socket.on("close", async () => {
@@ -85,28 +269,20 @@ class ListenerService {
       if (buffer.length && !handling) {
         const rawMessage = buffer;
         buffer = Buffer.alloc(0);
-        this.logger.warn("tcp", "Analyzer disconnected with buffered data; parsing remaining bytes", {
+        this.logger.warn("tcp", "Socket closed with buffered data; parsing remaining bytes", {
           analyzer: analyzer.name,
           details: `${rawMessage.length} bytes`,
           rawMessage: rawMessage.toString("utf8")
         });
-        await this.handleMessage(rawMessage, analyzer);
+        await this.handleMessage(rawMessage, analyzer, { mode: context.mode, remote: context.remote });
       }
-      this.logger.info("tcp", "Analyzer disconnected", { analyzer: analyzer.name });
     });
-    socket.on("error", (err) => this.logger.error("tcp", err.message, { analyzer: analyzer.name }));
   }
 
-  messageLooksComplete(buffer) {
-    const text = buffer.toString("utf8");
-    return text.includes("\x1c\r")
-      || text.includes("\x1c\n")
-      || (!text.startsWith("\x0b") && (/\rOBX\|/.test(text) || /\r\d?L\|/.test(text) || /\n\d?L\|/.test(text)));
-  }
-
-  async handleMessage(rawMessage, analyzer) {
+  async handleMessage(rawMessage, analyzer, context = {}) {
     const rawText = this.rawText(rawMessage);
     const protocol = this.detectProtocol(rawMessage);
+    this.updateDiagnostics({ lastRawMessage: rawText });
     try {
       this.logger.info("message", `Detected ${protocol} analyzer message`, {
         analyzer: analyzer.name,
@@ -114,14 +290,32 @@ class ListenerService {
         rawMessage: rawText
       });
       const parsed = this.parseMessage(rawMessage, analyzer);
+      this.logger.info("message", `${protocol} parsed`, {
+        analyzer: analyzer.name,
+        patient: parsed.patientName,
+        sample: parsed.sampleId,
+        details: `${parsed.results.length} results`
+      });
       const payload = { rawMessage: rawText, parsed, analyzer, receivedAt: new Date().toISOString() };
       try {
         await this.firebase.uploadMachineResult(payload);
+        this.logger.info("firebase", "Firestore upload success", {
+          analyzer: analyzer.name,
+          sample: parsed.sampleId,
+          details: context.remote || ""
+        });
       } catch (err) {
         await this.queue.enqueue(payload, err.message);
+        this.logger.error("firebase", "Firestore upload failure", {
+          analyzer: analyzer.name,
+          sample: parsed.sampleId,
+          details: err.message,
+          rawMessage: rawText
+        });
       }
       this.bumpTodayCount();
       this.lastMessageAt = new Date().toISOString();
+      this.updateDiagnostics({ lastParserError: "" });
       this.logger.info("message", "Imported analyzer result", {
         analyzer: analyzer.name,
         patient: parsed.patientName,
@@ -131,9 +325,11 @@ class ListenerService {
       return { ok: true, parsed };
     } catch (err) {
       this.errors.unshift(err.message);
+      this.updateDiagnostics({ lastParserError: err.message });
       this.logger.rawParserError(rawText, err.message, {
         analyzer: analyzer.name,
-        protocol
+        protocol,
+        remote: context.remote || ""
       });
       this.logger.error("message", "Unable to parse analyzer message", {
         analyzer: analyzer.name,
@@ -166,18 +362,46 @@ class ListenerService {
     if (String(analyzer.connectionType || "LAN").toUpperCase() !== "LAN") {
       return { ok: false, message: `${analyzer.connectionType} support is prepared but requires a serial driver adapter.` };
     }
+    const host = this.analyzerHost(analyzer);
+    const port = this.analyzerPort(analyzer);
     return new Promise((resolve) => {
-      const socket = net.createConnection({ host: analyzer.analyzerIp || analyzer.host || "127.0.0.1", port: Number(analyzer.port || 5001), timeout: 3500 });
+      const socket = net.createConnection({ host, port, timeout: 3500 });
       socket.on("connect", () => {
         socket.end();
-        resolve({ ok: true, message: "Analyzer TCP port is reachable." });
+        resolve({ ok: true, message: `TCP client can reach ${host}:${port}. Start Listener keeps the persistent socket open.` });
       });
       socket.on("timeout", () => {
         socket.destroy();
-        resolve({ ok: false, message: "Connection timed out." });
+        resolve({ ok: false, message: `Connection to ${host}:${port} timed out.` });
       });
       socket.on("error", (err) => resolve({ ok: false, message: err.message }));
     });
+  }
+
+  connectionMode(analyzer = {}) {
+    return String(analyzer.connectionMode || (analyzer.id === "mindray-bc5000" ? "TCP Client" : "TCP Server")).toUpperCase() === "TCP CLIENT"
+      ? "TCP Client"
+      : "TCP Server";
+  }
+
+  analyzerHost(analyzer = {}) {
+    return analyzer.analyzerIp || analyzer.host || "10.0.0.2";
+  }
+
+  analyzerPort(analyzer = {}) {
+    return Number(analyzer.analyzerPort || analyzer.port || 5001);
+  }
+
+  localPort(analyzer = {}) {
+    return Number(analyzer.localPort || analyzer.port || 5001);
+  }
+
+  analyzerKey(analyzer = {}) {
+    return analyzer.id || analyzer.name || "analyzer";
+  }
+
+  updateDiagnostics(next) {
+    this.diagnostics = { ...this.diagnostics, localPcIp: localEthernetIp(), ...next };
   }
 
   bumpTodayCount() {
@@ -196,9 +420,10 @@ class ListenerService {
       internetConnected: true,
       todayImportedReports: this.todayCount,
       lastMessageAt: this.lastMessageAt,
-      errors: this.errors.slice(0, 10)
+      errors: this.errors.slice(0, 10),
+      ...this.diagnostics
     };
   }
 }
 
-module.exports = { ListenerService };
+module.exports = { ListenerService, extractCompleteMessages };

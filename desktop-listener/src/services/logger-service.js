@@ -48,6 +48,9 @@ class LoggerService {
       date: new Date().toISOString(),
       analyzer: meta.analyzer || "",
       remote: meta.remote || "",
+      mode: meta.mode || "",
+      analyzerIp: meta.analyzerIp || "",
+      analyzerPort: meta.analyzerPort || "",
       byteLength: bytes.length,
       hex: bytes.toString("hex"),
       rawMessage: rawText

@@ -7,7 +7,11 @@ function defaultAnalyzer() {
     model: "BC-5000",
     protocol: "HL7",
     connectionType: "LAN",
+    connectionMode: "TCP Client",
     host: "0.0.0.0",
+    analyzerIp: "10.0.0.2",
+    analyzerPort: 5001,
+    localPort: 5001,
     port: 5001,
     reconnectAutomatically: true,
     enabled: true

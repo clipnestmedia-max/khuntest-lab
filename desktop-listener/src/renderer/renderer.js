@@ -61,14 +61,26 @@ function render(next) {
   $("userEmail").textContent = next.firebase.user.email || "";
   $("firebaseStatus").textContent = next.firebase.connected ? "Yes" : "No";
   $("internetStatus").textContent = navigator.onLine ? "Yes" : "No";
-  $("analyzerStatus").textContent = next.status.analyzerConnected ? "Yes" : "Waiting";
+  $("analyzerStatus").textContent = next.status.socketState || (next.status.analyzerConnected ? "Connected" : "Waiting");
   $("listenerStatus").textContent = next.status.running ? "Running" : "Paused";
   $("todayCount").textContent = String(next.status.todayImportedReports || 0);
   $("lastSync").textContent = formatDate(next.firebase.lastSyncTime || next.status.lastMessageAt);
   $("queueCount").textContent = `${next.queue.pending || 0} pending`;
+  renderDiagnostics(next.status || {});
   renderSettings(next.settings);
   renderAnalyzers(next.settings.analyzers || []);
   renderLogs(next.logs || []);
+}
+
+function renderDiagnostics(status) {
+  $("diagLocalIp").textContent = status.localPcIp || "Not detected";
+  $("diagAnalyzerIp").textContent = status.analyzerIp || "10.0.0.2";
+  $("diagAnalyzerPort").textContent = String(status.analyzerPort || 5001);
+  $("diagTcpMode").textContent = status.tcpMode || "TCP Client";
+  $("diagSocketState").textContent = status.socketState || "Disconnected";
+  $("diagLastByte").textContent = formatDate(status.lastReceivedByteTime);
+  $("diagLastRaw").textContent = truncateRaw(formatRawForDisplay(status.lastRawMessage || "None"));
+  $("diagLastParserError").textContent = status.lastParserError || "None";
 }
 
 function renderSettings(settings) {
@@ -96,9 +108,10 @@ function analyzerCard(analyzer, index) {
     <label>Analyzer Name<input data-field="name" value="${escapeAttr(analyzer.name || "")}"></label>
     <label>Protocol<select data-field="protocol"><option ${selected(analyzer.protocol, "HL7")}>HL7</option><option ${selected(analyzer.protocol, "ASTM")}>ASTM</option></select></label>
     <label>Connection Type<select data-field="connectionType"><option ${selected(analyzer.connectionType, "LAN")}>LAN</option><option ${selected(analyzer.connectionType, "RS232")}>RS232</option><option ${selected(analyzer.connectionType, "USB Serial")}>USB Serial</option></select></label>
-    <label>Analyzer Port<input data-field="port" type="number" value="${Number(analyzer.port || 5001)}"></label>
-    <label>Listener Host<input data-field="host" value="${escapeAttr(analyzer.host || "0.0.0.0")}"></label>
-    <label>Analyzer IP<input data-field="analyzerIp" value="${escapeAttr(analyzer.analyzerIp || "")}"></label>
+    <label>Connection Mode<select data-field="connectionMode"><option ${selected(analyzer.connectionMode || "TCP Client", "TCP Client")}>TCP Client</option><option ${selected(analyzer.connectionMode, "TCP Server")}>TCP Server</option></select></label>
+    <label>Analyzer IP<input data-field="analyzerIp" value="${escapeAttr(analyzer.analyzerIp || "10.0.0.2")}"></label>
+    <label>Analyzer Port<input data-field="analyzerPort" type="number" value="${Number(analyzer.analyzerPort || analyzer.port || 5001)}"></label>
+    <label>Local Listener Port (TCP Server only)<input data-field="localPort" type="number" value="${Number(analyzer.localPort || analyzer.port || 5001)}"></label>
     <label class="check-row"><input data-field="reconnectAutomatically" type="checkbox" ${analyzer.reconnectAutomatically ? "checked" : ""}>Reconnect Automatically</label>
     <label class="check-row"><input data-field="enabled" type="checkbox" ${analyzer.enabled !== false ? "checked" : ""}>Enabled</label>
     <div class="full"><button class="ghost" data-test-analyzer="${index}" type="button">Test Connection</button></div>
@@ -113,8 +126,11 @@ function addAnalyzer() {
     model: "",
     protocol: "HL7",
     connectionType: "LAN",
+    connectionMode: "TCP Client",
     host: "0.0.0.0",
-    analyzerIp: "",
+    analyzerIp: "10.0.0.2",
+    analyzerPort: 5001,
+    localPort: 5001,
     port: 5001,
     reconnectAutomatically: true,
     enabled: true
@@ -138,9 +154,12 @@ function collectAnalyzers() {
       name: get("name").value.trim(),
       protocol: get("protocol").value,
       connectionType: get("connectionType").value,
-      host: get("host").value.trim() || "0.0.0.0",
+      connectionMode: get("connectionMode").value,
+      host: "0.0.0.0",
       analyzerIp: get("analyzerIp").value.trim(),
-      port: Number(get("port").value || 5001),
+      analyzerPort: Number(get("analyzerPort").value || 5001),
+      localPort: Number(get("localPort").value || 5001),
+      port: Number(get("analyzerPort").value || get("localPort").value || 5001),
       reconnectAutomatically: get("reconnectAutomatically").checked,
       enabled: get("enabled").checked
     };
