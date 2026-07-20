@@ -200,6 +200,7 @@
         <div class="form-card report-select-card">
           <label>Select Patient / Bill No</label>
           <select id="reportBookingSelect" onchange="loadReportEditor(this.value)"></select>
+          <div id="reportEntryDedupeDebug" class="notice hidden" style="margin-top:10px;"></div>
         </div>
         <div id="reportEditor" class="hidden">
           <div class="toolbar"><button class="btn btn-outline btn-small" type="button" onclick="editCurrentReportBooking()">Edit Patient / Booking Details</button></div>
@@ -356,6 +357,9 @@ let onlineBookings = [];
 let adminNotifications = [];
 let onlineBookingsUnsub = null;
 let notificationsUnsub = null;
+let onlineBookingsListenerRegistrations = 0;
+let reportEntryRenderCount = 0;
+let lastReportEntryDedupeStats = { raw: 0, unique: 0, removed: 0, duplicateBills: [] };
 let seenNotificationIds = new Set(JSON.parse(localStorage.getItem("khuntest_seen_notifications") || "[]"));
 let currentReportBooking = null;
 let currentAdminUser = null;
@@ -410,6 +414,101 @@ function bookingTests(b) {
     : Array.isArray(b.tests)
       ? b.tests
       : [];
+}
+
+function timestampValue(value) {
+  const date = value?.toDate ? value.toDate() : new Date(value || 0);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function normalizeBookingRecord(row, sourceCollection = "bookings") {
+  const tests = bookingTests(row).length ? bookingTests(row) : onlineTests(row);
+  return {
+    ...row,
+    sourceCollection: row.sourceCollection || row.onlineCollection || sourceCollection,
+    documentId: row.documentId || row.id || "",
+    bookingId: row.bookingId || row.onlineBookingId || row.id || "",
+    billNo: String(row.billNo || row.bill_no || row.billNumber || row.reportBillNo || "").trim(),
+    patientUid: row.patientUid || row.uid || "",
+    patientName: row.patientName || row.patient_name || row.name || "",
+    tests,
+    collectionDate: row.collectionDate || row.collDate || row.preferredDate || row.date || "",
+    updatedAt: row.updatedAt || row.createdAt || ""
+  };
+}
+
+function sourceRank(source) {
+  const value = String(source || "").toLowerCase();
+  if (value === "bookings") return 4;
+  if (value === "onlinebookings") return 3;
+  if (value === "reports") return 2;
+  return 1;
+}
+
+function completenessScore(row) {
+  return [
+    row.documentId || row.id,
+    row.billNo || row.reportBillNo || row.bill_no,
+    row.patientName,
+    bookingTests(row).length || onlineTests(row).length,
+    row.phone,
+    row.age,
+    row.gender
+  ].reduce((sum, value) => sum + (value ? 1 : 0), 0);
+}
+
+function chooseMostCompleteRecord(existing, incoming) {
+  const a = normalizeBookingRecord(existing, existing.sourceCollection);
+  const b = normalizeBookingRecord(incoming, incoming.sourceCollection);
+  if (sourceRank(b.sourceCollection) !== sourceRank(a.sourceCollection)) return sourceRank(b.sourceCollection) > sourceRank(a.sourceCollection) ? incoming : existing;
+  if (completenessScore(b) !== completenessScore(a)) return completenessScore(b) > completenessScore(a) ? incoming : existing;
+  return timestampValue(b.updatedAt) >= timestampValue(a.updatedAt) ? incoming : existing;
+}
+
+function bookingDedupeKey(row, mode = "display") {
+  const bookingId = String(row.id || row.documentId || row.bookingId || "").trim();
+  const logicalBookingId = String(row.bookingId || row.onlineBookingId || "").trim();
+  const billNo = String(row.billNo || row.bill_no || row.billNumber || row.reportBillNo || "").trim();
+  if (mode === "report-entry" && billNo) return `bill:${billNo}`;
+  if (mode === "online" && logicalBookingId) return `online:${logicalBookingId}`;
+  if (mode === "machine" && billNo) return `bill:${billNo}`;
+  if (bookingId) return `booking:${bookingId}`;
+  if (billNo) return `bill:${billNo}`;
+  return `fallback:${row.patientUid || ""}:${row.collectionDate || row.date || ""}:${JSON.stringify(row.tests || row.selectedTests || [])}`;
+}
+
+function dedupeBookings(rows, mode = "display") {
+  const map = new Map();
+  const billCounts = new Map();
+  rows.forEach((sourceRow) => {
+    const row = normalizeBookingRecord(sourceRow, sourceRow.sourceCollection || sourceRow.onlineCollection || "bookings");
+    if (row.billNo) billCounts.set(row.billNo, (billCounts.get(row.billNo) || 0) + 1);
+    const key = bookingDedupeKey(row, mode);
+    const existing = map.get(key);
+    map.set(key, existing ? chooseMostCompleteRecord(existing, row) : row);
+  });
+  const unique = Array.from(map.values()).sort((a, b) => timestampValue(b.createdAt || b.updatedAt) - timestampValue(a.createdAt || a.updatedAt));
+  const duplicateBills = Array.from(billCounts.entries()).filter(([, count]) => count > 1).map(([billNo]) => billNo);
+  return {
+    raw: rows.length,
+    unique,
+    removed: Math.max(rows.length - unique.length, 0),
+    duplicateBills
+  };
+}
+
+function uniqueDisplayBookings(mode = "report-entry") {
+  return dedupeBookings(firebaseBookings.map((row) => normalizeBookingRecord(row, "bookings")), mode).unique;
+}
+
+function uniqueReportsForDisplay(rows) {
+  const map = new Map();
+  rows.forEach((report, index) => {
+    const key = String(report.billNo || report.id || "").trim() || `report:${index}`;
+    const existing = map.get(key);
+    map.set(key, existing ? chooseMostCompleteRecord(existing, { ...report, sourceCollection: "reports" }) : { ...report, sourceCollection: "reports" });
+  });
+  return Array.from(map.values()).sort((a, b) => timestampValue(b.releasedAt || b.updatedAt || b.createdAt) - timestampValue(a.releasedAt || a.updatedAt || a.createdAt));
 }
 
 function isCBCTest(test) {
@@ -587,6 +686,15 @@ async function getAllBookings() {
   const rows = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
   allBookings = rows;
   firebaseBookings = rows;
+  const stats = dedupeBookings(rows.map((row) => normalizeBookingRecord(row, "bookings")), "report-entry");
+  console.debug("[BookingsLoadDedup]", {
+    rawRecords: rows.length,
+    uniqueBookingIds: new Set(rows.map((row) => row.id || row.bookingId).filter(Boolean)).size,
+    uniqueBillNumbers: new Set(rows.map((row) => reportBill(row)).filter(Boolean)).size,
+    duplicateBillNumbers: stats.duplicateBills.length,
+    duplicateEntriesRemoved: stats.removed,
+    sources: { bookings: rows.length }
+  });
   return rows;
 }
 
@@ -616,6 +724,8 @@ async function getMachineResults() {
 
 function listenRealtimeAdminCollections() {
   if (!onlineBookingsUnsub) {
+    onlineBookingsListenerRegistrations += 1;
+    console.debug("[AdminRealtimeListeners]", { onlineBookingsRegistrations: onlineBookingsListenerRegistrations });
     onlineBookingsUnsub = onSnapshot(query(collection(db, "onlineBookings"), orderBy("createdAt", "desc")), (snap) => {
       onlineBookings = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
       renderFirebaseMetrics();
@@ -643,19 +753,13 @@ function onlineTests(row) {
 }
 
 function allOnlineRows() {
-  const byKey = new Map();
-  onlineBookings.forEach((row) => byKey.set(String(row.bookingId || row.id), { ...row, onlineCollection: "onlineBookings" }));
-  firebaseBookings
-    .filter((row) => row.source === "online" || row.onlineBookingId)
-    .forEach((row) => {
-      const key = String(row.bookingId || row.onlineBookingId || row.id);
-      if (!byKey.has(key)) byKey.set(key, { ...row, bookingId: row.bookingId || row.onlineBookingId || row.id, onlineCollection: "bookings" });
-    });
-  return Array.from(byKey.values()).sort((a, b) => {
-    const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-    const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-    return db.getTime() - da.getTime();
-  });
+  const rows = [
+    ...onlineBookings.map((row) => normalizeBookingRecord({ ...row, onlineCollection: "onlineBookings" }, "onlineBookings")),
+    ...firebaseBookings
+      .filter((row) => row.source === "online" || row.onlineBookingId)
+      .map((row) => normalizeBookingRecord({ ...row, bookingId: row.bookingId || row.onlineBookingId || row.id, onlineCollection: "bookings" }, "bookings"))
+  ];
+  return dedupeBookings(rows, "online").unique;
 }
 
 function onlineStatus(row) {
@@ -1413,6 +1517,26 @@ function bookingByKind(kind, id) {
     : firebaseBookings.find((b) => String(b.id) === String(id));
 }
 
+function bookingBySelectorValue(value) {
+  const text = String(value || "");
+  if (!text) return null;
+  if (text.startsWith("booking:")) {
+    const id = text.slice("booking:".length);
+    return firebaseBookings.find((b) => String(b.id || b.documentId) === id) || null;
+  }
+  if (text.startsWith("bill:")) {
+    const bill = text.slice("bill:".length);
+    return dedupeBookings(firebaseBookings, "report-entry").unique.find((b) => String(reportBill(b)) === bill || String(b.billNo || "") === bill) || null;
+  }
+  return firebaseBookings.find((b) => String(b.id) === text)
+    || firebaseBookings.find((b) => String(reportBill(b)) === text)
+    || null;
+}
+
+function selectorValueForBooking(row) {
+  return row?.id || row?.documentId ? `booking:${row.id || row.documentId}` : `bill:${row?.billNo || reportBill(row)}`;
+}
+
 function onlineCollectionFor(row) {
   return row?.onlineCollection === "bookings" ? "bookings" : "onlineBookings";
 }
@@ -1613,7 +1737,8 @@ window.moveOnlineToReportEntry = async function(id) {
 function renderFirebaseBookings() {
   const body = document.getElementById("adminBookings");
   if (!body) return;
-  body.innerHTML = firebaseBookings.length ? firebaseBookings.map((b) => {
+  const rows = uniqueDisplayBookings("report-entry");
+  body.innerHTML = rows.length ? rows.map((b) => {
     const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
     const bill = reportBill(b);
     const wa = whatsappReportLink(b);
@@ -1640,10 +1765,10 @@ function renderFirebaseBookings() {
 function renderPendingReports() {
   const body = document.getElementById("pendingReportsBody");
   if (!body) return;
-  const rows = firebaseBookings.filter((b) => !hasFirestoreReport(b)).slice(0, 8);
+  const rows = uniqueDisplayBookings("report-entry").filter((b) => !hasFirestoreReport(b)).slice(0, 8);
   body.innerHTML = rows.length ? rows.map((b) => {
     const tests = bookingTests(b).map((t) => t.name).join(", ") || b.test || "";
-    return `<tr><td><b>${html(reportBill(b))}</b><br><small>${html(b.status || "Pending")}</small></td><td>${html(displayPatientName(b.patientName))}<br><small>${html(b.phone)}</small></td><td>${html(tests)}</td><td><button class="btn btn-navy btn-small" onclick="setTab('reportGen');renderReportBookingSelect();loadReportEditor('${html(b.id)}')">Start Report</button></td></tr>`;
+    return `<tr><td><b>${html(reportBill(b))}</b><br><small>${html(b.status || "Pending")}</small></td><td>${html(displayPatientName(b.patientName))}<br><small>${html(b.phone)}</small></td><td>${html(tests)}</td><td><button class="btn btn-navy btn-small" onclick="setTab('reportGen');renderReportBookingSelect();loadReportEditor('booking:${html(b.id)}')">Start Report</button></td></tr>`;
   }).join("") : `<tr><td colspan="4">No pending reports.</td></tr>`;
 }
 
@@ -1738,7 +1863,7 @@ function reportRowsFromMachineResult(row) {
 }
 
 function bookingForMachineResult(row) {
-  return firebaseBookings.find((booking) => (
+  return uniqueDisplayBookings("machine").find((booking) => (
     String(booking.id || "") === String(row.bookingId || "")
     || String(reportBill(booking)) === String(row.billNo || "")
     || String(reportBill(booking)) === String(row.sampleId || "")
@@ -1764,7 +1889,7 @@ window.attachMachineResultToBooking = async function(id) {
   if (!row) return alert("Machine result not found.");
   const bill = prompt("Enter booking bill number to attach this machine result", row.billNo || row.sampleId || "");
   if (!bill) return;
-  const booking = firebaseBookings.find((b) => String(reportBill(b)) === String(bill));
+  const booking = uniqueDisplayBookings("machine").find((b) => String(reportBill(b)) === String(bill));
   if (!booking) return alert("Booking not found for bill " + bill);
   await updateDoc(doc(db, "machineResults", id), {
     billNo: reportBill(booking),
@@ -1922,7 +2047,7 @@ window.renderPatientsPanel = function() {
   if (!body) return;
   const q = (document.getElementById("patientSearch")?.value || "").toLowerCase();
   const map = new Map();
-  firebaseBookings.forEach((b) => {
+  uniqueDisplayBookings("report-entry").forEach((b) => {
     const key = b.patientEmail || b.email || b.phone || b.patientName;
     if (!map.has(key)) map.set(key, { name: b.patientName, email: b.patientEmail || b.email, phone: b.phone, count: 0, revenue: 0, last: b.createdAt });
     const row = map.get(key);
@@ -1940,7 +2065,7 @@ window.renderPatientsPanel = function() {
   });
   const rows = Array.from(map.values()).filter((p) => !q || [p.name, p.email, p.phone].join(" ").toLowerCase().includes(q));
   body.innerHTML = rows.map((p) => {
-    const booking = firebaseBookings.find((b) => (b.patientEmail || b.email || b.phone || b.patientName) === (p.email || p.phone || p.name));
+    const booking = uniqueDisplayBookings("report-entry").find((b) => (b.patientEmail || b.email || b.phone || b.patientName) === (p.email || p.phone || p.name));
     const online = allOnlineRows().find((b) => (b.email || b.patientEmail || b.phone || b.patientName) === (p.email || p.phone || p.name));
     const edit = booking ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(booking.id)}')">Edit</button> ${billActionsHtml(booking, "booking")}` : online ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('online','${html(online.id || online.bookingId)}')">Edit</button> ${billActionsHtml(online, "online")}` : "";
     return `<tr><td><b>${html(displayPatientName(p.name))}</b></td><td>${html(p.phone)}<br><small>${html(p.email)}</small></td><td>${p.count}</td><td>${rupees(p.revenue)}</td><td>${html(createdText(p.last))}</td><td>${edit}</td></tr>`;
@@ -1951,11 +2076,11 @@ window.renderReportsPanel = function() {
   const body = document.getElementById("reportsBody");
   if (!body) return;
   const q = (document.getElementById("reportSearch")?.value || "").toLowerCase();
-  const rows = firebaseReports.filter((r) => isFinalReport(r) && (!q || [r.billNo, r.patientName, r.phone].join(" ").toLowerCase().includes(q)));
+  const rows = uniqueReportsForDisplay(firebaseReports).filter((r) => isFinalReport(r) && (!q || [r.billNo, r.patientName, r.phone].join(" ").toLowerCase().includes(q)));
   body.innerHTML = rows.map((r) => {
-    const b = firebaseBookings.find((booking) => String(reportBill(booking)) === String(r.billNo || r.id)) || r;
+    const b = uniqueDisplayBookings("report-entry").find((booking) => String(reportBill(booking)) === String(r.billNo || r.id)) || r;
     const wa = whatsappReportLink(b);
-    const editButton = firebaseBookings.some((booking) => booking.id === b?.id) ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
+    const editButton = uniqueDisplayBookings("report-entry").some((booking) => booking.id === b?.id) ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
     const billButtons = b?.id ? `<br>${billActionsHtml(b, "booking", "Reprint Bill")}` : "";
     return `<tr><td><b>${html(r.billNo || r.id)}</b></td><td>${html(displayPatientName(r.patientName))}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(r.billNo || r.id)}">View/Print</a>${wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">WhatsApp</a>` : ""}${editButton}${billButtons}</td></tr>`;
   }).join("") || `<tr><td colspan="5">No released reports found.</td></tr>`;
@@ -1964,13 +2089,43 @@ window.renderReportsPanel = function() {
 function renderFirebaseReportSelect() {
   const sel = document.getElementById("reportBookingSelect");
   if (!sel) return;
-  sel.innerHTML = '<option value="">Select patient / bill</option>' + firebaseBookings.map((b) => {
+  reportEntryRenderCount += 1;
+  const previous = sel.value;
+  const deduped = dedupeBookings(firebaseBookings.map((row) => normalizeBookingRecord(row, "bookings")), "report-entry");
+  lastReportEntryDedupeStats = {
+    raw: deduped.raw,
+    unique: deduped.unique.length,
+    removed: deduped.removed,
+    duplicateBills: deduped.duplicateBills
+  };
+  const duplicatePreview = deduped.duplicateBills.slice(0, 8).join(", ");
+  console.debug("[ReportEntryDedup]", {
+    renderCount: reportEntryRenderCount,
+    onlineBookingsListenerRegistrations,
+    rawRecords: deduped.raw,
+    uniqueBookings: deduped.unique.length,
+    duplicateEntriesRemoved: deduped.removed,
+    duplicateBillNumbers: deduped.duplicateBills.length,
+    duplicateBillPreview: duplicatePreview
+  });
+  sel.innerHTML = '<option value="">Select Patient / Bill No</option>' + deduped.unique.map((b) => {
     const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
-    return `<option value="${html(b.id)}">${html(b.billNo || b.id)} - ${html(displayPatientName(b.patientName))} - ${html(tests)}</option>`;
+    const value = b.id || b.documentId ? `booking:${b.id || b.documentId}` : `bill:${b.billNo || reportBill(b)}`;
+    return `<option value="${html(value)}">${html(b.billNo || b.id)} - ${html(displayPatientName(b.patientName))} - ${html(tests)}</option>`;
   }).join("");
+  if (previous && Array.from(sel.options).some((option) => option.value === previous)) sel.value = previous;
+  renderReportEntryDedupeDebug();
 }
 
 window.renderReportBookingSelect = renderFirebaseReportSelect;
+
+function renderReportEntryDedupeDebug() {
+  const box = document.getElementById("reportEntryDedupeDebug");
+  if (!box) return;
+  const stats = lastReportEntryDedupeStats;
+  box.classList.toggle("hidden", !currentAdminProfile || stats.raw === 0);
+  box.innerHTML = `Raw bookings: <b>${stats.raw}</b> &nbsp; Unique bookings: <b>${stats.unique}</b> &nbsp; Duplicate display entries removed: <b>${stats.removed}</b>`;
+}
 
 function currentFindingRows() {
   const rows = [];
@@ -2437,7 +2592,7 @@ window.filterAdminBookings = function() {
 };
 
 window.loadReportEditor = async function(id) {
-  currentReportBooking = firebaseBookings.find((b) => b.id === id);
+  currentReportBooking = bookingBySelectorValue(id);
   selectedBookingForReport = currentReportBooking;
   const box = document.getElementById("reportEditor");
   if (!box) return;
@@ -2533,8 +2688,10 @@ window.openReportEntry = async function(bookingId) {
   window.setTab("reportGen");
   renderFirebaseReportSelect();
   const select = document.getElementById("reportBookingSelect");
-  if (select) select.value = bookingId;
-  await window.loadReportEditor(bookingId);
+  const booking = bookingBySelectorValue(`booking:${bookingId}`) || bookingBySelectorValue(bookingId);
+  const value = selectorValueForBooking(booking || { id: bookingId });
+  if (select) select.value = value;
+  await window.loadReportEditor(value);
 };
 
 window.editCurrentReportBooking = function() {
