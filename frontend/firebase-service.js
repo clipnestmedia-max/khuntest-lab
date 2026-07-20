@@ -399,7 +399,20 @@ export async function createOnlineBooking(bookingData) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
-  await setDoc(doc(db, C.onlineBookings, bookingId), payload);
+  let savedCollection = C.onlineBookings;
+  let savedId = bookingId;
+  try {
+    await setDoc(doc(db, C.onlineBookings, bookingId), payload);
+  } catch (err) {
+    const fallbackRef = await addDoc(collection(db, C.bookings), {
+      ...payload,
+      onlineBookingId: bookingId,
+      source: "online",
+      status: payload.bookingStatus
+    });
+    savedCollection = C.bookings;
+    savedId = fallbackRef.id;
+  }
   await savePatientProfile(user.uid, {
     uid: user.uid,
     name: payload.patientName,
@@ -422,8 +435,8 @@ export async function createOnlineBooking(bookingData) {
     message: `${payload.patientName || "Patient"} requested ${tests.map((test) => test.name).join(", ") || "lab tests"}.`,
     isRead: false,
     createdAt: serverTimestamp()
-  }, { merge: true });
-  return { id: bookingId, ...payload };
+  }, { merge: true }).catch(() => {});
+  return { id: savedId, savedCollection, ...payload };
 }
 
 export function listenMyOnlineBookings(uid, callback, onError) {

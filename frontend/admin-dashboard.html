@@ -576,6 +576,22 @@ function onlineTests(row) {
       : [];
 }
 
+function allOnlineRows() {
+  const byKey = new Map();
+  onlineBookings.forEach((row) => byKey.set(String(row.bookingId || row.id), { ...row, onlineCollection: "onlineBookings" }));
+  firebaseBookings
+    .filter((row) => row.source === "online" || row.onlineBookingId)
+    .forEach((row) => {
+      const key = String(row.bookingId || row.onlineBookingId || row.id);
+      if (!byKey.has(key)) byKey.set(key, { ...row, bookingId: row.bookingId || row.onlineBookingId || row.id, onlineCollection: "bookings" });
+    });
+  return Array.from(byKey.values()).sort((a, b) => {
+    const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+    const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+    return db.getTime() - da.getTime();
+  });
+}
+
 function onlineStatus(row) {
   return row.bookingStatus || row.status || "New";
 }
@@ -986,7 +1002,8 @@ function renderDebugPanel() {
 function renderFirebaseMetrics() {
   const today = new Date().toISOString().slice(0, 10);
   const todayBookings = firebaseBookings.filter((b) => (b.date || createdDateKey(b.createdAt)) === today);
-  const onlineToday = onlineBookings.filter((b) => onlineDate(b) === today || createdDateKey(b.createdAt) === today);
+  const onlineRows = allOnlineRows();
+  const onlineToday = onlineRows.filter((b) => onlineDate(b) === today || createdDateKey(b.createdAt) === today);
   const releasedCount = firebaseReports.filter((r) => (r.reportStatus || r.status || "") === "Final").length;
   const pendingStatuses = new Set(["pending", "confirmed", "sample collected", "report entry"]);
   document.getElementById("mBookings").textContent = firebaseBookings.length;
@@ -999,9 +1016,9 @@ function renderFirebaseMetrics() {
   document.getElementById("mReportPending").textContent = Math.max(firebaseBookings.length - releasedCount, 0);
   document.getElementById("mTests").textContent = allLabTests.length;
   document.getElementById("mOnlineToday").textContent = onlineToday.length;
-  document.getElementById("mOnlineNew").textContent = onlineBookings.filter((b) => ["new", "pending confirmation"].includes(String(onlineStatus(b)).toLowerCase())).length;
-  document.getElementById("mHomePending").textContent = onlineBookings.filter((b) => b.collectionType === "Home Collection" && !["completed", "cancelled"].includes(String(onlineStatus(b)).toLowerCase())).length;
-  document.getElementById("mPaymentPending").textContent = onlineBookings.filter((b) => String(b.paymentStatus || "Pending").toLowerCase() === "pending").length;
+  document.getElementById("mOnlineNew").textContent = onlineRows.filter((b) => ["new", "pending confirmation"].includes(String(onlineStatus(b)).toLowerCase())).length;
+  document.getElementById("mHomePending").textContent = onlineRows.filter((b) => b.collectionType === "Home Collection" && !["completed", "cancelled"].includes(String(onlineStatus(b)).toLowerCase())).length;
+  document.getElementById("mPaymentPending").textContent = onlineRows.filter((b) => String(b.paymentStatus || "Pending").toLowerCase() === "pending").length;
 }
 
 window.setOnlineStatusFilter = function(status) {
@@ -1025,7 +1042,7 @@ function onlineBookingRows() {
   const status = document.getElementById("onlineStatusFilter")?.value || "";
   const payment = document.getElementById("onlinePaymentFilter")?.value || "";
   const collectionType = document.getElementById("onlineCollectionFilter")?.value || "";
-  return onlineBookings.filter((b) => {
+  return allOnlineRows().filter((b) => {
     const tests = onlineTests(b).map((test) => test.name || test.testName || "").join(", ");
     const haystack = [b.bookingId, b.id, b.patientName, b.phone, b.whatsapp, tests].join(" ").toLowerCase();
     return (!q || haystack.includes(q))
@@ -1069,14 +1086,18 @@ window.renderOnlineBookingsPanel = function() {
 function renderRecentOnlineBookings() {
   const body = document.getElementById("recentOnlineBookingsBody");
   if (!body) return;
-  const rows = onlineBookings.slice(0, 6);
+  const rows = allOnlineRows().slice(0, 6);
   body.innerHTML = rows.length ? rows.map((b) => `<tr><td><b>${html(b.bookingId || b.id)}</b><br><small>${html(onlineStatus(b))}</small></td><td>${html(b.patientName || "")}<br><small>${html(b.phone || "")}</small></td><td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || "")}</small></td><td><button class="btn btn-navy btn-small" onclick="setTab('onlineBookings');document.getElementById('onlineBookingSearch').value='${html(b.bookingId || b.id)}';renderOnlineBookingsPanel()">View</button></td></tr>`).join("") : `<tr><td colspan="4">No online bookings yet.</td></tr>`;
 }
 
 function bookingByKind(kind, id) {
   return kind === "online"
-    ? onlineBookings.find((b) => String(b.id || b.bookingId) === String(id))
+    ? allOnlineRows().find((b) => String(b.id || b.bookingId || b.onlineBookingId) === String(id))
     : firebaseBookings.find((b) => String(b.id) === String(id));
+}
+
+function onlineCollectionFor(row) {
+  return row?.onlineCollection === "bookings" ? "bookings" : "onlineBookings";
 }
 
 function testsTextareaValue(row) {
@@ -1170,7 +1191,7 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
     updatedAt: serverTimestamp(),
     updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
   };
-  const collectionName = kind === "online" ? "onlineBookings" : "bookings";
+  const collectionName = kind === "online" ? onlineCollectionFor(before) : "bookings";
   const before = bookingByKind(kind, id) || {};
   await setDoc(doc(db, collectionName, id), patch, { merge: true });
   await addDoc(collection(db, "bookingAuditTrail"), {
@@ -1201,7 +1222,8 @@ window.viewOnlineBooking = function(id) {
 };
 
 window.updateOnlineBookingStatus = async function(id, status) {
-  await setDoc(doc(db, "onlineBookings", id), { bookingStatus: status, status, updatedAt: serverTimestamp(), updatedBy: currentAdmin?.email || "" }, { merge: true });
+  const row = bookingByKind("online", id);
+  await setDoc(doc(db, onlineCollectionFor(row), id), { bookingStatus: status, status, updatedAt: serverTimestamp(), updatedBy: currentAdmin?.email || "" }, { merge: true });
 };
 
 window.confirmOnlineBooking = function(id) {
@@ -1211,7 +1233,8 @@ window.confirmOnlineBooking = function(id) {
 window.assignOnlineFieldBoy = async function(id) {
   const name = prompt("Assign field boy");
   if (name === null) return;
-  await setDoc(doc(db, "onlineBookings", id), { staff: name || "Not Assigned", fieldBoyName: name || "Not Assigned", bookingStatus: "Assigned", status: "Assigned", updatedAt: serverTimestamp() }, { merge: true });
+  const row = bookingByKind("online", id);
+  await setDoc(doc(db, onlineCollectionFor(row), id), { staff: name || "Not Assigned", fieldBoyName: name || "Not Assigned", bookingStatus: "Assigned", status: "Assigned", updatedAt: serverTimestamp() }, { merge: true });
 };
 
 window.cancelOnlineBooking = async function(id) {
@@ -1241,7 +1264,7 @@ window.moveOnlineToReportEntry = async function(id) {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   });
-  await setDoc(doc(db, "onlineBookings", id), { linkedBookingId: docRef.id, billNo: bill, bookingStatus: "Processing", status: "Processing", updatedAt: serverTimestamp() }, { merge: true });
+  await setDoc(doc(db, onlineCollectionFor(row), id), { linkedBookingId: docRef.id, billNo: bill, bookingStatus: "Processing", status: "Processing", updatedAt: serverTimestamp() }, { merge: true });
   alert("Moved to Report Entry. Bill No: " + bill);
   await refreshFirebaseDashboard();
 };
@@ -1544,7 +1567,7 @@ window.renderPatientsPanel = function() {
     row.revenue += Number(b.totalAmount || b.grossTotal || b.price || 0);
     row.last = b.createdAt || row.last;
   });
-  onlineBookings.forEach((b) => {
+  allOnlineRows().forEach((b) => {
     const key = b.email || b.patientEmail || b.phone || b.patientName;
     if (!map.has(key)) map.set(key, { name: b.patientName, email: b.email || b.patientEmail, phone: b.phone, count: 0, revenue: 0, last: b.createdAt });
     const row = map.get(key);
@@ -1555,7 +1578,7 @@ window.renderPatientsPanel = function() {
   const rows = Array.from(map.values()).filter((p) => !q || [p.name, p.email, p.phone].join(" ").toLowerCase().includes(q));
   body.innerHTML = rows.map((p) => {
     const booking = firebaseBookings.find((b) => (b.patientEmail || b.email || b.phone || b.patientName) === (p.email || p.phone || p.name));
-    const online = onlineBookings.find((b) => (b.email || b.patientEmail || b.phone || b.patientName) === (p.email || p.phone || p.name));
+    const online = allOnlineRows().find((b) => (b.email || b.patientEmail || b.phone || b.patientName) === (p.email || p.phone || p.name));
     const edit = booking ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(booking.id)}')">Edit</button>` : online ? `<button class="btn btn-outline btn-small" onclick="openBookingEditModal('online','${html(online.id || online.bookingId)}')">Edit</button>` : "";
     return `<tr><td><b>${html(p.name)}</b></td><td>${html(p.phone)}<br><small>${html(p.email)}</small></td><td>${p.count}</td><td>${rupees(p.revenue)}</td><td>${html(createdText(p.last))}</td><td>${edit}</td></tr>`;
   }).join("") || `<tr><td colspan="6">No patients found.</td></tr>`;
