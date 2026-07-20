@@ -8,6 +8,7 @@ const { parseASTM } = require("../parsers/mindray-bc5000-astm");
 const MLLP_START = 0x0b;
 const MLLP_END = 0x1c;
 const MAX_RECONNECT_DELAY_MS = 30000;
+const SERVER_BIND_HOST = "0.0.0.0";
 
 function indexOfMllpEnd(buffer) {
   for (let index = 0; index < buffer.length - 1; index += 1) {
@@ -60,6 +61,20 @@ function localEthernetIp() {
   return "Not detected";
 }
 
+function normalizeConnectionMode(value) {
+  const text = String(value || "").trim().toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-");
+  return text === "tcp-server" ? "tcp-server" : "tcp-client";
+}
+
+function displayConnectionMode(value) {
+  return normalizeConnectionMode(value) === "tcp-server" ? "TCP Server" : "TCP Client";
+}
+
+function validAnalyzerHost(host) {
+  const text = String(host || "").trim();
+  return Boolean(text) && text !== SERVER_BIND_HOST;
+}
+
 class ListenerService {
   constructor(appStore, firebase, queue, logger) {
     this.appStore = appStore;
@@ -95,7 +110,7 @@ class ListenerService {
         this.logger.warn("listener", `${analyzer.connectionType} is configured as a future adapter`, { analyzer: analyzer.name });
         continue;
       }
-      if (this.connectionMode(analyzer) === "TCP Client") {
+      if (this.connectionMode(analyzer) === "tcp-client") {
         this.startTcpClient(analyzer, 0);
       } else {
         await this.startTcpServer(analyzer);
@@ -130,6 +145,20 @@ class ListenerService {
     const key = this.analyzerKey(analyzer);
     const host = this.analyzerHost(analyzer);
     const port = this.analyzerPort(analyzer);
+    if (!validAnalyzerHost(host)) {
+      const message = "TCP Client mode requires a valid analyzer IP. 0.0.0.0 is only allowed as a TCP Server bind host.";
+      this.errors.unshift(message);
+      this.updateDiagnostics({
+        analyzerIp: host || "",
+        analyzerPort: port,
+        tcpMode: "TCP Client",
+        socketState: "Disconnected",
+        lastParserError: message,
+        connectionInfo: ""
+      });
+      this.logger.error("tcp", message, { analyzer: analyzer.name, details: `${host}:${port}` });
+      return;
+    }
     this.updateDiagnostics({
       analyzerIp: host,
       analyzerPort: port,
@@ -139,7 +168,7 @@ class ListenerService {
     });
     this.logger.info("tcp", `Connecting to ${host}:${port}`, { analyzer: analyzer.name });
 
-    const socket = net.createConnection({ host, port });
+    const socket = net.createConnection(port, host);
     this.sockets.set(key, socket);
 
     socket.on("connect", () => {
@@ -183,8 +212,8 @@ class ListenerService {
 
   startTcpServer(analyzer) {
     return new Promise((resolve, reject) => {
-      const host = analyzer.host || "0.0.0.0";
-      const port = this.localPort(analyzer);
+      const host = SERVER_BIND_HOST;
+      const port = this.localListenerPort(analyzer);
       const server = net.createServer((socket) => {
         this.analyzerConnected = true;
         this.updateDiagnostics({
@@ -194,7 +223,7 @@ class ListenerService {
           socketState: "Connected",
           connectionInfo: `${socket.remoteAddress}:${socket.remotePort}`
         });
-        this.logger.info("tcp", "Analyzer connected", {
+        this.logger.info("tcp", `Analyzer connected from ${socket.remoteAddress}:${socket.remotePort}`, {
           analyzer: analyzer.name,
           details: `${socket.remoteAddress}:${socket.remotePort}`
         });
@@ -232,12 +261,12 @@ class ListenerService {
         lastReceivedByteTime: new Date().toISOString(),
         lastRawMessage: this.rawText(chunk),
         connectionInfo: remote,
-        tcpMode: context.mode || this.connectionMode(analyzer)
+        tcpMode: context.mode || displayConnectionMode(this.connectionMode(analyzer))
       });
       this.logger.rawPacket(chunk, {
         analyzer: analyzer.name,
         remote,
-        mode: context.mode || this.connectionMode(analyzer),
+        mode: context.mode || displayConnectionMode(this.connectionMode(analyzer)),
         analyzerIp: this.analyzerHost(analyzer),
         analyzerPort: this.analyzerPort(analyzer)
       });
@@ -362,10 +391,15 @@ class ListenerService {
     if (String(analyzer.connectionType || "LAN").toUpperCase() !== "LAN") {
       return { ok: false, message: `${analyzer.connectionType} support is prepared but requires a serial driver adapter.` };
     }
+    if (this.connectionMode(analyzer) === "tcp-server") return this.testServerBind(analyzer);
     const host = this.analyzerHost(analyzer);
     const port = this.analyzerPort(analyzer);
+    if (!validAnalyzerHost(host)) {
+      return { ok: false, message: "TCP Client mode requires a valid analyzer IP. 0.0.0.0 is only allowed for TCP Server bind." };
+    }
     return new Promise((resolve) => {
-      const socket = net.createConnection({ host, port, timeout: 3500 });
+      const socket = net.createConnection(port, host);
+      socket.setTimeout(3500);
       socket.on("connect", () => {
         socket.end();
         resolve({ ok: true, message: `TCP client can reach ${host}:${port}. Start Listener keeps the persistent socket open.` });
@@ -378,22 +412,31 @@ class ListenerService {
     });
   }
 
+  testServerBind(analyzer) {
+    const port = this.localListenerPort(analyzer);
+    return new Promise((resolve) => {
+      const server = net.createServer();
+      server.once("error", (err) => resolve({ ok: false, message: `Cannot bind TCP Server on ${SERVER_BIND_HOST}:${port}: ${err.message}` }));
+      server.listen(port, SERVER_BIND_HOST, () => {
+        server.close(() => resolve({ ok: true, message: `TCP Server can listen on ${SERVER_BIND_HOST}:${port}. Start Listener will wait for the analyzer to connect inbound.` }));
+      });
+    });
+  }
+
   connectionMode(analyzer = {}) {
-    return String(analyzer.connectionMode || (analyzer.id === "mindray-bc5000" ? "TCP Client" : "TCP Server")).toUpperCase() === "TCP CLIENT"
-      ? "TCP Client"
-      : "TCP Server";
+    return normalizeConnectionMode(analyzer.connectionMode || (analyzer.id === "mindray-bc5000" ? "tcp-client" : "tcp-server"));
   }
 
   analyzerHost(analyzer = {}) {
-    return analyzer.analyzerIp || analyzer.host || "10.0.0.2";
+    return String(analyzer.analyzerIp || "").trim();
   }
 
   analyzerPort(analyzer = {}) {
-    return Number(analyzer.analyzerPort || analyzer.port || 5001);
+    return Number(analyzer.analyzerPort ?? analyzer.port ?? 5001);
   }
 
-  localPort(analyzer = {}) {
-    return Number(analyzer.localPort || analyzer.port || 5001);
+  localListenerPort(analyzer = {}) {
+    return Number(analyzer.localListenerPort ?? analyzer.localPort ?? analyzer.port ?? 5001);
   }
 
   analyzerKey(analyzer = {}) {
@@ -426,4 +469,4 @@ class ListenerService {
   }
 }
 
-module.exports = { ListenerService, extractCompleteMessages };
+module.exports = { ListenerService, extractCompleteMessages, normalizeConnectionMode };

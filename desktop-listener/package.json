@@ -1,6 +1,6 @@
 {
   "name": "khuntest-lab-listener",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Professional Windows desktop LIS listener for KhunTest Lab analyzers.",
   "main": "src/main/main.js",
   "author": "KhunTest Lab",
@@ -10,7 +10,8 @@
     "dev": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win nsis --x64",
-    "test": "npm run test:parse",
+    "test": "npm run test:parse && npm run test:listener",
+    "test:listener": "node scripts/test-listener.js",
     "test:parse": "node scripts/test-parser.js"
   },
   "dependencies": {

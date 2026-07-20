@@ -94,9 +94,20 @@ function renderSettings(settings) {
 
 function renderAnalyzers(analyzers) {
   $("analyzerList").innerHTML = analyzers.map((analyzer, index) => analyzerCard(analyzer, index)).join("");
+  document.querySelectorAll(".analyzer-card").forEach((card) => {
+    const mode = card.querySelector('[data-field="connectionMode"]');
+    mode.addEventListener("change", () => updateAnalyzerModeFields(card));
+    updateAnalyzerModeFields(card);
+  });
   document.querySelectorAll("[data-test-analyzer]").forEach((button) => {
     button.addEventListener("click", async () => {
-      const analyzer = collectAnalyzers()[Number(button.dataset.testAnalyzer)];
+      let analyzer;
+      try {
+        analyzer = collectAnalyzers()[Number(button.dataset.testAnalyzer)];
+      } catch (err) {
+        alert(err.message);
+        return;
+      }
       const result = await window.khunTest.testConnection(analyzer);
       alert(result.message);
     });
@@ -108,10 +119,10 @@ function analyzerCard(analyzer, index) {
     <label>Analyzer Name<input data-field="name" value="${escapeAttr(analyzer.name || "")}"></label>
     <label>Protocol<select data-field="protocol"><option ${selected(analyzer.protocol, "HL7")}>HL7</option><option ${selected(analyzer.protocol, "ASTM")}>ASTM</option></select></label>
     <label>Connection Type<select data-field="connectionType"><option ${selected(analyzer.connectionType, "LAN")}>LAN</option><option ${selected(analyzer.connectionType, "RS232")}>RS232</option><option ${selected(analyzer.connectionType, "USB Serial")}>USB Serial</option></select></label>
-    <label>Connection Mode<select data-field="connectionMode"><option ${selected(analyzer.connectionMode || "TCP Client", "TCP Client")}>TCP Client</option><option ${selected(analyzer.connectionMode, "TCP Server")}>TCP Server</option></select></label>
-    <label>Analyzer IP<input data-field="analyzerIp" value="${escapeAttr(analyzer.analyzerIp || "10.0.0.2")}"></label>
-    <label>Analyzer Port<input data-field="analyzerPort" type="number" value="${Number(analyzer.analyzerPort || analyzer.port || 5001)}"></label>
-    <label>Local Listener Port (TCP Server only)<input data-field="localPort" type="number" value="${Number(analyzer.localPort || analyzer.port || 5001)}"></label>
+    <label>Connection Mode<select data-field="connectionMode"><option value="tcp-client" ${selected(normalizeMode(analyzer.connectionMode || "tcp-client"), "tcp-client")}>TCP Client</option><option value="tcp-server" ${selected(normalizeMode(analyzer.connectionMode), "tcp-server")}>TCP Server</option></select></label>
+    <label data-mode-field="client">Analyzer IP<input data-field="analyzerIp" value="${escapeAttr(analyzer.analyzerIp || "10.0.0.2")}"></label>
+    <label data-mode-field="client">Analyzer Port<input data-field="analyzerPort" type="number" value="${Number(analyzer.analyzerPort || analyzer.port || 5001)}"></label>
+    <label data-mode-field="server">Local Listener Port<input data-field="localListenerPort" type="number" value="${Number(analyzer.localListenerPort || analyzer.localPort || analyzer.port || 5001)}"></label>
     <label class="check-row"><input data-field="reconnectAutomatically" type="checkbox" ${analyzer.reconnectAutomatically ? "checked" : ""}>Reconnect Automatically</label>
     <label class="check-row"><input data-field="enabled" type="checkbox" ${analyzer.enabled !== false ? "checked" : ""}>Enabled</label>
     <div class="full"><button class="ghost" data-test-analyzer="${index}" type="button">Test Connection</button></div>
@@ -126,10 +137,11 @@ function addAnalyzer() {
     model: "",
     protocol: "HL7",
     connectionType: "LAN",
-    connectionMode: "TCP Client",
+    connectionMode: "tcp-client",
     host: "0.0.0.0",
     analyzerIp: "10.0.0.2",
     analyzerPort: 5001,
+    localListenerPort: 5001,
     localPort: 5001,
     port: 5001,
     reconnectAutomatically: true,
@@ -140,29 +152,55 @@ function addAnalyzer() {
 }
 
 async function saveAnalyzers() {
-  await window.khunTest.saveSettings({ analyzers: collectAnalyzers() });
-  state = await window.khunTest.getState();
-  render(state);
+  try {
+    await window.khunTest.saveSettings({ analyzers: collectAnalyzers() });
+    state = await window.khunTest.getState();
+    render(state);
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function collectAnalyzers() {
   return [...document.querySelectorAll(".analyzer-card")].map((card, index) => {
     const get = (field) => card.querySelector(`[data-field="${field}"]`);
+    const mode = normalizeMode(get("connectionMode").value);
+    const analyzerIp = get("analyzerIp").value.trim();
+    const analyzerPort = Number(get("analyzerPort").value || 5001);
+    const localListenerPort = Number(get("localListenerPort").value || 5001);
+    if (mode === "tcp-client" && (!analyzerIp || analyzerIp === "0.0.0.0")) {
+      throw new Error("TCP Client mode requires a valid Analyzer IP. 0.0.0.0 is allowed only as a TCP Server bind host.");
+    }
     return {
       id: state.settings.analyzers?.[index]?.id || `analyzer-${index}`,
       model: state.settings.analyzers?.[index]?.model || "",
       name: get("name").value.trim(),
       protocol: get("protocol").value,
       connectionType: get("connectionType").value,
-      connectionMode: get("connectionMode").value,
+      connectionMode: mode,
       host: "0.0.0.0",
-      analyzerIp: get("analyzerIp").value.trim(),
-      analyzerPort: Number(get("analyzerPort").value || 5001),
-      localPort: Number(get("localPort").value || 5001),
-      port: Number(get("analyzerPort").value || get("localPort").value || 5001),
+      analyzerIp: mode === "tcp-client" ? analyzerIp : "",
+      analyzerPort,
+      localListenerPort,
+      localPort: localListenerPort,
+      port: mode === "tcp-server" ? localListenerPort : analyzerPort,
       reconnectAutomatically: get("reconnectAutomatically").checked,
       enabled: get("enabled").checked
     };
+  });
+}
+
+function updateAnalyzerModeFields(card) {
+  const mode = normalizeMode(card.querySelector('[data-field="connectionMode"]').value);
+  card.querySelectorAll('[data-mode-field="client"]').forEach((label) => {
+    const disabled = mode === "tcp-server";
+    label.classList.toggle("hidden", disabled);
+    label.querySelectorAll("input, select").forEach((input) => { input.disabled = disabled; });
+  });
+  card.querySelectorAll('[data-mode-field="server"]').forEach((label) => {
+    const disabled = mode === "tcp-client";
+    label.classList.toggle("hidden", disabled);
+    label.querySelectorAll("input, select").forEach((input) => { input.disabled = disabled; });
   });
 }
 
@@ -211,6 +249,11 @@ function formatDate(value) {
 
 function selected(actual, expected) {
   return String(actual || "").toUpperCase() === String(expected).toUpperCase() ? "selected" : "";
+}
+
+function normalizeMode(value) {
+  const text = String(value || "").trim().toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-");
+  return text === "tcp-server" ? "tcp-server" : "tcp-client";
 }
 
 function escapeHtml(value) {

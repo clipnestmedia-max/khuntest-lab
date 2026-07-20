@@ -10,6 +10,7 @@ class AppStore {
     this.filePath = path.join(app.getPath("userData"), "khuntest-listener-settings.json");
     this.data = this.load();
     if (!this.data.settings) this.data.settings = defaultSettings();
+    this.data.settings = migrateSettings(this.data.settings);
     this.save();
   }
 
@@ -23,7 +24,7 @@ class AppStore {
   }
 
   merge(patch) {
-    const next = deepMerge(this.all(), patch || {});
+    const next = migrateSettings(deepMerge(this.all(), patch || {}));
     this.data.settings = next;
     this.save();
     return next;
@@ -91,4 +92,36 @@ function deepMerge(base, patch) {
   return next;
 }
 
-module.exports = { AppStore };
+function normalizeMode(value) {
+  const text = String(value || "").trim().toLowerCase().replace(/_/g, "-").replace(/\s+/g, "-");
+  return text === "tcp-server" ? "tcp-server" : "tcp-client";
+}
+
+function migrateSettings(settings) {
+  const next = settings || defaultSettings();
+  next.analyzers = (next.analyzers || []).map((analyzer) => migrateAnalyzer(analyzer));
+  return next;
+}
+
+function migrateAnalyzer(analyzer) {
+  const mode = normalizeMode(analyzer.connectionMode || (analyzer.id === "mindray-bc5000" ? "tcp-client" : "tcp-server"));
+  const legacyPort = Number(analyzer.port ?? 5001);
+  const analyzerPort = Number(analyzer.analyzerPort ?? legacyPort ?? 5001);
+  const localListenerPort = Number(analyzer.localListenerPort ?? analyzer.localPort ?? legacyPort ?? 5001);
+  const analyzerIp = String(analyzer.analyzerIp || "").trim();
+  const host = String(analyzer.host || "0.0.0.0").trim() || "0.0.0.0";
+
+  return {
+    ...analyzer,
+    connectionMode: mode,
+    host: "0.0.0.0",
+    analyzerIp: mode === "tcp-client" && analyzerIp && analyzerIp !== "0.0.0.0" ? analyzerIp : "",
+    analyzerPort,
+    localListenerPort,
+    localPort: localListenerPort,
+    port: mode === "tcp-server" ? localListenerPort : analyzerPort,
+    serverBindHost: host === "0.0.0.0" ? host : "0.0.0.0"
+  };
+}
+
+module.exports = { AppStore, migrateSettings };
