@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>All Tests - KHUNTEST LABS</title>
-  <meta name="description" content="KHUNTEST LABS diagnostic website with home sample collection, patient report portal and admin dashboard.">
+  <meta name="description" content="Search the KhunTest Lab test catalog for blood tests, prices, parameters and home sample collection options in Darbhanga.">
   <link rel="stylesheet" href="styles.css">
   <script src="seo.js" defer></script>
   <style>
@@ -45,6 +45,7 @@
     import { getTestsLoadInfo, loadAvailableTests } from "./firebase-service.js";
 
     let allTests = [];
+    let testSlugMap = {};
     const $ = (id) => document.getElementById(id);
     const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
@@ -87,6 +88,7 @@
           <div class="price">${rupees(test.price)}</div>
           <br>
           <button class="btn btn-outline btn-small" type="button" onclick="toggleParams(${index})">View Parameters</button>
+          ${testSlugMap[test.testCode]?.slug ? `<a class="btn btn-outline btn-small" href="tests/${safe(testSlugMap[test.testCode].slug)}/">View Details</a>` : ""}
           <a class="btn btn-red btn-small" href="booking.html?test=${encodeURIComponent(test.testCode || test.name)}">Book Now</a>
           <ul class="param-list hidden" id="params-${index}">
             ${(test.parameters || []).map((p) => `<li><b>${safe(p.name)}</b>${p.normalRange ? ` - ${safe(p.normalRange)}` : ""}${p.unit ? ` ${safe(p.unit)}` : ""}</li>`).join("")}
@@ -97,6 +99,7 @@
 
     async function load() {
       try {
+        testSlugMap = await fetch("./data/test-slug-map.json", { cache: "no-store" }).then((res) => res.ok ? res.json() : {}).catch(() => ({}));
         const result = await loadAvailableTests();
         allTests = result.tests || [];
         const info = getTestsLoadInfo();

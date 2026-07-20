@@ -13,8 +13,13 @@ const corePages = [
   ["/booking.html", "weekly", "0.7"]
 ];
 
-const seoTests = JSON.parse(fs.readFileSync(path.join(root, "data", "seo-tests.json"), "utf8"));
-const testPages = seoTests.map((test) => [`/tests/${test.slug}/`, "monthly", "0.75"]);
+const slugMapPath = path.join(root, "data", "test-slug-map.json");
+const slugMap = fs.existsSync(slugMapPath)
+  ? JSON.parse(fs.readFileSync(slugMapPath, "utf8"))
+  : Object.fromEntries(JSON.parse(fs.readFileSync(path.join(root, "data", "seo-tests.json"), "utf8")).map((test) => [test.slug, test]));
+const testPages = Object.values(slugMap)
+  .filter((test) => test.slug)
+  .map((test) => [`/tests/${test.slug}/`, "monthly", "0.75"]);
 const urls = [...corePages, ...testPages];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls

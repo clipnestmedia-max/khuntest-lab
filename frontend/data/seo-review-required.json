@@ -1,0 +1,3422 @@
+[
+  {
+    "testCode": "KT0001",
+    "name": "1-5 Biopsy Sample ( May Call As Small Specimen)",
+    "slug": "kt0001-1-5-biopsy-sample-may-call-as-small-specimen"
+  },
+  {
+    "testCode": "KT0002",
+    "name": "17-Alpha Hydroxyprogesterone",
+    "slug": "kt0002-17-alpha-hydroxyprogesterone"
+  },
+  {
+    "testCode": "KT0003",
+    "name": "21 Hydroxylase Ab",
+    "slug": "kt0003-21-hydroxylase-ab"
+  },
+  {
+    "testCode": "KT0004",
+    "name": "24 hr Urine Protein Random",
+    "slug": "kt0004-24-hr-urine-protein-random"
+  },
+  {
+    "testCode": "KT0005",
+    "name": "24 Hrs Urinary copper",
+    "slug": "kt0005-24-hrs-urinary-copper"
+  },
+  {
+    "testCode": "KT0006",
+    "name": "24 Hrs Urinary Magnesium",
+    "slug": "kt0006-24-hrs-urinary-magnesium"
+  },
+  {
+    "testCode": "KT0007",
+    "name": "24 Hrs urinary Microalbuminuria",
+    "slug": "kt0007-24-hrs-urinary-microalbuminuria"
+  },
+  {
+    "testCode": "KT0008",
+    "name": "24 Hrs Urinary Oxalate",
+    "slug": "kt0008-24-hrs-urinary-oxalate"
+  },
+  {
+    "testCode": "KT0009",
+    "name": "24 hrs Urinary Protein",
+    "slug": "kt0009-24-hrs-urinary-protein"
+  },
+  {
+    "testCode": "KT0010",
+    "name": "24 Hrs urine Metanephrins",
+    "slug": "kt0010-24-hrs-urine-metanephrins"
+  },
+  {
+    "testCode": "KT0011",
+    "name": "24 Hrs urine Nor- Metanephrins",
+    "slug": "kt0011-24-hrs-urine-nor-metanephrins"
+  },
+  {
+    "testCode": "KT0012",
+    "name": "5 Alpha-Dihydro testosterone",
+    "slug": "kt0012-5-alpha-dihydro-testosterone"
+  },
+  {
+    "testCode": "KT0013",
+    "name": "Aarogyam 1.3",
+    "slug": "kt0013-aarogyam-1-3"
+  },
+  {
+    "testCode": "KT0014",
+    "name": "ABG TEST",
+    "slug": "kt0014-abg-test"
+  },
+  {
+    "testCode": "KT0015",
+    "name": "Abnormal Haemoglobin Studies Hb Variants Blood",
+    "slug": "kt0015-abnormal-haemoglobin-studies-hb-variants-blood"
+  },
+  {
+    "testCode": "KT0016",
+    "name": "ABO GROUP & RH TYPING",
+    "slug": "kt0016-abo-group-and-rh-typing"
+  },
+  {
+    "testCode": "KT0017",
+    "name": "ABSOLUTE EOSINOPHIL COUNT",
+    "slug": "kt0017-absolute-eosinophil-count"
+  },
+  {
+    "testCode": "KT0018",
+    "name": "Absolute Neutrophil count",
+    "slug": "kt0018-absolute-neutrophil-count"
+  },
+  {
+    "testCode": "KT0019",
+    "name": "ACE (ANGIOTENSIN CONVERTING ENZYME )",
+    "slug": "kt0019-ace-angiotensin-converting-enzyme"
+  },
+  {
+    "testCode": "KT0020",
+    "name": "AChR Antibodies",
+    "slug": "kt0020-achr-antibodies"
+  },
+  {
+    "testCode": "KT0021",
+    "name": "Acid Phosphatase",
+    "slug": "kt0021-acid-phosphatase"
+  },
+  {
+    "testCode": "KT0022",
+    "name": "Acitic Fluid -Cell Type/ Cell Count /Albumin",
+    "slug": "kt0022-acitic-fluid-cell-type-cell-count-albumin"
+  },
+  {
+    "testCode": "KT0023",
+    "name": "ACTH (Adreno Cortico Tropic Hormone)",
+    "slug": "kt0023-acth-adreno-cortico-tropic-hormone"
+  },
+  {
+    "testCode": "KT0024",
+    "name": "ADA",
+    "slug": "kt0024-ada"
+  },
+  {
+    "testCode": "KT0025",
+    "name": "Advance Electrolytes",
+    "slug": "kt0025-advance-electrolytes"
+  },
+  {
+    "testCode": "KT0026",
+    "name": "Advance lipid (APO A+ APO B + LIPO)",
+    "slug": "kt0026-advance-lipid-apo-a-apo-b-lipo"
+  },
+  {
+    "testCode": "KT0027",
+    "name": "AFB CULTURE/SENSETIVITY",
+    "slug": "kt0027-afb-culture-sensetivity"
+  },
+  {
+    "testCode": "KT0028",
+    "name": "AFB STAINING (ZEIL NIELSON STAIN) 2 SAMPLES",
+    "slug": "kt0028-afb-staining-zeil-nielson-stain-2-samples"
+  },
+  {
+    "testCode": "KT0029",
+    "name": "AFP (Alpha Feto Protein)",
+    "slug": "kt0029-afp-alpha-feto-protein"
+  },
+  {
+    "testCode": "KT0030",
+    "name": "Aldolase",
+    "slug": "kt0030-aldolase"
+  },
+  {
+    "testCode": "KT0031",
+    "name": "Aldosterone -Plasma renin ratio",
+    "slug": "kt0031-aldosterone-plasma-renin-ratio"
+  },
+  {
+    "testCode": "KT0032",
+    "name": "ALKALINE PHOSPHATE",
+    "slug": "kt0032-alkaline-phosphate"
+  },
+  {
+    "testCode": "KT0033",
+    "name": "Allergy Drug Panel Comprehensive",
+    "slug": "kt0033-allergy-drug-panel-comprehensive"
+  },
+  {
+    "testCode": "KT0034",
+    "name": "ALPHA1 ANTI TRYPSIN",
+    "slug": "kt0034-alpha1-anti-trypsin"
+  },
+  {
+    "testCode": "KT0035",
+    "name": "AMH PLUS PREMIUM",
+    "slug": "kt0035-amh-plus-premium"
+  },
+  {
+    "testCode": "KT0036",
+    "name": "Ammonia Level",
+    "slug": "kt0036-ammonia-level"
+  },
+  {
+    "testCode": "KT0037",
+    "name": "AMYLASE",
+    "slug": "kt0037-amylase"
+  },
+  {
+    "testCode": "KT0038",
+    "name": "ANA (ANTI NUCLEAR ANTIBODY)",
+    "slug": "kt0038-ana-anti-nuclear-antibody"
+  },
+  {
+    "testCode": "KT0039",
+    "name": "ANA By IFA MATHOD",
+    "slug": "kt0039-ana-by-ifa-mathod"
+  },
+  {
+    "testCode": "KT0040",
+    "name": "ANA By IFA MATHOD TITER",
+    "slug": "kt0040-ana-by-ifa-mathod-titer"
+  },
+  {
+    "testCode": "KT0041",
+    "name": "ANA PROFILE",
+    "slug": "kt0041-ana-profile"
+  },
+  {
+    "testCode": "KT0042",
+    "name": "ANCA (Vasculitis Screan IF)",
+    "slug": "kt0042-anca-vasculitis-screan-if"
+  },
+  {
+    "testCode": "KT0043",
+    "name": "ANCA-C",
+    "slug": "kt0043-anca-c"
+  },
+  {
+    "testCode": "KT0044",
+    "name": "ANCA-P",
+    "slug": "kt0044-anca-p"
+  },
+  {
+    "testCode": "KT0045",
+    "name": "Androgen",
+    "slug": "kt0045-androgen"
+  },
+  {
+    "testCode": "KT0046",
+    "name": "Anemia Comprehensive panel",
+    "slug": "kt0046-anemia-comprehensive-panel"
+  },
+  {
+    "testCode": "KT0047",
+    "name": "ANEMIA PANEL",
+    "slug": "kt0047-anemia-panel"
+  },
+  {
+    "testCode": "KT0048",
+    "name": "Antenatal Panel",
+    "slug": "kt0048-antenatal-panel"
+  },
+  {
+    "testCode": "KT0049",
+    "name": "Anti CARDLOLIPIN ANTIBODY -Igg",
+    "slug": "kt0049-anti-cardlolipin-antibody-igg"
+  },
+  {
+    "testCode": "KT0050",
+    "name": "Anti CARDLOLIPIN ANTIBODY -Igm",
+    "slug": "kt0050-anti-cardlolipin-antibody-igm"
+  },
+  {
+    "testCode": "KT0051",
+    "name": "ANTI CCP (Antibody)",
+    "slug": "kt0051-anti-ccp-antibody"
+  },
+  {
+    "testCode": "KT0052",
+    "name": "Anti Centromere Antibody",
+    "slug": "kt0052-anti-centromere-antibody"
+  },
+  {
+    "testCode": "KT0053",
+    "name": "Anti DNase B",
+    "slug": "kt0053-anti-dnase-b"
+  },
+  {
+    "testCode": "KT0054",
+    "name": "Anti Ds DNA",
+    "slug": "kt0054-anti-ds-dna"
+  },
+  {
+    "testCode": "KT0055",
+    "name": "ANTI HAV Igm",
+    "slug": "kt0055-anti-hav-igm"
+  },
+  {
+    "testCode": "KT0056",
+    "name": "ANTI HAV TOTAL (IgG&IgM)",
+    "slug": "kt0056-anti-hav-total-igg-and-igm"
+  },
+  {
+    "testCode": "KT0057",
+    "name": "Anti HBC Ag-IgG",
+    "slug": "kt0057-anti-hbc-ag-igg"
+  },
+  {
+    "testCode": "KT0058",
+    "name": "Anti HBC Ag-IgM",
+    "slug": "kt0058-anti-hbc-ag-igm"
+  },
+  {
+    "testCode": "KT0059",
+    "name": "Anti HBC Total",
+    "slug": "kt0059-anti-hbc-total"
+  },
+  {
+    "testCode": "KT0060",
+    "name": "Anti HBe Antibody",
+    "slug": "kt0060-anti-hbe-antibody"
+  },
+  {
+    "testCode": "KT0061",
+    "name": "Anti HBS",
+    "slug": "kt0061-anti-hbs"
+  },
+  {
+    "testCode": "KT0062",
+    "name": "Anti HBS Antibody",
+    "slug": "kt0062-anti-hbs-antibody"
+  },
+  {
+    "testCode": "KT0063",
+    "name": "Anti HBS IgG",
+    "slug": "kt0063-anti-hbs-igg"
+  },
+  {
+    "testCode": "KT0064",
+    "name": "Anti HBS IgM",
+    "slug": "kt0064-anti-hbs-igm"
+  },
+  {
+    "testCode": "KT0065",
+    "name": "ANTI HEPATITIS C VIRUS (ANTI HCV) - TOTAL",
+    "slug": "kt0065-anti-hepatitis-c-virus-anti-hcv-total"
+  },
+  {
+    "testCode": "KT0066",
+    "name": "ANTI HEPATITIS C VIRUS (ANTI HCV) - TOTAL",
+    "slug": "kt0066-anti-hepatitis-c-virus-anti-hcv-total"
+  },
+  {
+    "testCode": "KT0067",
+    "name": "Anti Hepatitis E Virus (Anti HEV) - IgM",
+    "slug": "kt0067-anti-hepatitis-e-virus-anti-hev-igm"
+  },
+  {
+    "testCode": "KT0068",
+    "name": "Anti HEV Igg",
+    "slug": "kt0068-anti-hev-igg"
+  },
+  {
+    "testCode": "KT0069",
+    "name": "Anti Insulin Antibody",
+    "slug": "kt0069-anti-insulin-antibody"
+  },
+  {
+    "testCode": "KT0070",
+    "name": "Anti Mitochondrial A/B (AMA)",
+    "slug": "kt0070-anti-mitochondrial-a-b-ama"
+  },
+  {
+    "testCode": "KT0071",
+    "name": "ANTI MPO",
+    "slug": "kt0071-anti-mpo"
+  },
+  {
+    "testCode": "KT0072",
+    "name": "Anti Mullenium Hormone (AMH)",
+    "slug": "kt0072-anti-mullenium-hormone-amh"
+  },
+  {
+    "testCode": "KT0073",
+    "name": "ANTI MULLERIAN HORMONE (AMH)",
+    "slug": "kt0073-anti-mullerian-hormone-amh"
+  },
+  {
+    "testCode": "KT0074",
+    "name": "Anti PHOSPHOLIPID ANTIBODY -Igg",
+    "slug": "kt0074-anti-phospholipid-antibody-igg"
+  },
+  {
+    "testCode": "KT0075",
+    "name": "Anti PHOSPHOLIPID ANTIBODY -Igm",
+    "slug": "kt0075-anti-phospholipid-antibody-igm"
+  },
+  {
+    "testCode": "KT0076",
+    "name": "Anti Sm - Antibody",
+    "slug": "kt0076-anti-sm-antibody"
+  },
+  {
+    "testCode": "KT0077",
+    "name": "Anti-HBc IgM (IgM Ab to Hep-B Core Ag)",
+    "slug": "kt0077-anti-hbc-igm-igm-ab-to-hep-b-core-ag"
+  },
+  {
+    "testCode": "KT0078",
+    "name": "Anti-IA2",
+    "slug": "kt0078-anti-ia2"
+  },
+  {
+    "testCode": "KT0079",
+    "name": "Anti-Smooth Muscle Antibody",
+    "slug": "kt0079-anti-smooth-muscle-antibody"
+  },
+  {
+    "testCode": "KT0080",
+    "name": "Anti-TPO",
+    "slug": "kt0080-anti-tpo"
+  },
+  {
+    "testCode": "KT0081",
+    "name": "Antibody To Hapatitis C Virus (ECI)",
+    "slug": "kt0081-antibody-to-hapatitis-c-virus-eci"
+  },
+  {
+    "testCode": "KT0082",
+    "name": "Antithyroglobulin (ATG)",
+    "slug": "kt0082-antithyroglobulin-atg"
+  },
+  {
+    "testCode": "KT0083",
+    "name": "APLA (Antiphospholipid antibody )- IgG",
+    "slug": "kt0083-apla-antiphospholipid-antibody-igg"
+  },
+  {
+    "testCode": "KT0084",
+    "name": "APLA (Antiphospholipid antibody )- IgM",
+    "slug": "kt0084-apla-antiphospholipid-antibody-igm"
+  },
+  {
+    "testCode": "KT0085",
+    "name": "Apolipoprotein A (APOA-1)",
+    "slug": "kt0085-apolipoprotein-a-apoa-1"
+  },
+  {
+    "testCode": "KT0086",
+    "name": "Apolipoprotein B (APOB)",
+    "slug": "kt0086-apolipoprotein-b-apob"
+  },
+  {
+    "testCode": "KT0087",
+    "name": "APTT(Activated Partial Thromboplastin Time)",
+    "slug": "kt0087-aptt-activated-partial-thromboplastin-time"
+  },
+  {
+    "testCode": "KT0088",
+    "name": "Arthritis Panel",
+    "slug": "kt0088-arthritis-panel"
+  },
+  {
+    "testCode": "KT0089",
+    "name": "Ascitic Fluid - Grams Stain",
+    "slug": "kt0089-ascitic-fluid-grams-stain"
+  },
+  {
+    "testCode": "KT0090",
+    "name": "Ascitic Fluid -AFB Stain",
+    "slug": "kt0090-ascitic-fluid-afb-stain"
+  },
+  {
+    "testCode": "KT0091",
+    "name": "ASCITIC Fluid Analysis- Cell,Sugar and Protein",
+    "slug": "kt0091-ascitic-fluid-analysis-cell-sugar-and-protein"
+  },
+  {
+    "testCode": "KT0092",
+    "name": "Ascitic Fluid Analysis- Culture",
+    "slug": "kt0092-ascitic-fluid-analysis-culture"
+  },
+  {
+    "testCode": "KT0093",
+    "name": "ASCITIC FLUID EXAM+ ASPIRATION CHARGE",
+    "slug": "kt0093-ascitic-fluid-exam-aspiration-charge"
+  },
+  {
+    "testCode": "KT0094",
+    "name": "Ascitic fluid For Cytology ( Cell Count & Cell Type)",
+    "slug": "kt0094-ascitic-fluid-for-cytology-cell-count-and-cell-type"
+  },
+  {
+    "testCode": "KT0095",
+    "name": "ASO LATEX",
+    "slug": "kt0095-aso-latex"
+  },
+  {
+    "testCode": "KT0096",
+    "name": "ASO TITRE (Quantitative)",
+    "slug": "kt0096-aso-titre-quantitative"
+  },
+  {
+    "testCode": "KT0097",
+    "name": "Aspergillus IgG",
+    "slug": "kt0097-aspergillus-igg"
+  },
+  {
+    "testCode": "KT0098",
+    "name": "ASPIRATION CHARGE ANY SAMPLE",
+    "slug": "kt0098-aspiration-charge-any-sample"
+  },
+  {
+    "testCode": "KT0099",
+    "name": "BACTERIAL CULTRUE & SENSITIVITY EXAMINATION",
+    "slug": "kt0099-bacterial-cultrue-and-sensitivity-examination"
+  },
+  {
+    "testCode": "KT0100",
+    "name": "BAL FLUID ANALYSIS",
+    "slug": "kt0100-bal-fluid-analysis"
+  },
+  {
+    "testCode": "KT0101",
+    "name": "BAL Fluid Analysis -Cytology For Malignant Cell",
+    "slug": "kt0101-bal-fluid-analysis-cytology-for-malignant-cell"
+  },
+  {
+    "testCode": "KT0102",
+    "name": "BAL FLUID ANALYSIS-CYTOLOGY FOR MALIGNANT CELL",
+    "slug": "kt0102-bal-fluid-analysis-cytology-for-malignant-cell"
+  },
+  {
+    "testCode": "KT0103",
+    "name": "Bal For Culture & Sensitivity",
+    "slug": "kt0103-bal-for-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0104",
+    "name": "BAND Cell",
+    "slug": "kt0104-band-cell"
+  },
+  {
+    "testCode": "KT0105",
+    "name": "Basic Fever Panel",
+    "slug": "kt0105-basic-fever-panel"
+  },
+  {
+    "testCode": "KT0106",
+    "name": "Basic infertility profile",
+    "slug": "kt0106-basic-infertility-profile"
+  },
+  {
+    "testCode": "KT0107",
+    "name": "Bence Jones Proteins urine",
+    "slug": "kt0107-bence-jones-proteins-urine"
+  },
+  {
+    "testCode": "KT0108",
+    "name": "BETA HCG",
+    "slug": "kt0108-beta-hcg"
+  },
+  {
+    "testCode": "KT0109",
+    "name": "Beta Hcg Cancer Marker",
+    "slug": "kt0109-beta-hcg-cancer-marker"
+  },
+  {
+    "testCode": "KT0110",
+    "name": "Beta-2 Glycoprotein IgG",
+    "slug": "kt0110-beta-2-glycoprotein-igg"
+  },
+  {
+    "testCode": "KT0111",
+    "name": "Beta-2 Glycoprotein IgM",
+    "slug": "kt0111-beta-2-glycoprotein-igm"
+  },
+  {
+    "testCode": "KT0112",
+    "name": "BETA2 MICROGLOBULIN",
+    "slug": "kt0112-beta2-microglobulin"
+  },
+  {
+    "testCode": "KT0113",
+    "name": "Bile Acid",
+    "slug": "kt0113-bile-acid"
+  },
+  {
+    "testCode": "KT0114",
+    "name": "Biopsy Bone Marrow (Procedure)",
+    "slug": "kt0114-biopsy-bone-marrow-procedure"
+  },
+  {
+    "testCode": "KT0115",
+    "name": "Biopsy Nerve",
+    "slug": "kt0115-biopsy-nerve"
+  },
+  {
+    "testCode": "KT0116",
+    "name": "Biopsy Neuropathology",
+    "slug": "kt0116-biopsy-neuropathology"
+  },
+  {
+    "testCode": "KT0117",
+    "name": "Blood C And S",
+    "slug": "kt0117-blood-c-and-s"
+  },
+  {
+    "testCode": "KT0118",
+    "name": "Blood Culture",
+    "slug": "kt0118-blood-culture"
+  },
+  {
+    "testCode": "KT0119",
+    "name": "BLOOD CULTURE (AEROBIC)",
+    "slug": "kt0119-blood-culture-aerobic"
+  },
+  {
+    "testCode": "KT0120",
+    "name": "Blood Culture (Paired)",
+    "slug": "kt0120-blood-culture-paired"
+  },
+  {
+    "testCode": "KT0121",
+    "name": "Blood Culture With Urine Culture and ET Secration",
+    "slug": "kt0121-blood-culture-with-urine-culture-and-et-secration"
+  },
+  {
+    "testCode": "KT0122",
+    "name": "Blood Culture With Urine Culture and Sputum Culture",
+    "slug": "kt0122-blood-culture-with-urine-culture-and-sputum-culture"
+  },
+  {
+    "testCode": "KT0123",
+    "name": "Blood Culture With Urine Culture and Tracheal Culture",
+    "slug": "kt0123-blood-culture-with-urine-culture-and-tracheal-culture"
+  },
+  {
+    "testCode": "KT0124",
+    "name": "Blood Group & Rh Factor",
+    "slug": "kt0124-blood-group-and-rh-factor"
+  },
+  {
+    "testCode": "KT0125",
+    "name": "Blood Sugar (2 hrs. 75 g Glucose)",
+    "slug": "kt0125-blood-sugar-2-hrs-75-g-glucose"
+  },
+  {
+    "testCode": "KT0126",
+    "name": "Blood Sugar (2 hrs. PP)",
+    "slug": "kt0126-blood-sugar-2-hrs-pp"
+  },
+  {
+    "testCode": "KT0127",
+    "name": "Blood Sugar (Fasting)",
+    "slug": "kt0127-blood-sugar-fasting"
+  },
+  {
+    "testCode": "KT0128",
+    "name": "Blood Sugar (Random)",
+    "slug": "kt0128-blood-sugar-random"
+  },
+  {
+    "testCode": "KT0129",
+    "name": "BLOOD SUGAR PP+DRUGS",
+    "slug": "kt0129-blood-sugar-pp-drugs"
+  },
+  {
+    "testCode": "KT0130",
+    "name": "BLOOD UREA",
+    "slug": "kt0130-blood-urea"
+  },
+  {
+    "testCode": "KT0131",
+    "name": "Blood urea nitrogen (BUN)",
+    "slug": "kt0131-blood-urea-nitrogen-bun"
+  },
+  {
+    "testCode": "KT0132",
+    "name": "Blood Urea Nitrogen(BUN)",
+    "slug": "kt0132-blood-urea-nitrogen-bun"
+  },
+  {
+    "testCode": "KT0133",
+    "name": "BMI",
+    "slug": "kt0133-bmi"
+  },
+  {
+    "testCode": "KT0134",
+    "name": "BODY FLUID FOR CULTURE(BACTEC)",
+    "slug": "kt0134-body-fluid-for-culture-bactec"
+  },
+  {
+    "testCode": "KT0135",
+    "name": "BONE MARROW EXAMINATION",
+    "slug": "kt0135-bone-marrow-examination"
+  },
+  {
+    "testCode": "KT0136",
+    "name": "Brucella IgG",
+    "slug": "kt0136-brucella-igg"
+  },
+  {
+    "testCode": "KT0137",
+    "name": "Brucella IgM",
+    "slug": "kt0137-brucella-igm"
+  },
+  {
+    "testCode": "KT0138",
+    "name": "BT",
+    "slug": "kt0138-bt"
+  },
+  {
+    "testCode": "KT0139",
+    "name": "C S F",
+    "slug": "kt0139-c-s-f"
+  },
+  {
+    "testCode": "KT0140",
+    "name": "C-Peptide",
+    "slug": "kt0140-c-peptide"
+  },
+  {
+    "testCode": "KT0141",
+    "name": "C-Reactive Protein Quantitative",
+    "slug": "kt0141-c-reactive-protein-quantitative"
+  },
+  {
+    "testCode": "KT0142",
+    "name": "C-Reactive Protein Quantitative",
+    "slug": "kt0142-c-reactive-protein-quantitative"
+  },
+  {
+    "testCode": "KT0143",
+    "name": "C-Reactive Protein Quantitative",
+    "slug": "kt0143-c-reactive-protein-quantitative"
+  },
+  {
+    "testCode": "KT0144",
+    "name": "CA 15.3",
+    "slug": "kt0144-ca-15-3"
+  },
+  {
+    "testCode": "KT0145",
+    "name": "CA 242",
+    "slug": "kt0145-ca-242"
+  },
+  {
+    "testCode": "KT0146",
+    "name": "CA 50",
+    "slug": "kt0146-ca-50"
+  },
+  {
+    "testCode": "KT0147",
+    "name": "CA 72.4",
+    "slug": "kt0147-ca-72-4"
+  },
+  {
+    "testCode": "KT0148",
+    "name": "CA-125",
+    "slug": "kt0148-ca-125"
+  },
+  {
+    "testCode": "KT0149",
+    "name": "CA19.9",
+    "slug": "kt0149-ca19-9"
+  },
+  {
+    "testCode": "KT0150",
+    "name": "Calcitonin",
+    "slug": "kt0150-calcitonin"
+  },
+  {
+    "testCode": "KT0151",
+    "name": "Calcium",
+    "slug": "kt0151-calcium"
+  },
+  {
+    "testCode": "KT0152",
+    "name": "CALCIUM IONISED",
+    "slug": "kt0152-calcium-ionised"
+  },
+  {
+    "testCode": "KT0153",
+    "name": "Carbamazepine (Tegretol, Mazetol)",
+    "slug": "kt0153-carbamazepine-tegretol-mazetol"
+  },
+  {
+    "testCode": "KT0154",
+    "name": "Carbamazepine (Tegretol, Mazetol)",
+    "slug": "kt0154-carbamazepine-tegretol-mazetol"
+  },
+  {
+    "testCode": "KT0155",
+    "name": "Cardic profile",
+    "slug": "kt0155-cardic-profile"
+  },
+  {
+    "testCode": "KT0156",
+    "name": "CATHETERTIP CULTURE+SENSITIVITY",
+    "slug": "kt0156-cathetertip-culture-sensitivity"
+  },
+  {
+    "testCode": "KT0157",
+    "name": "CBC",
+    "slug": "cbc-test"
+  },
+  {
+    "testCode": "KT0158",
+    "name": "CBC+COMMENT OF SMEAR",
+    "slug": "kt0158-cbc-comment-of-smear"
+  },
+  {
+    "testCode": "KT0159",
+    "name": "CD3",
+    "slug": "kt0159-cd3"
+  },
+  {
+    "testCode": "KT0160",
+    "name": "CD4",
+    "slug": "kt0160-cd4"
+  },
+  {
+    "testCode": "KT0161",
+    "name": "CD4/CD8",
+    "slug": "kt0161-cd4-cd8"
+  },
+  {
+    "testCode": "KT0162",
+    "name": "CD5 ( Immunohistochemistry )",
+    "slug": "kt0162-cd5-immunohistochemistry"
+  },
+  {
+    "testCode": "KT0163",
+    "name": "CEA Levels(Carcino Embryonic Antigen)",
+    "slug": "kt0163-cea-levels-carcino-embryonic-antigen"
+  },
+  {
+    "testCode": "KT0164",
+    "name": "CELL BLOCK",
+    "slug": "kt0164-cell-block"
+  },
+  {
+    "testCode": "KT0165",
+    "name": "Cell Block cytology",
+    "slug": "kt0165-cell-block-cytology"
+  },
+  {
+    "testCode": "KT0166",
+    "name": "CENTRAL LINE TIP FOR CULTURE+SENSITIVITY",
+    "slug": "kt0166-central-line-tip-for-culture-sensitivity"
+  },
+  {
+    "testCode": "KT0167",
+    "name": "Chickun Guniya Serology",
+    "slug": "kt0167-chickun-guniya-serology"
+  },
+  {
+    "testCode": "KT0168",
+    "name": "CHIKUNGUNIYA IGG",
+    "slug": "kt0168-chikunguniya-igg"
+  },
+  {
+    "testCode": "KT0169",
+    "name": "CHIKUNGUNIYA IGM",
+    "slug": "kt0169-chikunguniya-igm"
+  },
+  {
+    "testCode": "KT0170",
+    "name": "Chloride",
+    "slug": "kt0170-chloride"
+  },
+  {
+    "testCode": "KT0171",
+    "name": "Cholesterol",
+    "slug": "kt0171-cholesterol"
+  },
+  {
+    "testCode": "KT0172",
+    "name": "Chyle Qualitative Detection, Urine",
+    "slug": "kt0172-chyle-qualitative-detection-urine"
+  },
+  {
+    "testCode": "KT0173",
+    "name": "CML Quest IRMA",
+    "slug": "kt0173-cml-quest-irma"
+  },
+  {
+    "testCode": "KT0174",
+    "name": "CMV IgG (Cytomegalovirus antibodes)",
+    "slug": "kt0174-cmv-igg-cytomegalovirus-antibodes"
+  },
+  {
+    "testCode": "KT0175",
+    "name": "CMV(CYTOMEGGALO )IGM",
+    "slug": "kt0175-cmv-cytomeggalo-igm"
+  },
+  {
+    "testCode": "KT0176",
+    "name": "COAGULATION PROFILE",
+    "slug": "kt0176-coagulation-profile"
+  },
+  {
+    "testCode": "KT0177",
+    "name": "collection charge",
+    "slug": "kt0177-collection-charge"
+  },
+  {
+    "testCode": "KT0178",
+    "name": "Complement Protein Concentration(c3)",
+    "slug": "kt0178-complement-protein-concentration-c3"
+  },
+  {
+    "testCode": "KT0179",
+    "name": "Complement Protein Concentration(c4)",
+    "slug": "kt0179-complement-protein-concentration-c4"
+  },
+  {
+    "testCode": "KT0180",
+    "name": "COMPLETE INFERTILITY Profile (female)",
+    "slug": "kt0180-complete-infertility-profile-female"
+  },
+  {
+    "testCode": "KT0181",
+    "name": "Comprehensive Health panel (male)",
+    "slug": "kt0181-comprehensive-health-panel-male"
+  },
+  {
+    "testCode": "KT0182",
+    "name": "Comprehensive Health panel female",
+    "slug": "kt0182-comprehensive-health-panel-female"
+  },
+  {
+    "testCode": "KT0183",
+    "name": "Comprehensive Hormone Panel female",
+    "slug": "kt0183-comprehensive-hormone-panel-female"
+  },
+  {
+    "testCode": "KT0184",
+    "name": "CONJUNCTIVAL SWAB FOR C AND S",
+    "slug": "kt0184-conjunctival-swab-for-c-and-s"
+  },
+  {
+    "testCode": "KT0185",
+    "name": "COOMBS TEST DIRECT",
+    "slug": "kt0185-coombs-test-direct"
+  },
+  {
+    "testCode": "KT0186",
+    "name": "COOMBS TEST INDIRECT",
+    "slug": "kt0186-coombs-test-indirect"
+  },
+  {
+    "testCode": "KT0187",
+    "name": "COPPER Serum",
+    "slug": "kt0187-copper-serum"
+  },
+  {
+    "testCode": "KT0188",
+    "name": "Cortisol free 24 Hrs Urine",
+    "slug": "kt0188-cortisol-free-24-hrs-urine"
+  },
+  {
+    "testCode": "KT0189",
+    "name": "Cortisol Urine",
+    "slug": "kt0189-cortisol-urine"
+  },
+  {
+    "testCode": "KT0190",
+    "name": "Covid 19 Package - 3",
+    "slug": "kt0190-covid-19-package-3"
+  },
+  {
+    "testCode": "KT0191",
+    "name": "Covid 19 Package -2",
+    "slug": "kt0191-covid-19-package-2"
+  },
+  {
+    "testCode": "KT0192",
+    "name": "COVID-19 ANTIGEN",
+    "slug": "kt0192-covid-19-antigen"
+  },
+  {
+    "testCode": "KT0193",
+    "name": "COVID-19 TOTAL ANTIBODY",
+    "slug": "kt0193-covid-19-total-antibody"
+  },
+  {
+    "testCode": "KT0194",
+    "name": "COVID-19 TOTAL ANTIBODY (IgG)",
+    "slug": "kt0194-covid-19-total-antibody-igg"
+  },
+  {
+    "testCode": "KT0195",
+    "name": "COVID-19 TOTAL ANTIBODY (IgM+IgG+IgA)",
+    "slug": "kt0195-covid-19-total-antibody-igm-igg-iga"
+  },
+  {
+    "testCode": "KT0196",
+    "name": "CPK (MB)",
+    "slug": "kt0196-cpk-mb"
+  },
+  {
+    "testCode": "KT0197",
+    "name": "Creatine Kinase -MB",
+    "slug": "kt0197-creatine-kinase-mb"
+  },
+  {
+    "testCode": "KT0198",
+    "name": "Creatine PhosphoKinase (CPK) -NAC",
+    "slug": "kt0198-creatine-phosphokinase-cpk-nac"
+  },
+  {
+    "testCode": "KT0199",
+    "name": "Cross Match",
+    "slug": "kt0199-cross-match"
+  },
+  {
+    "testCode": "KT0200",
+    "name": "Cryptococcus Antigen ,CSF",
+    "slug": "kt0200-cryptococcus-antigen-csf"
+  },
+  {
+    "testCode": "KT0201",
+    "name": "Cryptococcus Antigen, Serum",
+    "slug": "kt0201-cryptococcus-antigen-serum"
+  },
+  {
+    "testCode": "KT0202",
+    "name": "CSF - AFB Stain",
+    "slug": "kt0202-csf-afb-stain"
+  },
+  {
+    "testCode": "KT0203",
+    "name": "CSF -Culture",
+    "slug": "kt0203-csf-culture"
+  },
+  {
+    "testCode": "KT0204",
+    "name": "CSF Electrophoresis",
+    "slug": "kt0204-csf-electrophoresis"
+  },
+  {
+    "testCode": "KT0205",
+    "name": "CT",
+    "slug": "kt0205-ct"
+  },
+  {
+    "testCode": "KT0206",
+    "name": "CT GUIDED F.N.A.C",
+    "slug": "kt0206-ct-guided-f-n-a-c"
+  },
+  {
+    "testCode": "KT0207",
+    "name": "Culture & Sensitivity ( Other Specimen)",
+    "slug": "kt0207-culture-and-sensitivity-other-specimen"
+  },
+  {
+    "testCode": "KT0208",
+    "name": "Culture, Body Fluid",
+    "slug": "kt0208-culture-body-fluid"
+  },
+  {
+    "testCode": "KT0209",
+    "name": "CVP Line Tip For Culture & Sensitivity",
+    "slug": "kt0209-cvp-line-tip-for-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0210",
+    "name": "Cystatin C",
+    "slug": "kt0210-cystatin-c"
+  },
+  {
+    "testCode": "KT0211",
+    "name": "Cytogenetics",
+    "slug": "kt0211-cytogenetics"
+  },
+  {
+    "testCode": "KT0212",
+    "name": "CYTOLOGY FOR MALIGNANT CELLS",
+    "slug": "kt0212-cytology-for-malignant-cells"
+  },
+  {
+    "testCode": "KT0213",
+    "name": "Cytology For Nipple Discharge",
+    "slug": "kt0213-cytology-for-nipple-discharge"
+  },
+  {
+    "testCode": "KT0214",
+    "name": "D DIMER",
+    "slug": "kt0214-d-dimer"
+  },
+  {
+    "testCode": "KT0215",
+    "name": "D Dimer(Quantitative)",
+    "slug": "kt0215-d-dimer-quantitative"
+  },
+  {
+    "testCode": "KT0216",
+    "name": "D.L.C",
+    "slug": "kt0216-d-l-c"
+  },
+  {
+    "testCode": "KT0217",
+    "name": "Dehydroepiandrosterone-sulfate(DHEAS)",
+    "slug": "kt0217-dehydroepiandrosterone-sulfate-dheas"
+  },
+  {
+    "testCode": "KT0218",
+    "name": "Dengue Ns1 Antigen",
+    "slug": "kt0218-dengue-ns1-antigen"
+  },
+  {
+    "testCode": "KT0219",
+    "name": "Dengue Profile",
+    "slug": "kt0219-dengue-profile"
+  },
+  {
+    "testCode": "KT0220",
+    "name": "Dengue Serology (Ig M & Ig G)",
+    "slug": "kt0220-dengue-serology-ig-m-and-ig-g"
+  },
+  {
+    "testCode": "KT0221",
+    "name": "DIABETIC PANEL",
+    "slug": "kt0221-diabetic-panel"
+  },
+  {
+    "testCode": "KT0222",
+    "name": "DIABETIC PROFILE",
+    "slug": "kt0222-diabetic-profile"
+  },
+  {
+    "testCode": "KT0223",
+    "name": "Dual marker",
+    "slug": "kt0223-dual-marker"
+  },
+  {
+    "testCode": "KT0224",
+    "name": "E GFR (estimated GFR)",
+    "slug": "kt0224-e-gfr-estimated-gfr"
+  },
+  {
+    "testCode": "KT0225",
+    "name": "EAR DISCHARGE C+S",
+    "slug": "kt0225-ear-discharge-c-s"
+  },
+  {
+    "testCode": "KT0226",
+    "name": "EAR SWAB C & S",
+    "slug": "kt0226-ear-swab-c-and-s"
+  },
+  {
+    "testCode": "KT0227",
+    "name": "ECG",
+    "slug": "kt0227-ecg"
+  },
+  {
+    "testCode": "KT0228",
+    "name": "Electrolytes (Na/K/Cl), Urine",
+    "slug": "kt0228-electrolytes-na-k-cl-urine"
+  },
+  {
+    "testCode": "KT0229",
+    "name": "Elisa For H.Pylori (IgG,IgM,)",
+    "slug": "kt0229-elisa-for-h-pylori-igg-igm"
+  },
+  {
+    "testCode": "KT0230",
+    "name": "ELISA FOR H.PYLORI (IGM)",
+    "slug": "kt0230-elisa-for-h-pylori-igm"
+  },
+  {
+    "testCode": "KT0231",
+    "name": "ELISA FOR H.PYLORI RAPAID",
+    "slug": "kt0231-elisa-for-h-pylori-rapaid"
+  },
+  {
+    "testCode": "KT0232",
+    "name": "ELISA FOR H.PYLORI(IgG)",
+    "slug": "kt0232-elisa-for-h-pylori-igg"
+  },
+  {
+    "testCode": "KT0233",
+    "name": "ELISA FOR MICROFILARIA",
+    "slug": "kt0233-elisa-for-microfilaria"
+  },
+  {
+    "testCode": "KT0234",
+    "name": "Elisa for Pro-Calcitonin",
+    "slug": "kt0234-elisa-for-pro-calcitonin"
+  },
+  {
+    "testCode": "KT0235",
+    "name": "Entamoeba Histolytica Antibodies",
+    "slug": "kt0235-entamoeba-histolytica-antibodies"
+  },
+  {
+    "testCode": "KT0236",
+    "name": "ERYTHROPOIETIN",
+    "slug": "kt0236-erythropoietin"
+  },
+  {
+    "testCode": "KT0237",
+    "name": "Erythropoietin (EPO) Level",
+    "slug": "kt0237-erythropoietin-epo-level"
+  },
+  {
+    "testCode": "KT0238",
+    "name": "Esnophil",
+    "slug": "kt0238-esnophil"
+  },
+  {
+    "testCode": "KT0239",
+    "name": "ESR",
+    "slug": "kt0239-esr"
+  },
+  {
+    "testCode": "KT0240",
+    "name": "ESTRADIOL(E2)",
+    "slug": "kt0240-estradiol-e2"
+  },
+  {
+    "testCode": "KT0241",
+    "name": "ET SECRETION FOR CULTURE SENSITIVITY",
+    "slug": "kt0241-et-secretion-for-culture-sensitivity"
+  },
+  {
+    "testCode": "KT0242",
+    "name": "EXTRA SLIDE",
+    "slug": "kt0242-extra-slide"
+  },
+  {
+    "testCode": "KT0243",
+    "name": "EYE SWAB CULTURE",
+    "slug": "kt0243-eye-swab-culture"
+  },
+  {
+    "testCode": "KT0244",
+    "name": "Factor 5 Functional",
+    "slug": "kt0244-factor-5-functional"
+  },
+  {
+    "testCode": "KT0245",
+    "name": "Factor 8 Studies",
+    "slug": "kt0245-factor-8-studies"
+  },
+  {
+    "testCode": "KT0246",
+    "name": "Factor 9 Studies",
+    "slug": "kt0246-factor-9-studies"
+  },
+  {
+    "testCode": "KT0247",
+    "name": "Factor VII Activit",
+    "slug": "kt0247-factor-vii-activit"
+  },
+  {
+    "testCode": "KT0248",
+    "name": "FDP,FIBRINOGENDEGRADATION",
+    "slug": "kt0248-fdp-fibrinogendegradation"
+  },
+  {
+    "testCode": "KT0249",
+    "name": "Fecal Calprotectin",
+    "slug": "kt0249-fecal-calprotectin"
+  },
+  {
+    "testCode": "KT0250",
+    "name": "Fine Needle Aspiration Cytology",
+    "slug": "kt0250-fine-needle-aspiration-cytology"
+  },
+  {
+    "testCode": "KT0251",
+    "name": "FISH & Cytogenetics(Aneuploidy Detection Products Of Conception (POC) Using Chromosomes 13 18 21 X & Y)",
+    "slug": "kt0251-fish-and-cytogenetics-aneuploidy-detection-products-of-conception-poc-using-chromos"
+  },
+  {
+    "testCode": "KT0252",
+    "name": "FISH FOR BCR / ABL",
+    "slug": "kt0252-fish-for-bcr-abl"
+  },
+  {
+    "testCode": "KT0253",
+    "name": "Fluid ADA",
+    "slug": "kt0253-fluid-ada"
+  },
+  {
+    "testCode": "KT0254",
+    "name": "FLUID AMYLASE",
+    "slug": "kt0254-fluid-amylase"
+  },
+  {
+    "testCode": "KT0255",
+    "name": "Fluid Analysis -Cytology For Malignant Cell",
+    "slug": "kt0255-fluid-analysis-cytology-for-malignant-cell"
+  },
+  {
+    "testCode": "KT0256",
+    "name": "FLUID ASPIRATION CHARGE",
+    "slug": "kt0256-fluid-aspiration-charge"
+  },
+  {
+    "testCode": "KT0257",
+    "name": "Fluid Gram Stain",
+    "slug": "kt0257-fluid-gram-stain"
+  },
+  {
+    "testCode": "KT0258",
+    "name": "Fluid LDH",
+    "slug": "kt0258-fluid-ldh"
+  },
+  {
+    "testCode": "KT0259",
+    "name": "FLUID LDH RATIO",
+    "slug": "kt0259-fluid-ldh-ratio"
+  },
+  {
+    "testCode": "KT0260",
+    "name": "FLUID-AFB",
+    "slug": "kt0260-fluid-afb"
+  },
+  {
+    "testCode": "KT0261",
+    "name": "FNAC OF BOTH AXILLARY GLAND",
+    "slug": "kt0261-fnac-of-both-axillary-gland"
+  },
+  {
+    "testCode": "KT0262",
+    "name": "FNAC BOTH BREAST",
+    "slug": "kt0262-fnac-both-breast"
+  },
+  {
+    "testCode": "KT0263",
+    "name": "FNAC-CLN",
+    "slug": "kt0263-fnac-cln"
+  },
+  {
+    "testCode": "KT0264",
+    "name": "Foleys Catheter Tip For Culture & Sensitivity",
+    "slug": "kt0264-foleys-catheter-tip-for-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0265",
+    "name": "Folic Acid",
+    "slug": "kt0265-folic-acid"
+  },
+  {
+    "testCode": "KT0266",
+    "name": "Folic Acid [Folate]",
+    "slug": "kt0266-folic-acid-folate"
+  },
+  {
+    "testCode": "KT0267",
+    "name": "Free beta HCG",
+    "slug": "kt0267-free-beta-hcg"
+  },
+  {
+    "testCode": "KT0268",
+    "name": "Free T3",
+    "slug": "kt0268-free-t3"
+  },
+  {
+    "testCode": "KT0269",
+    "name": "FREE THYROID PROFILE",
+    "slug": "kt0269-free-thyroid-profile"
+  },
+  {
+    "testCode": "KT0270",
+    "name": "free-Testosterone",
+    "slug": "kt0270-free-testosterone"
+  },
+  {
+    "testCode": "KT0271",
+    "name": "FSH (Follicle Stimulating Hormone)",
+    "slug": "kt0271-fsh-follicle-stimulating-hormone"
+  },
+  {
+    "testCode": "KT0272",
+    "name": "FT3",
+    "slug": "kt0272-ft3"
+  },
+  {
+    "testCode": "KT0273",
+    "name": "FT4",
+    "slug": "kt0273-ft4"
+  },
+  {
+    "testCode": "KT0274",
+    "name": "Fungal Culture Test",
+    "slug": "kt0274-fungal-culture-test"
+  },
+  {
+    "testCode": "KT0275",
+    "name": "FUNGAL STAINING",
+    "slug": "kt0275-fungal-staining"
+  },
+  {
+    "testCode": "KT0276",
+    "name": "G6PD DEFICIENCY TEST",
+    "slug": "kt0276-g6pd-deficiency-test"
+  },
+  {
+    "testCode": "KT0277",
+    "name": "GAD 65",
+    "slug": "kt0277-gad-65"
+  },
+  {
+    "testCode": "KT0278",
+    "name": "GAD 65 Antibody",
+    "slug": "kt0278-gad-65-antibody"
+  },
+  {
+    "testCode": "KT0279",
+    "name": "Gamma Gt",
+    "slug": "kt0279-gamma-gt"
+  },
+  {
+    "testCode": "KT0280",
+    "name": "Gastrin-17",
+    "slug": "kt0280-gastrin-17"
+  },
+  {
+    "testCode": "KT0281",
+    "name": "GENEXPERT ULTRA (NEXT GENERATION) MTB WITH RIFAMPICIN RESISTANCE",
+    "slug": "kt0281-genexpert-ultra-next-generation-mtb-with-rifampicin-resistance"
+  },
+  {
+    "testCode": "KT0282",
+    "name": "GFR TEST",
+    "slug": "kt0282-gfr-test"
+  },
+  {
+    "testCode": "KT0283",
+    "name": "Globulin",
+    "slug": "kt0283-globulin"
+  },
+  {
+    "testCode": "KT0284",
+    "name": "Glucose",
+    "slug": "kt0284-glucose"
+  },
+  {
+    "testCode": "KT0285",
+    "name": "Glucose Challenge Test ( 50 gram glucose GCT)",
+    "slug": "kt0285-glucose-challenge-test-50-gram-glucose-gct"
+  },
+  {
+    "testCode": "KT0286",
+    "name": "Glucose Tolerance Test (75 gm Gluscose)",
+    "slug": "kt0286-glucose-tolerance-test-75-gm-gluscose"
+  },
+  {
+    "testCode": "KT0287",
+    "name": "Glucose Tolerence Test ( Gestation 100 Gm Glucose)",
+    "slug": "kt0287-glucose-tolerence-test-gestation-100-gm-glucose"
+  },
+  {
+    "testCode": "KT0288",
+    "name": "GRAM STAIN",
+    "slug": "kt0288-gram-stain"
+  },
+  {
+    "testCode": "KT0289",
+    "name": "Growth Hormone",
+    "slug": "kt0289-growth-hormone"
+  },
+  {
+    "testCode": "KT0290",
+    "name": "H Pylori Rapid Test",
+    "slug": "kt0290-h-pylori-rapid-test"
+  },
+  {
+    "testCode": "KT0291",
+    "name": "H.I.V BOTH",
+    "slug": "kt0291-h-i-v-both"
+  },
+  {
+    "testCode": "KT0292",
+    "name": "H.PYLORI QUANTITATIVE",
+    "slug": "kt0292-h-pylori-quantitative"
+  },
+  {
+    "testCode": "KT0293",
+    "name": "HAEMOGLOBIN",
+    "slug": "kt0293-haemoglobin"
+  },
+  {
+    "testCode": "KT0294",
+    "name": "HAEMOGLOBIN VARIANT ANALYSIS",
+    "slug": "kt0294-haemoglobin-variant-analysis"
+  },
+  {
+    "testCode": "KT0295",
+    "name": "Hapatitis B Profile",
+    "slug": "kt0295-hapatitis-b-profile"
+  },
+  {
+    "testCode": "KT0296",
+    "name": "Hapatitis B Surface Antigen (ECI)",
+    "slug": "kt0296-hapatitis-b-surface-antigen-eci"
+  },
+  {
+    "testCode": "KT0297",
+    "name": "HAV IgM",
+    "slug": "kt0297-hav-igm"
+  },
+  {
+    "testCode": "KT0298",
+    "name": "HB Electrophoresis HPLC",
+    "slug": "kt0298-hb-electrophoresis-hplc"
+  },
+  {
+    "testCode": "KT0299",
+    "name": "HBA1C",
+    "slug": "kt0299-hba1c"
+  },
+  {
+    "testCode": "KT0300",
+    "name": "HBeAg-Hepatitis B Envelope Antigen",
+    "slug": "kt0300-hbeag-hepatitis-b-envelope-antigen"
+  },
+  {
+    "testCode": "KT0301",
+    "name": "HBsAg (Rapid)",
+    "slug": "kt0301-hbsag-rapid"
+  },
+  {
+    "testCode": "KT0302",
+    "name": "HBsAg ELISA",
+    "slug": "kt0302-hbsag-elisa"
+  },
+  {
+    "testCode": "KT0303",
+    "name": "HBV Viral Load By Real Time PCR",
+    "slug": "kt0303-hbv-viral-load-by-real-time-pcr"
+  },
+  {
+    "testCode": "KT0304",
+    "name": "HCV (Rapid)",
+    "slug": "kt0304-hcv-rapid"
+  },
+  {
+    "testCode": "KT0305",
+    "name": "HCV RNA Qualitative (PCR)",
+    "slug": "kt0305-hcv-rna-qualitative-pcr"
+  },
+  {
+    "testCode": "KT0306",
+    "name": "HCV RNA Quantitative (PCR)",
+    "slug": "kt0306-hcv-rna-quantitative-pcr"
+  },
+  {
+    "testCode": "KT0307",
+    "name": "HDL Cholesterol",
+    "slug": "kt0307-hdl-cholesterol"
+  },
+  {
+    "testCode": "KT0308",
+    "name": "Health check-up silver (female)",
+    "slug": "kt0308-health-check-up-silver-female"
+  },
+  {
+    "testCode": "KT0309",
+    "name": "Health check-up silver (male)",
+    "slug": "kt0309-health-check-up-silver-male"
+  },
+  {
+    "testCode": "KT0310",
+    "name": "Helicobacter Pylori (H.pylori) Antigen, Stool",
+    "slug": "kt0310-helicobacter-pylori-h-pylori-antigen-stool"
+  },
+  {
+    "testCode": "KT0311",
+    "name": "Helicobacter Pylori (H.pylori) Antigen, Stool",
+    "slug": "kt0311-helicobacter-pylori-h-pylori-antigen-stool"
+  },
+  {
+    "testCode": "KT0312",
+    "name": "Helicobacter Pylori IgM Antibodies",
+    "slug": "kt0312-helicobacter-pylori-igm-antibodies"
+  },
+  {
+    "testCode": "KT0313",
+    "name": "Hepatitis A (HAV) IgG",
+    "slug": "kt0313-hepatitis-a-hav-igg"
+  },
+  {
+    "testCode": "KT0314",
+    "name": "Hepatitis A Virus IgM Antibodies",
+    "slug": "kt0314-hepatitis-a-virus-igm-antibodies"
+  },
+  {
+    "testCode": "KT0315",
+    "name": "Hepatitis B core -Total Antibodies (HBc-T)",
+    "slug": "kt0315-hepatitis-b-core-total-antibodies-hbc-t"
+  },
+  {
+    "testCode": "KT0316",
+    "name": "Hepatitis B Core IgG",
+    "slug": "kt0316-hepatitis-b-core-igg"
+  },
+  {
+    "testCode": "KT0317",
+    "name": "Hepatitis B Core IgM",
+    "slug": "kt0317-hepatitis-b-core-igm"
+  },
+  {
+    "testCode": "KT0318",
+    "name": "Hepatitis B envelope Antibodies (HBeAb)",
+    "slug": "kt0318-hepatitis-b-envelope-antibodies-hbeab"
+  },
+  {
+    "testCode": "KT0319",
+    "name": "Hepatitis B Profile",
+    "slug": "kt0319-hepatitis-b-profile"
+  },
+  {
+    "testCode": "KT0320",
+    "name": "Hepatitis B Profile",
+    "slug": "kt0320-hepatitis-b-profile"
+  },
+  {
+    "testCode": "KT0321",
+    "name": "Hepatitis B Surface Antibodies (HBsAb)",
+    "slug": "kt0321-hepatitis-b-surface-antibodies-hbsab"
+  },
+  {
+    "testCode": "KT0322",
+    "name": "Hepatitis B surface antigen (HBsAg) ECLIA",
+    "slug": "kt0322-hepatitis-b-surface-antigen-hbsag-eclia"
+  },
+  {
+    "testCode": "KT0323",
+    "name": "Hepatitis B Surface Total Antibodies",
+    "slug": "kt0323-hepatitis-b-surface-total-antibodies"
+  },
+  {
+    "testCode": "KT0324",
+    "name": "Hepatitis B Virus DNA Quantitative PCR",
+    "slug": "kt0324-hepatitis-b-virus-dna-quantitative-pcr"
+  },
+  {
+    "testCode": "KT0325",
+    "name": "Hepatitis B Virus Viral Load DNA LEVEL",
+    "slug": "kt0325-hepatitis-b-virus-viral-load-dna-level"
+  },
+  {
+    "testCode": "KT0326",
+    "name": "Hepatitis B. MARKA",
+    "slug": "kt0326-hepatitis-b-marka"
+  },
+  {
+    "testCode": "KT0327",
+    "name": "Hepatitis C Antibody (HCV), Quantitative",
+    "slug": "kt0327-hepatitis-c-antibody-hcv-quantitative"
+  },
+  {
+    "testCode": "KT0328",
+    "name": "Hepatitis C virus IgG",
+    "slug": "kt0328-hepatitis-c-virus-igg"
+  },
+  {
+    "testCode": "KT0329",
+    "name": "Hepatitis C virus Igm",
+    "slug": "kt0329-hepatitis-c-virus-igm"
+  },
+  {
+    "testCode": "KT0330",
+    "name": "Hepatitis E Virus IgM Antibodies",
+    "slug": "kt0330-hepatitis-e-virus-igm-antibodies"
+  },
+  {
+    "testCode": "KT0331",
+    "name": "Hepatitis E Virus, IgG Antibodies",
+    "slug": "kt0331-hepatitis-e-virus-igg-antibodies"
+  },
+  {
+    "testCode": "KT0332",
+    "name": "Hepatitis E Virus, IgG Antibodies",
+    "slug": "kt0332-hepatitis-e-virus-igg-antibodies"
+  },
+  {
+    "testCode": "KT0333",
+    "name": "Hepatitis E Virus, IgM Antibodies",
+    "slug": "kt0333-hepatitis-e-virus-igm-antibodies"
+  },
+  {
+    "testCode": "KT0334",
+    "name": "High-Sensitivity C-Reactive Protein(hs-CRP)",
+    "slug": "kt0334-high-sensitivity-c-reactive-protein-hs-crp"
+  },
+  {
+    "testCode": "KT0335",
+    "name": "Histo Block Of Review",
+    "slug": "kt0335-histo-block-of-review"
+  },
+  {
+    "testCode": "KT0336",
+    "name": "HISTOPATHOLOGY EXTRA LARGE BIOPSY",
+    "slug": "kt0336-histopathology-extra-large-biopsy"
+  },
+  {
+    "testCode": "KT0337",
+    "name": "HISTOPATHOLOGY LARGE",
+    "slug": "kt0337-histopathology-large"
+  },
+  {
+    "testCode": "KT0338",
+    "name": "Histopathology Medium Specimen",
+    "slug": "kt0338-histopathology-medium-specimen"
+  },
+  {
+    "testCode": "KT0339",
+    "name": "Histopathology Small Specimen",
+    "slug": "kt0339-histopathology-small-specimen"
+  },
+  {
+    "testCode": "KT0340",
+    "name": "HISTOPATHOLOGY/FNAC SLIDE AND BLOCK ISSUE",
+    "slug": "kt0340-histopathology-fnac-slide-and-block-issue"
+  },
+  {
+    "testCode": "KT0341",
+    "name": "Histopathology: Block/Slide For Review",
+    "slug": "kt0341-histopathology-block-slide-for-review"
+  },
+  {
+    "testCode": "KT0342",
+    "name": "Histopathology: Radical Specimen",
+    "slug": "kt0342-histopathology-radical-specimen"
+  },
+  {
+    "testCode": "KT0343",
+    "name": "HIV 1 & 2 Antibody (ECI)",
+    "slug": "kt0343-hiv-1-and-2-antibody-eci"
+  },
+  {
+    "testCode": "KT0344",
+    "name": "HIV 1 & 2 Antibody (Rapid)",
+    "slug": "kt0344-hiv-1-and-2-antibody-rapid"
+  },
+  {
+    "testCode": "KT0345",
+    "name": "HIV 4th Gen ELISA",
+    "slug": "kt0345-hiv-4th-gen-elisa"
+  },
+  {
+    "testCode": "KT0346",
+    "name": "HIV I & II Quantitative (HIV)",
+    "slug": "kt0346-hiv-i-and-ii-quantitative-hiv"
+  },
+  {
+    "testCode": "KT0347",
+    "name": "HIV RNA Qualitative (PCR)",
+    "slug": "kt0347-hiv-rna-qualitative-pcr"
+  },
+  {
+    "testCode": "KT0348",
+    "name": "HLA-B27 (Flowcytometer)",
+    "slug": "kt0348-hla-b27-flowcytometer"
+  },
+  {
+    "testCode": "KT0349",
+    "name": "HLA-B27 PCR,QUALITATIVE",
+    "slug": "kt0349-hla-b27-pcr-qualitative"
+  },
+  {
+    "testCode": "KT0350",
+    "name": "Homocysteine (Serum)",
+    "slug": "kt0350-homocysteine-serum"
+  },
+  {
+    "testCode": "KT0351",
+    "name": "Hormonal Assay",
+    "slug": "kt0351-hormonal-assay"
+  },
+  {
+    "testCode": "KT0352",
+    "name": "HPV",
+    "slug": "kt0352-hpv"
+  },
+  {
+    "testCode": "KT0353",
+    "name": "HPV (LBC)",
+    "slug": "kt0353-hpv-lbc"
+  },
+  {
+    "testCode": "KT0354",
+    "name": "HPV DNA Hybrid capture",
+    "slug": "kt0354-hpv-dna-hybrid-capture"
+  },
+  {
+    "testCode": "KT0355",
+    "name": "HPV-Human Papilloma Virus DNA Detection And Typing LBC",
+    "slug": "kt0355-hpv-human-papilloma-virus-dna-detection-and-typing-lbc"
+  },
+  {
+    "testCode": "KT0356",
+    "name": "HSV-1/2 IgG (Herpes Simplex virus)",
+    "slug": "kt0356-hsv-1-2-igg-herpes-simplex-virus"
+  },
+  {
+    "testCode": "KT0357",
+    "name": "HSV-1/2 IgM (Herpes Simplex virus)",
+    "slug": "kt0357-hsv-1-2-igm-herpes-simplex-virus"
+  },
+  {
+    "testCode": "KT0358",
+    "name": "HSV-2 IgE (Herpes simplex virus)",
+    "slug": "kt0358-hsv-2-ige-herpes-simplex-virus"
+  },
+  {
+    "testCode": "KT0359",
+    "name": "HSV-2 IgG (Herpes Simplex virus)",
+    "slug": "kt0359-hsv-2-igg-herpes-simplex-virus"
+  },
+  {
+    "testCode": "KT0360",
+    "name": "HSV-2 IgM (Herpes simplex virus)",
+    "slug": "kt0360-hsv-2-igm-herpes-simplex-virus"
+  },
+  {
+    "testCode": "KT0361",
+    "name": "Human Leukocyte Antigen B27 (HLA-B27)",
+    "slug": "kt0361-human-leukocyte-antigen-b27-hla-b27"
+  },
+  {
+    "testCode": "KT0362",
+    "name": "ICA",
+    "slug": "kt0362-ica"
+  },
+  {
+    "testCode": "KT0363",
+    "name": "IgA (Urine)",
+    "slug": "kt0363-iga-urine"
+  },
+  {
+    "testCode": "KT0364",
+    "name": "IgE TOTAL",
+    "slug": "kt0364-ige-total"
+  },
+  {
+    "testCode": "KT0365",
+    "name": "IGF-1",
+    "slug": "kt0365-igf-1"
+  },
+  {
+    "testCode": "KT0366",
+    "name": "IgG (Serum)",
+    "slug": "kt0366-igg-serum"
+  },
+  {
+    "testCode": "KT0367",
+    "name": "IgG (Urine)",
+    "slug": "kt0367-igg-urine"
+  },
+  {
+    "testCode": "KT0368",
+    "name": "IgM",
+    "slug": "kt0368-igm"
+  },
+  {
+    "testCode": "KT0369",
+    "name": "IL-6",
+    "slug": "kt0369-il-6"
+  },
+  {
+    "testCode": "KT0370",
+    "name": "Immature/Mature Neutrophil Ratio",
+    "slug": "kt0370-immature-mature-neutrophil-ratio"
+  },
+  {
+    "testCode": "KT0371",
+    "name": "IMMUNOGLOBULIN A (IGA)",
+    "slug": "kt0371-immunoglobulin-a-iga"
+  },
+  {
+    "testCode": "KT0372",
+    "name": "Immunoglobulin Profile",
+    "slug": "kt0372-immunoglobulin-profile"
+  },
+  {
+    "testCode": "KT0373",
+    "name": "IMMUNOGLOBULIN- IgA",
+    "slug": "kt0373-immunoglobulin-iga"
+  },
+  {
+    "testCode": "KT0374",
+    "name": "Immunohistochemistry -Three Markers",
+    "slug": "kt0374-immunohistochemistry-three-markers"
+  },
+  {
+    "testCode": "KT0375",
+    "name": "Immunohistochemistry Er/Pr",
+    "slug": "kt0375-immunohistochemistry-er-pr"
+  },
+  {
+    "testCode": "KT0376",
+    "name": "Immunohistochemistry Her - 2 Neu",
+    "slug": "kt0376-immunohistochemistry-her-2-neu"
+  },
+  {
+    "testCode": "KT0377",
+    "name": "Immunohistochemistry- Two Markers",
+    "slug": "kt0377-immunohistochemistry-two-markers"
+  },
+  {
+    "testCode": "KT0378",
+    "name": "Immunohistochemistry-OneMarker",
+    "slug": "kt0378-immunohistochemistry-onemarker"
+  },
+  {
+    "testCode": "KT0379",
+    "name": "Immunohistochemistry> Three Markers",
+    "slug": "kt0379-immunohistochemistry-three-markers"
+  },
+  {
+    "testCode": "KT0380",
+    "name": "India Ink",
+    "slug": "kt0380-india-ink"
+  },
+  {
+    "testCode": "KT0381",
+    "name": "INDIRECT COOMBS TEST",
+    "slug": "kt0381-indirect-coombs-test"
+  },
+  {
+    "testCode": "KT0382",
+    "name": "Infertility Panel (Male)",
+    "slug": "kt0382-infertility-panel-male"
+  },
+  {
+    "testCode": "KT0383",
+    "name": "INHIBIN A, Maternal Marker",
+    "slug": "kt0383-inhibin-a-maternal-marker"
+  },
+  {
+    "testCode": "KT0384",
+    "name": "Inorganic phosphorus",
+    "slug": "kt0384-inorganic-phosphorus"
+  },
+  {
+    "testCode": "KT0385",
+    "name": "Insulin Fasting",
+    "slug": "kt0385-insulin-fasting"
+  },
+  {
+    "testCode": "KT0386",
+    "name": "Insulin Fasting",
+    "slug": "kt0386-insulin-fasting"
+  },
+  {
+    "testCode": "KT0387",
+    "name": "Insulin Like Growth Factor-1 (IGF-1)",
+    "slug": "kt0387-insulin-like-growth-factor-1-igf-1"
+  },
+  {
+    "testCode": "KT0388",
+    "name": "IRON DEFICIENCY BASIC PANEL",
+    "slug": "kt0388-iron-deficiency-basic-panel"
+  },
+  {
+    "testCode": "KT0389",
+    "name": "IRON PROFILE with Ferritin",
+    "slug": "kt0389-iron-profile-with-ferritin"
+  },
+  {
+    "testCode": "KT0390",
+    "name": "IT Ratio",
+    "slug": "kt0390-it-ratio"
+  },
+  {
+    "testCode": "KT0391",
+    "name": "Karyotyping",
+    "slug": "kt0391-karyotyping"
+  },
+  {
+    "testCode": "KT0392",
+    "name": "KFT",
+    "slug": "kidney-function-test"
+  },
+  {
+    "testCode": "KT0393",
+    "name": "Kidney Stone Analysis",
+    "slug": "kt0393-kidney-stone-analysis"
+  },
+  {
+    "testCode": "KT0394",
+    "name": "KOH Stanning ( Small Specimen)",
+    "slug": "kt0394-koh-stanning-small-specimen"
+  },
+  {
+    "testCode": "KT0395",
+    "name": "Lactate, Plasma",
+    "slug": "kt0395-lactate-plasma"
+  },
+  {
+    "testCode": "KT0396",
+    "name": "LDH -( LACTATE DEHYDROGENASE) - FLUID",
+    "slug": "kt0396-ldh-lactate-dehydrogenase-fluid"
+  },
+  {
+    "testCode": "KT0397",
+    "name": "LDH Total (Serum)",
+    "slug": "kt0397-ldh-total-serum"
+  },
+  {
+    "testCode": "KT0398",
+    "name": "LDL Cholestrol",
+    "slug": "kt0398-ldl-cholestrol"
+  },
+  {
+    "testCode": "KT0399",
+    "name": "Le Cells",
+    "slug": "kt0399-le-cells"
+  },
+  {
+    "testCode": "KT0400",
+    "name": "LEPTOSPIRA IGM & ICG (BY RAPID METHOD)",
+    "slug": "kt0400-leptospira-igm-and-icg-by-rapid-method"
+  },
+  {
+    "testCode": "KT0401",
+    "name": "LEPTOSPIRA-IgM",
+    "slug": "kt0401-leptospira-igm"
+  },
+  {
+    "testCode": "KT0402",
+    "name": "LH",
+    "slug": "kt0402-lh"
+  },
+  {
+    "testCode": "KT0403",
+    "name": "LIPASE",
+    "slug": "kt0403-lipase"
+  },
+  {
+    "testCode": "KT0404",
+    "name": "LIPID PROFILE",
+    "slug": "kt0404-lipid-profile"
+  },
+  {
+    "testCode": "KT0405",
+    "name": "Lipoprotein A",
+    "slug": "kt0405-lipoprotein-a"
+  },
+  {
+    "testCode": "KT0406",
+    "name": "Liquid Based Cytology (LBC),Sure path Cytology",
+    "slug": "kt0406-liquid-based-cytology-lbc-sure-path-cytology"
+  },
+  {
+    "testCode": "KT0407",
+    "name": "LIVER FUNCTION TEST",
+    "slug": "liver-function-test"
+  },
+  {
+    "testCode": "KT0408",
+    "name": "LKM-1 Antibodies",
+    "slug": "kt0408-lkm-1-antibodies"
+  },
+  {
+    "testCode": "KT0409",
+    "name": "LKM1 Antibodies (Liver Kidney Microsomes)",
+    "slug": "kt0409-lkm1-antibodies-liver-kidney-microsomes"
+  },
+  {
+    "testCode": "KT0410",
+    "name": "LUPUS ANTICOAGULANT SCREEN TIME",
+    "slug": "kt0410-lupus-anticoagulant-screen-time"
+  },
+  {
+    "testCode": "KT0411",
+    "name": "Magnesium (Serum)",
+    "slug": "kt0411-magnesium-serum"
+  },
+  {
+    "testCode": "KT0412",
+    "name": "Malaria Antigen (Rapid Test For Malaria)",
+    "slug": "kt0412-malaria-antigen-rapid-test-for-malaria"
+  },
+  {
+    "testCode": "KT0413",
+    "name": "MALARIA PARASITE",
+    "slug": "kt0413-malaria-parasite"
+  },
+  {
+    "testCode": "KT0414",
+    "name": "Malaria Profile",
+    "slug": "kt0414-malaria-profile"
+  },
+  {
+    "testCode": "KT0415",
+    "name": "Malaria Total Antibody",
+    "slug": "kt0415-malaria-total-antibody"
+  },
+  {
+    "testCode": "KT0416",
+    "name": "Malaria Total Antibody",
+    "slug": "kt0416-malaria-total-antibody"
+  },
+  {
+    "testCode": "KT0417",
+    "name": "Malignant Cells",
+    "slug": "kt0417-malignant-cells"
+  },
+  {
+    "testCode": "KT0418",
+    "name": "MANTOUX TEST (MT)",
+    "slug": "kt0418-mantoux-test-mt"
+  },
+  {
+    "testCode": "KT0419",
+    "name": "Microalbuminuria (MAU)",
+    "slug": "kt0419-microalbuminuria-mau"
+  },
+  {
+    "testCode": "KT0420",
+    "name": "Microalbuminuria (MAU)",
+    "slug": "kt0420-microalbuminuria-mau"
+  },
+  {
+    "testCode": "KT0421",
+    "name": "MICROFALARIA (RAPID TEST)",
+    "slug": "kt0421-microfalaria-rapid-test"
+  },
+  {
+    "testCode": "KT0422",
+    "name": "Mini Diab Profile",
+    "slug": "kt0422-mini-diab-profile"
+  },
+  {
+    "testCode": "KT0423",
+    "name": "MTB WITH RIFAMPICIN AND ISONIAZID RESISTANCE",
+    "slug": "kt0423-mtb-with-rifampicin-and-isoniazid-resistance"
+  },
+  {
+    "testCode": "KT0424",
+    "name": "Mucosal Scrapping for Cytology",
+    "slug": "kt0424-mucosal-scrapping-for-cytology"
+  },
+  {
+    "testCode": "KT0425",
+    "name": "Mumps IgG",
+    "slug": "kt0425-mumps-igg"
+  },
+  {
+    "testCode": "KT0426",
+    "name": "Mumps IgM",
+    "slug": "kt0426-mumps-igm"
+  },
+  {
+    "testCode": "KT0427",
+    "name": "Mycobacterium Tuberculosis (Sputum)",
+    "slug": "kt0427-mycobacterium-tuberculosis-sputum"
+  },
+  {
+    "testCode": "KT0428",
+    "name": "Myeloma Profile",
+    "slug": "kt0428-myeloma-profile"
+  },
+  {
+    "testCode": "KT0429",
+    "name": "Nail Clipping For Fungus",
+    "slug": "kt0429-nail-clipping-for-fungus"
+  },
+  {
+    "testCode": "KT0430",
+    "name": "Nasal Swab For Culture & Sensitivity",
+    "slug": "kt0430-nasal-swab-for-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0431",
+    "name": "Needle Stick Injury Panel",
+    "slug": "kt0431-needle-stick-injury-panel"
+  },
+  {
+    "testCode": "KT0432",
+    "name": "Nicotine Metabolite",
+    "slug": "kt0432-nicotine-metabolite"
+  },
+  {
+    "testCode": "KT0433",
+    "name": "NORMAL COVID PACKAGE",
+    "slug": "kt0433-normal-covid-package"
+  },
+  {
+    "testCode": "KT0434",
+    "name": "NT-Pro BNP",
+    "slug": "kt0434-nt-pro-bnp"
+  },
+  {
+    "testCode": "KT0435",
+    "name": "OncqHaem IRMA",
+    "slug": "kt0435-oncqhaem-irma"
+  },
+  {
+    "testCode": "KT0436",
+    "name": "OPTIMAL FOR MALARIA(RTMP)",
+    "slug": "kt0436-optimal-for-malaria-rtmp"
+  },
+  {
+    "testCode": "KT0437",
+    "name": "Other Fluid Analysis - Cell Type & Cell Count",
+    "slug": "kt0437-other-fluid-analysis-cell-type-and-cell-count"
+  },
+  {
+    "testCode": "KT0438",
+    "name": "Other Fluid Analysis - Culture",
+    "slug": "kt0438-other-fluid-analysis-culture"
+  },
+  {
+    "testCode": "KT0439",
+    "name": "Other Fluid Analysis -LDH",
+    "slug": "kt0439-other-fluid-analysis-ldh"
+  },
+  {
+    "testCode": "KT0440",
+    "name": "PAP SMEAE EXAMINATION.",
+    "slug": "kt0440-pap-smeae-examination"
+  },
+  {
+    "testCode": "KT0441",
+    "name": "PAP SMEAR",
+    "slug": "kt0441-pap-smear"
+  },
+  {
+    "testCode": "KT0442",
+    "name": "Pap Smear Examination",
+    "slug": "kt0442-pap-smear-examination"
+  },
+  {
+    "testCode": "KT0443",
+    "name": "PCR For Chlamydia- urine",
+    "slug": "kt0443-pcr-for-chlamydia-urine"
+  },
+  {
+    "testCode": "KT0444",
+    "name": "PCR For Herpes simplex virus",
+    "slug": "kt0444-pcr-for-herpes-simplex-virus"
+  },
+  {
+    "testCode": "KT0445",
+    "name": "PCV",
+    "slug": "kt0445-pcv"
+  },
+  {
+    "testCode": "KT0446",
+    "name": "Pericardial Fluid ADA",
+    "slug": "kt0446-pericardial-fluid-ada"
+  },
+  {
+    "testCode": "KT0447",
+    "name": "Pericardiocentesis fluid analysis",
+    "slug": "kt0447-pericardiocentesis-fluid-analysis"
+  },
+  {
+    "testCode": "KT0448",
+    "name": "Peripheral Smear Examination",
+    "slug": "kt0448-peripheral-smear-examination"
+  },
+  {
+    "testCode": "KT0449",
+    "name": "Phosphorus",
+    "slug": "kt0449-phosphorus"
+  },
+  {
+    "testCode": "KT0450",
+    "name": "Plasma nor metanephrine",
+    "slug": "kt0450-plasma-nor-metanephrine"
+  },
+  {
+    "testCode": "KT0451",
+    "name": "Plasma metanephrine",
+    "slug": "kt0451-plasma-metanephrine"
+  },
+  {
+    "testCode": "KT0452",
+    "name": "PLATELET COUNT",
+    "slug": "kt0452-platelet-count"
+  },
+  {
+    "testCode": "KT0453",
+    "name": "Pleural Fluid",
+    "slug": "kt0453-pleural-fluid"
+  },
+  {
+    "testCode": "KT0454",
+    "name": "Pleural Fluid - AFB Stain",
+    "slug": "kt0454-pleural-fluid-afb-stain"
+  },
+  {
+    "testCode": "KT0455",
+    "name": "Pleural Fluid ADA",
+    "slug": "kt0455-pleural-fluid-ada"
+  },
+  {
+    "testCode": "KT0456",
+    "name": "Pleural Fluid Analysis-Culture",
+    "slug": "kt0456-pleural-fluid-analysis-culture"
+  },
+  {
+    "testCode": "KT0457",
+    "name": "Pleural Fluid Analysis-Grams Stain",
+    "slug": "kt0457-pleural-fluid-analysis-grams-stain"
+  },
+  {
+    "testCode": "KT0458",
+    "name": "POTASSIUM",
+    "slug": "kt0458-potassium"
+  },
+  {
+    "testCode": "KT0459",
+    "name": "Pre Dailysis Screen",
+    "slug": "kt0459-pre-dailysis-screen"
+  },
+  {
+    "testCode": "KT0460",
+    "name": "PRO BNP",
+    "slug": "kt0460-pro-bnp"
+  },
+  {
+    "testCode": "KT0461",
+    "name": "Procalcitonin (Qualitative)",
+    "slug": "kt0461-procalcitonin-qualitative"
+  },
+  {
+    "testCode": "KT0462",
+    "name": "Progesterone",
+    "slug": "kt0462-progesterone"
+  },
+  {
+    "testCode": "KT0463",
+    "name": "Proinsulin",
+    "slug": "kt0463-proinsulin"
+  },
+  {
+    "testCode": "KT0464",
+    "name": "Protein 24 hrs Urine",
+    "slug": "kt0464-protein-24-hrs-urine"
+  },
+  {
+    "testCode": "KT0465",
+    "name": "Prothrombin Time ( With INR)",
+    "slug": "kt0465-prothrombin-time-with-inr"
+  },
+  {
+    "testCode": "KT0466",
+    "name": "PSA FREE",
+    "slug": "kt0466-psa-free"
+  },
+  {
+    "testCode": "KT0467",
+    "name": "PSA- Total (Prostate Specific Antigen total )",
+    "slug": "kt0467-psa-total-prostate-specific-antigen-total"
+  },
+  {
+    "testCode": "KT0468",
+    "name": "PTH-Intact (Parathormone Intact)",
+    "slug": "kt0468-pth-intact-parathormone-intact"
+  },
+  {
+    "testCode": "KT0469",
+    "name": "Pus C & S",
+    "slug": "kt0469-pus-c-and-s"
+  },
+  {
+    "testCode": "KT0470",
+    "name": "PUS FOR AFB",
+    "slug": "kt0470-pus-for-afb"
+  },
+  {
+    "testCode": "KT0471",
+    "name": "QUADRUPLE(MARKER)",
+    "slug": "kt0471-quadruple-marker"
+  },
+  {
+    "testCode": "KT0472",
+    "name": "R H TITRE ANTIBODY",
+    "slug": "kt0472-r-h-titre-antibody"
+  },
+  {
+    "testCode": "KT0473",
+    "name": "R K -39 FOR KALAZAR",
+    "slug": "kt0473-r-k-39-for-kalazar"
+  },
+  {
+    "testCode": "KT0474",
+    "name": "R.P.R BOTH",
+    "slug": "kt0474-r-p-r-both"
+  },
+  {
+    "testCode": "KT0475",
+    "name": "R.P.R-H",
+    "slug": "kt0475-r-p-r-h"
+  },
+  {
+    "testCode": "KT0476",
+    "name": "R.P.R-W",
+    "slug": "kt0476-r-p-r-w"
+  },
+  {
+    "testCode": "KT0477",
+    "name": "RA FACTOR(Quantitative)",
+    "slug": "kt0477-ra-factor-quantitative"
+  },
+  {
+    "testCode": "KT0478",
+    "name": "RA LATEX",
+    "slug": "kt0478-ra-latex"
+  },
+  {
+    "testCode": "KT0479",
+    "name": "RBC Count",
+    "slug": "kt0479-rbc-count"
+  },
+  {
+    "testCode": "KT0480",
+    "name": "Renal Profile",
+    "slug": "kt0480-renal-profile"
+  },
+  {
+    "testCode": "KT0481",
+    "name": "Reticulocyte Count",
+    "slug": "kt0481-reticulocyte-count"
+  },
+  {
+    "testCode": "KT0482",
+    "name": "Rh Antibody Titre",
+    "slug": "kt0482-rh-antibody-titre"
+  },
+  {
+    "testCode": "KT0483",
+    "name": "RPR (Rapid Plasma regin)",
+    "slug": "kt0483-rpr-rapid-plasma-regin"
+  },
+  {
+    "testCode": "KT0484",
+    "name": "Rubella IgE",
+    "slug": "kt0484-rubella-ige"
+  },
+  {
+    "testCode": "KT0485",
+    "name": "Rubella IgG",
+    "slug": "kt0485-rubella-igg"
+  },
+  {
+    "testCode": "KT0486",
+    "name": "Rubella IgM",
+    "slug": "kt0486-rubella-igm"
+  },
+  {
+    "testCode": "KT0487",
+    "name": "S Prolactin",
+    "slug": "kt0487-s-prolactin"
+  },
+  {
+    "testCode": "KT0488",
+    "name": "S TYPHI DOT",
+    "slug": "kt0488-s-typhi-dot"
+  },
+  {
+    "testCode": "KT0489",
+    "name": "S-100",
+    "slug": "kt0489-s-100"
+  },
+  {
+    "testCode": "KT0490",
+    "name": "S. Estradiol",
+    "slug": "kt0490-s-estradiol"
+  },
+  {
+    "testCode": "KT0491",
+    "name": "S. Lithium",
+    "slug": "kt0491-s-lithium"
+  },
+  {
+    "testCode": "KT0492",
+    "name": "S. Valproate level",
+    "slug": "kt0492-s-valproate-level"
+  },
+  {
+    "testCode": "KT0493",
+    "name": "SAAG(Serum Ascites Albumin Gradient",
+    "slug": "kt0493-saag-serum-ascites-albumin-gradient"
+  },
+  {
+    "testCode": "KT0494",
+    "name": "SATYAMEV ACTIVE",
+    "slug": "kt0494-satyamev-active"
+  },
+  {
+    "testCode": "KT0495",
+    "name": "Satyamev Advance",
+    "slug": "kt0495-satyamev-advance"
+  },
+  {
+    "testCode": "KT0496",
+    "name": "SATYAMEV COMPLETE",
+    "slug": "kt0496-satyamev-complete"
+  },
+  {
+    "testCode": "KT0497",
+    "name": "Satyamev Complte",
+    "slug": "kt0497-satyamev-complte"
+  },
+  {
+    "testCode": "KT0498",
+    "name": "Satyamev Lite",
+    "slug": "kt0498-satyamev-lite"
+  },
+  {
+    "testCode": "KT0499",
+    "name": "SATYAMEV LITE",
+    "slug": "kt0499-satyamev-lite"
+  },
+  {
+    "testCode": "KT0500",
+    "name": "Satyamev Mini camp",
+    "slug": "kt0500-satyamev-mini-camp"
+  },
+  {
+    "testCode": "KT0501",
+    "name": "Satyamev Platinum",
+    "slug": "kt0501-satyamev-platinum"
+  },
+  {
+    "testCode": "KT0502",
+    "name": "Satyamev Screen",
+    "slug": "kt0502-satyamev-screen"
+  },
+  {
+    "testCode": "KT0503",
+    "name": "Satyamev Super",
+    "slug": "kt0503-satyamev-super"
+  },
+  {
+    "testCode": "KT0504",
+    "name": "SATYAMEV SUPER",
+    "slug": "kt0504-satyamev-super"
+  },
+  {
+    "testCode": "KT0505",
+    "name": "SATYAMEV TOTAL",
+    "slug": "kt0505-satyamev-total"
+  },
+  {
+    "testCode": "KT0506",
+    "name": "SCCA",
+    "slug": "kt0506-scca"
+  },
+  {
+    "testCode": "KT0507",
+    "name": "Scrub Typhus IgM (ELISA)",
+    "slug": "kt0507-scrub-typhus-igm-elisa"
+  },
+  {
+    "testCode": "KT0508",
+    "name": "Scrub Typhus IgM (RAPID) CARD",
+    "slug": "kt0508-scrub-typhus-igm-rapid-card"
+  },
+  {
+    "testCode": "KT0509",
+    "name": "SEMEN ANALYSIS (H.S.F)",
+    "slug": "kt0509-semen-analysis-h-s-f"
+  },
+  {
+    "testCode": "KT0510",
+    "name": "Semen C & S",
+    "slug": "kt0510-semen-c-and-s"
+  },
+  {
+    "testCode": "KT0511",
+    "name": "Serum Ketone",
+    "slug": "kt0511-serum-ketone"
+  },
+  {
+    "testCode": "KT0512",
+    "name": "SERUM ADA",
+    "slug": "kt0512-serum-ada"
+  },
+  {
+    "testCode": "KT0513",
+    "name": "SERUM ALBUMIN",
+    "slug": "kt0513-serum-albumin"
+  },
+  {
+    "testCode": "KT0514",
+    "name": "Serum Aldosterone",
+    "slug": "kt0514-serum-aldosterone"
+  },
+  {
+    "testCode": "KT0515",
+    "name": "Serum Bilrubin Total and Direct",
+    "slug": "kt0515-serum-bilrubin-total-and-direct"
+  },
+  {
+    "testCode": "KT0516",
+    "name": "SERUM CERULOPLASMIN",
+    "slug": "kt0516-serum-ceruloplasmin"
+  },
+  {
+    "testCode": "KT0517",
+    "name": "Serum Cortisol 08 AM",
+    "slug": "kt0517-serum-cortisol-08-am"
+  },
+  {
+    "testCode": "KT0518",
+    "name": "Serum Cortisol 8:00 PM",
+    "slug": "kt0518-serum-cortisol-8-00-pm"
+  },
+  {
+    "testCode": "KT0519",
+    "name": "SERUM CREATININE",
+    "slug": "kt0519-serum-creatinine"
+  },
+  {
+    "testCode": "KT0520",
+    "name": "SERUM FERRITIN",
+    "slug": "kt0520-serum-ferritin"
+  },
+  {
+    "testCode": "KT0521",
+    "name": "SERUM IgE",
+    "slug": "kt0521-serum-ige"
+  },
+  {
+    "testCode": "KT0522",
+    "name": "Serum Igg Aspergillus",
+    "slug": "kt0522-serum-igg-aspergillus"
+  },
+  {
+    "testCode": "KT0523",
+    "name": "SERUM INSULIN (PP)",
+    "slug": "kt0523-serum-insulin-pp"
+  },
+  {
+    "testCode": "KT0524",
+    "name": "SERUM INSULIN FASTING",
+    "slug": "kt0524-serum-insulin-fasting"
+  },
+  {
+    "testCode": "KT0525",
+    "name": "Serum Iron",
+    "slug": "kt0525-serum-iron"
+  },
+  {
+    "testCode": "KT0526",
+    "name": "Serum Lysine level",
+    "slug": "kt0526-serum-lysine-level"
+  },
+  {
+    "testCode": "KT0527",
+    "name": "Serum Osmolality",
+    "slug": "kt0527-serum-osmolality"
+  },
+  {
+    "testCode": "KT0528",
+    "name": "Serum Osmolality",
+    "slug": "kt0528-serum-osmolality"
+  },
+  {
+    "testCode": "KT0529",
+    "name": "Serum pH",
+    "slug": "kt0529-serum-ph"
+  },
+  {
+    "testCode": "KT0530",
+    "name": "Serum Phenytoin",
+    "slug": "kt0530-serum-phenytoin"
+  },
+  {
+    "testCode": "KT0531",
+    "name": "SERUM PROLACTIN",
+    "slug": "kt0531-serum-prolactin"
+  },
+  {
+    "testCode": "KT0532",
+    "name": "SERUM PROTEIN",
+    "slug": "kt0532-serum-protein"
+  },
+  {
+    "testCode": "KT0533",
+    "name": "Serum protein Electrophoresis",
+    "slug": "kt0533-serum-protein-electrophoresis"
+  },
+  {
+    "testCode": "KT0534",
+    "name": "SERUM SODIUM",
+    "slug": "kt0534-serum-sodium"
+  },
+  {
+    "testCode": "KT0535",
+    "name": "Sex Hormone Binding Globulin (SHBG)",
+    "slug": "kt0535-sex-hormone-binding-globulin-shbg"
+  },
+  {
+    "testCode": "KT0536",
+    "name": "SGOT (AST)",
+    "slug": "kt0536-sgot-ast"
+  },
+  {
+    "testCode": "KT0537",
+    "name": "SGPT (ALT)",
+    "slug": "kt0537-sgpt-alt"
+  },
+  {
+    "testCode": "KT0538",
+    "name": "SICKLING SCREENING TEST",
+    "slug": "kt0538-sickling-screening-test"
+  },
+  {
+    "testCode": "KT0539",
+    "name": "SKIN SCRAPPING FOR FUNGUS",
+    "slug": "kt0539-skin-scrapping-for-fungus"
+  },
+  {
+    "testCode": "KT0540",
+    "name": "SKIN SMEAR FOR -AFB (LEPROSY )1 SITE",
+    "slug": "kt0540-skin-smear-for-afb-leprosy-1-site"
+  },
+  {
+    "testCode": "KT0541",
+    "name": "SLIDES FOR REVIEW",
+    "slug": "kt0541-slides-for-review"
+  },
+  {
+    "testCode": "KT0542",
+    "name": "SLIT SKIN SMEAR FOR AFB",
+    "slug": "kt0542-slit-skin-smear-for-afb"
+  },
+  {
+    "testCode": "KT0543",
+    "name": "SMEAR FOR FUNGUS",
+    "slug": "kt0543-smear-for-fungus"
+  },
+  {
+    "testCode": "KT0544",
+    "name": "Smear For Gram Staining",
+    "slug": "kt0544-smear-for-gram-staining"
+  },
+  {
+    "testCode": "KT0545",
+    "name": "SPILENE PUNCTURE",
+    "slug": "kt0545-spilene-puncture"
+  },
+  {
+    "testCode": "KT0546",
+    "name": "SPIROMETRY",
+    "slug": "kt0546-spirometry"
+  },
+  {
+    "testCode": "KT0547",
+    "name": "Sputum For Eosinophils",
+    "slug": "kt0547-sputum-for-eosinophils"
+  },
+  {
+    "testCode": "KT0548",
+    "name": "SPUTUM CULTURE",
+    "slug": "kt0548-sputum-culture"
+  },
+  {
+    "testCode": "KT0549",
+    "name": "SPUTUM FOR AFB",
+    "slug": "kt0549-sputum-for-afb"
+  },
+  {
+    "testCode": "KT0550",
+    "name": "Sputum for AFB",
+    "slug": "kt0550-sputum-for-afb"
+  },
+  {
+    "testCode": "KT0551",
+    "name": "Sputum For Fungus",
+    "slug": "kt0551-sputum-for-fungus"
+  },
+  {
+    "testCode": "KT0552",
+    "name": "Sputum for Garm Stain",
+    "slug": "kt0552-sputum-for-garm-stain"
+  },
+  {
+    "testCode": "KT0553",
+    "name": "Sputum For Malignant Cell & Cytology",
+    "slug": "kt0553-sputum-for-malignant-cell-and-cytology"
+  },
+  {
+    "testCode": "KT0554",
+    "name": "Stone Analysis",
+    "slug": "kt0554-stone-analysis"
+  },
+  {
+    "testCode": "KT0555",
+    "name": "Stool Culture/Sensitivity",
+    "slug": "kt0555-stool-culture-sensitivity"
+  },
+  {
+    "testCode": "KT0556",
+    "name": "Stool For Ex Egg",
+    "slug": "kt0556-stool-for-ex-egg"
+  },
+  {
+    "testCode": "KT0557",
+    "name": "Stool For Hanging Drop",
+    "slug": "kt0557-stool-for-hanging-drop"
+  },
+  {
+    "testCode": "KT0558",
+    "name": "Stool for occult blood",
+    "slug": "kt0558-stool-for-occult-blood"
+  },
+  {
+    "testCode": "KT0559",
+    "name": "Stool For Reducing Substance",
+    "slug": "kt0559-stool-for-reducing-substance"
+  },
+  {
+    "testCode": "KT0560",
+    "name": "Stool pH",
+    "slug": "kt0560-stool-ph"
+  },
+  {
+    "testCode": "KT0561",
+    "name": "Stool Routine & Microscopy",
+    "slug": "kt0561-stool-routine-and-microscopy"
+  },
+  {
+    "testCode": "KT0562",
+    "name": "SUPER ACTIVE",
+    "slug": "kt0562-super-active"
+  },
+  {
+    "testCode": "KT0563",
+    "name": "SUPER HEALTH",
+    "slug": "kt0563-super-health"
+  },
+  {
+    "testCode": "KT0564",
+    "name": "SUPER SCREEN",
+    "slug": "kt0564-super-screen"
+  },
+  {
+    "testCode": "KT0565",
+    "name": "SUPER1",
+    "slug": "kt0565-super1"
+  },
+  {
+    "testCode": "KT0566",
+    "name": "SYNOVIAL C&S",
+    "slug": "kt0566-synovial-c-and-s"
+  },
+  {
+    "testCode": "KT0567",
+    "name": "SYNOVIAL CULTURE",
+    "slug": "kt0567-synovial-culture"
+  },
+  {
+    "testCode": "KT0568",
+    "name": "SYNOVIAL FLUID EXAM",
+    "slug": "kt0568-synovial-fluid-exam"
+  },
+  {
+    "testCode": "KT0569",
+    "name": "T.L.C",
+    "slug": "kt0569-t-l-c"
+  },
+  {
+    "testCode": "KT0570",
+    "name": "T.P.H.A -W",
+    "slug": "kt0570-t-p-h-a-w"
+  },
+  {
+    "testCode": "KT0571",
+    "name": "T.P.H.A- BOTH",
+    "slug": "kt0571-t-p-h-a-both"
+  },
+  {
+    "testCode": "KT0572",
+    "name": "T.P.H.A-H",
+    "slug": "kt0572-t-p-h-a-h"
+  },
+  {
+    "testCode": "KT0573",
+    "name": "T3",
+    "slug": "kt0573-t3"
+  },
+  {
+    "testCode": "KT0574",
+    "name": "T3,T4,TSH",
+    "slug": "kt0574-t3-t4-tsh"
+  },
+  {
+    "testCode": "KT0575",
+    "name": "T4",
+    "slug": "kt0575-t4"
+  },
+  {
+    "testCode": "KT0576",
+    "name": "T4 TSH",
+    "slug": "kt0576-t4-tsh"
+  },
+  {
+    "testCode": "KT0577",
+    "name": "TB Gold (ECL)",
+    "slug": "kt0577-tb-gold-ecl"
+  },
+  {
+    "testCode": "KT0578",
+    "name": "TB PCR - Endometrium",
+    "slug": "kt0578-tb-pcr-endometrium"
+  },
+  {
+    "testCode": "KT0579",
+    "name": "TB PCR - Semen",
+    "slug": "kt0579-tb-pcr-semen"
+  },
+  {
+    "testCode": "KT0580",
+    "name": "TB PCR -BLOOD",
+    "slug": "kt0580-tb-pcr-blood"
+  },
+  {
+    "testCode": "KT0581",
+    "name": "TB PCR -CSF",
+    "slug": "kt0581-tb-pcr-csf"
+  },
+  {
+    "testCode": "KT0582",
+    "name": "TB PCR- Endometrium Blood",
+    "slug": "kt0582-tb-pcr-endometrium-blood"
+  },
+  {
+    "testCode": "KT0583",
+    "name": "TB PCR- Tissue",
+    "slug": "kt0583-tb-pcr-tissue"
+  },
+  {
+    "testCode": "KT0584",
+    "name": "TB PCR- Urine",
+    "slug": "kt0584-tb-pcr-urine"
+  },
+  {
+    "testCode": "KT0585",
+    "name": "TB PCR-Menstrual Blood",
+    "slug": "kt0585-tb-pcr-menstrual-blood"
+  },
+  {
+    "testCode": "KT0586",
+    "name": "TB PCR-Other",
+    "slug": "kt0586-tb-pcr-other"
+  },
+  {
+    "testCode": "KT0587",
+    "name": "TB SURE",
+    "slug": "kt0587-tb-sure"
+  },
+  {
+    "testCode": "KT0588",
+    "name": "Testosterone",
+    "slug": "kt0588-testosterone"
+  },
+  {
+    "testCode": "KT0589",
+    "name": "TGA",
+    "slug": "kt0589-tga"
+  },
+  {
+    "testCode": "KT0590",
+    "name": "Thalassemia",
+    "slug": "kt0590-thalassemia"
+  },
+  {
+    "testCode": "KT0591",
+    "name": "Throat swab C & S",
+    "slug": "kt0591-throat-swab-c-and-s"
+  },
+  {
+    "testCode": "KT0592",
+    "name": "Thyroid Profile",
+    "slug": "thyroid-profile"
+  },
+  {
+    "testCode": "KT0593",
+    "name": "Tip C & S",
+    "slug": "kt0593-tip-c-and-s"
+  },
+  {
+    "testCode": "KT0594",
+    "name": "TISSUE CULTURE",
+    "slug": "kt0594-tissue-culture"
+  },
+  {
+    "testCode": "KT0595",
+    "name": "Tissue For Culture & Sensitivity",
+    "slug": "kt0595-tissue-for-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0596",
+    "name": "TISSUE TRANSGLUTAMINASE TTG ANTIBODY IGG IGM",
+    "slug": "kt0596-tissue-transglutaminase-ttg-antibody-igg-igm"
+  },
+  {
+    "testCode": "KT0597",
+    "name": "TLC+DLC+HB",
+    "slug": "kt0597-tlc-dlc-hb"
+  },
+  {
+    "testCode": "KT0598",
+    "name": "TLC/HB",
+    "slug": "kt0598-tlc-hb"
+  },
+  {
+    "testCode": "KT0599",
+    "name": "TMA",
+    "slug": "kt0599-tma"
+  },
+  {
+    "testCode": "KT0600",
+    "name": "TORCH IGG",
+    "slug": "kt0600-torch-igg"
+  },
+  {
+    "testCode": "KT0601",
+    "name": "TORCH IgG + IgM",
+    "slug": "kt0601-torch-igg-igm"
+  },
+  {
+    "testCode": "KT0602",
+    "name": "TORCH IgM",
+    "slug": "kt0602-torch-igm"
+  },
+  {
+    "testCode": "KT0603",
+    "name": "TORCH PROFILE (10)",
+    "slug": "kt0603-torch-profile-10"
+  },
+  {
+    "testCode": "KT0604",
+    "name": "TORCH PROFILE (8)",
+    "slug": "kt0604-torch-profile-8"
+  },
+  {
+    "testCode": "KT0605",
+    "name": "TOTAL BILE ACID",
+    "slug": "kt0605-total-bile-acid"
+  },
+  {
+    "testCode": "KT0606",
+    "name": "Total Proteins With Albumin/Globulin/A/G",
+    "slug": "kt0606-total-proteins-with-albumin-globulin-a-g"
+  },
+  {
+    "testCode": "KT0607",
+    "name": "TOXO IgG",
+    "slug": "kt0607-toxo-igg"
+  },
+  {
+    "testCode": "KT0608",
+    "name": "TOXO IgM",
+    "slug": "kt0608-toxo-igm"
+  },
+  {
+    "testCode": "KT0609",
+    "name": "TOXO TEST",
+    "slug": "kt0609-toxo-test"
+  },
+  {
+    "testCode": "KT0610",
+    "name": "TPHA",
+    "slug": "kt0610-tpha"
+  },
+  {
+    "testCode": "KT0611",
+    "name": "Tracheal Secrations For Culture & Sensitivity",
+    "slug": "kt0611-tracheal-secrations-for-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0612",
+    "name": "Triglycerides",
+    "slug": "kt0612-triglycerides"
+  },
+  {
+    "testCode": "KT0613",
+    "name": "Triple Marker",
+    "slug": "kt0613-triple-marker"
+  },
+  {
+    "testCode": "KT0614",
+    "name": "TROP- I",
+    "slug": "kt0614-trop-i"
+  },
+  {
+    "testCode": "KT0615",
+    "name": "TROPONIN-I QUANTITATIVE",
+    "slug": "kt0615-troponin-i-quantitative"
+  },
+  {
+    "testCode": "KT0616",
+    "name": "TROPONIN-T",
+    "slug": "kt0616-troponin-t"
+  },
+  {
+    "testCode": "KT0617",
+    "name": "TSH",
+    "slug": "kt0617-tsh"
+  },
+  {
+    "testCode": "KT0618",
+    "name": "TTg-IgA",
+    "slug": "kt0618-ttg-iga"
+  },
+  {
+    "testCode": "KT0619",
+    "name": "TUMOR MARKERS",
+    "slug": "kt0619-tumor-markers"
+  },
+  {
+    "testCode": "KT0620",
+    "name": "Tzanck Smear",
+    "slug": "kt0620-tzanck-smear"
+  },
+  {
+    "testCode": "KT0621",
+    "name": "URETRIC STONE",
+    "slug": "kt0621-uretric-stone"
+  },
+  {
+    "testCode": "KT0622",
+    "name": "Uric Acid",
+    "slug": "kt0622-uric-acid"
+  },
+  {
+    "testCode": "KT0623",
+    "name": "Urinary Amylase",
+    "slug": "kt0623-urinary-amylase"
+  },
+  {
+    "testCode": "KT0624",
+    "name": "Urinary Calcium - 24 Hrs",
+    "slug": "kt0624-urinary-calcium-24-hrs"
+  },
+  {
+    "testCode": "KT0625",
+    "name": "Urinary Calcium - Spot",
+    "slug": "kt0625-urinary-calcium-spot"
+  },
+  {
+    "testCode": "KT0626",
+    "name": "Urinary Chloride (Spot Sample)",
+    "slug": "kt0626-urinary-chloride-spot-sample"
+  },
+  {
+    "testCode": "KT0627",
+    "name": "Urinary Chloride 24 Hrs",
+    "slug": "kt0627-urinary-chloride-24-hrs"
+  },
+  {
+    "testCode": "KT0628",
+    "name": "URINARY CREATININE-24HRS",
+    "slug": "kt0628-urinary-creatinine-24hrs"
+  },
+  {
+    "testCode": "KT0629",
+    "name": "Urinary Potassium -(Spot Sample)",
+    "slug": "kt0629-urinary-potassium-spot-sample"
+  },
+  {
+    "testCode": "KT0630",
+    "name": "Urinary Potassium -24 Hrs",
+    "slug": "kt0630-urinary-potassium-24-hrs"
+  },
+  {
+    "testCode": "KT0631",
+    "name": "Urinary Protein (Spot)",
+    "slug": "kt0631-urinary-protein-spot"
+  },
+  {
+    "testCode": "KT0632",
+    "name": "Urinary Uric Acid -24 Hrs",
+    "slug": "kt0632-urinary-uric-acid-24-hrs"
+  },
+  {
+    "testCode": "KT0633",
+    "name": "URINE CYTOLOGY FOR MALIGNANT CELL",
+    "slug": "kt0633-urine-cytology-for-malignant-cell"
+  },
+  {
+    "testCode": "KT0634",
+    "name": "URINE R/E +BILE",
+    "slug": "kt0634-urine-r-e-bile"
+  },
+  {
+    "testCode": "KT0635",
+    "name": "URINE ACR",
+    "slug": "kt0635-urine-acr"
+  },
+  {
+    "testCode": "KT0636",
+    "name": "Urine Albumin",
+    "slug": "kt0636-urine-albumin"
+  },
+  {
+    "testCode": "KT0637",
+    "name": "URINE C&S",
+    "slug": "kt0637-urine-c-and-s"
+  },
+  {
+    "testCode": "KT0638",
+    "name": "Urine Chyluria",
+    "slug": "kt0638-urine-chyluria"
+  },
+  {
+    "testCode": "KT0639",
+    "name": "Urine cotinine (Spot)",
+    "slug": "kt0639-urine-cotinine-spot"
+  },
+  {
+    "testCode": "KT0640",
+    "name": "Urine Creatinine (Spot)",
+    "slug": "kt0640-urine-creatinine-spot"
+  },
+  {
+    "testCode": "KT0641",
+    "name": "URINE CULTURE",
+    "slug": "kt0641-urine-culture"
+  },
+  {
+    "testCode": "KT0642",
+    "name": "Urine Electrophoresis",
+    "slug": "kt0642-urine-electrophoresis"
+  },
+  {
+    "testCode": "KT0643",
+    "name": "Urine Fat globules",
+    "slug": "kt0643-urine-fat-globules"
+  },
+  {
+    "testCode": "KT0644",
+    "name": "URINE FOR GLOBULIN",
+    "slug": "kt0644-urine-for-globulin"
+  },
+  {
+    "testCode": "KT0645",
+    "name": "Urine For AFB Smear",
+    "slug": "kt0645-urine-for-afb-smear"
+  },
+  {
+    "testCode": "KT0646",
+    "name": "Urine For Bile Pigment",
+    "slug": "kt0646-urine-for-bile-pigment"
+  },
+  {
+    "testCode": "KT0647",
+    "name": "Urine For Bile Salt",
+    "slug": "kt0647-urine-for-bile-salt"
+  },
+  {
+    "testCode": "KT0648",
+    "name": "Urine For Cast",
+    "slug": "kt0648-urine-for-cast"
+  },
+  {
+    "testCode": "KT0649",
+    "name": "Urine For Dysmorphic RBC",
+    "slug": "kt0649-urine-for-dysmorphic-rbc"
+  },
+  {
+    "testCode": "KT0650",
+    "name": "Urine For Haematuria",
+    "slug": "kt0650-urine-for-haematuria"
+  },
+  {
+    "testCode": "KT0651",
+    "name": "URINE FOR MALIGNANT CELLS",
+    "slug": "kt0651-urine-for-malignant-cells"
+  },
+  {
+    "testCode": "KT0652",
+    "name": "URINE FOR MICROALBUMIN",
+    "slug": "kt0652-urine-for-microalbumin"
+  },
+  {
+    "testCode": "KT0653",
+    "name": "Urine For Sodium ( Spot Sample)",
+    "slug": "kt0653-urine-for-sodium-spot-sample"
+  },
+  {
+    "testCode": "KT0654",
+    "name": "Urine For Specefic Gravity",
+    "slug": "kt0654-urine-for-specefic-gravity"
+  },
+  {
+    "testCode": "KT0655",
+    "name": "Urine Ketone",
+    "slug": "kt0655-urine-ketone"
+  },
+  {
+    "testCode": "KT0656",
+    "name": "Urine NMP22",
+    "slug": "kt0656-urine-nmp22"
+  },
+  {
+    "testCode": "KT0657",
+    "name": "Urine Pregnancy",
+    "slug": "kt0657-urine-pregnancy"
+  },
+  {
+    "testCode": "KT0658",
+    "name": "Urine Protein (Spot)",
+    "slug": "kt0658-urine-protein-spot"
+  },
+  {
+    "testCode": "KT0659",
+    "name": "Urine Protein/Creatinine Ratio",
+    "slug": "kt0659-urine-protein-creatinine-ratio"
+  },
+  {
+    "testCode": "KT0660",
+    "name": "Urine Routine & Microscopy",
+    "slug": "kt0660-urine-routine-and-microscopy"
+  },
+  {
+    "testCode": "KT0661",
+    "name": "Urine Sugar Fasting",
+    "slug": "kt0661-urine-sugar-fasting"
+  },
+  {
+    "testCode": "KT0662",
+    "name": "Urine Sugar (pp)",
+    "slug": "kt0662-urine-sugar-pp"
+  },
+  {
+    "testCode": "KT0663",
+    "name": "Urine Sugar Fasting",
+    "slug": "kt0663-urine-sugar-fasting"
+  },
+  {
+    "testCode": "KT0664",
+    "name": "Urine Sugar PP",
+    "slug": "kt0664-urine-sugar-pp"
+  },
+  {
+    "testCode": "KT0665",
+    "name": "Urine Sugar Random",
+    "slug": "kt0665-urine-sugar-random"
+  },
+  {
+    "testCode": "KT0666",
+    "name": "USG GUIDED F.N.A.C",
+    "slug": "kt0666-usg-guided-f-n-a-c"
+  },
+  {
+    "testCode": "KT0667",
+    "name": "Vaginal Swab Culture & Sensitivity",
+    "slug": "kt0667-vaginal-swab-culture-and-sensitivity"
+  },
+  {
+    "testCode": "KT0668",
+    "name": "VALPROIC ACID",
+    "slug": "kt0668-valproic-acid"
+  },
+  {
+    "testCode": "KT0669",
+    "name": "Varicella IgM",
+    "slug": "kt0669-varicella-igm"
+  },
+  {
+    "testCode": "KT0670",
+    "name": "VDRL",
+    "slug": "kt0670-vdrl"
+  },
+  {
+    "testCode": "KT0671",
+    "name": "VDRL (BOTH)",
+    "slug": "kt0671-vdrl-both"
+  },
+  {
+    "testCode": "KT0672",
+    "name": "Viral Marker",
+    "slug": "kt0672-viral-marker"
+  },
+  {
+    "testCode": "KT0673",
+    "name": "VITAMIN B2/RIBOFLAVIN",
+    "slug": "kt0673-vitamin-b2-riboflavin"
+  },
+  {
+    "testCode": "KT0674",
+    "name": "Vitamin B6",
+    "slug": "kt0674-vitamin-b6"
+  },
+  {
+    "testCode": "KT0675",
+    "name": "Vitamin D -Total",
+    "slug": "kt0675-vitamin-d-total"
+  },
+  {
+    "testCode": "KT0676",
+    "name": "VITAMIN D2",
+    "slug": "kt0676-vitamin-d2"
+  },
+  {
+    "testCode": "KT0677",
+    "name": "VITAMIN D3",
+    "slug": "kt0677-vitamin-d3"
+  },
+  {
+    "testCode": "KT0678",
+    "name": "VITAMIN E",
+    "slug": "kt0678-vitamin-e"
+  },
+  {
+    "testCode": "KT0679",
+    "name": "Vitamin K",
+    "slug": "kt0679-vitamin-k"
+  },
+  {
+    "testCode": "KT0680",
+    "name": "Vitamin-B12",
+    "slug": "kt0680-vitamin-b12"
+  },
+  {
+    "testCode": "KT0681",
+    "name": "VLDL",
+    "slug": "kt0681-vldl"
+  },
+  {
+    "testCode": "KT0682",
+    "name": "WIDAL TEST",
+    "slug": "kt0682-widal-test"
+  },
+  {
+    "testCode": "KT0683",
+    "name": "Wound Swab C+S",
+    "slug": "kt0683-wound-swab-c-s"
+  },
+  {
+    "testCode": "KT0684",
+    "name": "Zinc Transporter 8 (ZNT8) Antibody",
+    "slug": "kt0684-zinc-transporter-8-znt8-antibody"
+  }
+]
