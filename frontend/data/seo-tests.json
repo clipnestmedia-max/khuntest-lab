@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "cbc-test",
+    "name": "CBC Test",
+    "fullName": "Complete Blood Count Test",
+    "description": "CBC test in Darbhanga to measure red blood cells, white blood cells, haemoglobin, haematocrit and platelets.",
+    "price": 399,
+    "category": "Hematology",
+    "preparation": "No fasting is usually required unless advised with another test.",
+    "parameters": ["Haemoglobin", "RBC count", "WBC count", "Platelet count", "PCV", "MCV", "MCH", "MCHC", "Differential count"],
+    "normalRange": "Ranges vary by age and sex. Your report should be reviewed with a qualified clinician.",
+    "keywords": "CBC test Darbhanga, complete blood count, haemoglobin test, blood test in Darbhanga"
+  },
+  {
+    "slug": "liver-function-test",
+    "name": "Liver Function Test",
+    "fullName": "LFT Liver Function Test",
+    "description": "Liver function test in Darbhanga for bilirubin, SGOT, SGPT, alkaline phosphatase, protein and albumin.",
+    "price": 899,
+    "category": "Biochemistry",
+    "preparation": "Fasting may be requested for some liver profiles. Follow doctor or lab instructions.",
+    "parameters": ["Total bilirubin", "Direct bilirubin", "Indirect bilirubin", "SGOT/AST", "SGPT/ALT", "Alkaline phosphatase", "Total protein", "Albumin", "Globulin"],
+    "normalRange": "Ranges vary by method and laboratory instrument. Interpret with clinical history.",
+    "keywords": "LFT test Darbhanga, liver function test, SGPT test, SGOT test, diagnostic lab in Bihar"
+  },
+  {
+    "slug": "kidney-function-test",
+    "name": "Kidney Function Test",
+    "fullName": "KFT Kidney Function Test",
+    "description": "Kidney function test in Darbhanga for urea, creatinine, uric acid and electrolytes.",
+    "price": 899,
+    "category": "Biochemistry",
+    "preparation": "Tell the lab about medicines and follow fasting advice if combined with other tests.",
+    "parameters": ["Urea", "Creatinine", "Uric acid", "Sodium", "Potassium", "Chloride", "Calcium"],
+    "normalRange": "Reference ranges depend on age, sex and testing method. Discuss abnormal values with a clinician.",
+    "keywords": "KFT test Darbhanga, kidney function test, creatinine test, urea test, home sample collection Darbhanga"
+  },
+  {
+    "slug": "thyroid-profile",
+    "name": "Thyroid Profile",
+    "fullName": "Thyroid Profile T3 T4 TSH",
+    "description": "Thyroid profile test in Darbhanga to measure T3, T4 and TSH for thyroid health screening.",
+    "price": 699,
+    "category": "Hormone",
+    "preparation": "Share thyroid medication details. Morning sample timing may be advised by your doctor.",
+    "parameters": ["T3", "T4", "TSH"],
+    "normalRange": "Reference ranges vary by assay and patient factors. Use the report range and medical advice.",
+    "keywords": "thyroid test Darbhanga, T3 T4 TSH test, thyroid profile, blood test in Darbhanga"
+  }
+]

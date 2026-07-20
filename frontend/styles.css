@@ -226,6 +226,22 @@ button,input,select,textarea{font-family:inherit;max-width:100%}
   font-weight:850;
   box-shadow:0 8px 20px rgba(2,43,89,.05);
 }
+
+.seo-faq details{
+  background:#fff;
+  border:1px solid var(--khun-line);
+  border-radius:8px;
+  padding:14px 16px;
+  margin:10px 0;
+  box-shadow:var(--khun-shadow-soft);
+}
+.seo-faq summary{
+  cursor:pointer;
+  color:var(--khun-navy);
+  font-weight:900;
+}
+.seo-faq p{margin:10px 0 0;color:#475569}
+.seo-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 .hero-card{
   position:relative;
   background:rgba(255,255,255,.94);
