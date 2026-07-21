@@ -54,6 +54,27 @@ npm run dist
 
 The generated installer is written under `desktop-listener/dist/` as `KhunTestLab-Listener-Setup.exe`.
 
+## Release Process
+
+The admin dashboard downloads the latest listener through GitHub Releases using `frontend/listener-release.json`. Do not commit the installer EXE into the normal source tree.
+
+1. Update `desktop-listener/package.json` and `desktop-listener/package-lock.json` to the next version.
+2. Commit and push the listener changes to `main`.
+3. Create and push a listener tag:
+
+```bash
+git tag listener-v1.0.3
+git push origin listener-v1.0.3
+```
+
+4. GitHub Actions runs `.github/workflows/release-listener.yml`.
+5. The workflow installs dependencies, runs tests, builds `KhunTestLab-Listener-Setup.exe`, calculates SHA-256, creates the GitHub Release, uploads the installer, and updates `frontend/listener-release.json`.
+6. The metadata commit to `main` triggers the existing Firebase Hosting deployment workflow.
+7. Admin Dashboard > Machine Results shows the newest version, release date, file size, checksum, release notes, and download button.
+8. The customer closes the running listener, downloads the update from the admin dashboard, verifies the checksum, and installs it.
+
+Windows may show SmartScreen warnings until production builds are code-signed. Production distribution should use a code-signing certificate; do not instruct customers to disable Windows security.
+
 ## Customer Workflow
 
 1. Download `KhunTestLab-Listener-Setup.exe`.

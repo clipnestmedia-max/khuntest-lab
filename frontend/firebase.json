@@ -12,6 +12,17 @@
       "**/*.sql",
       "**/*.zip",
       "**/*.pdf"
+    ],
+    "headers": [
+      {
+        "source": "/listener-release.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      }
     ]
   },
   "firestore": {

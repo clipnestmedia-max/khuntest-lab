@@ -41,6 +41,19 @@
   .admin-toast-actions { display:flex; gap:8px; margin-top:10px; }
   .online-filter-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
   .sticky-actions { position: sticky; bottom:0; background:#fff; border-top:1px solid #dce4f2; padding-top:12px; display:flex; gap:10px; justify-content:flex-end; }
+  .listener-installer-card { background:#fff; border:1px solid #dce4f2; border-radius:18px; padding:18px; margin:14px 0 18px; box-shadow:0 12px 32px rgba(18,38,63,.08); }
+  .listener-installer-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+  .listener-installer-head h3 { margin:0 0 6px; color:#062b59; font-size:22px; }
+  .listener-installer-head p { margin:0; color:#516176; max-width:760px; line-height:1.45; }
+  .listener-meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:16px 0; }
+  .listener-meta-grid div { border:1px solid #edf2f8; border-radius:12px; padding:10px 12px; background:#f8fbff; min-width:0; }
+  .listener-meta-grid span { display:block; color:#5e6f86; font-size:12px; font-weight:800; text-transform:uppercase; }
+  .listener-meta-grid b { display:block; color:#062b59; margin-top:3px; overflow-wrap:anywhere; }
+  .listener-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .listener-actions .btn { display:inline-flex; align-items:center; gap:8px; }
+  .listener-checksum { margin-top:12px; padding:12px; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; color:#26364d; }
+  .listener-checksum code { display:block; margin-top:5px; white-space:normal; overflow-wrap:anywhere; font-size:12px; color:#0f172a; }
+  .listener-status-note { margin-top:12px; color:#9a3412; font-weight:750; }
   @media(max-width:700px){
     .modal-overlay,.admin-modal{padding:12px}
     .modal-dialog,.admin-modal-box,.modal-dialog.modal-wide,.admin-modal-box.modal-wide{width:calc(100vw - 24px);max-height:calc(100vh - 24px);border-radius:12px}
@@ -52,6 +65,8 @@
     .parameter-table tr{display:grid;border:1px solid #dce4f2;border-radius:10px;margin:10px 0;padding:10px;background:#fff}
     .parameter-table td{display:grid;grid-template-columns:120px 1fr;gap:8px;border:0!important;padding:6px!important}
     .parameter-table td::before{content:attr(data-label);font-weight:800;color:#062b59}
+    .listener-actions{display:grid}
+    .listener-actions .btn{width:100%;justify-content:center}
   }
 </style>
 </head>
@@ -278,6 +293,7 @@
     <section data-panel="machineResults" class="hidden">
       <h2>Machine Results</h2>
       <div class="notice">Machine results are imported as draft. Verify before release.</div>
+      <div id="listenerInstallerMount"></div>
       <div class="toolbar">
         <input id="machineResultSearch" placeholder="Search sample, bill, patient..." oninput="renderMachineResultsPanel()">
         <button class="btn btn-outline btn-small" type="button" onclick="refreshFirebaseDashboard()">Refresh</button>
@@ -374,6 +390,8 @@ let machineResultsDebug = {
   snapshotDocumentCount: 0,
   lastFirestoreError: ""
 };
+let listenerReleaseMetadata = null;
+let listenerReleaseError = "";
 let reportEntryRenderCount = 0;
 let lastReportEntryDedupeStats = { raw: 0, unique: 0, removed: 0, duplicateBills: [] };
 let seenNotificationIds = new Set(JSON.parse(localStorage.getItem("khuntest_seen_notifications") || "[]"));
@@ -687,6 +705,92 @@ async function logoutUser() {
 async function getCurrentUserRole() {
   return currentAdminProfile?.role || null;
 }
+
+function activeAdminVerified() {
+  return currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive !== false && currentAdminProfile?.active !== false;
+}
+
+async function loadListenerReleaseMetadata() {
+  if (!activeAdminVerified()) return null;
+  const mount = document.getElementById("listenerInstallerMount");
+  if (mount) mount.innerHTML = `<div class="listener-installer-card"><b>KhunTest Lab Listener</b><p>Loading installer information...</p></div>`;
+  try {
+    const response = await fetch(`/listener-release.json?ts=${Date.now()}`, {
+      cache: "no-store",
+      credentials: "same-origin"
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    listenerReleaseMetadata = await response.json();
+    listenerReleaseError = "";
+  } catch (err) {
+    listenerReleaseMetadata = null;
+    listenerReleaseError = err.message || String(err);
+  }
+  renderListenerInstallerCard();
+  return listenerReleaseMetadata;
+}
+
+function renderListenerInstallerCard() {
+  const mount = document.getElementById("listenerInstallerMount");
+  if (!mount) return;
+  if (!activeAdminVerified()) {
+    mount.innerHTML = "";
+    return;
+  }
+  if (!listenerReleaseMetadata) {
+    mount.innerHTML = `
+      <div class="listener-installer-card">
+        <div class="listener-installer-head">
+          <div>
+            <h3>KhunTest Lab Listener</h3>
+            <p>Installer information is temporarily unavailable.</p>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+  const release = listenerReleaseMetadata;
+  const canDownload = Boolean(release.downloadUrl && release.fileName);
+  mount.innerHTML = `
+    <div class="listener-installer-card">
+      <div class="listener-installer-head">
+        <div>
+          <h3>KhunTest Lab Listener</h3>
+          <p>Install this application on the Windows computer connected to the laboratory analyzer. It receives analyzer results and securely sends them to KhunTest Lab.</p>
+        </div>
+        <span class="status ${release.status === "stable" ? "reported" : "pending"}">${html(release.status || "stable")}</span>
+      </div>
+      <div class="listener-meta-grid">
+        <div><span>Latest version</span><b>${html(release.version || "-")}</b></div>
+        <div><span>Windows support</span><b>${html(release.minimumWindows || "Windows 10")} / 11</b></div>
+        <div><span>Installer size</span><b>${html(release.fileSize || "-")}</b></div>
+        <div><span>Release date</span><b>${html(createdText(release.releasedAt))}</b></div>
+        <div><span>Update status</span><b>${html(release.updateStatus || "Latest stable release")}</b></div>
+      </div>
+      <div class="listener-actions">
+        ${canDownload ? `<a class="btn btn-red" href="${html(release.downloadUrl)}" download="${html(release.fileName)}" rel="noopener noreferrer">
+          <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+          Download Latest Installer
+        </a>` : `<button class="btn btn-red" type="button" disabled>Download unavailable</button>`}
+        <a class="btn btn-outline" href="listener-installation-guide.html" target="_blank" rel="noopener noreferrer">Installation Guide</a>
+        <a class="btn btn-outline" href="${html(release.releaseNotesUrl || "#")}" target="_blank" rel="noopener noreferrer">Release Notes</a>
+        <button class="btn btn-outline" type="button" onclick="copyListenerChecksum()">Copy checksum</button>
+      </div>
+      <div class="listener-checksum">
+        <b>SHA-256 checksum</b>
+        <code id="listenerChecksumValue">${html(release.sha256 || "Unavailable")}</code>
+      </div>
+      <div class="listener-status-note">Close the running KhunTest Lab Listener before installing an update.</div>
+      <div class="listener-status-note">Windows may show a SmartScreen warning because the installer is not yet code-signed. Verify the publisher and checksum before installation.</div>
+    </div>`;
+}
+
+window.copyListenerChecksum = async function() {
+  const checksum = listenerReleaseMetadata?.sha256 || "";
+  if (!checksum) return alert("Checksum is unavailable.");
+  await navigator.clipboard.writeText(checksum);
+  alert("Checksum copied.");
+};
 
 async function readCollection(name, sortField = "createdAt") {
   try {
@@ -2991,6 +3095,7 @@ document.getElementById("overviewCleanup").addEventListener("click", () => docum
 document.addEventListener("DOMContentLoaded", async function() {
   try {
     await checkAdminAuth();
+    await loadListenerReleaseMetadata();
     document.getElementById("todayText").textContent = new Date().toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
     await loadAllTests();
     await loadBookings();

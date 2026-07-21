@@ -1,0 +1,147 @@
+name: Release KhunTest Lab Listener
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Listener version, for example 1.0.3. Leave blank to read desktop-listener/package.json."
+        required: false
+        type: string
+      prerelease:
+        description: "Mark GitHub Release as prerelease"
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - "listener-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      INSTALLER_NAME: KhunTestLab-Listener-Setup.exe
+      REPO_SLUG: ${{ github.repository }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: desktop-listener/package-lock.json
+
+      - name: Install listener dependencies
+        working-directory: desktop-listener
+        run: npm ci
+
+      - name: Run listener tests
+        working-directory: desktop-listener
+        run: npm test
+
+      - name: Build Windows installer
+        working-directory: desktop-listener
+        run: npm run dist
+
+      - name: Resolve release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          PACKAGE_VERSION="$(node -p "require('./desktop-listener/package.json').version")"
+          INPUT_VERSION="${{ github.event.inputs.version || '' }}"
+          VERSION="${INPUT_VERSION:-$PACKAGE_VERSION}"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#listener-v}"
+          fi
+          TAG="listener-v${VERSION}"
+          ASSET="desktop-listener/dist/${INSTALLER_NAME}"
+          SHA256="$(sha256sum "${ASSET}" | awk '{print $1}')"
+          BYTES="$(stat -c%s "${ASSET}")"
+          SIZE_MB="$(node -e "console.log(Math.round(Number(process.argv[1]) / 1024 / 1024) + ' MB')" "${BYTES}")"
+          RELEASED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          DOWNLOAD_URL="https://github.com/${REPO_SLUG}/releases/download/${TAG}/${INSTALLER_NAME}"
+          NOTES_URL="https://github.com/${REPO_SLUG}/releases/tag/${TAG}"
+          {
+            echo "version=${VERSION}"
+            echo "tag=${TAG}"
+            echo "sha256=${SHA256}"
+            echo "bytes=${BYTES}"
+            echo "file_size=${SIZE_MB}"
+            echo "released_at=${RELEASED_AT}"
+            echo "download_url=${DOWNLOAD_URL}"
+            echo "notes_url=${NOTES_URL}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Create GitHub Release and upload installer
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: KhunTest Lab Listener ${{ steps.meta.outputs.version }}
+          body: |
+            KhunTest Lab Listener ${{ steps.meta.outputs.version }}
+
+            SHA-256:
+            `${{ steps.meta.outputs.sha256 }}`
+
+            Close the running KhunTest Lab Listener before installing this update.
+          files: desktop-listener/dist/KhunTestLab-Listener-Setup.exe
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update listener release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require("fs");
+          const metadata = {
+            version: process.env.VERSION,
+            fileName: process.env.INSTALLER_NAME,
+            downloadUrl: process.env.DOWNLOAD_URL,
+            releaseNotesUrl: process.env.NOTES_URL,
+            releasedAt: process.env.RELEASED_AT,
+            fileSize: process.env.FILE_SIZE,
+            sha256: process.env.SHA256,
+            minimumWindows: "Windows 10",
+            status: process.env.PRERELEASE === "true" ? "prerelease" : "stable",
+            updateStatus: process.env.PRERELEASE === "true" ? "Prerelease build" : "Latest stable release"
+          };
+          fs.writeFileSync("frontend/listener-release.json", JSON.stringify(metadata, null, 2) + "\n");
+          NODE
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          DOWNLOAD_URL: ${{ steps.meta.outputs.download_url }}
+          NOTES_URL: ${{ steps.meta.outputs.notes_url }}
+          RELEASED_AT: ${{ steps.meta.outputs.released_at }}
+          FILE_SIZE: ${{ steps.meta.outputs.file_size }}
+          SHA256: ${{ steps.meta.outputs.sha256 }}
+          PRERELEASE: ${{ github.event.inputs.prerelease || false }}
+
+      - name: Commit release metadata to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git add frontend/listener-release.json
+          if git diff --cached --quiet; then
+            echo "listener-release.json already current."
+            exit 0
+          fi
+          git commit -m "Update listener release metadata for ${{ steps.meta.outputs.tag }}"
+          git push origin main

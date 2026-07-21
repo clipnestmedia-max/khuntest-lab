@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KhunTest Lab Listener Installation Guide</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .guide-shell{max-width:980px;margin:0 auto;padding:28px 18px 46px}
+  .guide-hero{background:#fff;border:1px solid #dce4f2;border-radius:18px;padding:24px;box-shadow:0 12px 32px rgba(18,38,63,.08)}
+  .guide-hero h1{margin:0 0 10px;color:#062b59}
+  .guide-hero p{margin:0;color:#516176;line-height:1.5}
+  .guide-card{background:#fff;border:1px solid #dce4f2;border-radius:18px;padding:20px;margin-top:18px;box-shadow:0 10px 28px rgba(18,38,63,.06)}
+  .guide-card h2{margin-top:0;color:#062b59}
+  .guide-card li{margin:10px 0;line-height:1.45}
+  .guide-card code{background:#f1f5f9;padding:2px 6px;border-radius:6px;color:#0f172a}
+  .guide-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  @media(max-width:700px){.guide-actions{display:grid}.guide-actions .btn{width:100%;text-align:center}}
+</style>
+</head>
+<body>
+  <main class="guide-shell">
+    <section class="guide-hero">
+      <h1>KhunTest Lab Listener Installation Guide</h1>
+      <p>Use this guide on the Windows computer connected to the laboratory analyzer. Run a dummy analyzer test before processing real patient data.</p>
+      <div class="guide-actions">
+        <a class="btn btn-red" href="admin-dashboard.html">Back to Admin Dashboard</a>
+        <a class="btn btn-outline" href="https://github.com/clipnestmedia-max/khuntest-lab/releases/latest" target="_blank" rel="noopener noreferrer">Release Notes</a>
+      </div>
+    </section>
+
+    <section class="guide-card">
+      <h2>Install Or Update</h2>
+      <ol>
+        <li>Download <code>KhunTestLab-Listener-Setup.exe</code> from Admin Dashboard &gt; Machine Results.</li>
+        <li>Close the currently running KhunTest Lab Listener from the system tray before installing an update.</li>
+        <li>Run the installer. Use administrator mode only if Windows requires it for the selected install location.</li>
+        <li>Select the preferred installation option and finish setup.</li>
+        <li>When Windows Firewall prompts for network access, allow Private Network access for the listener.</li>
+        <li>Open KhunTest Lab Listener and login with an authorized KhunTest Lab admin or lab account.</li>
+        <li>Open Analyzer Settings and select Mindray BC5000.</li>
+        <li>Select TCP Server mode.</li>
+        <li>Set Local Listener Port to <code>5001</code>.</li>
+        <li>Start Listener.</li>
+        <li>Confirm Firebase Connected, Internet Connected, Listener Running, and Waiting for Analyzer or Analyzer Connected.</li>
+        <li>Configure the analyzer LIS destination IP to the customer PC Ethernet IP and port <code>5001</code>.</li>
+        <li>Run a dummy test before using real patient data.</li>
+      </ol>
+    </section>
+
+    <section class="guide-card">
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><b>ECONNREFUSED:</b> The listener is likely in TCP Client mode or connecting to the wrong analyzer endpoint. For Mindray BC5000 inbound LIS mode, use TCP Server mode and port <code>5001</code>.</li>
+        <li><b>Port already in use:</b> Close duplicate listener instances, then check <code>netstat -ano | findstr :5001</code> and stop the conflicting process if it is not the KhunTest listener.</li>
+        <li><b>Firewall blocked:</b> Add an inbound Windows Firewall rule for TCP port <code>5001</code> on Private networks. Do not disable Windows Firewall.</li>
+        <li><b>Analyzer not connected:</b> Confirm the analyzer LIS destination IP is the customer PC Ethernet IP, for example <code>10.0.0.3</code>, and that both devices are on the same analyzer network.</li>
+        <li><b>No raw message received:</b> Check the listener diagnostics. Remote Connections should increase when the analyzer connects, and Last Received Byte should change when it sends data.</li>
+        <li><b>Firebase upload failed:</b> Confirm the app is logged in with an authorized admin/lab account, Internet Connected is Yes, and Firebase Connected is Yes. Failed uploads should enter the offline queue.</li>
+        <li><b>Installer cannot replace running application:</b> Exit KhunTest Lab Listener from the system tray, wait a few seconds, then run the installer again.</li>
+      </ul>
+    </section>
+
+    <section class="guide-card">
+      <h2>Security Notes</h2>
+      <p>Windows may show a SmartScreen warning because the installer is not yet code-signed. Verify the publisher, release page, and SHA-256 checksum before installation.</p>
+      <p>Production distribution should use a code-signing certificate so Windows can verify the installer publisher.</p>
+    </section>
+  </main>
+</body>
+</html>
