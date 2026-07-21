@@ -433,7 +433,7 @@
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      font-size: 3.35mm;
+      font-size: 3.2mm;
     }
 
     .lft-table thead {
@@ -450,7 +450,7 @@
     }
 
     .lft-table td {
-      padding: 1.25mm 1.4mm;
+      padding: 1mm 1.4mm;
       border-bottom: .35px solid rgba(17, 17, 17, .25);
       vertical-align: top;
       break-inside: avoid;
@@ -530,10 +530,10 @@
     }
 
     .lft-notes {
-      margin-top: 3mm;
+      margin-top: 2mm;
       padding-left: 5mm;
-      font-size: 2.95mm;
-      line-height: 1.4;
+      font-size: 2.55mm;
+      line-height: 1.3;
     }
 
     .lft-notes li {
@@ -856,6 +856,11 @@
       ].some((term) => text.includes(term));
     }
 
+    function isAstAltRatioParameter(row) {
+      const key = compactKey(row?.parameterName || row?.name || row?.code || row?.testName || "");
+      return ["astalt", "sgotsgpt", "astaltratio", "sgotsgptratio"].some((alias) => key.includes(alias));
+    }
+
     function isLFTGroup(group) {
       return isLFTText(group?.testName) || isLFTText(group?.category) || (
         Array.isArray(group?.rows) &&
@@ -926,8 +931,12 @@
         method: pick(row, ["method", "methodName", "method_name"], ""),
         sample: pick(row, ["sample", "sampleType", "sample_type"], ""),
         comment: pick(row, ["comment", "remarks", "description", "interpretation"], ""),
+        label: pick(row, ["label", "calculatedLabel", "calculated_label"], ""),
+        formula: pick(row, ["formula"], ""),
+        code: pick(row, ["code", "parameterCode", "parameter_code"], ""),
         flag: pick(row, ["flag", "abnormalFlag", "abnormal_flag", "resultFlag", "result_flag", "statusFlag", "status_flag"], ""),
         calculated: Boolean(row.calculated || row.isCalculated || row.is_calculated || row.calculationSource || row.calculation_source),
+        sourceParameters: Array.isArray(row.sourceParameters) ? row.sourceParameters : [],
         details: Array.isArray(row.details) ? row.details : [],
         isHeading: Boolean(row.isHeading || row.heading || row.type === "heading" || headingText.includes("differential count"))
       };
@@ -1045,23 +1054,30 @@
     }
 
     const LFT_ORDER = [
-      ["totalbilirubin", "bilirubintotal"],
-      ["directbilirubin", "bilirubindirect"],
-      ["indirectbilirubin", "bilirubinindirect"],
-      ["sgotast", "astsgot", "sgot", "ast"],
-      ["sgptalt", "altsgpt", "sgpt", "alt"],
-      ["astalt", "sgotsgpt", "astaspartatealanine", "sgotsgptratio"],
+      ["astsgot", "sgotast", "ast", "sgot"],
+      ["altsgpt", "sgptalt", "alt", "sgpt"],
       ["ggt", "ggtp", "gammaglutamyltransferase"],
       ["alkalinephosphatase", "alp"],
+      ["bilirubintotal", "totalbilirubin", "tbilirubin"],
+      ["bilirubindirect", "directbilirubin", "dbilirubin"],
+      ["bilirubinindirect", "indirectbilirubin", "ibilirubin"],
       ["totalprotein", "totalproteins"],
       ["albumin"],
       ["globulin"],
       ["agratio", "albuminglobulinratio"]
     ];
 
+    const LFT_DEFAULT_NOTES = [
+      "Increased AST and ALT levels should be correlated with clinical findings, history, and medication use.",
+      "ALT activity is often higher than AST in many liver diseases; exceptions may occur in alcoholic hepatitis, cirrhosis, and liver neoplasia.",
+      "In chronic liver disease, ELF, AFP, or DCP/PIVKA II testing may be considered when clinically indicated."
+    ];
+
     function lftSortIndex(row) {
       const key = compactKey(row.parameterName || row.testName);
-      const index = LFT_ORDER.findIndex((aliases) => aliases.some((alias) => key.includes(alias)));
+      const index = LFT_ORDER.findIndex((aliases) => aliases.some((alias) => (
+        alias.length <= 3 ? key === alias : key.includes(alias)
+      )));
       return index === -1 ? 999 : index;
     }
 
@@ -1092,7 +1108,7 @@
           <td class="lft-investigation-col">
             <span class="lft-param-name">${safe(row.parameterName || row.testName)}</span>
             ${row.method ? `<span class="lft-method">Method: ${safe(row.method)}</span>` : ""}
-            ${row.calculated ? `<span class="lft-calculated">Calculated parameter</span>` : ""}
+            ${row.calculated ? `<span class="lft-calculated">${safe(row.label || "Auto-calculated")}</span>` : ""}
           </td>
           <td class="lft-result-col">
             <span class="lft-result-value">${safe(resultValue)}</span>
@@ -1111,6 +1127,7 @@
         if (row.comment) notes.push(row.comment);
       });
       group.comments.forEach((comment) => notes.push(comment));
+      LFT_DEFAULT_NOTES.forEach((note) => notes.push(note));
       return Array.from(new Set(notes.map((note) => String(note).trim()).filter(Boolean)));
     }
 
@@ -1119,6 +1136,7 @@
       const continuation = pageIndex > 0 ? " (CONTINUED)" : "";
       const sample = rows.find((row) => row.sample)?.sample || "Not specified";
       const orderedRows = rows
+        .filter((row) => !isAstAltRatioParameter(row))
         .map((row, index) => ({ row, index }))
         .sort((a, b) => lftSortIndex(a.row) - lftSortIndex(b.row) || a.index - b.index)
         .map((item) => item.row);
@@ -1332,9 +1350,9 @@
         releasedAt: now,
         tests: [{ testCode: "KT0407", name: "LIVER FUNCTION TEST", category: "Biochemistry" }],
         results: [
-          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Total Bilirubin", resultValue: "1.8", normalValue: "0.1-1.2", unit: "mg/dL", sample: "Serum", method: "Diazo", flag: "High" },
-          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Direct Bilirubin", resultValue: "0.6", normalValue: "0.0-0.3", unit: "mg/dL", sample: "Serum", method: "Diazo", flag: "H" },
-          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Indirect Bilirubin", resultValue: "1.2", normalValue: "Calculated", unit: "mg/dL", sample: "Serum", calculated: true },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Total Bilirubin", resultValue: "1.80", normalValue: "0.1-1.2", unit: "mg/dL", sample: "Serum", method: "Diazo", flag: "High" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Direct Bilirubin", resultValue: "0.60", normalValue: "0.0-0.3", unit: "mg/dL", sample: "Serum", method: "Diazo", flag: "H" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Indirect Bilirubin", resultValue: "1.20", normalValue: "Calculated", unit: "mg/dL", sample: "Serum", calculated: true },
           { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "SGOT / AST", resultValue: "82", normalValue: "8-33", unit: "U/L", sample: "Serum", method: "IFCC without P5P", flag: "Critical High" },
           { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "SGPT / ALT", resultValue: "76", normalValue: "4-36", unit: "U/L", sample: "Serum", method: "IFCC without P5P", flag: "High" },
           { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Alkaline Phosphatase", resultValue: "118", normalValue: "20-130", unit: "U/L", sample: "Serum", method: "PNPP" },

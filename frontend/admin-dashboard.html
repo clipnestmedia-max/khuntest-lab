@@ -54,6 +54,9 @@
   .listener-checksum { margin-top:12px; padding:12px; border-radius:12px; background:#f8fafc; border:1px solid #e2e8f0; color:#26364d; }
   .listener-checksum code { display:block; margin-top:5px; white-space:normal; overflow-wrap:anywhere; font-size:12px; color:#0f172a; }
   .listener-status-note { margin-top:12px; color:#9a3412; font-weight:750; }
+  .finding-warning-row td { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa!important; font-weight:800; }
+  .calculated-row input[readonly] { background:#f8fafc; color:#0f172a; font-weight:800; }
+  .calculated-row small { color:#0b4d92; font-weight:800; }
   @media(max-width:700px){
     .modal-overlay,.admin-modal{padding:12px}
     .modal-dialog,.admin-modal-box,.modal-dialog.modal-wide,.admin-modal-box.modal-wide{width:calc(100vw - 24px);max-height:calc(100vh - 24px);border-radius:12px}
@@ -359,6 +362,16 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { collection, getDocs, getDoc, addDoc, updateDoc, setDoc, doc, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  INDIRECT_BILIRUBIN_WARNING,
+  applyLftCalculatedParameters,
+  calculateAgRatio,
+  calculateGlobulin,
+  calculateIndirectBilirubin,
+  compactLftKey,
+  isAstAltRatioParameter,
+  isIndirectBilirubinParameter
+} from "./scripts/lft-calculations.mjs";
 
 console.log("Admin dashboard loading...");
 console.log("Firebase db:", db);
@@ -550,6 +563,11 @@ function isCBCTest(test) {
   return text.includes("cbc") || text.includes("complete blood count");
 }
 
+function isLFTTest(test) {
+  const text = `${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`.toLowerCase();
+  return compactLftKey(text).includes("lft") || text.includes("liver function");
+}
+
 function getFullCBCParameters() {
   return [
     { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
@@ -581,12 +599,15 @@ function normalizeTestParameters(test) {
   return Array.isArray(test?.parameters) && test.parameters.length
     ? test.parameters.map((p, index) => ({
         name: p.name || p.parameterName || "Result",
+        code: p.code || p.parameterCode || p.parameter_code || "",
         normalRange: p.normalRange || p.normalValue || p.normal || "",
         unit: p.unit || "",
         method: p.method || "",
         sample: p.sample || test.sample || "",
         type: p.type || "",
         isHeading: Boolean(p.isHeading || p.heading || p.type === "heading"),
+        precision: p.precision ?? p.decimalPlaces ?? p.decimal_places ?? p.decimals ?? "",
+        calculated: Boolean(p.calculated || p.isCalculated || p.is_calculated),
         sortOrder: Number(p.sortOrder || index + 1)
       }))
     : [{
@@ -2272,20 +2293,88 @@ function renderReportEntryDedupeDebug() {
   box.innerHTML = `Raw bookings: <b>${stats.raw}</b> &nbsp; Unique bookings: <b>${stats.unique}</b> &nbsp; Duplicate display entries removed: <b>${stats.removed}</b>`;
 }
 
+function reportResultFromEditorRow(row) {
+  return {
+    code: row.code || "",
+    name: row.name || row.parameterName || "Result",
+    category: row.category || "",
+    testName: row.testName || row.name || "",
+    parameterName: row.name || row.parameterName || "Result",
+    resultValue: row.finding || row.resultValue || "",
+    value: row.finding || row.resultValue || "",
+    normalRange: row.normal || row.normalRange || "",
+    unit: row.unit || "",
+    method: row.method || "",
+    sample: row.sample || "",
+    type: row.type || "",
+    isHeading: row.type === "heading" || row.isHeading === "true" || row.isHeading === true,
+    comment: row.comment || "",
+    source: row.source || "",
+    calculated: row.calculated === true || row.calculated === "true",
+    readOnly: row.readOnly === true || row.readOnly === "true",
+    label: row.label || "",
+    formula: row.formula || "",
+    sourceParameters: Array.isArray(row.sourceParameters) ? row.sourceParameters : [],
+    precision: row.precision ?? ""
+  };
+}
+
+function editorRowFromReportResult(result) {
+  return {
+    code: result.code || "",
+    name: result.parameterName || result.name || "Result",
+    category: result.category || "",
+    testName: result.testName || "",
+    normal: result.normalRange || result.normal || "",
+    finding: result.resultValue || result.value || result.finding || "",
+    unit: result.unit || "",
+    method: result.method || "",
+    sample: result.sample || "",
+    type: result.type || "",
+    isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
+    status: "Draft",
+    comment: result.comment || "",
+    source: result.source || "",
+    calculated: Boolean(result.calculated || result.isCalculated || result.is_calculated),
+    readOnly: Boolean(result.readOnly || result.readonly || result.calculated),
+    label: result.label || "",
+    formula: result.formula || "",
+    sourceParameters: Array.isArray(result.sourceParameters) ? result.sourceParameters : [],
+    precision: result.precision ?? ""
+  };
+}
+
+function applyLftCalculationsToEditorRows(rows) {
+  const editorRows = rows
+    .filter((row) => !isAstAltRatioParameter(row))
+    .map((row) => ({ ...row }));
+  const report = applyLftCalculatedParameters({
+    tests: currentReportBooking ? bookingTests(currentReportBooking) : [],
+    results: editorRows.map(reportResultFromEditorRow)
+  });
+  const nextRows = report.results.map(editorRowFromReportResult);
+  window.currentLftValidationWarning = report.lftValidationWarning || "";
+  return nextRows;
+}
+
 function currentFindingRows() {
   const rows = [];
   document.querySelectorAll("#findingRows tr").forEach((tr) => {
     const obj = {};
-    tr.querySelectorAll("[data-r]").forEach((el) => {
+    const controls = tr.querySelectorAll("[data-r]");
+    if (!controls.length) return;
+    controls.forEach((el) => {
       if (el.dataset.r === "details") {
         try { obj.details = JSON.parse(el.value || "[]"); } catch (e) { obj.details = []; }
+      } else if (el.dataset.r === "sourceParameters") {
+        try { obj.sourceParameters = JSON.parse(el.value || "[]"); } catch (e) { obj.sourceParameters = []; }
       } else {
         obj[el.dataset.r] = el.value;
       }
     });
     rows.push(obj);
   });
-  return rows;
+  return applyLftCalculationsToEditorRows(rows);
 }
 
 function reportResultsFromRows(rows) {
@@ -2294,10 +2383,12 @@ function reportResultsFromRows(rows) {
     const isHeading = row.type === "heading" || row.isHeading === "true" || row.isHeading === true;
     if (isHeading) {
       results.push({
+        code: row.code || "",
         category: row.category || "",
         testName: row.testName || row.name || "",
         parameterName: row.name || "",
         resultValue: "",
+        value: "",
         normalRange: "",
         unit: "",
         method: "",
@@ -2310,28 +2401,39 @@ function reportResultsFromRows(rows) {
     }
     if (Array.isArray(row.details) && row.details.length) {
       row.details.forEach((detail) => results.push({
+        code: detail.code || row.code || "",
         category: row.category || "",
         testName: row.testName || row.name || "",
         parameterName: detail.parameter || row.name || "",
         resultValue: detail.finding || "",
+        value: detail.finding || "",
         normalRange: detail.normal || "",
         unit: detail.unit || "",
         method: detail.method || row.method || "",
         sample: detail.sample || row.sample || "",
-        comment: row.comment || ""
+        comment: row.comment || "",
+        calculated: Boolean(detail.calculated || row.calculated === true || row.calculated === "true"),
+        formula: detail.formula || row.formula || "",
+        sourceParameters: Array.isArray(detail.sourceParameters) ? detail.sourceParameters : Array.isArray(row.sourceParameters) ? row.sourceParameters : []
       }));
       return;
     }
     results.push({
+      code: row.code || "",
+      name: row.name || "",
       category: row.category || "",
       testName: row.testName || row.name || "",
       parameterName: row.name || "",
       resultValue: row.finding || "",
+      value: row.finding || "",
       normalRange: row.normal || "",
       unit: row.unit || "",
       method: row.method || "",
       sample: row.sample || "",
-      comment: row.comment || ""
+      comment: row.comment || "",
+      calculated: row.calculated === true || row.calculated === "true",
+      formula: row.formula || "",
+      sourceParameters: Array.isArray(row.sourceParameters) ? row.sourceParameters : []
     });
   });
   return results;
@@ -2349,6 +2451,7 @@ window.setTab = function(tab) {
 function paintFindingRows(rows) {
   const body = document.getElementById("findingRows");
   if (!body) return;
+  rows = applyLftCalculationsToEditorRows(rows);
   reportResults = rows;
   body.innerHTML = rows.length ? rows.map((row, index) => {
     const isHeading = row.type === "heading" || row.isHeading === true;
@@ -2358,6 +2461,7 @@ function paintFindingRows(rows) {
       <td colspan="4">
         <b>${html(row.name || row.parameterName || "")}</b>
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "")}">
+        <input type="hidden" data-r="code" data-i="${index}" value="${html(row.code || "")}">
         <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="heading">
@@ -2367,11 +2471,18 @@ function paintFindingRows(rows) {
     </tr>
       `;
     }
+    const isCalculated = row.calculated === true || row.calculated === "true";
+    const isReadOnly = row.readOnly === true || row.readOnly === "true" || isCalculated || isIndirectBilirubinParameter(row);
+    const rowClass = [
+      row.source === "machine" ? "machine-filled-row" : "",
+      isReadOnly ? "calculated-row" : ""
+    ].filter(Boolean).join(" ");
     return `
-    <tr class="${row.source === "machine" ? "machine-filled-row" : ""}">
+    <tr class="${rowClass}">
       <td>
         <b>${html(row.name || row.parameterName || "Result")}</b>
-        <br><small>${html(row.testName || row.category || "")}</small>
+        <br><small>${html(row.label || (isCalculated ? "Auto-calculated" : row.testName || row.category || ""))}</small>
+        <input type="hidden" data-r="code" data-i="${index}" value="${html(row.code || "")}">
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "Result")}">
         <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
@@ -2379,13 +2490,31 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="sample" data-i="${index}" value="${html(row.sample || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="${html(row.type || "")}">
         <input type="hidden" data-r="source" data-i="${index}" value="${html(row.source || "")}">
+        <input type="hidden" data-r="calculated" data-i="${index}" value="${isCalculated ? "true" : ""}">
+        <input type="hidden" data-r="readOnly" data-i="${index}" value="${isReadOnly ? "true" : ""}">
+        <input type="hidden" data-r="label" data-i="${index}" value="${html(row.label || (isCalculated ? "Auto-calculated" : ""))}">
+        <input type="hidden" data-r="formula" data-i="${index}" value="${html(row.formula || "")}">
+        <input type="hidden" data-r="sourceParameters" data-i="${index}" value="${html(JSON.stringify(row.sourceParameters || []))}">
+        <input type="hidden" data-r="precision" data-i="${index}" value="${html(row.precision ?? "")}">
       </td>
-      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="Enter result"></td>
+      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}" ${isReadOnly ? "readonly" : ""}></td>
       <td><input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly></td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
   `;
   }).join("") : `<tr><td colspan="4">No parameters found. A default result row is available after selecting a booking.</td></tr>`;
+  const warning = window.currentLftValidationWarning || "";
+  if (warning) {
+    body.insertAdjacentHTML("afterbegin", `<tr class="finding-warning-row"><td colspan="4">${html(warning)}</td></tr>`);
+  }
+  body.querySelectorAll('input[data-r="finding"]:not([readonly])').forEach((input) => {
+    input.addEventListener("input", () => {
+      const name = input.closest("tr")?.querySelector('[data-r="name"]')?.value || "";
+      if (["bilirubintotal", "totalbilirubin", "tbilirubin", "bilirubindirect", "directbilirubin", "dbilirubin"].includes(compactLftKey(name))) {
+        paintFindingRows(currentFindingRows());
+      }
+    });
+  });
 }
 
 window.firebaseUpdateStatus = async function(bookingId, status) {
@@ -2450,12 +2579,15 @@ function selectedTestSnapshot(test, packageName = "") {
     reportTime: test.reportTime || "Same Day",
     parameters: normalizeTestParameters(test).map((p, index) => ({
       name: p.name || p.parameterName || "Result",
+      code: p.code || p.parameterCode || p.parameter_code || "",
       normalRange: p.normalRange || p.normalValue || p.normal || "",
       unit: p.unit || "",
       method: p.method || "",
       sample: p.sample || test.sample || "",
       type: p.type || "",
       isHeading: Boolean(p.isHeading || p.heading || p.type === "heading"),
+      precision: p.precision ?? p.decimalPlaces ?? p.decimal_places ?? p.decimals ?? "",
+      calculated: Boolean(p.calculated || p.isCalculated || p.is_calculated),
       sortOrder: Number(p.sortOrder || index + 1)
     })),
     package: packageName
@@ -2671,6 +2803,7 @@ function reportRowsForTest(test, existingResults = []) {
   const params = normalizeTestParameters(test);
   if (!isCBCTest(test) && existingResults.length) {
     return existingResults.map((result) => ({
+      code: result.code || result.parameterCode || "",
       name: result.parameterName || result.name || "Result",
       category: result.category || test.category || "",
       testName: result.testName || test.name || "",
@@ -2683,12 +2816,19 @@ function reportRowsForTest(test, existingResults = []) {
       isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
       status: "Draft",
       comment: result.comment || "",
-      source: result.source || ""
+      source: result.source || "",
+      calculated: Boolean(result.calculated || result.isCalculated || result.is_calculated),
+      readOnly: Boolean(result.readOnly || result.readonly || result.calculated),
+      label: result.label || "",
+      formula: result.formula || "",
+      sourceParameters: Array.isArray(result.sourceParameters) ? result.sourceParameters : [],
+      precision: result.precision ?? result.decimalPlaces ?? result.decimal_places ?? ""
     }));
   }
   return params.map((p) => {
     const existing = existingResults.find((result) => cbcParameterKey(result.parameterName || result.name) === cbcParameterKey(p.name));
     return {
+      code: p.code || existing?.code || "",
       name: p.name || test.name || "Test",
       category: test.category || existing?.category || "",
       testName: test.name || existing?.testName || "",
@@ -2701,7 +2841,13 @@ function reportRowsForTest(test, existingResults = []) {
       isHeading: Boolean(p.isHeading || p.heading || p.type === "heading" || existing?.isHeading),
       status: "Final",
       comment: existing?.comment || "",
-      source: existing?.source || ""
+      source: existing?.source || "",
+      calculated: Boolean(p.calculated || existing?.calculated || existing?.isCalculated),
+      readOnly: Boolean(p.readOnly || p.readonly || p.calculated || existing?.calculated),
+      label: p.label || existing?.label || "",
+      formula: p.formula || existing?.formula || "",
+      sourceParameters: Array.isArray(p.sourceParameters) ? p.sourceParameters : Array.isArray(existing?.sourceParameters) ? existing.sourceParameters : [],
+      precision: p.precision ?? existing?.precision ?? ""
     };
   });
 }
@@ -2784,6 +2930,7 @@ window.loadReportEditor = async function(id) {
       })
     : existingResults.length
       ? existingResults.map((result) => ({
+          code: result.code || result.parameterCode || "",
           name: result.parameterName || result.name || "Result",
           category: result.category || "",
           testName: result.testName || "",
@@ -2796,7 +2943,13 @@ window.loadReportEditor = async function(id) {
           isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
           status: existingReport.reportStatus || existingReport.status || "Draft",
           comment: result.comment || "",
-          source: result.source || ""
+          source: result.source || "",
+          calculated: Boolean(result.calculated || result.isCalculated || result.is_calculated),
+          readOnly: Boolean(result.readOnly || result.readonly || result.calculated),
+          label: result.label || "",
+          formula: result.formula || "",
+          sourceParameters: Array.isArray(result.sourceParameters) ? result.sourceParameters : [],
+          precision: result.precision ?? ""
         }))
       : [{ name: b.test || "Test", normal: "", finding: "", unit: "", status: "Final", comment: "" }];
   paintFindingRows(rows);
@@ -2910,20 +3063,37 @@ async function saveReportDetailsEdit(event) {
   showAdminToast("Patient details updated successfully.");
 }
 
-window.openReportPreview = function() {
+function hasBlockingLftValidation(payload) {
+  return payload?.lftValidationWarning === INDIRECT_BILIRUBIN_WARNING;
+}
+
+function showLftValidationWarning(payload) {
+  if (!hasBlockingLftValidation(payload)) return false;
+  alert(INDIRECT_BILIRUBIN_WARNING);
+  paintFindingRows(currentFindingRows());
+  return true;
+}
+
+window.openReportPreview = async function() {
   if (!currentReportBooking) {
     alert("Please select booking.");
     return;
   }
+  const payload = reportPayload("Draft");
+  if (showLftValidationWarning(payload)) return;
+  await saveReportDraft(payload);
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
 };
 
-window.printGeneratedReport = function() {
+window.printGeneratedReport = async function() {
   if (!currentReportBooking) {
     alert("Please select booking.");
     return;
   }
+  const payload = reportPayload("Draft");
+  if (showLftValidationWarning(payload)) return;
+  await saveReportDraft(payload);
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
 };
@@ -2933,7 +3103,7 @@ function reportPayload(status = "Draft") {
   const rows = currentFindingRows();
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   const reportingDate = document.getElementById("rReportingDate")?.value || "";
-  return {
+  const payload = {
     billNo: bill,
     bookingId: currentReportBooking.id,
     patientName: normalizePatientName(currentReportBooking.patientName),
@@ -2951,11 +3121,13 @@ function reportPayload(status = "Draft") {
     reportStatus: status,
     status
   };
+  return applyLftCalculatedParameters(payload);
 }
 
 window.saveGeneratedDraft = async function() {
   const payload = reportPayload("Draft");
   if (!payload) return alert("Please select booking.");
+  if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
   alert("Draft saved to Firestore.");
   await refreshFirebaseDashboard();
@@ -2967,6 +3139,7 @@ window.releaseGeneratedReport = async function() {
     return;
   }
   const payload = reportPayload("Final");
+  if (showLftValidationWarning(payload)) return;
   await saveReport(payload);
   currentReportBooking.reportReleased = true;
   currentReportBooking.reportBillNo = payload.billNo;
