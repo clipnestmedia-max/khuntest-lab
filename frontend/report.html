@@ -409,6 +409,139 @@
       text-align: justify;
     }
 
+    .lft-section {
+      margin-top: 4mm;
+      color: #111;
+    }
+
+    .lft-title {
+      margin: 0 0 3.2mm;
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 4.2mm;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .lft-sample {
+      margin-bottom: 2mm;
+      font-size: 3.15mm;
+      font-weight: 700;
+    }
+
+    .lft-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 3.35mm;
+    }
+
+    .lft-table thead {
+      display: table-header-group;
+    }
+
+    .lft-table th {
+      padding: 1.2mm 1.4mm;
+      border-top: 1.2px solid #111;
+      border-bottom: 1.2px solid #111;
+      text-align: left;
+      font-size: 3.45mm;
+      font-weight: 900;
+    }
+
+    .lft-table td {
+      padding: 1.25mm 1.4mm;
+      border-bottom: .35px solid rgba(17, 17, 17, .25);
+      vertical-align: top;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .lft-investigation-col {
+      width: 40%;
+    }
+
+    .lft-result-col {
+      width: 18%;
+      text-align: center;
+    }
+
+    .lft-range-col {
+      width: 28%;
+      text-align: center;
+    }
+
+    .lft-unit-col {
+      width: 14%;
+      text-align: center;
+    }
+
+    .lft-table th.lft-result-col,
+    .lft-table th.lft-range-col,
+    .lft-table th.lft-unit-col {
+      text-align: center;
+    }
+
+    .lft-param-name {
+      display: block;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .lft-method,
+    .lft-calculated {
+      display: block;
+      margin-top: .45mm;
+      color: #374151;
+      font-size: 2.65mm;
+      font-style: italic;
+      line-height: 1.25;
+    }
+
+    .lft-result-value {
+      display: inline-block;
+      min-width: 12mm;
+      font-weight: 900;
+    }
+
+    .lft-flag {
+      display: block;
+      margin-top: .45mm;
+      font-size: 2.55mm;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .lft-high .lft-result-col,
+    .lft-critical-high .lft-result-col {
+      color: #b91c1c;
+    }
+
+    .lft-low .lft-result-col,
+    .lft-critical-low .lft-result-col {
+      color: #1d4ed8;
+    }
+
+    .lft-critical-high .lft-result-value,
+    .lft-critical-low .lft-result-value {
+      padding-bottom: .25mm;
+      border-bottom: .45mm solid currentColor;
+    }
+
+    .lft-notes {
+      margin-top: 3mm;
+      padding-left: 5mm;
+      font-size: 2.95mm;
+      line-height: 1.4;
+    }
+
+    .lft-notes li {
+      margin-bottom: 1mm;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
     .end-area {
       margin: 1.5mm 5mm 0;
       border-top: 1px dotted #111;
@@ -617,6 +750,12 @@
         break-after: auto;
       }
 
+      .lft-table tr,
+      .lft-notes li {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
       a {
         color: #000;
         text-decoration: none;
@@ -690,6 +829,41 @@
       return text.includes("cbc") || text.includes("complete blood count");
     }
 
+    function compactKey(value) {
+      return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+    function isLFTText(value) {
+      const text = String(value || "").toLowerCase();
+      const key = compactKey(value);
+      return key === "lft" || text.includes("liver function");
+    }
+
+    function isLFTParameterName(value) {
+      const text = String(value || "").toLowerCase();
+      return [
+        "bilirubin",
+        "sgot",
+        "sgpt",
+        " ast",
+        " alt",
+        "alkaline phosphatase",
+        "total protein",
+        "albumin",
+        "globulin",
+        "a/g ratio",
+        "ag ratio"
+      ].some((term) => text.includes(term));
+    }
+
+    function isLFTGroup(group) {
+      return isLFTText(group?.testName) || isLFTText(group?.category) || (
+        Array.isArray(group?.rows) &&
+        group.rows.length >= 4 &&
+        group.rows.every((row) => isLFTText(row.testName) || isLFTParameterName(row.parameterName))
+      );
+    }
+
     function getFullCBCParameters() {
       return [
         { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
@@ -752,6 +926,8 @@
         method: pick(row, ["method", "methodName", "method_name"], ""),
         sample: pick(row, ["sample", "sampleType", "sample_type"], ""),
         comment: pick(row, ["comment", "remarks", "description", "interpretation"], ""),
+        flag: pick(row, ["flag", "abnormalFlag", "abnormal_flag", "resultFlag", "result_flag", "statusFlag", "status_flag"], ""),
+        calculated: Boolean(row.calculated || row.isCalculated || row.is_calculated || row.calculationSource || row.calculation_source),
         details: Array.isArray(row.details) ? row.details : [],
         isHeading: Boolean(row.isHeading || row.heading || row.type === "heading" || headingText.includes("differential count"))
       };
@@ -868,6 +1044,108 @@
       return html;
     }
 
+    const LFT_ORDER = [
+      ["totalbilirubin", "bilirubintotal"],
+      ["directbilirubin", "bilirubindirect"],
+      ["indirectbilirubin", "bilirubinindirect"],
+      ["sgotast", "astsgot", "sgot", "ast"],
+      ["sgptalt", "altsgpt", "sgpt", "alt"],
+      ["astalt", "sgotsgpt", "astaspartatealanine", "sgotsgptratio"],
+      ["ggt", "ggtp", "gammaglutamyltransferase"],
+      ["alkalinephosphatase", "alp"],
+      ["totalprotein", "totalproteins"],
+      ["albumin"],
+      ["globulin"],
+      ["agratio", "albuminglobulinratio"]
+    ];
+
+    function lftSortIndex(row) {
+      const key = compactKey(row.parameterName || row.testName);
+      const index = LFT_ORDER.findIndex((aliases) => aliases.some((alias) => key.includes(alias)));
+      return index === -1 ? 999 : index;
+    }
+
+    function normalizeFlag(value) {
+      const flag = String(value || "").trim().toLowerCase();
+      if (!flag) return null;
+      if (["ch", "critical high", "critical-high", "panic high", "panic-high"].includes(flag) || flag.includes("critical high")) {
+        return { className: "lft-critical-high", label: "Critical High" };
+      }
+      if (["cl", "critical low", "critical-low", "panic low", "panic-low"].includes(flag) || flag.includes("critical low")) {
+        return { className: "lft-critical-low", label: "Critical Low" };
+      }
+      if (["h", "high", "hi", "above", "above range"].includes(flag) || flag.includes("high")) {
+        return { className: "lft-high", label: "High" };
+      }
+      if (["l", "low", "lo", "below", "below range"].includes(flag) || flag.includes("low")) {
+        return { className: "lft-low", label: "Low" };
+      }
+      return null;
+    }
+
+    function lftRowHtml(row) {
+      const flag = normalizeFlag(row.flag);
+      const rowClass = flag ? flag.className : "";
+      const resultValue = row.resultValue || (row.calculated ? "Not available" : "");
+      return `
+        <tr class="${rowClass}">
+          <td class="lft-investigation-col">
+            <span class="lft-param-name">${safe(row.parameterName || row.testName)}</span>
+            ${row.method ? `<span class="lft-method">Method: ${safe(row.method)}</span>` : ""}
+            ${row.calculated ? `<span class="lft-calculated">Calculated parameter</span>` : ""}
+          </td>
+          <td class="lft-result-col">
+            <span class="lft-result-value">${safe(resultValue)}</span>
+            ${flag ? `<span class="lft-flag">${safe(flag.label)}</span>` : ""}
+          </td>
+          <td class="lft-range-col">${safe(row.normalValue)}</td>
+          <td class="lft-unit-col">${safe(row.unit)}</td>
+        </tr>
+      `;
+    }
+
+    function approvedLFTNotes(group, rows, showEnd) {
+      if (!showEnd) return [];
+      const notes = [];
+      rows.forEach((row) => {
+        if (row.comment) notes.push(row.comment);
+      });
+      group.comments.forEach((comment) => notes.push(comment));
+      return Array.from(new Set(notes.map((note) => String(note).trim()).filter(Boolean)));
+    }
+
+    function renderLFTReportSection(group, rows, pageIndex, pageCount) {
+      const showEnd = pageIndex === pageCount - 1;
+      const continuation = pageIndex > 0 ? " (CONTINUED)" : "";
+      const sample = rows.find((row) => row.sample)?.sample || "Not specified";
+      const orderedRows = rows
+        .map((row, index) => ({ row, index }))
+        .sort((a, b) => lftSortIndex(a.row) - lftSortIndex(b.row) || a.index - b.index)
+        .map((item) => item.row);
+      const notes = approvedLFTNotes(group, orderedRows, showEnd);
+
+      return `
+        <section class="lft-section">
+          <h1 class="lft-title">LIVER FUNCTION TEST (LFT)${safe(continuation)}</h1>
+          <div class="lft-sample">Sample Type: ${safe(sample)}</div>
+          <table class="lft-table">
+            <thead>
+              <tr>
+                <th class="lft-investigation-col">Investigation</th>
+                <th class="lft-result-col">Result</th>
+                <th class="lft-range-col">Reference Value</th>
+                <th class="lft-unit-col">Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orderedRows.length ? orderedRows.map(lftRowHtml).join("") : `<tr><td colspan="4" style="text-align:center;font-weight:700;padding:18px;">Report result not available.</td></tr>`}
+            </tbody>
+          </table>
+          ${notes.length ? `<ol class="lft-notes">${notes.map((note) => `<li>${safe(note)}</li>`).join("")}</ol>` : ""}
+        </section>
+      `;
+    }
+
     function letterheadHtml() {
       return `
         <header class="lab-letterhead">
@@ -961,12 +1239,9 @@
     function pageHtml(report, billNo, group, rows, pageIndex, pageCount) {
       const showEnd = pageIndex === pageCount - 1;
       const continuation = pageIndex > 0 ? " (Continued)" : "";
-      return `
-        <section class="report-page">
-          ${letterheadHtml()}
-          <img class="report-watermark" src="assets/khuntest-logo.png" alt="">
-          <div class="report-content">
-            ${patientBlock(report, billNo)}
+      const resultSection = isLFTGroup(group)
+        ? renderLFTReportSection(group, rows, pageIndex, pageCount)
+        : `
             <table class="result-table">
               <thead>
                 <tr>
@@ -983,6 +1258,14 @@
                 ${showEnd && group.comments.length ? `<tr class="comment-row"><td colspan="4">${safe(group.comments.join(" "))}</td></tr>` : ""}
               </tbody>
             </table>
+          `;
+      return `
+        <section class="report-page">
+          ${letterheadHtml()}
+          <img class="report-watermark" src="assets/khuntest-logo.png" alt="">
+          <div class="report-content">
+            ${patientBlock(report, billNo)}
+            ${resultSection}
             ${showEnd ? `<div class="end-area">*** End of Report ***</div>` : `<div class="continued">Continued on next page</div>`}
           </div>
           ${signatureHtml()}
@@ -1035,6 +1318,34 @@
       app.innerHTML = message;
     }
 
+    function mockLFTReport() {
+      const now = new Date("2026-07-21T17:10:00");
+      return {
+        billNo: "LFT-DEMO",
+        patientName: "TEST PATIENT",
+        age: "42y",
+        gender: "Male",
+        doctor: "Dr N.K SUMAN(MBBS, MD)",
+        status: "Final",
+        createdAt: "2026-07-21T16:42:00",
+        collectionDate: "2026-07-21T16:48:00",
+        releasedAt: now,
+        tests: [{ testCode: "KT0407", name: "LIVER FUNCTION TEST", category: "Biochemistry" }],
+        results: [
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Total Bilirubin", resultValue: "1.8", normalValue: "0.1-1.2", unit: "mg/dL", sample: "Serum", method: "Diazo", flag: "High" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Direct Bilirubin", resultValue: "0.6", normalValue: "0.0-0.3", unit: "mg/dL", sample: "Serum", method: "Diazo", flag: "H" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Indirect Bilirubin", resultValue: "1.2", normalValue: "Calculated", unit: "mg/dL", sample: "Serum", calculated: true },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "SGOT / AST", resultValue: "82", normalValue: "8-33", unit: "U/L", sample: "Serum", method: "IFCC without P5P", flag: "Critical High" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "SGPT / ALT", resultValue: "76", normalValue: "4-36", unit: "U/L", sample: "Serum", method: "IFCC without P5P", flag: "High" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Alkaline Phosphatase", resultValue: "118", normalValue: "20-130", unit: "U/L", sample: "Serum", method: "PNPP" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Total Protein", resultValue: "6.8", normalValue: "6.0-8.3", unit: "g/dL", sample: "Serum", method: "Biuret" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Albumin", resultValue: "3.1", normalValue: "3.4-5.4", unit: "g/dL", sample: "Serum", method: "BCG", flag: "Low" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "Globulin", resultValue: "3.7", normalValue: "2.0-3.5", unit: "g/dL", sample: "Serum", calculated: true, flag: "High" },
+          { category: "BIO-CHEMISTRY", testName: "LIVER FUNCTION TEST", parameterName: "A/G Ratio", resultValue: "0.84", normalValue: "1.0-2.2", unit: "Ratio", sample: "Serum", calculated: true, flag: "Low", comment: "Interpret results with clinical findings and relevant medication history." }
+        ]
+      };
+    }
+
     function mockReport() {
       const now = new Date("2026-04-28T14:42:00");
       return {
@@ -1072,8 +1383,8 @@
       const params = getParams();
       const billNo = getBillNo();
 
-      if (params.get("mock") === "1") {
-        const report = mockReport();
+      if (params.get("mock") === "1" || params.get("mock") === "lft") {
+        const report = params.get("mock") === "lft" ? mockLFTReport() : mockReport();
         renderReport(report, report.billNo);
         return;
       }
