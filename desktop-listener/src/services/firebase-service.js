@@ -82,6 +82,12 @@ class FirebaseService {
   async uploadMachineResult(item) {
     if (!this.clientDb && !this.db) throw new Error("Firebase is not connected. Login first.");
     const { rawMessage, parsed, analyzer } = item.payload || item;
+    const labId = this.appStore.get("lab.labId", "KHUNTEST-LAB");
+    this.logger.info("firebase", "Firestore upload start", {
+      analyzer: analyzer?.name || parsed.analyzerName,
+      sample: parsed.sampleId,
+      details: `collection=machineResults; labId=${labId}`
+    });
     const booking = await this.findBooking(parsed);
     const machineDoc = {
       source: analyzer?.name || parsed.source || "Mindray BC-5000",
@@ -93,12 +99,13 @@ class FirebaseService {
       patientId: parsed.patientId || "",
       testDate: parsed.testDate || "",
       analyzerName: parsed.analyzerName || analyzer?.name || "Mindray BC-5000",
-      labId: this.appStore.get("lab.labId", "KHUNTEST-LAB"),
+      labId,
       receivedAt: this.timestamp(),
       status: "received",
       matchStatus: booking ? "matched" : "unmatched",
       bookingId: booking?.id || "",
       rawMessage,
+      rawMessageRef: "",
       parsedResults: parsed.results || []
     };
     const machineRef = await this.add("machineResults", machineDoc);
@@ -107,7 +114,8 @@ class FirebaseService {
     this.logger.info("firebase", "Uploaded machine result", {
       analyzer: machineDoc.analyzerName,
       patient: machineDoc.patientName,
-      sample: machineDoc.sampleId
+      sample: machineDoc.sampleId,
+      details: `collection=machineResults; document=${machineRef.id}`
     });
     return { ok: true, machineResultId: machineRef.id, matched: Boolean(booking), bookingId: booking?.id || "" };
   }

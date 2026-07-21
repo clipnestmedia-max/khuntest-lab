@@ -121,7 +121,9 @@ ipcMain.handle("settings:get", async () => ({
 }));
 
 ipcMain.handle("settings:save", async (_event, patch) => {
+  const wasRunning = services.listener.status().running;
   services.appStore.merge(patch);
+  if (wasRunning) await services.listener.start();
   sendStatus();
   return { ok: true, settings: services.appStore.safeSettings() };
 });

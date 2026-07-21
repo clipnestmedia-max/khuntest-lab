@@ -104,7 +104,8 @@ function migrateSettings(settings) {
 }
 
 function migrateAnalyzer(analyzer) {
-  const mode = normalizeMode(analyzer.connectionMode || (analyzer.id === "mindray-bc5000" ? "tcp-client" : "tcp-server"));
+  const hasExplicitMode = Object.prototype.hasOwnProperty.call(analyzer, "connectionMode");
+  const mode = normalizeMode(hasExplicitMode ? analyzer.connectionMode : "tcp-server");
   const legacyPort = Number(analyzer.port ?? 5001);
   const analyzerPort = Number(analyzer.analyzerPort ?? legacyPort ?? 5001);
   const localListenerPort = Number(analyzer.localListenerPort ?? analyzer.localPort ?? legacyPort ?? 5001);
@@ -120,7 +121,10 @@ function migrateAnalyzer(analyzer) {
     localListenerPort,
     localPort: localListenerPort,
     port: mode === "tcp-server" ? localListenerPort : analyzerPort,
-    serverBindHost: host === "0.0.0.0" ? host : "0.0.0.0"
+    serverBindHost: host === "0.0.0.0" ? host : "0.0.0.0",
+    reconnectAutomatically: mode === "tcp-client" ? analyzer.reconnectAutomatically !== false : false,
+    sendAck: analyzer.sendAck !== false,
+    ackMode: analyzer.ackMode === "immediate" ? "immediate" : "after-parse"
   };
 }
 

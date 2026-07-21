@@ -44,14 +44,25 @@ class LoggerService {
   rawPacket(buffer, meta = {}) {
     const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer || ""), "utf8");
     const rawText = bytes.toString("utf8");
+    const date = new Date().toISOString();
+    const dayDir = path.join(this.logDir, "raw", date.slice(0, 10));
+    fs.mkdirSync(dayDir, { recursive: true });
+    const safeRemote = String(meta.remote || "unknown").replace(/[^a-zA-Z0-9_.-]/g, "_");
+    const binaryPath = path.join(dayDir, `${date.replace(/[:.]/g, "-")}-${safeRemote}-${bytes.length}.bin`);
+    fs.writeFileSync(binaryPath, bytes);
     const row = {
-      date: new Date().toISOString(),
+      date,
       analyzer: meta.analyzer || "",
       remote: meta.remote || "",
       mode: meta.mode || "",
       analyzerIp: meta.analyzerIp || "",
       analyzerPort: meta.analyzerPort || "",
       byteLength: bytes.length,
+      framing: meta.framing || "",
+      protocol: meta.protocol || "",
+      binaryPath,
+      hexPreview: bytes.toString("hex").slice(0, 240),
+      asciiPreview: rawText.replace(/[^\x20-\x7e\r\n\t]/g, ".").slice(0, 500),
       hex: bytes.toString("hex"),
       rawMessage: rawText
     };

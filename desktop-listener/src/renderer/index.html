@@ -61,14 +61,24 @@
           <div class="metric wide"><span>Offline Queue</span><b id="queueCount">0 pending</b></div>
         </div>
         <div class="diagnostics-panel">
-          <h3>Diagnostics</h3>
+          <div class="section-head">
+            <h3>Diagnostics</h3>
+            <button id="copyDiagnosticsBtn" class="secondary" type="button">Copy Network Diagnostic</button>
+          </div>
           <div class="diagnostics-grid">
             <div><span>Local PC Ethernet IP</span><b id="diagLocalIp">Not detected</b></div>
             <div><span>Analyzer IP</span><b id="diagAnalyzerIp">10.0.0.2</b></div>
             <div><span>Analyzer Port</span><b id="diagAnalyzerPort">5001</b></div>
             <div><span>TCP Mode</span><b id="diagTcpMode">TCP Client</b></div>
             <div><span>Socket State</span><b id="diagSocketState">Disconnected</b></div>
+            <div><span>Listening</span><b id="diagListening">No</b></div>
+            <div><span>Listening PID</span><b id="diagListeningPid">-</b></div>
+            <div><span>Bind Address</span><b id="diagBindAddress">-</b></div>
+            <div><span>Remote Connections</span><b id="diagRemoteConnections">0</b></div>
             <div><span>Last Received Byte Time</span><b id="diagLastByte">Never</b></div>
+            <div><span>Framing Type</span><b id="diagFramingType">Unknown</b></div>
+            <div><span>Parser Selected</span><b id="diagParserSelected">Unknown</b></div>
+            <div class="diagnostic-wide"><span>Firewall Guidance</span><pre id="diagFirewallGuidance" class="raw-cell">Allow inbound TCP 5001 if no remote traffic arrives.</pre></div>
             <div class="diagnostic-wide"><span>Last Raw Message</span><pre id="diagLastRaw" class="raw-cell">None</pre></div>
             <div class="diagnostic-wide"><span>Last Parser Error</span><pre id="diagLastParserError" class="raw-cell">None</pre></div>
           </div>

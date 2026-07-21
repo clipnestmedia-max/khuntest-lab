@@ -25,6 +25,7 @@ function bindEvents() {
   $("saveSettingsBtn").addEventListener("click", saveSettings);
   $("exportLogsBtn").addEventListener("click", exportLogs);
   $("openLogsBtn").addEventListener("click", () => window.khunTest.openLogsFolder());
+  $("copyDiagnosticsBtn").addEventListener("click", copyNetworkDiagnostic);
   document.querySelectorAll(".nav").forEach((button) => button.addEventListener("click", () => showTab(button.dataset.tab)));
 }
 
@@ -78,7 +79,14 @@ function renderDiagnostics(status) {
   $("diagAnalyzerPort").textContent = String(status.analyzerPort || 5001);
   $("diagTcpMode").textContent = status.tcpMode || "TCP Client";
   $("diagSocketState").textContent = status.socketState || "Disconnected";
+  $("diagListening").textContent = status.listening ? "Yes" : "No";
+  $("diagListeningPid").textContent = status.listeningPid ? String(status.listeningPid) : "-";
+  $("diagBindAddress").textContent = status.bindAddress || "-";
+  $("diagRemoteConnections").textContent = String(status.remoteConnections || 0);
   $("diagLastByte").textContent = formatDate(status.lastReceivedByteTime);
+  $("diagFramingType").textContent = status.framingType || "Unknown";
+  $("diagParserSelected").textContent = status.parserSelected || "Unknown";
+  $("diagFirewallGuidance").textContent = status.firewallGuidance || "Allow inbound TCP 5001 if no remote traffic arrives.";
   $("diagLastRaw").textContent = truncateRaw(formatRawForDisplay(status.lastRawMessage || "None"));
   $("diagLastParserError").textContent = status.lastParserError || "None";
 }
@@ -123,6 +131,8 @@ function analyzerCard(analyzer, index) {
     <label data-mode-field="client">Analyzer IP<input data-field="analyzerIp" value="${escapeAttr(analyzer.analyzerIp || "10.0.0.2")}"></label>
     <label data-mode-field="client">Analyzer Port<input data-field="analyzerPort" type="number" value="${Number(analyzer.analyzerPort || analyzer.port || 5001)}"></label>
     <label data-mode-field="server">Local Listener Port<input data-field="localListenerPort" type="number" value="${Number(analyzer.localListenerPort || analyzer.localPort || analyzer.port || 5001)}"></label>
+    <label class="check-row"><input data-field="sendAck" type="checkbox" ${analyzer.sendAck !== false ? "checked" : ""}>Send ACK</label>
+    <label>ACK Mode<select data-field="ackMode"><option value="after-parse" ${selected(analyzer.ackMode || "after-parse", "after-parse")}>After Parse</option><option value="immediate" ${selected(analyzer.ackMode, "immediate")}>Immediate</option></select></label>
     <label class="check-row"><input data-field="reconnectAutomatically" type="checkbox" ${analyzer.reconnectAutomatically ? "checked" : ""}>Reconnect Automatically</label>
     <label class="check-row"><input data-field="enabled" type="checkbox" ${analyzer.enabled !== false ? "checked" : ""}>Enabled</label>
     <div class="full"><button class="ghost" data-test-analyzer="${index}" type="button">Test Connection</button></div>
@@ -185,9 +195,29 @@ function collectAnalyzers() {
       localPort: localListenerPort,
       port: mode === "tcp-server" ? localListenerPort : analyzerPort,
       reconnectAutomatically: get("reconnectAutomatically").checked,
+      sendAck: get("sendAck").checked,
+      ackMode: get("ackMode").value === "immediate" ? "immediate" : "after-parse",
       enabled: get("enabled").checked
     };
   });
+}
+
+async function copyNetworkDiagnostic() {
+  const status = state.status || {};
+  const text = [
+    `Local IP: ${status.localPcIp || "Not detected"}`,
+    `Mode: ${status.tcpMode || "Unknown"}`,
+    `Listening: ${status.listening ? "Yes" : "No"}`,
+    `Port: ${status.analyzerPort || 5001}`,
+    `Bind Address: ${status.bindAddress || "-"}`,
+    `Listening PID: ${status.listeningPid || "-"}`,
+    `Remote Connections: ${status.remoteConnections || 0}`,
+    `Last Received Byte: ${formatDate(status.lastReceivedByteTime)}`,
+    `Framing Type: ${status.framingType || "Unknown"}`,
+    `Parser Selected: ${status.parserSelected || "Unknown"}`,
+    `Firewall Guidance: ${status.firewallGuidance || ""}`
+  ].join("\n");
+  await navigator.clipboard.writeText(text);
 }
 
 function updateAnalyzerModeFields(card) {

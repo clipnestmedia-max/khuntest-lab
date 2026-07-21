@@ -33,7 +33,10 @@ function stripMllp(message = "") {
 }
 
 function normalizeCode(value = "") {
-  return String(value).split("^").find(Boolean)?.trim() || "";
+  const raw = String(value).split("^").find(Boolean)?.trim() || "";
+  const differential = raw.match(/^(neu|lym|mon|eos|bas)([#%])$/i);
+  if (differential) return `${differential[1].toUpperCase()}${differential[2]}`;
+  return raw.toUpperCase();
 }
 
 function parsePatientName(field = "") {
@@ -94,6 +97,10 @@ function parseHL7(rawMessage, analyzer = {}) {
       const codeField = fields[3] || "";
       const code = normalizeCode(codeField);
       const nameFromMessage = codeField.split("^").filter(Boolean)[1] || code;
+      if (!parsed.sampleId) {
+        parsed.sampleId = fields[18] || fields[14] || "";
+        parsed.billNo = parsed.sampleId;
+      }
       parsed.results.push({
         code,
         name: nameFromMessage || code,

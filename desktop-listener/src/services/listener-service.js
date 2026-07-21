@@ -7,6 +7,7 @@ const { parseASTM } = require("../parsers/mindray-bc5000-astm");
 
 const MLLP_START = 0x0b;
 const MLLP_END = 0x1c;
+const ASTM_CONTROL_BYTES = new Set([0x02, 0x03, 0x04, 0x05, 0x06, 0x15, 0x17]);
 const MAX_RECONNECT_DELAY_MS = 30000;
 const SERVER_BIND_HOST = "0.0.0.0";
 
@@ -51,6 +52,15 @@ function extractCompleteMessages(buffer) {
   return { messages, remainder };
 }
 
+function framingType(buffer) {
+  const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer || ""), "utf8");
+  if (bytes[0] === MLLP_START && bytes.includes(MLLP_END)) return "MLLP";
+  if ([...bytes].some((byte) => ASTM_CONTROL_BYTES.has(byte))) return "ASTM control";
+  const text = bytes.toString("utf8");
+  if (/(^|\r|\n)MSH\|/.test(text)) return "Plain HL7";
+  return "Unknown";
+}
+
 function localEthernetIp() {
   const interfaces = os.networkInterfaces();
   for (const rows of Object.values(interfaces)) {
@@ -83,6 +93,7 @@ class ListenerService {
     this.logger = logger;
     this.servers = new Map();
     this.sockets = new Map();
+    this.serverSockets = new Map();
     this.reconnectTimers = new Map();
     this.running = false;
     this.analyzerConnected = false;
@@ -94,11 +105,19 @@ class ListenerService {
       analyzerIp: "10.0.0.2",
       analyzerPort: 5001,
       tcpMode: "TCP Client",
-      socketState: "Disconnected",
+      socketState: "Listener Ready",
       lastReceivedByteTime: "",
       lastRawMessage: "",
       lastParserError: "",
-      connectionInfo: ""
+      connectionInfo: "",
+      listening: false,
+      listeningPid: process.pid,
+      bindAddress: "",
+      remoteConnections: 0,
+      framingType: "",
+      parserSelected: "",
+      parserError: "",
+      firewallGuidance: "If remote connections stay at 0, allow inbound TCP 5001 in Windows Firewall."
     };
   }
 
@@ -111,7 +130,7 @@ class ListenerService {
         continue;
       }
       if (this.connectionMode(analyzer) === "tcp-client") {
-        this.startTcpClient(analyzer, 0);
+        await this.startTcpClient(analyzer, 0);
       } else {
         await this.startTcpServer(analyzer);
       }
@@ -121,28 +140,47 @@ class ListenerService {
   }
 
   async stop() {
-    for (const timer of this.reconnectTimers.values()) clearTimeout(timer);
-    this.reconnectTimers.clear();
-
-    for (const socket of this.sockets.values()) {
-      socket.removeAllListeners("close");
-      socket.destroy();
-    }
-    this.sockets.clear();
-
-    const closing = [];
-    for (const server of this.servers.values()) {
-      closing.push(new Promise((resolve) => server.close(resolve)));
-    }
-    await Promise.allSettled(closing);
+    const keys = new Set([...this.reconnectTimers.keys(), ...this.sockets.keys(), ...this.servers.keys(), ...this.serverSockets.keys()]);
+    await Promise.allSettled([...keys].map((key) => this.stopCurrentTransport(key)));
     this.servers.clear();
+    this.sockets.clear();
+    this.serverSockets.clear();
+    this.reconnectTimers.clear();
     this.running = false;
     this.analyzerConnected = false;
-    this.updateDiagnostics({ socketState: "Disconnected", connectionInfo: "" });
+    this.updateDiagnostics({ socketState: "Listener Ready", connectionInfo: "", listening: false, bindAddress: "", remoteConnections: 0 });
   }
 
-  startTcpClient(analyzer, attempt) {
+  async stopCurrentTransport(key) {
+    const timer = this.reconnectTimers.get(key);
+    if (timer) clearTimeout(timer);
+    this.reconnectTimers.delete(key);
+
+    const clientSocket = this.sockets.get(key);
+    if (clientSocket) {
+      clientSocket.removeAllListeners();
+      clientSocket.destroy();
+    }
+    this.sockets.delete(key);
+
+    const accepted = this.serverSockets.get(key);
+    for (const socket of accepted || []) {
+      socket.removeAllListeners();
+      socket.destroy();
+    }
+    this.serverSockets.delete(key);
+
+    const server = this.servers.get(key);
+    if (server) {
+      server.removeAllListeners("connection");
+      await new Promise((resolve) => server.close(() => resolve()));
+    }
+    this.servers.delete(key);
+  }
+
+  async startTcpClient(analyzer, attempt) {
     const key = this.analyzerKey(analyzer);
+    if (attempt === 0) await this.stopCurrentTransport(key);
     const host = this.analyzerHost(analyzer);
     const port = this.analyzerPort(analyzer);
     if (!validAnalyzerHost(host)) {
@@ -176,7 +214,7 @@ class ListenerService {
       this.updateDiagnostics({ socketState: "Connected", connectionInfo: `${host}:${port}` });
       this.logger.info("tcp", "TCP connection established", { analyzer: analyzer.name, details: `${host}:${port}` });
       this.handleSocket(socket, analyzer, { mode: "TCP Client", remote: `${host}:${port}` });
-      this.updateDiagnostics({ socketState: "Waiting for result" });
+      this.updateDiagnostics({ socketState: "Waiting for Analyzer" });
     });
 
     socket.on("error", (err) => {
@@ -205,33 +243,56 @@ class ListenerService {
     });
     const timer = setTimeout(() => {
       this.reconnectTimers.delete(key);
-      if (this.running) this.startTcpClient(analyzer, attempt);
+      if (this.running) this.startTcpClient(analyzer, attempt).catch((err) => {
+        this.errors.unshift(err.message);
+        this.logger.error("tcp", err.message, { analyzer: analyzer.name });
+      });
     }, delay);
     this.reconnectTimers.set(key, timer);
   }
 
   startTcpServer(analyzer) {
     return new Promise((resolve, reject) => {
+      const key = this.analyzerKey(analyzer);
+      this.stopCurrentTransport(key).then(() => {
       const host = SERVER_BIND_HOST;
       const port = this.localListenerPort(analyzer);
+      this.logger.info("tcp", "TCP server created", { analyzer: analyzer.name, details: `${host}:${port}` });
       const server = net.createServer((socket) => {
         this.analyzerConnected = true;
+        if (!this.serverSockets.has(key)) this.serverSockets.set(key, new Set());
+        this.serverSockets.get(key).add(socket);
         this.updateDiagnostics({
           analyzerIp: socket.remoteAddress || this.analyzerHost(analyzer),
           analyzerPort: socket.remotePort || this.analyzerPort(analyzer),
           tcpMode: "TCP Server",
-          socketState: "Connected",
-          connectionInfo: `${socket.remoteAddress}:${socket.remotePort}`
+          socketState: "Analyzer Connected",
+          connectionInfo: `${socket.remoteAddress}:${socket.remotePort}`,
+          remoteConnections: this.remoteConnectionCount()
         });
         this.logger.info("tcp", `Analyzer connected from ${socket.remoteAddress}:${socket.remotePort}`, {
           analyzer: analyzer.name,
           details: `${socket.remoteAddress}:${socket.remotePort}`
         });
+        socket.on("close", () => {
+          this.serverSockets.get(key)?.delete(socket);
+          this.analyzerConnected = this.remoteConnectionCount() > 0;
+          this.updateDiagnostics({
+            socketState: this.analyzerConnected ? "Analyzer Connected" : "Waiting for Analyzer",
+            remoteConnections: this.remoteConnectionCount()
+          });
+          this.logger.info("tcp", "Socket closed", { analyzer: analyzer.name, details: `${socket.remoteAddress}:${socket.remotePort}` });
+        });
+        socket.on("error", (err) => {
+          this.errors.unshift(err.message);
+          this.updateDiagnostics({ socketState: "Error", lastParserError: err.message, parserError: err.message });
+          this.logger.error("tcp", "Socket error", { analyzer: analyzer.name, details: `${socket.remoteAddress}:${socket.remotePort}; ${err.message}` });
+        });
         this.handleSocket(socket, analyzer, { mode: "TCP Server", remote: `${socket.remoteAddress}:${socket.remotePort}` });
       });
       server.on("error", (err) => {
         this.errors.unshift(err.message);
-        this.updateDiagnostics({ socketState: "Disconnected" });
+        this.updateDiagnostics({ socketState: "Error", listening: false });
         this.logger.error("tcp", err.message, { analyzer: analyzer.name });
         reject(err);
       });
@@ -240,13 +301,18 @@ class ListenerService {
           analyzerIp: this.analyzerHost(analyzer),
           analyzerPort: this.analyzerPort(analyzer),
           tcpMode: "TCP Server",
-          socketState: "Waiting for result",
-          connectionInfo: `${host}:${port}`
+          socketState: "Waiting for Analyzer",
+          connectionInfo: `${host}:${port}`,
+          listening: true,
+          listeningPid: process.pid,
+          bindAddress: `${host}:${port}`,
+          remoteConnections: this.remoteConnectionCount()
         });
         this.logger.info("tcp", `Listening on ${host}:${port}`, { analyzer: analyzer.name });
-        this.servers.set(this.analyzerKey(analyzer), server);
+        this.servers.set(key, server);
         resolve();
       });
+      }).catch(reject);
     });
   }
 
@@ -256,19 +322,28 @@ class ListenerService {
 
     socket.on("data", async (chunk) => {
       const remote = context.remote || `${socket.remoteAddress}:${socket.remotePort}`;
+      const firstByte = new Date().toISOString();
+      const detectedProtocol = this.detectProtocol(chunk);
+      const framing = framingType(chunk);
       this.updateDiagnostics({
-        socketState: "Message received",
-        lastReceivedByteTime: new Date().toISOString(),
+        socketState: "Receiving Data",
+        lastReceivedByteTime: firstByte,
         lastRawMessage: this.rawText(chunk),
         connectionInfo: remote,
-        tcpMode: context.mode || displayConnectionMode(this.connectionMode(analyzer))
+        tcpMode: context.mode || displayConnectionMode(this.connectionMode(analyzer)),
+        framingType: framing,
+        parserSelected: detectedProtocol,
+        remoteConnections: this.remoteConnectionCount()
       });
+      this.logger.info("tcp", "First byte received", { analyzer: analyzer.name, details: firstByte });
       this.logger.rawPacket(chunk, {
         analyzer: analyzer.name,
         remote,
         mode: context.mode || displayConnectionMode(this.connectionMode(analyzer)),
         analyzerIp: this.analyzerHost(analyzer),
-        analyzerPort: this.analyzerPort(analyzer)
+        analyzerPort: this.analyzerPort(analyzer),
+        framing,
+        protocol: detectedProtocol
       });
       this.logger.info("tcp", "Raw bytes received", {
         analyzer: analyzer.name,
@@ -282,15 +357,21 @@ class ListenerService {
       handling = true;
       for (const rawMessage of extracted.messages) {
         const protocol = this.detectProtocol(rawMessage);
-        this.logger.info("message", "Message type detected", { analyzer: analyzer.name, details: protocol });
+        this.updateDiagnostics({ socketState: "Parsing", framingType: framingType(rawMessage), parserSelected: protocol });
+        this.logger.info("message", "Message framing detected", { analyzer: analyzer.name, details: framingType(rawMessage) });
+        this.logger.info("message", `Detected protocol: ${protocol}`, { analyzer: analyzer.name, details: protocol });
+        if (protocol === "HL7" && analyzer.sendAck !== false && analyzer.ackMode === "immediate") {
+          socket.write(buildAck(rawMessage, "AA"));
+          this.logger.info("tcp", "ACK sent", { analyzer: analyzer.name, details: "AA immediate" });
+        }
         const result = await this.handleMessage(rawMessage, analyzer, { remote, mode: context.mode });
-        if (protocol === "HL7") {
+        if (protocol === "HL7" && analyzer.sendAck !== false && analyzer.ackMode !== "immediate") {
           socket.write(buildAck(rawMessage, result.ok ? "AA" : "AE"));
           this.logger.info("tcp", "ACK sent", { analyzer: analyzer.name, details: result.ok ? "AA" : "AE" });
         }
       }
       handling = false;
-      if (!socket.destroyed) this.updateDiagnostics({ socketState: "Waiting for result" });
+      if (!socket.destroyed) this.updateDiagnostics({ socketState: "Waiting for Analyzer" });
     });
 
     socket.on("close", async () => {
@@ -344,7 +425,7 @@ class ListenerService {
       }
       this.bumpTodayCount();
       this.lastMessageAt = new Date().toISOString();
-      this.updateDiagnostics({ lastParserError: "" });
+      this.updateDiagnostics({ lastParserError: "", parserError: "", socketState: "Uploaded" });
       this.logger.info("message", "Imported analyzer result", {
         analyzer: analyzer.name,
         patient: parsed.patientName,
@@ -354,7 +435,7 @@ class ListenerService {
       return { ok: true, parsed };
     } catch (err) {
       this.errors.unshift(err.message);
-      this.updateDiagnostics({ lastParserError: err.message });
+      this.updateDiagnostics({ lastParserError: err.message, parserError: err.message, socketState: "Error" });
       this.logger.rawParserError(rawText, err.message, {
         analyzer: analyzer.name,
         protocol,
@@ -370,6 +451,8 @@ class ListenerService {
   }
 
   detectProtocol(message) {
+    const bytes = Buffer.isBuffer(message) ? message : Buffer.from(String(message || ""), "utf8");
+    if ([...bytes].some((byte) => ASTM_CONTROL_BYTES.has(byte)) && !/(^|\r|\n)MSH\|/.test(this.rawText(message))) return "ASTM";
     const clean = stripMllp(this.rawText(message)).replace(/[\x02\x03\x04\x05\x06\x15\x17]/g, "").trim();
     if (/(^|\r|\n)MSH\|/.test(clean)) return "HL7";
     if (/(^|\r|\n)\d?[HPOCRL]\|/.test(clean)) return "ASTM";
@@ -437,6 +520,10 @@ class ListenerService {
 
   localListenerPort(analyzer = {}) {
     return Number(analyzer.localListenerPort ?? analyzer.localPort ?? analyzer.port ?? 5001);
+  }
+
+  remoteConnectionCount() {
+    return [...this.serverSockets.values()].reduce((total, sockets) => total + sockets.size, 0);
   }
 
   analyzerKey(analyzer = {}) {

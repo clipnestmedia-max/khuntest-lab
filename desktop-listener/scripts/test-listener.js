@@ -49,8 +49,11 @@ async function testTcpServerMode() {
 
     const socket = net.createConnection(address.port, "127.0.0.1");
     await once(socket, "connect");
+    let ack = "";
+    socket.on("data", (chunk) => { ack += chunk.toString("utf8"); });
     socket.write(Buffer.from(`\x0b${hl7.trim()}\x1c\r`, "utf8"));
     await waitFor(() => uploaded.length === 1, 2500, "Inbound HL7 message was not parsed and uploaded.");
+    await waitFor(() => ack.includes("MSA|AA|"), 2500, "HL7 ACK was not returned to the client.");
     if (!uploaded[0].parsed?.results?.length) throw new Error("Uploaded payload did not include parsed HL7 results.");
     socket.end();
   } finally {

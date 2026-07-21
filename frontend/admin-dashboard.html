@@ -302,6 +302,11 @@
         <span>Last error: <strong id="adminDebugLastError">none</strong></span>
         <span>Current URL: <strong id="adminDebugUrl">-</strong></span>
         <span>Firebase projectId: <strong id="adminDebugProject">khuntest-lab-e5966</strong></span>
+        <span>Machine collection: <strong id="adminDebugMachineCollection">machineResults</strong></span>
+        <span>Machine filters: <strong id="adminDebugMachineFilters">orderBy receivedAt desc</strong></span>
+        <span>Machine snapshot: <strong id="adminDebugMachineSnapshot">never</strong></span>
+        <span>Machine docs: <strong id="adminDebugMachineDocs">0</strong></span>
+        <span>Machine error: <strong id="adminDebugMachineError">none</strong></span>
       </div>
     </div>
     </div>
@@ -359,7 +364,16 @@ let onlineBookings = [];
 let adminNotifications = [];
 let onlineBookingsUnsub = null;
 let notificationsUnsub = null;
+let machineResultsUnsub = null;
 let onlineBookingsListenerRegistrations = 0;
+let machineResultsListenerRegistrations = 0;
+let machineResultsDebug = {
+  collectionPath: "machineResults",
+  queryFilters: "orderBy receivedAt desc",
+  lastSnapshotTime: "",
+  snapshotDocumentCount: 0,
+  lastFirestoreError: ""
+};
 let reportEntryRenderCount = 0;
 let lastReportEntryDedupeStats = { raw: 0, unique: 0, removed: 0, duplicateBills: [] };
 let seenNotificationIds = new Set(JSON.parse(localStorage.getItem("khuntest_seen_notifications") || "[]"));
@@ -743,6 +757,26 @@ function listenRealtimeAdminCollections() {
       renderNotificationBadge();
       showLatestOnlineBookingToast();
     }, (err) => console.warn("Notifications listener failed", err));
+  }
+  if (!machineResultsUnsub) {
+    machineResultsListenerRegistrations += 1;
+    console.debug("[AdminRealtimeListeners]", { machineResultsRegistrations: machineResultsListenerRegistrations });
+    machineResultsUnsub = onSnapshot(query(collection(db, "machineResults"), orderBy("receivedAt", "desc")), (snap) => {
+      machineResults = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+      machineResultsDebug = {
+        ...machineResultsDebug,
+        lastSnapshotTime: new Date().toISOString(),
+        snapshotDocumentCount: snap.docs.length,
+        lastFirestoreError: ""
+      };
+      renderMachineResultsPanel();
+      renderDebugPanel();
+    }, (err) => {
+      machineResultsDebug = { ...machineResultsDebug, lastFirestoreError: err.message || String(err) };
+      lastFirestoreError = machineResultsDebug.lastFirestoreError;
+      renderDebugPanel();
+      showAdminError(`machineResults listener: ${machineResultsDebug.lastFirestoreError}`);
+    });
   }
 }
 
@@ -1283,7 +1317,12 @@ function updateAdminDebugBox() {
     adminDebugTestSource: lastAdminTestSource,
     adminDebugLastError: lastFirestoreError || window.lastAdminTestError || lastTestLoadingError || "none",
     adminDebugUrl: window.location.href,
-    adminDebugProject: "khuntest-lab-e5966"
+    adminDebugProject: "khuntest-lab-e5966",
+    adminDebugMachineCollection: machineResultsDebug.collectionPath,
+    adminDebugMachineFilters: machineResultsDebug.queryFilters,
+    adminDebugMachineSnapshot: machineResultsDebug.lastSnapshotTime ? createdText(machineResultsDebug.lastSnapshotTime) : "never",
+    adminDebugMachineDocs: machineResultsDebug.snapshotDocumentCount,
+    adminDebugMachineError: machineResultsDebug.lastFirestoreError || "none"
   };
   Object.entries(values).forEach(([id, value]) => {
     const el = document.getElementById(id);
@@ -1411,7 +1450,7 @@ function renderDebugPanel() {
     debugJsonTestsCount: testInfo.jsonCount || 0,
     debugBookingsCount: firebaseBookings.length,
     debugReportsCount: firebaseReports.length,
-    debugFirestoreError: lastFirestoreError || "none",
+    debugFirestoreError: lastFirestoreError || machineResultsDebug.lastFirestoreError || "none",
     debugTestLoadError: lastTestLoadingError || testInfo.error || "none"
   };
   Object.entries(values).forEach(([id, value]) => {
