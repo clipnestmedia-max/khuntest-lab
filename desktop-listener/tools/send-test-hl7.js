@@ -2,13 +2,13 @@
 
 const net = require("net");
 
-const host = process.argv[2] || "10.0.0.3";
+const host = process.argv[2] || "127.0.0.1";
 const port = Number(process.argv[3] || 5001);
 
 const segments = [
-  "MSH|^~\\&|MINDRAY|BC5000|KHUNTEST-LIS|KHUNTEST|20260721120000||ORU^R01|TEST001|P|2.3.1",
+  "MSH|^~\\&|MINDRAY|BC5000|KHUNTEST-LIS|KHUNTEST|20260721120000||ORU^R01|TEST-BC5000-001|P|2.3.1",
   "PID|1||TEST-PID-001||PATIENT^TEST||19900101|U",
-  "OBR|1|TEST-001|TEST-001|CBC^Complete Blood Count|||20260721115900",
+  "OBR|1|TEST-BC5000-001|TEST-BC5000-001|CBC^Complete Blood Count|||20260721115900|||||||||||||||||||||TEST",
   "OBX|1|NM|WBC^WBC Count||7.2|10^9/L|4.0-10.0|N",
   "OBX|2|NM|RBC^RBC Count||4.81|10^12/L|4.00-5.50|N",
   "OBX|3|NM|HGB^Haemoglobin||13.8|g/dL|12.0-16.0|N",

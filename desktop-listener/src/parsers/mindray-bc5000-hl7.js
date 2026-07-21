@@ -70,6 +70,9 @@ function parseHL7(rawMessage, analyzer = {}) {
     billNo: "",
     patientName: "",
     patientId: "",
+    gender: "",
+    dateOfBirth: "",
+    age: "",
     testDate: "",
     analyzerName: analyzer.name || "",
     results: [],
@@ -87,6 +90,8 @@ function parseHL7(rawMessage, analyzer = {}) {
     if (type === "PID") {
       parsed.patientId = fields[3] || fields[2] || "";
       parsed.patientName = parsePatientName(fields[5] || "");
+      parsed.dateOfBirth = parseHl7Date(fields[7] || "");
+      parsed.gender = fields[8] || "";
     }
     if (type === "OBR") {
       parsed.sampleId = fields[3] || fields[2] || parsed.sampleId;
@@ -108,6 +113,7 @@ function parseHL7(rawMessage, analyzer = {}) {
         value: fields[5] || "",
         unit: fields[6] || "",
         normalRange: fields[7] || "",
+        referenceRange: fields[7] || "",
         abnormalFlag: fields[8] || ""
       });
     }

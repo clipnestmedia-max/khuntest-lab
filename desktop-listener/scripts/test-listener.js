@@ -21,6 +21,7 @@ async function testTcpServerMode() {
   const originalCreateConnection = net.createConnection;
   let createConnectionCalls = 0;
   const uploaded = [];
+  const rawPackets = [];
   const service = serviceFor([{
     id: "server-test",
     name: "Server Test",
@@ -32,7 +33,7 @@ async function testTcpServerMode() {
     analyzerIp: "",
     analyzerPort: 5001,
     enabled: true
-  }], uploaded);
+  }], uploaded, rawPackets);
 
   try {
     net.createConnection = function blockedCreateConnection() {
@@ -55,6 +56,8 @@ async function testTcpServerMode() {
     await waitFor(() => uploaded.length === 1, 2500, "Inbound HL7 message was not parsed and uploaded.");
     await waitFor(() => ack.includes("MSA|AA|"), 2500, "HL7 ACK was not returned to the client.");
     if (!uploaded[0].parsed?.results?.length) throw new Error("Uploaded payload did not include parsed HL7 results.");
+    if (!rawPackets.length) throw new Error("Raw message was not saved before parsing.");
+    if (!uploaded[0].rawMessagePath) throw new Error("Uploaded payload did not include raw message path.");
     socket.end();
   } finally {
     net.createConnection = originalCreateConnection;
@@ -89,22 +92,26 @@ async function testTcpClientValidation() {
   }
 }
 
-function serviceFor(analyzers, uploaded) {
+function serviceFor(analyzers, uploaded, rawPackets = []) {
   return new ListenerService(
     { get: (key, fallback) => (key === "analyzers" ? analyzers : fallback) },
     { uploadMachineResult: async (payload) => uploaded.push(payload) },
     { enqueue: async () => {} },
-    fakeLogger()
+    fakeLogger(rawPackets)
   );
 }
 
-function fakeLogger() {
+function fakeLogger(rawPackets = []) {
   return {
     info() {},
     warn() {},
     error() {},
-    rawPacket() {},
-    rawParserError() {}
+    rawPacket(buffer) {
+      rawPackets.push(buffer);
+      return { ok: true, binaryPath: `/tmp/raw-${rawPackets.length}.bin` };
+    },
+    rawParserError() {},
+    rawParserOutcome() {}
   };
 }
 

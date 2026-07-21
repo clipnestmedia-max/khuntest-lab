@@ -1,5 +1,6 @@
 "use strict";
 
+const crypto = require("crypto");
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
 const {
@@ -81,49 +82,78 @@ class FirebaseService {
 
   async uploadMachineResult(item) {
     if (!this.clientDb && !this.db) throw new Error("Firebase is not connected. Login first.");
-    const { rawMessage, parsed, analyzer } = item.payload || item;
+    if (!this.user && !this.db) throw new Error("Firebase user is not authenticated. Login first.");
+    const { rawMessage, parsed, analyzer, rawMessagePath } = item.payload || item;
     const labId = this.appStore.get("lab.labId", "KHUNTEST-LAB");
+    const analyzerId = analyzer?.id || "mindray-bc5000";
+    const resultTimestamp = parsed.testDate || parsed.resultTimestamp || "";
+    const dedupeKey = deterministicMachineResultId({
+      analyzerId,
+      sampleId: parsed.sampleId || parsed.billNo || "",
+      resultTimestamp,
+      rawMessage
+    });
     this.logger.info("firebase", "Firestore upload start", {
       analyzer: analyzer?.name || parsed.analyzerName,
       sample: parsed.sampleId,
-      details: `collection=machineResults; labId=${labId}`
+      details: `collection=machineResults; labId=${labId}; document=${dedupeKey}`
     });
     const booking = await this.findBooking(parsed);
+    const parameters = normalizeParameters(parsed.results || []);
     const machineDoc = {
       source: analyzer?.name || parsed.source || "Mindray BC-5000",
+      analyzerId,
       analyzerModel: analyzer?.model || parsed.analyzerModel || "BC-5000",
+      analyzerIp: analyzer?.analyzerIp || "",
       protocol: parsed.protocol || analyzer?.protocol || "HL7",
       sampleId: parsed.sampleId || "",
       billNo: parsed.billNo || parsed.sampleId || "",
       patientName: parsed.patientName || "",
       patientId: parsed.patientId || "",
+      gender: parsed.gender || "",
+      dateOfBirth: parsed.dateOfBirth || "",
+      age: parsed.age || "",
       testDate: parsed.testDate || "",
+      resultTimestamp,
       analyzerName: parsed.analyzerName || analyzer?.name || "Mindray BC-5000",
       labId,
       receivedAt: this.timestamp(),
-      status: "received",
+      updatedAt: this.timestamp(),
+      status: "draft",
       matchStatus: booking ? "matched" : "unmatched",
       bookingId: booking?.id || "",
+      createdByListener: true,
+      dedupeKey,
       rawMessage,
-      rawMessageRef: "",
+      rawMessageRef: rawMessagePath || "",
+      rawMessagePath: rawMessagePath || "",
+      parameters,
       parsedResults: parsed.results || []
     };
-    const machineRef = await this.add("machineResults", machineDoc);
-    if (booking) await this.createDraftReport(machineRef.id, booking, parsed);
+    await this.set("machineResults", dedupeKey, machineDoc, { merge: true });
+    if (booking) await this.createDraftReport(dedupeKey, booking, parsed);
     this.lastSyncTime = new Date().toISOString();
     this.logger.info("firebase", "Uploaded machine result", {
       analyzer: machineDoc.analyzerName,
       patient: machineDoc.patientName,
       sample: machineDoc.sampleId,
-      details: `collection=machineResults; document=${machineRef.id}`
+      details: `collection=machineResults; document=${dedupeKey}`
     });
-    return { ok: true, machineResultId: machineRef.id, matched: Boolean(booking), bookingId: booking?.id || "" };
+    return { ok: true, machineResultId: dedupeKey, matched: Boolean(booking), bookingId: booking?.id || "", dedupeKey };
   }
 
   async findBooking(parsed) {
-    const candidates = [parsed.billNo, parsed.sampleId].filter(Boolean).map(String);
-    for (const value of candidates) {
-      const rows = await this.queryBy("bookings", "billNo", value);
+    const candidates = [
+      { field: "sampleId", value: parsed.sampleId },
+      { field: "billNo", value: parsed.billNo },
+      { field: "billNo", value: parsed.sampleId }
+    ].filter((row) => row.value).map((row) => ({ ...row, value: String(row.value) }));
+    const seen = new Set();
+    for (const candidate of candidates) {
+      const key = `${candidate.field}:${candidate.value}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const rows = await this.queryBy("bookings", candidate.field, candidate.value);
       if (rows.length) return rows[0];
     }
     return null;
@@ -197,6 +227,27 @@ class FirebaseService {
   }
 }
 
+function deterministicMachineResultId({ analyzerId, sampleId, resultTimestamp, rawMessage }) {
+  const hash = crypto.createHash("sha256").update(String(rawMessage || ""), "utf8").digest("hex").slice(0, 24);
+  const readable = [analyzerId || "analyzer", sampleId || "no-sample", resultTimestamp || "no-time"]
+    .join("-")
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 96);
+  return `${readable}-${hash}`;
+}
+
+function normalizeParameters(rows) {
+  return rows.map((row) => ({
+    code: row.code || "",
+    name: row.name || row.khunTestName || row.code || "Result",
+    value: row.value || "",
+    unit: row.unit || "",
+    referenceRange: row.referenceRange || row.normalRange || "",
+    flag: row.flag || row.abnormalFlag || ""
+  }));
+}
+
 function mapMachineResultsToReport(parsed) {
   return (parsed.results || []).map((row) => ({
     category: "HAEMATOLOGY",
@@ -213,4 +264,4 @@ function mapMachineResultsToReport(parsed) {
   }));
 }
 
-module.exports = { FirebaseService, mapMachineResultsToReport };
+module.exports = { FirebaseService, mapMachineResultsToReport, deterministicMachineResultId, normalizeParameters };

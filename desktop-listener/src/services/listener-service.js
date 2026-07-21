@@ -105,7 +105,7 @@ class ListenerService {
       analyzerIp: "10.0.0.2",
       analyzerPort: 5001,
       tcpMode: "TCP Client",
-      socketState: "Listener Ready",
+      socketState: "Listener ready",
       lastReceivedByteTime: "",
       lastRawMessage: "",
       lastParserError: "",
@@ -148,7 +148,7 @@ class ListenerService {
     this.reconnectTimers.clear();
     this.running = false;
     this.analyzerConnected = false;
-    this.updateDiagnostics({ socketState: "Listener Ready", connectionInfo: "", listening: false, bindAddress: "", remoteConnections: 0 });
+    this.updateDiagnostics({ socketState: "Listener stopped", connectionInfo: "", listening: false, bindAddress: "", remoteConnections: 0 });
   }
 
   async stopCurrentTransport(key) {
@@ -190,7 +190,7 @@ class ListenerService {
         analyzerIp: host || "",
         analyzerPort: port,
         tcpMode: "TCP Client",
-        socketState: "Disconnected",
+        socketState: "Listener stopped",
         lastParserError: message,
         connectionInfo: ""
       });
@@ -211,22 +211,22 @@ class ListenerService {
 
     socket.on("connect", () => {
       this.analyzerConnected = true;
-      this.updateDiagnostics({ socketState: "Connected", connectionInfo: `${host}:${port}` });
+      this.updateDiagnostics({ socketState: "Analyzer connected", connectionInfo: `${host}:${port}` });
       this.logger.info("tcp", "TCP connection established", { analyzer: analyzer.name, details: `${host}:${port}` });
       this.handleSocket(socket, analyzer, { mode: "TCP Client", remote: `${host}:${port}` });
-      this.updateDiagnostics({ socketState: "Waiting for Analyzer" });
+      this.updateDiagnostics({ socketState: "Waiting for analyzer" });
     });
 
     socket.on("error", (err) => {
       this.errors.unshift(err.message);
-      this.updateDiagnostics({ lastParserError: "", socketState: "Disconnected" });
+      this.updateDiagnostics({ lastParserError: "", socketState: "Listener stopped" });
       this.logger.error("tcp", err.message, { analyzer: analyzer.name, details: `${host}:${port}` });
     });
 
     socket.on("close", () => {
       this.sockets.delete(key);
       this.analyzerConnected = false;
-      this.updateDiagnostics({ socketState: "Disconnected" });
+      this.updateDiagnostics({ socketState: "Listener stopped" });
       this.logger.info("tcp", "Analyzer disconnected", { analyzer: analyzer.name, details: `${host}:${port}` });
       if (this.running && analyzer.reconnectAutomatically !== false) this.scheduleReconnect(analyzer, attempt + 1);
     });
@@ -266,7 +266,7 @@ class ListenerService {
           analyzerIp: socket.remoteAddress || this.analyzerHost(analyzer),
           analyzerPort: socket.remotePort || this.analyzerPort(analyzer),
           tcpMode: "TCP Server",
-          socketState: "Analyzer Connected",
+          socketState: "Analyzer connected",
           connectionInfo: `${socket.remoteAddress}:${socket.remotePort}`,
           remoteConnections: this.remoteConnectionCount()
         });
@@ -278,21 +278,21 @@ class ListenerService {
           this.serverSockets.get(key)?.delete(socket);
           this.analyzerConnected = this.remoteConnectionCount() > 0;
           this.updateDiagnostics({
-            socketState: this.analyzerConnected ? "Analyzer Connected" : "Waiting for Analyzer",
+            socketState: this.analyzerConnected ? "Analyzer connected" : "Waiting for analyzer",
             remoteConnections: this.remoteConnectionCount()
           });
           this.logger.info("tcp", "Socket closed", { analyzer: analyzer.name, details: `${socket.remoteAddress}:${socket.remotePort}` });
         });
         socket.on("error", (err) => {
           this.errors.unshift(err.message);
-          this.updateDiagnostics({ socketState: "Error", lastParserError: err.message, parserError: err.message });
+          this.updateDiagnostics({ socketState: "Parse error", lastParserError: err.message, parserError: err.message });
           this.logger.error("tcp", "Socket error", { analyzer: analyzer.name, details: `${socket.remoteAddress}:${socket.remotePort}; ${err.message}` });
         });
         this.handleSocket(socket, analyzer, { mode: "TCP Server", remote: `${socket.remoteAddress}:${socket.remotePort}` });
       });
       server.on("error", (err) => {
         this.errors.unshift(err.message);
-        this.updateDiagnostics({ socketState: "Error", listening: false });
+        this.updateDiagnostics({ socketState: "Listener stopped", listening: false });
         this.logger.error("tcp", err.message, { analyzer: analyzer.name });
         reject(err);
       });
@@ -301,7 +301,7 @@ class ListenerService {
           analyzerIp: this.analyzerHost(analyzer),
           analyzerPort: this.analyzerPort(analyzer),
           tcpMode: "TCP Server",
-          socketState: "Waiting for Analyzer",
+          socketState: "Waiting for analyzer",
           connectionInfo: `${host}:${port}`,
           listening: true,
           listeningPid: process.pid,
@@ -326,7 +326,7 @@ class ListenerService {
       const detectedProtocol = this.detectProtocol(chunk);
       const framing = framingType(chunk);
       this.updateDiagnostics({
-        socketState: "Receiving Data",
+        socketState: "Receiving data",
         lastReceivedByteTime: firstByte,
         lastRawMessage: this.rawText(chunk),
         connectionInfo: remote,
@@ -336,7 +336,7 @@ class ListenerService {
         remoteConnections: this.remoteConnectionCount()
       });
       this.logger.info("tcp", "First byte received", { analyzer: analyzer.name, details: firstByte });
-      this.logger.rawPacket(chunk, {
+      const rawCapture = this.logger.rawPacket(chunk, {
         analyzer: analyzer.name,
         remote,
         mode: context.mode || displayConnectionMode(this.connectionMode(analyzer)),
@@ -361,17 +361,15 @@ class ListenerService {
         this.logger.info("message", "Message framing detected", { analyzer: analyzer.name, details: framingType(rawMessage) });
         this.logger.info("message", `Detected protocol: ${protocol}`, { analyzer: analyzer.name, details: protocol });
         if (protocol === "HL7" && analyzer.sendAck !== false && analyzer.ackMode === "immediate") {
-          socket.write(buildAck(rawMessage, "AA"));
-          this.logger.info("tcp", "ACK sent", { analyzer: analyzer.name, details: "AA immediate" });
+          this.sendAck(socket, rawMessage, analyzer, "AA", "immediate");
         }
-        const result = await this.handleMessage(rawMessage, analyzer, { remote, mode: context.mode });
+        const result = await this.handleMessage(rawMessage, analyzer, { remote, mode: context.mode, rawMessagePath: rawCapture?.binaryPath || "" });
         if (protocol === "HL7" && analyzer.sendAck !== false && analyzer.ackMode !== "immediate") {
-          socket.write(buildAck(rawMessage, result.ok ? "AA" : "AE"));
-          this.logger.info("tcp", "ACK sent", { analyzer: analyzer.name, details: result.ok ? "AA" : "AE" });
+          this.sendAck(socket, rawMessage, analyzer, result.ok ? "AA" : "AE", "after-parse");
         }
       }
       handling = false;
-      if (!socket.destroyed) this.updateDiagnostics({ socketState: "Waiting for Analyzer" });
+      if (!socket.destroyed) this.updateDiagnostics({ socketState: "Waiting for analyzer" });
     });
 
     socket.on("close", async () => {
@@ -389,6 +387,24 @@ class ListenerService {
     });
   }
 
+  sendAck(socket, rawMessage, analyzer, ackCode, mode) {
+    try {
+      const ack = buildAck(rawMessage, ackCode);
+      this.logger.info("tcp", "ACK generated", { analyzer: analyzer.name, details: `${ackCode} ${mode || ""}`.trim() });
+      socket.write(ack, (err) => {
+        if (err) {
+          this.errors.unshift(err.message);
+          this.logger.error("tcp", "ACK failed", { analyzer: analyzer.name, details: err.message });
+          return;
+        }
+        this.logger.info("tcp", "ACK sent", { analyzer: analyzer.name, details: `${ackCode} ${mode || ""}`.trim() });
+      });
+    } catch (err) {
+      this.errors.unshift(err.message);
+      this.logger.error("tcp", "ACK failed", { analyzer: analyzer.name, details: err.message });
+    }
+  }
+
   async handleMessage(rawMessage, analyzer, context = {}) {
     const rawText = this.rawText(rawMessage);
     const protocol = this.detectProtocol(rawMessage);
@@ -400,42 +416,64 @@ class ListenerService {
         rawMessage: rawText
       });
       const parsed = this.parseMessage(rawMessage, analyzer);
+      if (this.logger.rawParserOutcome) {
+        this.logger.rawParserOutcome(context.rawMessagePath, {
+          analyzer: analyzer.name,
+          protocol,
+          parserResult: "parsed",
+          sample: parsed.sampleId,
+          resultCount: parsed.results.length
+        });
+      }
       this.logger.info("message", `${protocol} parsed`, {
         analyzer: analyzer.name,
         patient: parsed.patientName,
         sample: parsed.sampleId,
         details: `${parsed.results.length} results`
       });
-      const payload = { rawMessage: rawText, parsed, analyzer, receivedAt: new Date().toISOString() };
+      const payload = { rawMessage: rawText, rawMessagePath: context.rawMessagePath || "", parsed, analyzer, receivedAt: new Date().toISOString() };
+      let uploaded = false;
       try {
+        this.updateDiagnostics({ socketState: "Uploading" });
         await this.firebase.uploadMachineResult(payload);
+        uploaded = true;
         this.logger.info("firebase", "Firestore upload success", {
           analyzer: analyzer.name,
           sample: parsed.sampleId,
           details: context.remote || ""
         });
       } catch (err) {
-        await this.queue.enqueue(payload, err.message);
+        const errorDetails = `${err.code ? `${err.code}: ` : ""}${err.message || String(err)}`;
+        await this.queue.enqueue(payload, errorDetails);
+        this.updateDiagnostics({ socketState: "Firebase error", lastParserError: errorDetails, parserError: errorDetails });
         this.logger.error("firebase", "Firestore upload failure", {
           analyzer: analyzer.name,
           sample: parsed.sampleId,
-          details: err.message,
+          details: errorDetails,
           rawMessage: rawText
         });
       }
       this.bumpTodayCount();
       this.lastMessageAt = new Date().toISOString();
-      this.updateDiagnostics({ lastParserError: "", parserError: "", socketState: "Uploaded" });
+      if (uploaded) this.updateDiagnostics({ lastParserError: "", parserError: "", socketState: "Uploaded" });
       this.logger.info("message", "Imported analyzer result", {
         analyzer: analyzer.name,
         patient: parsed.patientName,
         sample: parsed.sampleId,
         details: `${parsed.results.length} results`
       });
-      return { ok: true, parsed };
+      return { ok: uploaded, parsed };
     } catch (err) {
       this.errors.unshift(err.message);
-      this.updateDiagnostics({ lastParserError: err.message, parserError: err.message, socketState: "Error" });
+      this.updateDiagnostics({ lastParserError: err.message, parserError: err.message, socketState: "Parse error" });
+      if (this.logger.rawParserOutcome) {
+        this.logger.rawParserOutcome(context.rawMessagePath, {
+          analyzer: analyzer.name,
+          protocol,
+          parserResult: "error",
+          parserError: err.message
+        });
+      }
       this.logger.rawParserError(rawText, err.message, {
         analyzer: analyzer.name,
         protocol,
@@ -507,7 +545,7 @@ class ListenerService {
   }
 
   connectionMode(analyzer = {}) {
-    return normalizeConnectionMode(analyzer.connectionMode || (analyzer.id === "mindray-bc5000" ? "tcp-client" : "tcp-server"));
+    return normalizeConnectionMode(analyzer.connectionMode || "tcp-server");
   }
 
   analyzerHost(analyzer = {}) {

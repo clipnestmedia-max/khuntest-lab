@@ -18,6 +18,9 @@ function parseASTM(rawMessage, analyzer = {}) {
     billNo: "",
     patientName: "",
     patientId: "",
+    gender: "",
+    dateOfBirth: "",
+    age: "",
     testDate: "",
     analyzerName: analyzer.name || "Mindray BC-5000",
     results: [],
@@ -49,6 +52,7 @@ function parseASTM(rawMessage, analyzer = {}) {
         value: fields[3] || "",
         unit: fields[4] || "",
         normalRange: fields[5] || "",
+        referenceRange: fields[5] || "",
         abnormalFlag: fields[6] || ""
       });
     }

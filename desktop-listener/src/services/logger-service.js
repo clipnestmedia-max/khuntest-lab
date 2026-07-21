@@ -6,6 +6,7 @@ const path = require("path");
 class LoggerService {
   constructor(userDataPath) {
     this.logDir = path.join(userDataPath, "logs");
+    this.rawDataDir = path.join(userDataPath, "desktop-listener-data", "raw");
     this.rawMessagesFile = path.join(this.logDir, "raw-messages.log");
     this.lines = [];
     fs.mkdirSync(this.logDir, { recursive: true });
@@ -45,7 +46,7 @@ class LoggerService {
     const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(String(buffer || ""), "utf8");
     const rawText = bytes.toString("utf8");
     const date = new Date().toISOString();
-    const dayDir = path.join(this.logDir, "raw", date.slice(0, 10));
+    const dayDir = path.join(this.rawDataDir, date.slice(0, 10));
     fs.mkdirSync(dayDir, { recursive: true });
     const safeRemote = String(meta.remote || "unknown").replace(/[^a-zA-Z0-9_.-]/g, "_");
     const binaryPath = path.join(dayDir, `${date.replace(/[:.]/g, "-")}-${safeRemote}-${bytes.length}.bin`);
@@ -72,6 +73,21 @@ class LoggerService {
       details: row.remote,
       rawMessage: rawText
     });
+    return { ok: true, binaryPath, row };
+  }
+
+  rawParserOutcome(rawPath, outcome = {}) {
+    const row = {
+      date: new Date().toISOString(),
+      rawPath: rawPath || "",
+      analyzer: outcome.analyzer || "",
+      protocol: outcome.protocol || "",
+      parserResult: outcome.parserResult || "",
+      parserError: outcome.parserError || "",
+      sample: outcome.sample || "",
+      resultCount: outcome.resultCount || 0
+    };
+    fs.appendFileSync(this.rawMessagesFile, JSON.stringify(row) + "\n", "utf8");
   }
 
   rawParserError(rawMessage, error, meta = {}) {
