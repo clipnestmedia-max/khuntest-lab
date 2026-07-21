@@ -1,11 +1,11 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "fileName": "KhunTestLab-Listener-Setup.exe",
-  "downloadUrl": "https://github.com/clipnestmedia-max/khuntest-lab/releases/download/listener-v1.0.4/KhunTestLab-Listener-Setup.exe",
-  "releaseNotesUrl": "https://github.com/clipnestmedia-max/khuntest-lab/releases/tag/listener-v1.0.4",
-  "releasedAt": "2026-07-21T11:25:00Z",
+  "downloadUrl": "https://github.com/clipnestmedia-max/khuntest-lab/releases/download/listener-v1.0.5/KhunTestLab-Listener-Setup.exe",
+  "releaseNotesUrl": "https://github.com/clipnestmedia-max/khuntest-lab/releases/tag/listener-v1.0.5",
+  "releasedAt": "2026-07-21T11:35:00Z",
   "fileSize": "93 MB",
-  "sha256": "a290153dfb74de7652018e187370bea1348c5c855a517dfc823e9314e72745f9",
+  "sha256": "7e0e509fcb2fa3cbb9082a5a625553039d2f58e85c73d0915e612fc3327ea003",
   "minimumWindows": "Windows 10",
   "status": "stable",
   "updateStatus": "Latest stable release"

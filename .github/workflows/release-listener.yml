@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     env:
       INSTALLER_NAME: KhunTestLab-Listener-Setup.exe
       REPO_SLUG: ${{ github.repository }}
@@ -57,30 +57,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PACKAGE_VERSION="$(node -p "require('./desktop-listener/package.json').version")"
-          INPUT_VERSION="${{ github.event.inputs.version || '' }}"
-          VERSION="${INPUT_VERSION:-$PACKAGE_VERSION}"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            VERSION="${GITHUB_REF_NAME#listener-v}"
-          fi
-          TAG="listener-v${VERSION}"
-          ASSET="desktop-listener/dist/${INSTALLER_NAME}"
-          SHA256="$(sha256sum "${ASSET}" | awk '{print $1}')"
-          BYTES="$(stat -c%s "${ASSET}")"
-          SIZE_MB="$(node -e "console.log(Math.round(Number(process.argv[1]) / 1024 / 1024) + ' MB')" "${BYTES}")"
-          RELEASED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          DOWNLOAD_URL="https://github.com/${REPO_SLUG}/releases/download/${TAG}/${INSTALLER_NAME}"
-          NOTES_URL="https://github.com/${REPO_SLUG}/releases/tag/${TAG}"
-          {
-            echo "version=${VERSION}"
-            echo "tag=${TAG}"
-            echo "sha256=${SHA256}"
-            echo "bytes=${BYTES}"
-            echo "file_size=${SIZE_MB}"
-            echo "released_at=${RELEASED_AT}"
-            echo "download_url=${DOWNLOAD_URL}"
-            echo "notes_url=${NOTES_URL}"
-          } >> "${GITHUB_OUTPUT}"
+          node - <<'NODE'
+          const crypto = require("crypto");
+          const fs = require("fs");
+          const path = require("path");
+          const packageVersion = require("./desktop-listener/package.json").version;
+          const inputVersion = process.env.INPUT_VERSION || "";
+          let version = inputVersion || packageVersion;
+          if (process.env.GITHUB_REF_TYPE === "tag") version = String(process.env.GITHUB_REF_NAME || "").replace(/^listener-v/, "");
+          const tag = `listener-v${version}`;
+          const asset = path.join("desktop-listener", "dist", process.env.INSTALLER_NAME);
+          const bytes = fs.statSync(asset).size;
+          const sha256 = crypto.createHash("sha256").update(fs.readFileSync(asset)).digest("hex");
+          const fileSize = `${Math.round(bytes / 1024 / 1024)} MB`;
+          const releasedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+          const downloadUrl = `https://github.com/${process.env.REPO_SLUG}/releases/download/${tag}/${process.env.INSTALLER_NAME}`;
+          const notesUrl = `https://github.com/${process.env.REPO_SLUG}/releases/tag/${tag}`;
+          const lines = {
+            version,
+            tag,
+            sha256,
+            bytes,
+            file_size: fileSize,
+            released_at: releasedAt,
+            download_url: downloadUrl,
+            notes_url: notesUrl
+          };
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, Object.entries(lines).map(([key, value]) => `${key}=${value}`).join("\n") + "\n");
+          NODE
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version || '' }}
 
       - name: Create GitHub Release and upload installer
         uses: softprops/action-gh-release@v2

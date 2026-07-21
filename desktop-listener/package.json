@@ -1,6 +1,6 @@
 {
   "name": "khuntest-lab-listener",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Professional Windows desktop LIS listener for KhunTest Lab analyzers.",
   "main": "src/main/main.js",
   "author": "KhunTest Lab",
