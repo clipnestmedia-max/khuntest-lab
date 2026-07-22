@@ -263,9 +263,11 @@
       border-bottom: 1.2px solid #222;
       padding: 2mm 0 1.5mm;
       display: grid;
-      grid-template-columns: 34mm 1fr 30mm 69mm;
-      gap: 3mm;
+      grid-template-columns: 22mm minmax(74mm, 1fr) 21mm minmax(55mm, 58mm);
+      column-gap: 2mm;
       align-items: center;
+      width: 100%;
+      box-sizing: border-box;
       font-size: 2.85mm;
     }
 
@@ -291,6 +293,8 @@
     .patient-right {
       display: grid;
       gap: 1px;
+      min-width: 0;
+      width: 100%;
     }
 
     .info-line {
@@ -307,11 +311,62 @@
 
     .info-line .value {
       font-weight: 700;
-      word-break: break-word;
+      word-break: normal;
+      overflow-wrap: normal;
     }
 
     .info-line .status {
       font-weight: 900;
+    }
+
+    .patient-name-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .patient-name-label {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .patient-name-separator {
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .patient-name-value {
+      display: inline-block;
+      flex: 1 1 auto;
+      min-width: 0;
+      width: auto;
+      max-width: none;
+      white-space: nowrap;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      hyphens: none;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .patient-name-value.long-patient-name {
+      font-size: 10px;
+      letter-spacing: 0;
+    }
+
+    .report-patient-section .report-patient-details .patient-name-value {
+      width: auto !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      white-space: nowrap !important;
+      word-break: keep-all !important;
+      overflow-wrap: normal !important;
+      hyphens: none !important;
     }
 
     .qr {
@@ -756,6 +811,36 @@
         page-break-inside: avoid;
       }
 
+      .report-patient-section {
+        display: grid !important;
+        grid-template-columns: 22mm minmax(74mm, 1fr) 21mm minmax(55mm, 58mm) !important;
+        column-gap: 2mm !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      .report-patient-details,
+      .report-meta-details {
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+
+      .patient-name-line {
+        display: flex !important;
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      .patient-name-value {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
+        hyphens: none !important;
+      }
+
       a {
         color: #000;
         text-decoration: none;
@@ -1191,6 +1276,7 @@
 
     function patientBlock(report, billNo) {
       const patientName = normalizePatientName(pick(report, ["patientName", "patient_name", "name"], ""));
+      const longPatientNameClass = patientName.length > 24 ? " long-patient-name" : "";
       const age = pick(report, ["age", "patient_age"], "");
       const gender = pick(report, ["gender", "patient_gender"], "");
       const refBy = pick(report, ["refBy", "ref_by", "doctor", "refDoctor", "ref_doctor"], "");
@@ -1200,16 +1286,16 @@
       const status = pick(report, ["reportStatus", "report_status", "status"], "Final");
 
       return `
-        <header class="patient-header">
-          <div class="barcode" aria-hidden="true"></div>
-          <div class="patient-left">
-            <div class="info-line"><span class="label">PATIENT NAME</span><span>:</span><span class="value">${safe(patientName)}</span></div>
+        <header class="patient-header report-patient-section">
+          <div class="barcode report-barcode-column" aria-hidden="true"></div>
+          <div class="patient-left report-patient-details">
+            <div class="info-line patient-name-row patient-name-line"><span class="label patient-name-label">PATIENT NAME</span><span class="patient-name-separator">:</span><span class="value patient-name-value${longPatientNameClass}">${safe(patientName)}</span></div>
             <div class="info-line"><span>Bill No</span><span>:</span><span class="value">${safe(billNo)}</span></div>
             <div class="info-line"><span>Age/Gender</span><span>:</span><span class="value">${safe(age)}${age && gender ? "/" : ""}${safe(gender)}</span></div>
             <div class="info-line"><span class="label">Report Status</span><span>:</span><span class="value status">${safe(status || "Final")}</span></div>
           </div>
-          <div class="qr" aria-hidden="true"></div>
-          <div class="patient-right">
+          <div class="qr report-qr-column" aria-hidden="true"></div>
+          <div class="patient-right report-meta-details">
             <div class="info-line"><span>Registered Date</span><span>:</span><span class="value">${safe(formatDate(registeredDate))}</span></div>
             <div class="info-line"><span>Collection Date</span><span>:</span><span class="value">${safe(formatDate(collectionDate))}</span></div>
             <div class="info-line"><span>Reported Date</span><span>:</span><span class="value">${safe(formatDate(reportedDate))}</span></div>
