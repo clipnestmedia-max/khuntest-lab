@@ -54,6 +54,69 @@ function normalizePatientName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
 }
 
+function normalizeStaffName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function looksLikeEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function safeStaffName(...values) {
+  for (const value of values) {
+    const name = normalizeStaffName(value);
+    if (name && !looksLikeEmail(name)) return name;
+  }
+  return "";
+}
+
+function profileStaffName(profile = {}, user = null) {
+  return safeStaffName(
+    profile.name,
+    profile.displayName,
+    profile.fullName,
+    profile.staffName,
+    profile.labAttendantName,
+    user?.displayName
+  );
+}
+
+async function currentStaffIdentity() {
+  const user = auth.currentUser;
+  if (!user) return { uid: "", name: "" };
+  const snap = await getDoc(doc(db, C.users, user.uid)).catch(() => null);
+  const profile = snap?.exists() ? snap.data() : {};
+  return {
+    uid: user.uid,
+    name: profileStaffName(profile, user)
+  };
+}
+
+async function resolveLabAttendantName(source = {}) {
+  const direct = safeStaffName(
+    source.labAttendantName,
+    source.staffName,
+    source.createdByName,
+    source.resolvedLabAttendantName
+  );
+  if (direct) return direct;
+
+  const user = auth.currentUser;
+  const currentName = user ? profileStaffName({}, user) : "";
+  if (currentName) return currentName;
+
+  const uid = String(source.createdByUid || source.createdBy || "").trim();
+  if (uid && !looksLikeEmail(uid)) {
+    const snap = await getDoc(doc(db, C.users, uid)).catch(() => null);
+    if (snap?.exists()) {
+      const profileName = profileStaffName(snap.data());
+      if (profileName) return profileName;
+    }
+  }
+
+  return "KhunTest Lab Staff";
+}
+
 function billNo() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
@@ -262,6 +325,7 @@ function billSnapshot(data, existing = null) {
   const amountPaid = Number(data.amountPaid ?? data.paidAmount ?? (Number(data.cashReceived || 0) + Number(data.cardReceived || 0)));
   const balanceDue = Number(data.balanceDue ?? data.dueAmount ?? Math.max(grandTotal - amountPaid, 0));
   const billNumber = existing?.billNo || data.customerBillNo || data.billNo || data.bookingId || billNo();
+  const labAttendantName = safeStaffName(data.labAttendantName, data.staffName, data.createdByName);
   return {
     billId: existing?.billId || billNumber,
     billNo: billNumber,
@@ -287,7 +351,11 @@ function billSnapshot(data, existing = null) {
     paymentMode: data.paymentMode || data.payment || "",
     paymentStatus: data.paymentStatus || (balanceDue <= 0 ? "Paid" : "Pending"),
     transactionId: data.transactionId || "",
-    cashierName: data.cashierName || "",
+    labAttendantName,
+    staffName: safeStaffName(data.staffName),
+    createdByUid: data.createdByUid || "",
+    createdByName: safeStaffName(data.createdByName),
+    cashierName: safeStaffName(data.cashierName),
     remarks: data.remarks || data.notes || "",
     billDate: existing?.billDate || new Date().toISOString(),
     accessToken: existing?.accessToken || accessToken(),
@@ -308,6 +376,36 @@ async function findBillForBooking(data) {
     if (snap && !snap.empty) return normalizeDoc(snap.docs[0]);
   }
   return null;
+}
+
+async function findBookingForBill(bill = {}) {
+  const bookingId = String(bill.bookingId || bill.bookingNo || "").trim();
+  if (bookingId) {
+    const direct = await getDoc(doc(db, C.bookings, bookingId)).catch(() => null);
+    if (direct?.exists()) return normalizeDoc(direct);
+  }
+  const billNoValue = String(bill.billNo || "").trim();
+  if (billNoValue) {
+    const snap = await getDocs(query(collection(db, C.bookings), where("billNo", "==", billNoValue), limit(1))).catch(() => null);
+    if (snap && !snap.empty) return normalizeDoc(snap.docs[0]);
+  }
+  return null;
+}
+
+async function withResolvedLabAttendant(bill = {}) {
+  const booking = await findBookingForBill(bill).catch(() => null);
+  const resolvedLabAttendantName = await resolveLabAttendantName({
+    ...bill,
+    ...(booking || {})
+  }).catch(() => "KhunTest Lab Staff");
+  return {
+    ...bill,
+    labAttendantName: safeStaffName(bill.labAttendantName, booking?.labAttendantName),
+    staffName: safeStaffName(bill.staffName, booking?.staffName, booking?.staff),
+    createdByName: safeStaffName(bill.createdByName, booking?.createdByName),
+    createdByUid: bill.createdByUid || booking?.createdByUid || (!looksLikeEmail(booking?.createdBy) ? booking?.createdBy : ""),
+    resolvedLabAttendantName
+  };
 }
 
 function normalizeResult(row) {
@@ -424,13 +522,24 @@ export async function savePatientProfile(uid, profilePatch) {
 export async function createBooking(bookingData) {
   const booking = normalizeBooking(bookingData);
   const now = serverTimestamp();
+  const staffIdentity = await currentStaffIdentity();
+  const staffName = safeStaffName(booking.labAttendantName, booking.staffName, booking.createdByName, staffIdentity.name);
   const docRef = await addDoc(collection(db, C.bookings), {
     ...booking,
+    createdByUid: booking.createdByUid || staffIdentity.uid,
+    createdByName: safeStaffName(booking.createdByName, staffName),
+    labAttendantName: safeStaffName(booking.labAttendantName, staffName),
     createdAt: now,
     updatedAt: now
   });
   await updateDoc(docRef, { id: docRef.id });
-  return { id: docRef.id, ...booking };
+  return {
+    id: docRef.id,
+    ...booking,
+    createdByUid: booking.createdByUid || staffIdentity.uid,
+    createdByName: safeStaffName(booking.createdByName, staffName),
+    labAttendantName: safeStaffName(booking.labAttendantName, staffName)
+  };
 }
 
 export async function createOnlineBooking(bookingData) {
@@ -820,7 +929,10 @@ export async function createCustomerBillForBooking(bookingData, options = {}) {
     ...bill,
     reprintCount,
     createdAt: existing?.createdAt || serverTimestamp(),
-    createdBy: existing?.createdBy || bookingData.patientUid || ""
+    createdBy: existing?.createdBy || bookingData.createdByUid || bookingData.patientUid || "",
+    createdByUid: existing?.createdByUid || bookingData.createdByUid || "",
+    createdByName: existing?.createdByName || bill.createdByName || "",
+    labAttendantName: existing?.labAttendantName || bill.labAttendantName || ""
   }, { merge: true });
   await setDoc(doc(db, C.billAccess, bill.accessToken), {
     ...bill,
@@ -837,13 +949,13 @@ export async function getCustomerBill(billNoValue, token = "") {
     const accessSnap = await getDoc(doc(db, C.billAccess, token)).catch(() => null);
     if (accessSnap?.exists()) {
       const accessBill = normalizeDoc(accessSnap);
-      if (String(accessBill.billNo) === billNumber) return accessBill;
+      if (String(accessBill.billNo) === billNumber) return withResolvedLabAttendant(accessBill);
     }
   }
   const snap = await getDoc(doc(db, C.bills, billNumber));
   if (!snap.exists()) throw new Error("Bill not found.");
   const bill = normalizeDoc(snap);
-  if (token && token === bill.accessToken) return bill;
+  if (token && token === bill.accessToken) return withResolvedLabAttendant(bill);
   const user = auth.currentUser;
   if (!user) throw new Error("Please login to view this bill.");
   const profileSnap = await getDoc(doc(db, C.users, user.uid)).catch(() => null);
@@ -851,7 +963,7 @@ export async function getCustomerBill(billNoValue, token = "") {
   const isAdminUser = profile?.role === "admin" && profile?.isActive !== false;
   const isPatientOwner = bill.patientId === user.uid || cleanEmail(bill.patientEmail) === cleanEmail(user.email);
   if (!isAdminUser && !isPatientOwner) throw new Error("You are not authorized to view this bill.");
-  return bill;
+  return withResolvedLabAttendant(bill);
 }
 
 export async function updateBookingStatus(bookingId, status) {

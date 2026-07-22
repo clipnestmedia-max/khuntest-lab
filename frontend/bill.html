@@ -14,8 +14,10 @@
     button, .btn { border:0; border-radius:8px; padding:10px 14px; background:var(--blue); color:#fff; font-weight:800; cursor:pointer; text-decoration:none; }
     .btn-red { background:var(--red); }
     .bill-page { width:210mm; min-height:297mm; margin:18px auto; padding:10mm; background:#fff; box-shadow:0 14px 45px rgba(15,23,42,.18); }
-    .bill-head { display:grid; grid-template-columns:80px 1fr auto; gap:16px; align-items:center; border-bottom:3px solid var(--blue); padding-bottom:14px; }
-    .logo { width:74px; height:74px; object-fit:contain; }
+    .bill-head { display:grid; grid-template-columns:24mm 1fr auto; gap:14px; align-items:center; border-bottom:3px solid var(--blue); padding-bottom:14px; }
+    .logo-wrap { width:24mm; min-height:24mm; display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:10px; font-weight:900; text-align:center; line-height:1.15; }
+    .logo { width:22mm; max-width:100%; height:auto; max-height:24mm; object-fit:contain; display:block; }
+    .logo.is-hidden { display:none; }
     h1, h2, p { margin:0; }
     h1 { color:var(--blue); font-size:28px; letter-spacing:.5px; }
     .muted { color:var(--muted); }
@@ -39,7 +41,8 @@
     body.thermal { background:#fff; }
     body.thermal .bill-page { width:80mm; min-height:auto; margin:0 auto; padding:3mm; box-shadow:none; font-size:11px; }
     body.thermal .bill-head { grid-template-columns:1fr; text-align:center; gap:4px; border-bottom:1px dashed #111; }
-    body.thermal .logo { width:42px; height:42px; margin:auto; }
+    body.thermal .logo-wrap { width:42px; min-height:42px; margin:auto; }
+    body.thermal .logo { width:42px; max-height:42px; margin:auto; }
     body.thermal h1 { font-size:17px; }
     body.thermal .invoice-title { text-align:center; }
     body.thermal .info-grid { grid-template-columns:1fr; gap:6px; margin:8px 0; }
@@ -55,6 +58,7 @@
       body { background:#fff; }
       .bill-page { width:auto; min-height:auto; margin:0; padding:0; box-shadow:none; }
       body.thermal .bill-page { width:74mm; padding:0; }
+      .logo, .logo-wrap { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
     }
   </style>
   <style id="printPageStyle">@page { size: A4; margin: 10mm; }</style>
@@ -78,6 +82,11 @@
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
     const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[m]));
     const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
+    const looksLikeEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+    const safeAttendantName = (bill) => {
+      const value = String(bill.labAttendantName || bill.staffName || bill.createdByName || bill.resolvedLabAttendantName || "").trim();
+      return value && !looksLikeEmail(value) ? value.replace(/\s+/g, " ").toUpperCase() : "KHUNTEST LAB STAFF";
+    };
     const phone = (value) => {
       const digits = String(value || "").replace(/\D/g, "");
       return digits.length === 10 ? "91" + digits : digits;
@@ -90,9 +99,13 @@
 
     function renderBill(bill) {
       const tests = Array.isArray(bill.tests) ? bill.tests : [];
+      const attendantName = safeAttendantName(bill);
       document.getElementById("billRoot").innerHTML = `
         <header class="bill-head">
-          <img class="logo" src="assets/khuntest-logo.png" alt="KhunTest Lab">
+          <span class="logo-wrap" id="logoFallback">
+            <img class="logo" id="billLogo" src="assets/khuntest-logo.png" alt="KhunTest Lab" crossorigin="anonymous">
+            <span class="logo-text" hidden>KHUNTEST LABS</span>
+          </span>
           <div>
             <h1>KHUNTEST LABS</h1>
             <p>Allalpatti, Laheriasarai, Darbhanga, Bihar</p>
@@ -107,7 +120,7 @@
             <div class="line"><span>Bill No</span><b>${safe(bill.billNo)}</b></div>
             <div class="line"><span>Booking No</span><span>${safe(bill.bookingNo || bill.bookingId)}</span></div>
             <div class="line"><span>Date</span><span>${safe(formatDate(bill.billDate || bill.createdAt))}</span></div>
-            <div class="line"><span>Cashier</span><span>${safe(bill.cashierName || "")}</span></div>
+            <div class="line"><span>Lab Attendant</span><span>${safe(attendantName)}</span></div>
           </div>
           <div class="box">
             <h2>Patient Details</h2>
@@ -137,6 +150,38 @@
         <div class="signature"><div>Authorized Signature</div></div>
         <p class="thanks">Thank you for choosing KhunTest Lab</p>
       `;
+      prepareBillLogo();
+    }
+
+    function prepareBillLogo() {
+      const logo = document.getElementById("billLogo");
+      const textFallback = document.querySelector("#logoFallback .logo-text");
+      if (!logo || !textFallback) return;
+      const showTextFallback = () => {
+        logo.classList.add("is-hidden");
+        textFallback.hidden = false;
+        if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+          console.warn("Bill logo failed to load; using text fallback.");
+        }
+      };
+      logo.addEventListener("error", showTextFallback, { once: true });
+      if (logo.complete && !logo.naturalWidth) showTextFallback();
+    }
+
+    function waitForBillImages(timeoutMs = 1800) {
+      const images = Array.from(document.querySelectorAll("#billRoot img"));
+      const loading = images.map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          const done = () => resolve();
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", done, { once: true });
+        });
+      });
+      return Promise.race([
+        Promise.all(loading),
+        new Promise((resolve) => setTimeout(resolve, timeoutMs))
+      ]);
     }
 
     window.setLayout = function(layout) {
@@ -147,12 +192,14 @@
       params.set("layout", layout);
     };
 
-    window.printBill = function() {
+    window.printBill = async function() {
+      await waitForBillImages();
       window.print();
     };
 
-    window.downloadPdf = function() {
+    window.downloadPdf = async function() {
       alert("Choose 'Save as PDF' in the print dialog to download the bill PDF.");
+      await waitForBillImages();
       window.print();
     };
 
@@ -170,8 +217,8 @@
         setLayout(params.get("layout") === "thermal" ? "thermal" : "a4");
         currentBill = await getCustomerBill(params.get("bill"), params.get("token") || "");
         renderBill(currentBill);
-        if (params.get("print") === "1") setTimeout(() => window.print(), 400);
-        if (params.get("download") === "1") setTimeout(() => window.print(), 400);
+        if (params.get("print") === "1") setTimeout(() => window.printBill(), 400);
+        if (params.get("download") === "1") setTimeout(() => window.printBill(), 400);
       } catch (err) {
         document.getElementById("billRoot").innerHTML = `<div class="box"><h1>Bill unavailable</h1><p>${safe(err.message || "Unable to load bill.")}</p></div>`;
       }

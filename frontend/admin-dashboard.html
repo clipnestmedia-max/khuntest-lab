@@ -412,6 +412,33 @@ let currentReportBooking = null;
 let currentAdminUser = null;
 let lastFirestoreError = "";
 let lastTestLoadingError = "";
+
+function normalizeStaffDisplayName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function looksLikeEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function safeStaffDisplayName(...values) {
+  for (const value of values) {
+    const name = normalizeStaffDisplayName(value);
+    if (name && !looksLikeEmail(name)) return name;
+  }
+  return "";
+}
+
+function currentAdminDisplayName() {
+  return safeStaffDisplayName(
+    currentAdminProfile?.name,
+    currentAdminProfile?.displayName,
+    currentAdminProfile?.fullName,
+    currentAdminProfile?.staffName,
+    currentAdmin?.displayName,
+    currentAdminUser?.displayName
+  );
+}
 let lastAdminTestSource = "not loaded";
 let adminEntryTests = [];
 window.allLabTests = allLabTests;
@@ -1028,14 +1055,18 @@ async function updateTest(testId, data) {
 }
 
 async function createBooking(data) {
+  const staffName = safeStaffDisplayName(data.labAttendantName, data.staffName, data.createdByName, currentAdminDisplayName());
   const payload = {
     ...data,
     patientName: normalizePatientName(data.patientName),
+    createdByUid: data.createdByUid || currentAdmin?.uid || "",
+    createdByName: safeStaffDisplayName(data.createdByName, staffName),
+    labAttendantName: safeStaffDisplayName(data.labAttendantName, staffName),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };
   const docRef = await addDoc(collection(db, "bookings"), payload);
-  return { id: docRef.id, ...data };
+  return { id: docRef.id, ...data, createdByUid: payload.createdByUid, createdByName: payload.createdByName, labAttendantName: payload.labAttendantName };
 }
 
 async function findReportForBill(billNo) {
@@ -1214,6 +1245,7 @@ function billPayloadFromBooking(row, existing = null) {
   const summary = billingSummary(row);
   const billNo = existing?.billNo || row.customerBillNo || billNoForBooking(row);
   const token = existing?.accessToken || billToken();
+  const labAttendantName = safeStaffDisplayName(row.labAttendantName, row.staffName, row.createdByName, currentAdminDisplayName());
   return {
     billId: existing?.billId || billNo,
     billNo,
@@ -1239,13 +1271,17 @@ function billPayloadFromBooking(row, existing = null) {
     paymentMode: row.paymentMode || row.payment || "",
     paymentStatus: row.paymentStatus || (summary.balanceDue <= 0 ? "Paid" : "Pending"),
     transactionId: row.transactionId || "",
-    cashierName: currentAdmin?.email || currentAdminProfile?.name || "Admin",
+    labAttendantName,
+    staffName: safeStaffDisplayName(row.staffName, row.staff, row.fieldBoyName),
+    createdByUid: row.createdByUid || currentAdmin?.uid || "",
+    createdByName: safeStaffDisplayName(row.createdByName, labAttendantName),
+    cashierName: safeStaffDisplayName(row.cashierName, labAttendantName),
     remarks: row.remarks || row.notes || "",
     billDate: existing?.billDate || new Date().toISOString(),
     accessToken: token,
     revised: Boolean(existing?.revised),
     updatedAt: serverTimestamp(),
-    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+    updatedBy: currentAdmin?.uid || ""
   };
 }
 
@@ -1285,7 +1321,10 @@ async function ensureBillForBooking(row, options = {}) {
     ...payload,
     reprintCount,
     createdAt: existing?.createdAt || serverTimestamp(),
-    createdBy: existing?.createdBy || currentAdmin?.email || currentAdmin?.uid || ""
+    createdBy: existing?.createdBy || currentAdmin?.uid || "",
+    createdByUid: existing?.createdByUid || payload.createdByUid || "",
+    createdByName: existing?.createdByName || payload.createdByName || "",
+    labAttendantName: existing?.labAttendantName || payload.labAttendantName || ""
   }, { merge: true });
   await setDoc(doc(db, "billAccess", payload.accessToken), {
     ...payload,
@@ -3235,6 +3274,10 @@ window.savePatientEntry = async function(e) {
     payment: "Lab Billing",
     fieldBoyName: f.fieldBoy.value || "Not Assigned",
     staff: f.fieldBoy.value || "Not Assigned",
+    staffName: safeStaffDisplayName(f.fieldBoy.value),
+    labAttendantName: safeStaffDisplayName(f.fieldBoy.value, currentAdminDisplayName()),
+    createdByUid: currentAdmin?.uid || "",
+    createdByName: currentAdminDisplayName(),
     cashReceived: Number(f.cashReceived.value || 0),
     cardReceived: Number(f.cardReceived.value || 0),
     discount: Number(f.discount.value || 0),
