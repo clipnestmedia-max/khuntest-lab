@@ -2872,7 +2872,22 @@ function paintFindingRows(rows) {
     input.addEventListener("input", () => {
       const name = input.closest("tr")?.querySelector('[data-r="name"]')?.value || "";
       if (["bilirubintotal", "totalbilirubin", "tbilirubin", "bilirubindirect", "directbilirubin", "dbilirubin"].includes(compactLftKey(name))) {
+        const currentScroll = window.scrollY;
+        const rowIndex = input.dataset.i || "";
+        const selectionStart = input.selectionStart;
+        const selectionEnd = input.selectionEnd;
         paintFindingRows(currentFindingRows());
+        requestAnimationFrame(() => {
+          const restoredInput = Array.from(document.querySelectorAll('#findingRows input[data-r="finding"]:not([readonly])'))
+            .find((field) => String(field.dataset.i || "") === String(rowIndex));
+          if (restoredInput) {
+            restoredInput.focus({ preventScroll: true });
+            if (selectionStart !== null && selectionEnd !== null) {
+              restoredInput.setSelectionRange(selectionStart, selectionEnd);
+            }
+          }
+          window.scrollTo(0, currentScroll);
+        });
       }
     });
   });
