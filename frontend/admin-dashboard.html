@@ -57,6 +57,17 @@
   .finding-warning-row td { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa!important; font-weight:800; }
   .calculated-row input[readonly] { background:#f8fafc; color:#0f172a; font-weight:800; }
   .calculated-row small { color:#0b4d92; font-weight:800; }
+  .attendant-card { margin-top:18px; }
+  .attendant-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+  .attendant-form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; align-items:end; }
+  .attendant-form-grid label { display:grid; gap:5px; color:#334155; font-weight:800; }
+  .attendant-form-grid input, .attendant-form-grid select, .attendant-search, .attendant-select { width:100%; min-width:0; }
+  .attendant-select option.inactive { color:#94a3b8; }
+  .attendant-status { display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; font-size:12px; font-weight:900; }
+  .attendant-status.active { background:#dcfce7; color:#166534; }
+  .attendant-status.inactive { background:#fee2e2; color:#991b1b; }
+  .attendant-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .attendant-small { display:block; color:#64748b; font-size:12px; margin-top:3px; }
   @media(max-width:700px){
     .modal-overlay,.admin-modal{padding:12px}
     .modal-dialog,.admin-modal-box,.modal-dialog.modal-wide,.admin-modal-box.modal-wide{width:calc(100vw - 24px);max-height:calc(100vh - 24px);border-radius:12px}
@@ -70,6 +81,7 @@
     .parameter-table td::before{content:attr(data-label);font-weight:800;color:#062b59}
     .listener-actions{display:grid}
     .listener-actions .btn{width:100%;justify-content:center}
+    .attendant-actions{display:grid}
   }
 </style>
 </head>
@@ -173,7 +185,8 @@
               <label>E-MAIL :</label><input name="email" type="email">
               <label>REF. DOCTOR :</label><input name="doctor" value="Dr N.K SUMAN(MBBS, MD)">
               <label>C/O. Name :</label><input name="coName">
-              <label>FIELD-BOY NAME :</label><select name="fieldBoy" id="entryStaffSelect"></select>
+              <label>LAB ATTENDANT / SAMPLE COLLECTED BY :</label><select name="fieldBoy" id="entryStaffSelect" class="attendant-select" required></select>
+              <input id="entryAttendantSearch" class="attendant-search hidden" placeholder="Search lab attendant..." oninput="renderEntryAttendantOptions()">
               <label>ASSOCIATE LAB.:</label><input name="associateLab">
             </div>
           </div>
@@ -243,7 +256,7 @@
               <label>E-MAIL :</label><input id="rEmail" readonly>
               <label>REF. DOCTOR :</label><input id="rDoctor" readonly>
               <label>C/O. Name :</label><input id="rCoName" readonly>
-              <label>FIELD-BOY NAME :</label><input id="rFieldBoy" readonly>
+              <label>LAB ATTENDANT :</label><input id="rFieldBoy" readonly>
               <label>REPORTING DATE:</label><input id="rReportingDate" type="datetime-local">
             </div>
           </div>
@@ -308,7 +321,35 @@
         </table>
       </div>
     </section>
-    <section data-panel="settings" class="hidden"><h2>Settings</h2><div class="form-card settings-grid"><label>Lab Name<input value="KHUNTEST LABS" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KHUNTEST LABS. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div><div class="notice">Automatic WhatsApp sending must run from a secure server because the token is secret.</div><h2>Firebase Debug</h2><div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Test Source Used<input id="debugTestSource" readonly></label><label>Public Tests Count<input id="debugPublicTestsCount" readonly></label><label>Admin Tests Count<input id="debugTestsCount" readonly></label><label>Firestore Tests Count<input id="debugFirestoreTestsCount" readonly></label><label>data/tests.json Count<input id="debugJsonTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label><label>Last Test Loading Error<input id="debugTestLoadError" readonly></label></div></section>
+    <section data-panel="settings" class="hidden">
+      <h2>Settings</h2>
+      <div class="form-card settings-grid"><label>Lab Name<input value="KHUNTEST LABS" readonly></label><label>Address<input value="Allalpatti, Laheriasarai, Darbhanga, Bihar" readonly></label><label>Phone<input value="+91 9234277007" readonly></label><label>WhatsApp<input value="+91 9234277007" readonly></label><label>Email<input value="khuntest@yahoo.com" readonly></label><label>Default Ref Doctor<input value="Dr N.K SUMAN(MBBS, MD)"></label><label>Footer Copyright<input value="© 2026 KHUNTEST LABS. All Rights Reserved. Tech by:- Himanshu Sahni. 📞+91 9142579601" readonly></label></div>
+      <div class="form-card attendant-card">
+        <h2>Lab Attendants</h2>
+        <form id="labAttendantForm" class="attendant-form-grid">
+          <input type="hidden" name="id">
+          <label>Full Name<input name="fullName" required placeholder="HIMANSHU SAHNI"></label>
+          <label>Phone Number<input name="phone" inputmode="tel" placeholder="91XXXXXXXXXX"></label>
+          <label>Employee ID<input name="employeeId" placeholder="ATT001"></label>
+          <label>Designation<input name="designation" placeholder="LAB ATTENDANT"></label>
+          <label>Status<select name="active"><option value="true">Active</option><option value="false">Inactive</option></select></label>
+          <div class="attendant-actions"><button class="btn btn-red" type="submit">Save Attendant</button><button class="btn btn-outline" type="button" onclick="resetLabAttendantForm()">Clear</button></div>
+        </form>
+        <div class="attendant-toolbar">
+          <input id="labAttendantSearch" class="attendant-search" placeholder="Search attendant..." oninput="renderLabAttendantsSettings()">
+          <span class="notice" id="labAttendantCount" style="margin:0;"></span>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Employee ID</th><th>Designation</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="labAttendantsBody"><tr><td colspan="6">Loading attendants...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="notice">Automatic WhatsApp sending must run from a secure server because the token is secret.</div>
+      <h2>Firebase Debug</h2>
+      <div class="form-card settings-grid"><label>User Email<input id="debugEmail" readonly></label><label>UID<input id="debugUid" readonly></label><label>Admin Profile Loaded<input id="debugAdminLoaded" readonly></label><label>Test Source Used<input id="debugTestSource" readonly></label><label>Public Tests Count<input id="debugPublicTestsCount" readonly></label><label>Admin Tests Count<input id="debugTestsCount" readonly></label><label>Firestore Tests Count<input id="debugFirestoreTestsCount" readonly></label><label>data/tests.json Count<input id="debugJsonTestsCount" readonly></label><label>Bookings Count<input id="debugBookingsCount" readonly></label><label>Reports Count<input id="debugReportsCount" readonly></label><label>Last Firestore Error<input id="debugFirestoreError" readonly></label><label>Last Test Loading Error<input id="debugTestLoadError" readonly></label></div>
+    </section>
     <div id="adminDebugBox" class="admin-debug-box">
       <b>Admin Debug</b>
       <div class="admin-debug-grid">
@@ -361,7 +402,7 @@
 <script type="module">
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { collection, getDocs, getDoc, addDoc, updateDoc, setDoc, doc, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, getDocs, getDoc, addDoc, updateDoc, setDoc, deleteDoc, doc, query, where, orderBy, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   INDIRECT_BILIRUBIN_WARNING,
   applyLftCalculatedParameters,
@@ -394,6 +435,8 @@ let adminNotifications = [];
 let onlineBookingsUnsub = null;
 let notificationsUnsub = null;
 let machineResultsUnsub = null;
+let labAttendants = [];
+let labAttendantsUnsub = null;
 let onlineBookingsListenerRegistrations = 0;
 let machineResultsListenerRegistrations = 0;
 let machineResultsDebug = {
@@ -412,9 +455,14 @@ let currentReportBooking = null;
 let currentAdminUser = null;
 let lastFirestoreError = "";
 let lastTestLoadingError = "";
+const DEFAULT_LAB_ID = "khuntest-main";
+
+function currentLabId() {
+  return String(currentAdminProfile?.labId || currentAdminProfile?.labID || DEFAULT_LAB_ID).trim() || DEFAULT_LAB_ID;
+}
 
 function normalizeStaffDisplayName(value) {
-  return String(value || "").trim().replace(/\s+/g, " ");
+  return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
 }
 
 function looksLikeEmail(value) {
@@ -429,6 +477,11 @@ function safeStaffDisplayName(...values) {
   return "";
 }
 
+function hasAssignedAttendantName(value) {
+  const name = safeStaffDisplayName(value);
+  return Boolean(name && !["TO BE ASSIGNED", "NOT ASSIGNED"].includes(name));
+}
+
 function currentAdminDisplayName() {
   return safeStaffDisplayName(
     currentAdminProfile?.name,
@@ -439,6 +492,102 @@ function currentAdminDisplayName() {
     currentAdminUser?.displayName
   );
 }
+
+function normalizePhone(value) {
+  return String(value || "").replace(/[^\d+]/g, "").trim();
+}
+
+function activeLabAttendants() {
+  return labAttendants
+    .filter((attendant) => attendant.labId === currentLabId() && attendant.active !== false)
+    .sort((a, b) => String(a.fullName || "").localeCompare(String(b.fullName || "")));
+}
+
+function attendantById(id, includeInactive = false) {
+  const text = String(id || "");
+  return labAttendants.find((attendant) => String(attendant.id) === text && attendant.labId === currentLabId() && (includeInactive || attendant.active !== false)) || null;
+}
+
+function attendantOptionText(attendant) {
+  const designation = safeStaffDisplayName(attendant.designation);
+  return designation ? `${attendant.fullName} - ${designation}` : attendant.fullName;
+}
+
+function selectedAttendantSnapshot(id, { includeInactive = false } = {}) {
+  const attendant = attendantById(id, includeInactive);
+  if (!attendant) return null;
+  return {
+    labAttendantId: attendant.id,
+    labAttendantName: safeStaffDisplayName(attendant.fullName),
+    labAttendantPhone: attendant.phone || "",
+    labAttendantEmployeeId: attendant.employeeId || "",
+    sampleCollectedById: attendant.id,
+    sampleCollectedByName: safeStaffDisplayName(attendant.fullName)
+  };
+}
+
+function renderEntryAttendantOptions(selectedId = "") {
+  const select = document.getElementById("entryStaffSelect");
+  if (!select) return;
+  const search = document.getElementById("entryAttendantSearch");
+  const term = String(search?.value || "").trim().toLowerCase();
+  const active = activeLabAttendants();
+  const rows = active.filter((attendant) => {
+    if (!term) return true;
+    return [attendant.fullName, attendant.phone, attendant.employeeId, attendant.designation].join(" ").toLowerCase().includes(term);
+  });
+  const current = selectedId || select.value || "";
+  select.innerHTML = '<option value="">Select Lab Attendant</option>' + rows.map((attendant) => `<option value="${html(attendant.id)}" ${String(current) === String(attendant.id) ? "selected" : ""}>${html(attendantOptionText(attendant))}</option>`).join("");
+  if (search) search.classList.toggle("hidden", active.length <= 10);
+}
+
+function attendantSelectHtml(name, row = {}) {
+  const active = activeLabAttendants();
+  const selectedId = row.labAttendantId || "";
+  const selectedInactive = selectedId ? attendantById(selectedId, true) : null;
+  const options = ['<option value="">Select Lab Attendant</option>'];
+  if (selectedInactive && selectedInactive.active === false) {
+    options.push(`<option class="inactive" value="${html(selectedInactive.id)}" selected>${html(attendantOptionText(selectedInactive))} (Inactive)</option>`);
+  }
+  active.forEach((attendant) => {
+    options.push(`<option value="${html(attendant.id)}" ${String(selectedId) === String(attendant.id) ? "selected" : ""}>${html(attendantOptionText(attendant))}</option>`);
+  });
+  return `<select name="${html(name)}" class="attendant-select">${options.join("")}</select>`;
+}
+
+function promptLabAttendantSelection(currentId = "") {
+  const active = activeLabAttendants();
+  if (!active.length) {
+    alert("No active lab attendants found. Add an attendant in Settings first.");
+    return null;
+  }
+  const lines = active.map((attendant, index) => `${index + 1}. ${attendantOptionText(attendant)}`);
+  const currentIndex = active.findIndex((attendant) => String(attendant.id) === String(currentId));
+  const answer = prompt(`Select Lab Attendant / Sample Collected By:\n\n${lines.join("\n")}`, currentIndex >= 0 ? String(currentIndex + 1) : "1");
+  if (answer === null) return null;
+  const selected = active[Number(answer) - 1] || active.find((attendant) => attendant.fullName === safeStaffDisplayName(answer));
+  if (!selected) {
+    alert("Invalid attendant selection.");
+    return null;
+  }
+  return selectedAttendantSnapshot(selected.id);
+}
+
+function listenLabAttendants() {
+  if (labAttendantsUnsub) return;
+  labAttendantsUnsub = onSnapshot(query(collection(db, "labAttendants"), where("labId", "==", currentLabId())), (snap) => {
+    labAttendants = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+    renderLabAttendantsSettings();
+    renderEntryAttendantOptions();
+    renderOnlineBookingsPanel();
+  }, (err) => {
+    lastFirestoreError = err.message || String(err);
+    console.error(err);
+    renderDebugPanel();
+  });
+}
+
+window.renderEntryAttendantOptions = renderEntryAttendantOptions;
 let lastAdminTestSource = "not loaded";
 let adminEntryTests = [];
 window.allLabTests = allLabTests;
@@ -891,6 +1040,7 @@ async function getMachineResults() {
 }
 
 function listenRealtimeAdminCollections() {
+  listenLabAttendants();
   if (!onlineBookingsUnsub) {
     onlineBookingsListenerRegistrations += 1;
     console.debug("[AdminRealtimeListeners]", { onlineBookingsRegistrations: onlineBookingsListenerRegistrations });
@@ -1006,6 +1156,134 @@ function showAdminToast(message) {
   setTimeout(() => box.classList.add("hidden"), 2600);
 }
 
+function labAttendantForm() {
+  return document.getElementById("labAttendantForm");
+}
+
+window.resetLabAttendantForm = function() {
+  const form = labAttendantForm();
+  if (!form) return;
+  form.reset();
+  form.id.value = "";
+  form.active.value = "true";
+};
+
+function renderLabAttendantsSettings() {
+  const body = document.getElementById("labAttendantsBody");
+  if (!body) return;
+  const term = String(document.getElementById("labAttendantSearch")?.value || "").trim().toLowerCase();
+  const rows = labAttendants
+    .filter((attendant) => attendant.labId === currentLabId())
+    .filter((attendant) => {
+      if (!term) return true;
+      return [attendant.fullName, attendant.phone, attendant.employeeId, attendant.designation, attendant.active === false ? "inactive" : "active"].join(" ").toLowerCase().includes(term);
+    })
+    .sort((a, b) => String(a.fullName || "").localeCompare(String(b.fullName || "")));
+  const count = document.getElementById("labAttendantCount");
+  if (count) count.textContent = `${rows.length} attendant${rows.length === 1 ? "" : "s"} | ${activeLabAttendants().length} active`;
+  body.innerHTML = rows.length ? rows.map((attendant) => `
+    <tr>
+      <td><b>${html(attendant.fullName || "")}</b><span class="attendant-small">${html(createdText(attendant.createdAt))}</span></td>
+      <td>${html(attendant.phone || "")}</td>
+      <td>${html(attendant.employeeId || "")}</td>
+      <td>${html(attendant.designation || "")}</td>
+      <td><span class="attendant-status ${attendant.active === false ? "inactive" : "active"}">${attendant.active === false ? "Inactive" : "Active"}</span></td>
+      <td><div class="attendant-actions">
+        <button class="btn btn-outline btn-small" type="button" onclick="editLabAttendant('${html(attendant.id)}')">Edit</button>
+        <button class="btn btn-outline btn-small" type="button" onclick="toggleLabAttendant('${html(attendant.id)}')">${attendant.active === false ? "Activate" : "Deactivate"}</button>
+        <button class="btn btn-red btn-small" type="button" onclick="deleteLabAttendant('${html(attendant.id)}')">Delete</button>
+      </div></td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">No lab attendants found.</td></tr>`;
+}
+
+window.renderLabAttendantsSettings = renderLabAttendantsSettings;
+
+async function saveLabAttendant(event) {
+  event.preventDefault();
+  const form = event.target;
+  const id = String(form.id.value || "").trim();
+  const fullName = safeStaffDisplayName(form.fullName.value);
+  if (!fullName) return alert("Full Name is required.");
+  const duplicate = labAttendants.find((attendant) =>
+    attendant.labId === currentLabId()
+    && attendant.id !== id
+    && safeStaffDisplayName(attendant.fullName) === fullName
+    && attendant.active !== false
+  );
+  if (duplicate && !confirm("An active attendant with this name already exists. Save anyway?")) return;
+  const payload = {
+    labId: currentLabId(),
+    fullName,
+    originalFullName: String(form.fullName.value || "").trim().replace(/\s+/g, " "),
+    phone: normalizePhone(form.phone.value),
+    employeeId: safeStaffDisplayName(form.employeeId.value),
+    designation: safeStaffDisplayName(form.designation.value),
+    active: form.active.value !== "false",
+    updatedAt: serverTimestamp(),
+    updatedByUid: currentAdmin?.uid || ""
+  };
+  if (id) {
+    await setDoc(doc(db, "labAttendants", id), payload, { merge: true });
+    showAdminToast("Lab attendant updated.");
+  } else {
+    await addDoc(collection(db, "labAttendants"), {
+      ...payload,
+      createdAt: serverTimestamp(),
+      createdByUid: currentAdmin?.uid || ""
+    });
+    showAdminToast("Lab attendant added.");
+  }
+  resetLabAttendantForm();
+}
+
+window.editLabAttendant = function(id) {
+  const attendant = attendantById(id, true);
+  const form = labAttendantForm();
+  if (!attendant || !form) return alert("Lab attendant not found.");
+  form.id.value = attendant.id;
+  form.fullName.value = attendant.fullName || "";
+  form.phone.value = attendant.phone || "";
+  form.employeeId.value = attendant.employeeId || "";
+  form.designation.value = attendant.designation || "";
+  form.active.value = attendant.active === false ? "false" : "true";
+  form.fullName.focus();
+};
+
+window.toggleLabAttendant = async function(id) {
+  const attendant = attendantById(id, true);
+  if (!attendant) return alert("Lab attendant not found.");
+  await setDoc(doc(db, "labAttendants", id), {
+    active: attendant.active === false,
+    updatedAt: serverTimestamp(),
+    updatedByUid: currentAdmin?.uid || ""
+  }, { merge: true });
+};
+
+async function attendantIsReferenced(id) {
+  const bookingSnap = await getDocs(query(collection(db, "bookings"), where("labAttendantId", "==", id))).catch(() => ({ empty: true }));
+  if (!bookingSnap.empty) return true;
+  const onlineSnap = await getDocs(query(collection(db, "onlineBookings"), where("labAttendantId", "==", id))).catch(() => ({ empty: true }));
+  return !onlineSnap.empty;
+}
+
+window.deleteLabAttendant = async function(id) {
+  const attendant = attendantById(id, true);
+  if (!attendant) return alert("Lab attendant not found.");
+  if (!confirm(`Delete lab attendant ${attendant.fullName}?`)) return;
+  if (await attendantIsReferenced(id)) {
+    await setDoc(doc(db, "labAttendants", id), {
+      active: false,
+      updatedAt: serverTimestamp(),
+      updatedByUid: currentAdmin?.uid || ""
+    }, { merge: true });
+    alert("This attendant is used in existing bookings and cannot be deleted. It has been marked inactive.");
+    return;
+  }
+  await deleteDoc(doc(db, "labAttendants", id));
+  showAdminToast("Lab attendant deleted.");
+};
+
 window.dismissAdminNotification = async function(notificationId) {
   await setDoc(doc(db, "adminNotifications", notificationId), {
     isRead: true,
@@ -1055,7 +1333,7 @@ async function updateTest(testId, data) {
 }
 
 async function createBooking(data) {
-  const staffName = safeStaffDisplayName(data.labAttendantName, data.staffName, data.createdByName, currentAdminDisplayName());
+  const staffName = safeStaffDisplayName(data.labAttendantName, data.staffName, data.staff, data.fieldBoyName);
   const payload = {
     ...data,
     patientName: normalizePatientName(data.patientName),
@@ -1245,7 +1523,7 @@ function billPayloadFromBooking(row, existing = null) {
   const summary = billingSummary(row);
   const billNo = existing?.billNo || row.customerBillNo || billNoForBooking(row);
   const token = existing?.accessToken || billToken();
-  const labAttendantName = safeStaffDisplayName(row.labAttendantName, row.staffName, row.createdByName, currentAdminDisplayName());
+  const labAttendantName = safeStaffDisplayName(row.labAttendantName, row.staffName, row.staff, row.fieldBoyName);
   return {
     billId: existing?.billId || billNo,
     billNo,
@@ -1271,7 +1549,10 @@ function billPayloadFromBooking(row, existing = null) {
     paymentMode: row.paymentMode || row.payment || "",
     paymentStatus: row.paymentStatus || (summary.balanceDue <= 0 ? "Paid" : "Pending"),
     transactionId: row.transactionId || "",
+    labAttendantId: row.labAttendantId || "",
     labAttendantName,
+    labAttendantPhone: row.labAttendantPhone || "",
+    labAttendantEmployeeId: row.labAttendantEmployeeId || "",
     staffName: safeStaffDisplayName(row.staffName, row.staff, row.fieldBoyName),
     createdByUid: row.createdByUid || currentAdmin?.uid || "",
     createdByName: safeStaffDisplayName(row.createdByName, labAttendantName),
@@ -1324,7 +1605,10 @@ async function ensureBillForBooking(row, options = {}) {
     createdBy: existing?.createdBy || currentAdmin?.uid || "",
     createdByUid: existing?.createdByUid || payload.createdByUid || "",
     createdByName: existing?.createdByName || payload.createdByName || "",
-    labAttendantName: existing?.labAttendantName || payload.labAttendantName || ""
+    labAttendantId: existing?.labAttendantId || payload.labAttendantId || "",
+    labAttendantName: hasAssignedAttendantName(existing?.labAttendantName) ? existing.labAttendantName : (payload.labAttendantName || existing?.labAttendantName || ""),
+    labAttendantPhone: existing?.labAttendantPhone || payload.labAttendantPhone || "",
+    labAttendantEmployeeId: existing?.labAttendantEmployeeId || payload.labAttendantEmployeeId || ""
   }, { merge: true });
   await setDoc(doc(db, "billAccess", payload.accessToken), {
     ...payload,
@@ -1597,6 +1881,8 @@ async function refreshFirebaseDashboard() {
   renderMachineResultsPanel();
   renderOnlineBookingsPanel();
   renderRecentOnlineBookings();
+  renderLabAttendantsSettings();
+  renderEntryAttendantOptions();
   renderDebugPanel();
 }
 
@@ -1689,7 +1975,7 @@ window.renderOnlineBookingsPanel = function() {
       <td><b>${html(b.bookingId || id)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
       <td>${html(displayPatientName(b.patientName || ""))}<br><small>${html(b.email || b.patientEmail || "")}</small></td>
       <td>${html(b.phone || "")}<br><small>${html(b.whatsapp || "")}</small></td>
-      <td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || b.time || "")}</small></td>
+      <td>${html(b.collectionType || "")}<br><small>${html(onlineDate(b))} ${html(b.preferredTime || b.time || "")}</small><br><small>${html(b.labAttendantName || "To Be Assigned")}</small></td>
       <td>${html(tests)}</td>
       <td>${rupees(b.totalAmount || 0)}</td>
       <td>${html(b.paymentMode || "")}<br><span class="status ${String(b.paymentStatus || "Pending").toLowerCase() === "paid" ? "reported" : "pending"}">${html(b.paymentStatus || "Pending")}</span></td>
@@ -1699,7 +1985,7 @@ window.renderOnlineBookingsPanel = function() {
         <button class="btn btn-navy btn-small" onclick="openBookingEditModal('online','${html(id)}')">Edit</button>
         ${billActionsHtml(b, "online")}
         <button class="btn btn-green btn-small" onclick="confirmOnlineBooking('${html(id)}')">Confirm</button>
-        <button class="btn btn-outline btn-small" onclick="assignOnlineFieldBoy('${html(id)}')">Assign field boy</button>
+        <button class="btn btn-outline btn-small" onclick="assignOnlineLabAttendant('${html(id)}')">Assign Lab Attendant</button>
         <button class="btn btn-outline btn-small" onclick="moveOnlineToReportEntry('${html(id)}')">Move to report entry</button>
         <a class="report-link" href="tel:${html(b.phone || "")}">Call patient</a>
         <a class="report-link" target="_blank" href="https://wa.me/${html(normalizeIndianPhone(b.whatsapp || b.phone))}">Send WhatsApp</a>
@@ -1780,7 +2066,7 @@ window.openBookingEditModal = function(kind, id) {
       <label>Referring doctor<input name="doctor" value="${html(row.referringDoctor || row.doctor || row.refBy || "")}"></label>
       <label>Collection date<input name="collectionDate" type="date" value="${html(row.preferredDate || row.collectionDate || row.date || "")}"></label>
       <label>Reporting date<input name="reportingDate" type="datetime-local" value="${html(row.reportingDate || "")}"></label>
-      <label>Field boy<input name="staff" value="${html(row.staff || row.fieldBoyName || "")}"></label>
+      <label>Lab Attendant / Sample Collected By${attendantSelectHtml("labAttendantId", row)}</label>
       <label>Associate lab<input name="associateLab" value="${html(row.associateLab || "")}"></label>
       <label>Discount<input name="discount" type="number" value="${Number(row.discount || 0)}"></label>
       <label>Payment mode<input name="paymentMode" value="${html(row.paymentMode || row.payment || "")}"></label>
@@ -1823,8 +2109,8 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
     preferredDate: f.collectionDate.value,
     date: f.collectionDate.value,
     reportingDate: f.reportingDate.value,
-    staff: f.staff.value.trim(),
-    fieldBoyName: f.staff.value.trim(),
+    staff: before.staff || before.fieldBoyName || "",
+    fieldBoyName: before.fieldBoyName || before.staff || "",
     associateLab: f.associateLab.value.trim(),
     selectedTests: tests,
     tests,
@@ -1838,8 +2124,20 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
     paymentStatus: f.paymentStatus.value,
     remarks: f.remarks.value.trim(),
     updatedAt: serverTimestamp(),
-    updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
+    updatedBy: currentAdmin?.uid || ""
   };
+  const attendant = selectedAttendantSnapshot(f.labAttendantId.value, { includeInactive: true });
+  if (f.labAttendantId.value && !attendant) return alert("Selected lab attendant is not available.");
+  if (attendant && String(before.labAttendantId || "") !== String(attendant.labAttendantId)) {
+    Object.assign(patch, {
+      ...attendant,
+      staff: attendant.labAttendantName,
+      fieldBoyName: attendant.labAttendantName,
+      staffName: attendant.labAttendantName,
+      labAttendantUpdatedAt: serverTimestamp(),
+      labAttendantUpdatedByUid: currentAdmin?.uid || ""
+    });
+  }
   const collectionName = kind === "online" ? onlineCollectionFor(before) : "bookings";
   const existingBill = await findBillForBooking(before);
   if (existingBill) {
@@ -1892,19 +2190,43 @@ window.viewOnlineBooking = function(id) {
 
 window.updateOnlineBookingStatus = async function(id, status) {
   const row = bookingByKind("online", id);
-  await setDoc(doc(db, onlineCollectionFor(row), id), { bookingStatus: status, status, updatedAt: serverTimestamp(), updatedBy: currentAdmin?.email || "" }, { merge: true });
+  const patch = { bookingStatus: status, status, updatedAt: serverTimestamp(), updatedBy: currentAdmin?.uid || "" };
+  if (status === "Sample Collected") {
+    if (!row?.labAttendantId || !row?.labAttendantName || row.labAttendantName === "To Be Assigned") {
+      const attendant = promptLabAttendantSelection(row?.labAttendantId || "");
+      if (!attendant) return;
+      Object.assign(patch, attendant);
+    }
+    Object.assign(patch, {
+      sampleCollectedById: patch.labAttendantId || row.labAttendantId || "",
+      sampleCollectedByName: patch.labAttendantName || row.labAttendantName || "KhunTest Lab Staff",
+      sampleCollectedAt: serverTimestamp()
+    });
+  }
+  await setDoc(doc(db, onlineCollectionFor(row), id), patch, { merge: true });
 };
 
 window.confirmOnlineBooking = function(id) {
   return window.updateOnlineBookingStatus(id, "Confirmed");
 };
 
-window.assignOnlineFieldBoy = async function(id) {
-  const name = prompt("Assign field boy");
-  if (name === null) return;
+window.assignOnlineLabAttendant = async function(id) {
   const row = bookingByKind("online", id);
-  await setDoc(doc(db, onlineCollectionFor(row), id), { staff: name || "Not Assigned", fieldBoyName: name || "Not Assigned", bookingStatus: "Assigned", status: "Assigned", updatedAt: serverTimestamp() }, { merge: true });
+  const attendant = promptLabAttendantSelection(row?.labAttendantId || "");
+  if (!attendant) return;
+  await setDoc(doc(db, onlineCollectionFor(row), id), {
+    ...attendant,
+    staff: attendant.labAttendantName,
+    fieldBoyName: attendant.labAttendantName,
+    staffName: attendant.labAttendantName,
+    bookingStatus: "Assigned",
+    status: "Assigned",
+    updatedAt: serverTimestamp(),
+    updatedBy: currentAdmin?.uid || ""
+  }, { merge: true });
 };
+
+window.assignOnlineFieldBoy = window.assignOnlineLabAttendant;
 
 window.cancelOnlineBooking = async function(id) {
   if (!confirm("Cancel this online booking?")) return;
@@ -2775,8 +3097,7 @@ window.preparePatientEntry = async function() {
   document.getElementById("entryAdmDate").value = ktNowLocal();
   document.getElementById("entryCollDate").value = ktNowLocal();
   populateEntryTestDatalist();
-  const staffSel = document.getElementById("entryStaffSelect");
-  if (staffSel && !staffSel.options.length) staffSel.innerHTML = '<option value="">Select Field Boy</option>';
+  renderEntryAttendantOptions();
   adminEntryTests = [];
   selectedTests = adminEntryTests;
   selectedCurrentTest = null;
@@ -3011,7 +3332,7 @@ function updateReportEditorMetadataFields(b) {
     rEmail: b.patientEmail || b.email || "",
     rDoctor: b.doctor || b.referringDoctor || "",
     rCoName: b.coName || "",
-    rFieldBoy: b.staff || b.fieldBoyName || ""
+    rFieldBoy: b.labAttendantName || b.staffName || b.staff || b.fieldBoyName || ""
   };
   Object.entries(map).forEach(([id, val]) => {
     const el = document.getElementById(id);
@@ -3052,7 +3373,7 @@ window.openReportDetailsEditModal = function() {
       <label>Referring doctor<input name="doctor" value="${html(b.referringDoctor || b.doctor || b.refBy || "")}"></label>
       <label>Collection date<input name="collectionDate" type="datetime-local" value="${html((b.collDate || b.collectionDate || b.date || "").slice(0, 16))}"></label>
       <label>Reporting date<input name="reportingDate" type="datetime-local" value="${html(document.getElementById("rReportingDate")?.value || b.reportingDate || "")}"></label>
-      <label>Field boy<input name="staff" value="${html(b.staff || b.fieldBoyName || "")}"></label>
+      <label>Lab Attendant / Sample Collected By${attendantSelectHtml("labAttendantId", b)}</label>
       <label>Associate lab<input name="associateLab" value="${html(b.associateLab || "")}"></label>
       <label class="full">Remarks<textarea name="remarks">${html(b.remarks || b.notes || "")}</textarea></label>
       <div class="sticky-actions full"><button class="btn btn-outline" type="button" onclick="closeReportDetailsEditModal()">Cancel</button><button class="btn btn-red" type="submit">Save Changes</button></div>
@@ -3082,13 +3403,24 @@ async function saveReportDetailsEdit(event) {
       doctor: f.doctor.value,
       collectionDate: f.collectionDate.value,
       reportingDate: f.reportingDate.value,
-      staff: f.staff.value,
       associateLab: f.associateLab.value,
       remarks: f.remarks.value
     }),
     updatedAt: serverTimestamp(),
     updatedBy: currentAdmin?.email || currentAdmin?.uid || ""
   };
+  const attendant = selectedAttendantSnapshot(f.labAttendantId.value, { includeInactive: true });
+  if (f.labAttendantId.value && !attendant) return alert("Selected lab attendant is not available.");
+  if (attendant && String(currentReportBooking.labAttendantId || "") !== String(attendant.labAttendantId)) {
+    Object.assign(patch, {
+      ...attendant,
+      staff: attendant.labAttendantName,
+      fieldBoyName: attendant.labAttendantName,
+      staffName: attendant.labAttendantName,
+      labAttendantUpdatedAt: serverTimestamp(),
+      labAttendantUpdatedByUid: currentAdmin?.uid || ""
+    });
+  }
   await setDoc(doc(db, "bookings", currentReportBooking.id), patch, { merge: true });
   await syncPatientMetadata(currentReportBooking, patch);
   await syncReportMetadata(currentReportBooking, patch);
@@ -3239,6 +3571,11 @@ window.savePatientEntry = async function(e) {
     alert("Please add at least one test.");
     return;
   }
+  const attendant = selectedAttendantSnapshot(f.fieldBoy.value);
+  if (!attendant) {
+    alert("Please select an active Lab Attendant / Sample Collected By before saving this booking.");
+    return;
+  }
   const gross = tests.reduce((sum, t) => sum + Number(t.price || 0), 0);
   const booking = await createBooking({
     billNo: f.billNo.value || String(Math.floor(100000 + Math.random() * 900000)),
@@ -3272,10 +3609,11 @@ window.savePatientEntry = async function(e) {
     status: "Pending",
     reportReleased: false,
     payment: "Lab Billing",
-    fieldBoyName: f.fieldBoy.value || "Not Assigned",
-    staff: f.fieldBoy.value || "Not Assigned",
-    staffName: safeStaffDisplayName(f.fieldBoy.value),
-    labAttendantName: safeStaffDisplayName(f.fieldBoy.value, currentAdminDisplayName()),
+    fieldBoyName: attendant.labAttendantName,
+    staff: attendant.labAttendantName,
+    staffName: attendant.labAttendantName,
+    ...attendant,
+    sampleCollectedAt: serverTimestamp(),
     createdByUid: currentAdmin?.uid || "",
     createdByName: currentAdminDisplayName(),
     cashReceived: Number(f.cashReceived.value || 0),
@@ -3332,6 +3670,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     window.setupTestAutocomplete();
     window.setupAddTestButton();
     window.setupSaveBooking();
+    labAttendantForm()?.addEventListener("submit", saveLabAttendant);
     await window.preparePatientEntry();
   } catch (err) {
     console.error("Admin init failed:", err);

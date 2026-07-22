@@ -23,6 +23,13 @@ service cloud.firestore {
         && userDoc().data.isActive == true;
     }
 
+    function isStaff() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (userDoc().data.role == "staff" || userDoc().data.role == "admin")
+        && userDoc().data.isActive == true;
+    }
+
     function sameEmail(email) {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
@@ -121,6 +128,15 @@ service cloud.firestore {
           && (resource.data.bookingStatus in ["New", "Pending Confirmation"] || resource.data.status in ["New", "Pending Confirmation"])
           && request.resource.data.patientUid == resource.data.patientUid
         );
+      allow delete: if isAdmin();
+    }
+
+    match /labAttendants/{attendantId} {
+      allow read: if isAdmin()
+        || (isStaff() && resource.data.active == true);
+      allow create, update: if isAdmin()
+        && request.resource.data.labId is string
+        && request.resource.data.fullName is string;
       allow delete: if isAdmin();
     }
 

@@ -84,8 +84,9 @@
     const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
     const looksLikeEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
     const safeAttendantName = (bill) => {
-      const value = String(bill.labAttendantName || bill.staffName || bill.createdByName || bill.resolvedLabAttendantName || "").trim();
-      return value && !looksLikeEmail(value) ? value.replace(/\s+/g, " ").toUpperCase() : "KHUNTEST LAB STAFF";
+      const value = String(bill.labAttendantName || bill.resolvedLabAttendantName || bill.staffName || "").trim();
+      const normalized = value.replace(/\s+/g, " ").toUpperCase();
+      return normalized && !looksLikeEmail(value) && !["TO BE ASSIGNED", "NOT ASSIGNED"].includes(normalized) ? normalized : "KHUNTEST LAB STAFF";
     };
     const phone = (value) => {
       const digits = String(value || "").replace(/\D/g, "");

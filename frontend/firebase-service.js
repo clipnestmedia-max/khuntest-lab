@@ -35,7 +35,8 @@ const C = {
   patients: "patients",
   onlineBookings: "onlineBookings",
   adminNotifications: "adminNotifications",
-  bookingAuditTrail: "bookingAuditTrail"
+  bookingAuditTrail: "bookingAuditTrail",
+  labAttendants: "labAttendants"
 };
 
 let lastTestsLoadInfo = {
@@ -70,6 +71,11 @@ function safeStaffName(...values) {
   return "";
 }
 
+function hasAssignedAttendantName(value) {
+  const name = safeStaffName(value);
+  return Boolean(name && !["to be assigned", "not assigned"].includes(name.toLowerCase()));
+}
+
 function profileStaffName(profile = {}, user = null) {
   return safeStaffName(
     profile.name,
@@ -93,17 +99,21 @@ async function currentStaffIdentity() {
 }
 
 async function resolveLabAttendantName(source = {}) {
-  const direct = safeStaffName(
-    source.labAttendantName,
-    source.staffName,
-    source.createdByName,
-    source.resolvedLabAttendantName
-  );
+  const direct = safeStaffName(source.labAttendantName);
   if (direct) return direct;
 
-  const user = auth.currentUser;
-  const currentName = user ? profileStaffName({}, user) : "";
-  if (currentName) return currentName;
+  const attendantId = String(source.labAttendantId || "").trim();
+  if (attendantId) {
+    const attendantSnap = await getDoc(doc(db, C.labAttendants, attendantId)).catch(() => null);
+    if (attendantSnap?.exists()) {
+      const attendant = attendantSnap.data() || {};
+      const attendantName = safeStaffName(attendant.fullName, attendant.name);
+      if (attendantName) return attendantName;
+    }
+  }
+
+  const staffName = safeStaffName(source.staffName, source.staff);
+  if (staffName) return staffName;
 
   const uid = String(source.createdByUid || source.createdBy || "").trim();
   if (uid && !looksLikeEmail(uid)) {
@@ -281,6 +291,11 @@ function normalizeBooking(data) {
     address: data.address || "",
     payment: data.payment || "",
     staff: data.staff || "Not Assigned",
+    staffName: safeStaffName(data.staffName, data.staff, data.fieldBoyName),
+    labAttendantId: data.labAttendantId || "",
+    labAttendantName: safeStaffName(data.labAttendantName, data.staffName, data.staff, data.fieldBoyName),
+    labAttendantPhone: data.labAttendantPhone || "",
+    labAttendantEmployeeId: data.labAttendantEmployeeId || "",
     remoteNo: data.remoteNo || "0",
     dayNo: data.dayNo || "0",
     doctor: data.doctor || data.refDoctor || "",
@@ -325,7 +340,7 @@ function billSnapshot(data, existing = null) {
   const amountPaid = Number(data.amountPaid ?? data.paidAmount ?? (Number(data.cashReceived || 0) + Number(data.cardReceived || 0)));
   const balanceDue = Number(data.balanceDue ?? data.dueAmount ?? Math.max(grandTotal - amountPaid, 0));
   const billNumber = existing?.billNo || data.customerBillNo || data.billNo || data.bookingId || billNo();
-  const labAttendantName = safeStaffName(data.labAttendantName, data.staffName, data.createdByName);
+  const labAttendantName = safeStaffName(data.labAttendantName, data.staffName, data.staff, data.fieldBoyName);
   return {
     billId: existing?.billId || billNumber,
     billNo: billNumber,
@@ -351,8 +366,11 @@ function billSnapshot(data, existing = null) {
     paymentMode: data.paymentMode || data.payment || "",
     paymentStatus: data.paymentStatus || (balanceDue <= 0 ? "Paid" : "Pending"),
     transactionId: data.transactionId || "",
+    labAttendantId: data.labAttendantId || "",
     labAttendantName,
     staffName: safeStaffName(data.staffName),
+    labAttendantPhone: data.labAttendantPhone || "",
+    labAttendantEmployeeId: data.labAttendantEmployeeId || "",
     createdByUid: data.createdByUid || "",
     createdByName: safeStaffName(data.createdByName),
     cashierName: safeStaffName(data.cashierName),
@@ -400,7 +418,10 @@ async function withResolvedLabAttendant(bill = {}) {
   }).catch(() => "KhunTest Lab Staff");
   return {
     ...bill,
-    labAttendantName: safeStaffName(bill.labAttendantName, booking?.labAttendantName),
+    labAttendantName: hasAssignedAttendantName(bill.labAttendantName) ? safeStaffName(bill.labAttendantName) : safeStaffName(booking?.labAttendantName, bill.labAttendantName),
+    labAttendantId: bill.labAttendantId || booking?.labAttendantId || "",
+    labAttendantPhone: bill.labAttendantPhone || booking?.labAttendantPhone || "",
+    labAttendantEmployeeId: bill.labAttendantEmployeeId || booking?.labAttendantEmployeeId || "",
     staffName: safeStaffName(bill.staffName, booking?.staffName, booking?.staff),
     createdByName: safeStaffName(bill.createdByName, booking?.createdByName),
     createdByUid: bill.createdByUid || booking?.createdByUid || (!looksLikeEmail(booking?.createdBy) ? booking?.createdBy : ""),
@@ -523,7 +544,7 @@ export async function createBooking(bookingData) {
   const booking = normalizeBooking(bookingData);
   const now = serverTimestamp();
   const staffIdentity = await currentStaffIdentity();
-  const staffName = safeStaffName(booking.labAttendantName, booking.staffName, booking.createdByName, staffIdentity.name);
+  const staffName = safeStaffName(booking.labAttendantName, booking.staffName, booking.staff);
   const docRef = await addDoc(collection(db, C.bookings), {
     ...booking,
     createdByUid: booking.createdByUid || staffIdentity.uid,
@@ -589,6 +610,10 @@ export async function createOnlineBooking(bookingData) {
     paymentMode: bookingData.paymentMode || "Pay Later",
     paymentStatus,
     transactionId: bookingData.transactionId || "",
+    labAttendantId: null,
+    labAttendantName: "To Be Assigned",
+    labAttendantPhone: "",
+    labAttendantEmployeeId: "",
     bookingStatus: bookingData.bookingStatus || "New",
     status: bookingData.bookingStatus || "New",
     source: "online",
@@ -932,7 +957,10 @@ export async function createCustomerBillForBooking(bookingData, options = {}) {
     createdBy: existing?.createdBy || bookingData.createdByUid || bookingData.patientUid || "",
     createdByUid: existing?.createdByUid || bookingData.createdByUid || "",
     createdByName: existing?.createdByName || bill.createdByName || "",
-    labAttendantName: existing?.labAttendantName || bill.labAttendantName || ""
+    labAttendantId: existing?.labAttendantId || bill.labAttendantId || "",
+    labAttendantName: hasAssignedAttendantName(existing?.labAttendantName) ? existing.labAttendantName : (bill.labAttendantName || existing?.labAttendantName || ""),
+    labAttendantPhone: existing?.labAttendantPhone || bill.labAttendantPhone || "",
+    labAttendantEmployeeId: existing?.labAttendantEmployeeId || bill.labAttendantEmployeeId || ""
   }, { merge: true });
   await setDoc(doc(db, C.billAccess, bill.accessToken), {
     ...bill,
