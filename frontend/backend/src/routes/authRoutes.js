@@ -6,11 +6,76 @@ const { sendOtpEmail } = require("../services/emailService");
 
 const router = express.Router();
 
+function normalizeIndianPhone(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length < 10) return "";
+  return digits.slice(-10);
+}
+
+function normalizeLoginIdentifier(value) {
+  const cleaned = String(value || "").trim();
+  const digits = cleaned.replace(/\D/g, "");
+  if (/^\+?91[\s-]?\d{10}$/.test(cleaned.replace(/\s|-/g, ""))) return digits.slice(-10);
+  if (/^\d{10}$/.test(digits)) return digits;
+  return cleaned.toLowerCase();
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    patient_id: user.patient_id
+  };
+}
+
+async function findActiveUserByIdentifier(identifier, role = null) {
+  const normalized = normalizeLoginIdentifier(identifier);
+  const phone = normalizeIndianPhone(normalized);
+  const params = [];
+  const clauses = [];
+
+  if (normalized.includes("@")) {
+    clauses.push("LOWER(email) = ?");
+    params.push(normalized);
+  }
+
+  if (phone) {
+    const phoneCandidates = [
+      phone,
+      "0" + phone,
+      "91" + phone,
+      "+91" + phone,
+      "+91 " + phone,
+      phone.replace(/(\d{5})(\d{5})/, "$1 $2"),
+      phone.replace(/(\d{5})(\d{5})/, "$1-$2")
+    ];
+    clauses.push("(phone IN (?) OR RIGHT(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), 10) = ?)");
+    params.push(phoneCandidates, phone);
+  }
+
+  if (!clauses.length) return null;
+
+  let sql = `SELECT * FROM users WHERE is_active = 1 AND (${clauses.join(" OR ")})`;
+  if (role) {
+    sql += " AND role = ?";
+    params.push(role);
+  }
+  sql += " LIMIT 1";
+
+  const [rows] = await pool.query(sql, params);
+  return rows[0] || null;
+}
+
 function createToken(user) {
   return jwt.sign(
     {
       id: user.id,
+      name: user.name,
       email: user.email,
+      phone: user.phone,
       role: user.role,
       patient_id: user.patient_id || null
     },
@@ -26,28 +91,33 @@ function generateOtp() {
 }
 
 // Register user: admin/patient
-router.post("/register", async (req, res) => {
+async function registerHandler(req, res) {
   try {
     const { name, email, phone, password, role, patient_id } = req.body;
+    const finalRole = role === "admin" ? "admin" : "patient";
+    const normalizedPhone = normalizeIndianPhone(phone);
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const finalEmail = cleanEmail || (finalRole === "patient" && normalizedPhone ? `${normalizedPhone}@patients.khuntest.local` : "");
 
-    if (!email || !password) {
+    if (!finalEmail || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password required"
+        message: finalRole === "patient" ? "Mobile number and password required" : "Email and password required"
       });
     }
 
-    const finalRole = role === "admin" ? "admin" : "patient";
-
     const [existing] = await pool.query(
-      "SELECT id FROM users WHERE email = ? LIMIT 1",
-      [email]
+      `SELECT id FROM users
+       WHERE email = ?
+          OR (? <> '' AND RIGHT(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), 10) = ?)
+       LIMIT 1`,
+      [finalEmail, normalizedPhone, normalizedPhone]
     );
 
     if (existing.length) {
       return res.status(409).json({
         success: false,
-        message: "Email already registered"
+        message: finalRole === "patient" ? "This mobile number is already registered. Please log in." : "Email already registered"
       });
     }
 
@@ -59,8 +129,8 @@ router.post("/register", async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         name || "",
-        email,
-        phone || "",
+        finalEmail,
+        normalizedPhone || phone || "",
         passwordHash,
         finalRole,
         patient_id || null
@@ -79,33 +149,31 @@ router.post("/register", async (req, res) => {
       message: err.message
     });
   }
-});
+}
+
+router.post("/register", registerHandler);
 
 // Login
-router.post("/login", async (req, res) => {
+async function loginHandler(req, res) {
   try {
-    const { email, password, role } = req.body;
+    const { email, phone, identifier, password, role } = req.body;
+    const loginIdentifier = identifier || phone || email;
 
-    if (!email || !password) {
+    if (!loginIdentifier || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password required"
+        message: "Mobile number/email and password required"
       });
     }
 
-    let query = "SELECT * FROM users WHERE email = ? AND is_active = 1 LIMIT 1";
-    const params = [email];
+    const user = await findActiveUserByIdentifier(loginIdentifier, role || null);
 
-    const [rows] = await pool.query(query, params);
-
-    if (!rows.length) {
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password"
+        message: "Mobile number/email or password is incorrect."
       });
     }
-
-    const user = rows[0];
 
     if (role && user.role !== role) {
       return res.status(403).json({
@@ -119,7 +187,7 @@ router.post("/login", async (req, res) => {
     if (!ok) {
       return res.status(401).json({
         success: false,
-        message: "Invalid email or password"
+        message: "Mobile number/email or password is incorrect."
       });
     }
 
@@ -129,14 +197,8 @@ router.post("/login", async (req, res) => {
       success: true,
       message: "Login successful",
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        patient_id: user.patient_id
-      }
+      user: publicUser(user),
+      patient: user.role === "patient" ? publicUser(user) : undefined
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -145,36 +207,39 @@ router.post("/login", async (req, res) => {
       message: err.message
     });
   }
+}
+
+router.post("/login", loginHandler);
+
+router.post("/patient/login", (req, res) => {
+  req.body = { ...req.body, role: "patient" };
+  return loginHandler(req, res);
+});
+
+router.post("/patient/register", (req, res) => {
+  req.body = { ...req.body, role: "patient" };
+  return registerHandler(req, res);
 });
 
 // Forgot password: send OTP
 router.post("/forgot-password", async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { email, phone, identifier, role } = req.body;
+    const loginIdentifier = identifier || phone || email;
 
-    if (!email) {
+    if (!loginIdentifier) {
       return res.status(400).json({
         success: false,
-        message: "Email required"
+        message: "Mobile number or email required"
       });
     }
 
-    let sql = "SELECT * FROM users WHERE email = ? AND is_active = 1 LIMIT 1";
-    const [rows] = await pool.query(sql, [email]);
+    const user = await findActiveUserByIdentifier(loginIdentifier, role || null);
 
-    if (!rows.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No account found with this email"
-      });
-    }
-
-    const user = rows[0];
-
-    if (role && user.role !== role) {
-      return res.status(403).json({
-        success: false,
-        message: "This email is not registered for this panel"
+    if (!user || !user.email || user.email.endsWith("@patients.khuntest.local")) {
+      return res.json({
+        success: true,
+        message: "If an account exists, password reset instructions will be sent."
       });
     }
 
@@ -185,14 +250,14 @@ router.post("/forgot-password", async (req, res) => {
       `INSERT INTO password_reset_otps
       (user_id, email, otp_hash, expires_at)
       VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))`,
-      [user.id, email, otpHash]
+      [user.id, user.email, otpHash]
     );
 
-    await sendOtpEmail(email, otp);
+    await sendOtpEmail(user.email, otp);
 
     res.json({
       success: true,
-      message: "OTP sent to email"
+      message: "If an account exists, password reset instructions will be sent."
     });
   } catch (err) {
     console.error("Forgot password error:", err);

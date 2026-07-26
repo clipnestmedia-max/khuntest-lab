@@ -853,7 +853,7 @@
     <button onclick="window.print()">Print Report</button>
     <button class="pdf-btn" onclick="window.print()">Download/Save PDF</button>
     <button id="shareWhatsAppBtn" class="hidden" onclick="shareReportWhatsApp()">Share on WhatsApp</button>
-    <button class="back-btn" onclick="window.location.href='admin-dashboard.html'">Back to Dashboard</button>
+    <button id="backDashboardBtn" class="back-btn" onclick="window.location.href='admin-dashboard.html'">Back to Dashboard</button>
     <div class="print-note">For best print: Paper A4, Scale 100%, Margins None/Default, Background Graphics ON.</div>
   </div>
 
@@ -871,6 +871,43 @@
     function getBillNo() {
       const params = getParams();
       return params.get("bill") || params.get("billNo") || params.get("bill_no") || "";
+    }
+
+    function getStoredUser() {
+      try { return JSON.parse(localStorage.getItem("auth_user") || localStorage.getItem("patientUser") || "{}"); } catch (err) { return {}; }
+    }
+
+    function cleanEmail(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function normalizeIndianPhone(value) {
+      const digits = String(value || "").replace(/\D/g, "");
+      return digits.length >= 10 ? digits.slice(-10) : "";
+    }
+
+    function isPatientReportOwner(report) {
+      const user = getStoredUser();
+      if (!user || user.role !== "patient") return true;
+      const reportEmail = cleanEmail(pick(report, ["patientEmail", "email"]));
+      const userEmail = cleanEmail(user.email);
+      const reportPhone = normalizeIndianPhone(pick(report, ["phone", "whatsapp", "contactNo"]));
+      const userPhone = normalizeIndianPhone(user.phone || user.whatsapp || user.mobile);
+      return Boolean(
+        (reportEmail && userEmail && reportEmail === userEmail) ||
+        (reportPhone && userPhone && reportPhone === userPhone)
+      );
+    }
+
+    function setupBackButton() {
+      const user = getStoredUser();
+      const params = getParams();
+      const patientContext = params.get("from") === "patient" || user.role === "patient";
+      const button = document.getElementById("backDashboardBtn");
+      button.textContent = patientContext ? "Back to Patient Dashboard" : "Back to Dashboard";
+      button.onclick = () => {
+        window.location.href = patientContext ? "patient-dashboard.html" : "admin-dashboard.html";
+      };
     }
 
     function safe(value) {
@@ -1505,6 +1542,10 @@
           showError(`Report not found or not released yet.<br><br>Bill No: ${safe(billNo)}`);
           return;
         }
+        if (!isPatientReportOwner(report)) {
+          showError("You are not allowed to view this report.");
+          return;
+        }
         renderReport(report, billNo);
         if (params.get("print") === "1") setTimeout(() => window.print(), 350);
       } catch (err) {
@@ -1513,6 +1554,7 @@
       }
     }
 
+    setupBackButton();
     loadReport();
   </script>
 </body>

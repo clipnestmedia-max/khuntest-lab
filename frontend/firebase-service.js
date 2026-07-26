@@ -51,6 +51,20 @@ function cleanEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+function normalizeIndianPhone(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length < 10) return "";
+  return digits.slice(-10);
+}
+
+function normalizeLoginIdentifier(value) {
+  const cleaned = String(value || "").trim();
+  const digits = cleaned.replace(/\D/g, "");
+  if (/^\+?91[\s-]?\d{10}$/.test(cleaned.replace(/\s|-/g, ""))) return digits.slice(-10);
+  if (/^\d{10}$/.test(digits)) return digits;
+  return cleaned.toLowerCase();
+}
+
 function normalizePatientName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
 }
@@ -447,14 +461,59 @@ function normalizeResult(row) {
 }
 
 export async function loginUser(email, password) {
-  const cred = await signInWithEmailAndPassword(auth, cleanEmail(email), password);
+  const identifier = normalizeLoginIdentifier(email);
+  const loginEmail = await resolvePatientLoginEmail(identifier);
+  const cred = await signInWithEmailAndPassword(auth, loginEmail, password);
   const profileSnap = await getDoc(doc(db, C.users, cred.user.uid));
   if (!profileSnap.exists()) throw new Error("User profile not found in Firestore.");
   const profile = normalizeDoc(profileSnap);
   if (profile.isActive === false) throw new Error("This account is inactive.");
+  const token = await cred.user.getIdToken();
   localStorage.setItem("auth_user", JSON.stringify(profile));
   localStorage.setItem("auth_token", cred.user.uid);
+  if (profile.role === "patient") {
+    localStorage.setItem("patientToken", token);
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("patientUser", JSON.stringify(profile));
+  }
   return profile;
+}
+
+async function resolvePatientLoginEmail(identifier) {
+  if (!identifier) throw new Error("Enter your registered mobile number or email.");
+  if (identifier.includes("@")) return cleanEmail(identifier);
+
+  const phone = normalizeIndianPhone(identifier);
+  if (!phone) throw new Error("Enter a valid 10-digit mobile number.");
+
+  const phoneCandidates = Array.from(new Set([
+    phone,
+    "0" + phone,
+    "91" + phone,
+    "+91" + phone,
+    "+91 " + phone,
+    phone.replace(/(\d{5})(\d{5})/, "$1 $2"),
+    phone.replace(/(\d{5})(\d{5})/, "$1-$2")
+  ]));
+
+  const collectionsToSearch = [C.users, C.patients];
+  const fieldsToSearch = ["normalizedPhone", "phone", "whatsapp", "mobile"];
+
+  for (const collectionName of collectionsToSearch) {
+    for (const field of fieldsToSearch) {
+      const values = field === "normalizedPhone" ? [phone] : phoneCandidates;
+      for (const candidate of values) {
+        const snap = await getDocs(query(collection(db, collectionName), where(field, "==", candidate), limit(1)));
+        if (!snap.empty) {
+          const profile = normalizeDoc(snap.docs[0]);
+          const profileEmail = cleanEmail(profile.email);
+          if (profileEmail) return profileEmail;
+        }
+      }
+    }
+  }
+
+  throw new Error("Mobile number/email or password is incorrect.");
 }
 
 export async function requireAuth() {
@@ -485,6 +544,9 @@ export async function logoutUser() {
   localStorage.removeItem("auth_token");
   localStorage.removeItem("auth_user");
   localStorage.removeItem("kt_session");
+  localStorage.removeItem("patientToken");
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("patientUser");
 }
 
 export async function getCurrentUserRole() {
@@ -502,12 +564,16 @@ export async function getCurrentUserRole() {
 }
 
 export async function registerPatient({ name, email, phone, password, age, gender, address }) {
-  const cred = await createUserWithEmailAndPassword(auth, cleanEmail(email), password);
+  const normalizedPhone = normalizeIndianPhone(phone);
+  const loginEmail = cleanEmail(email) || (normalizedPhone ? `${normalizedPhone}@patients.khuntest.local` : "");
+  const cred = await createUserWithEmailAndPassword(auth, loginEmail, password);
   const profile = {
     uid: cred.user.uid,
     name: normalizePatientName(name),
-    email: cleanEmail(email),
+    email: loginEmail,
+    contactEmail: cleanEmail(email),
     phone: phone || "",
+    normalizedPhone,
     role: "patient",
     age: age || "",
     gender: gender || "",
@@ -518,8 +584,12 @@ export async function registerPatient({ name, email, phone, password, age, gende
   };
   await setDoc(doc(db, C.users, cred.user.uid), profile);
   await setDoc(doc(db, C.patients, cred.user.uid), profile, { merge: true });
+  const token = await cred.user.getIdToken();
   localStorage.setItem("auth_user", JSON.stringify(profile));
   localStorage.setItem("auth_token", cred.user.uid);
+  localStorage.setItem("patientToken", token);
+  localStorage.setItem("authToken", token);
+  localStorage.setItem("patientUser", JSON.stringify(profile));
   return profile;
 }
 
@@ -527,12 +597,23 @@ export async function resetPatientPassword(email) {
   await sendPasswordResetEmail(auth, cleanEmail(email));
 }
 
+export async function resetPatientPasswordByIdentifier(identifier) {
+  const normalized = normalizeLoginIdentifier(identifier);
+  const email = normalized.includes("@") ? cleanEmail(normalized) : await resolvePatientLoginEmail(normalized);
+  if (!email || email.endsWith("@patients.khuntest.local")) {
+    throw new Error("Please contact KhunTest Lab to reset this password.");
+  }
+  await sendPasswordResetEmail(auth, email);
+}
+
 export async function savePatientProfile(uid, profilePatch) {
+  const normalizedPhone = normalizeIndianPhone(profilePatch.phone || profilePatch.mobile || profilePatch.whatsapp);
   const clean = {
     ...profilePatch,
     name: normalizePatientName(profilePatch.name || profilePatch.patientName || ""),
     patientName: normalizePatientName(profilePatch.patientName || profilePatch.name || ""),
     email: cleanEmail(profilePatch.email),
+    normalizedPhone,
     updatedAt: serverTimestamp()
   };
   await setDoc(doc(db, C.users, uid), clean, { merge: true });
@@ -833,10 +914,24 @@ export async function getPatientBookings(email, phone) {
     ? await getDocs(query(collection(db, C.bookings), where("patientEmail", "==", emailValue)))
     : { docs: [] };
   let rows = snap.docs.map(normalizeDoc);
-  if (phone) {
-    const phoneSnap = await getDocs(query(collection(db, C.bookings), where("phone", "==", String(phone).trim())));
+  const normalizedPhone = normalizeIndianPhone(phone);
+  if (normalizedPhone) {
     const byId = new Map(rows.map((row) => [row.id, row]));
-    phoneSnap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
+    const candidates = Array.from(new Set([
+      String(phone || "").trim(),
+      normalizedPhone,
+      "0" + normalizedPhone,
+      "91" + normalizedPhone,
+      "+91" + normalizedPhone,
+      "+91 " + normalizedPhone,
+      normalizedPhone.replace(/(\d{5})(\d{5})/, "$1 $2"),
+      normalizedPhone.replace(/(\d{5})(\d{5})/, "$1-$2")
+    ].filter(Boolean)));
+
+    for (const candidate of candidates) {
+      const phoneSnap = await getDocs(query(collection(db, C.bookings), where("phone", "==", candidate)));
+      phoneSnap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
+    }
     rows = Array.from(byId.values());
   }
   return rows.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));

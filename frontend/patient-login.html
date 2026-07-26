@@ -8,22 +8,32 @@
   <link rel="stylesheet" href="styles.css">
   <script src="seo.js" defer></script>
   <style>
-    .portal-page{min-height:calc(100vh - 280px);display:grid;place-items:center;padding:48px 0;background:linear-gradient(135deg,#f8fbff,#fff1f1)}
-    .patient-card{width:100%;max-width:460px;background:#fff;border-radius:24px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+    .portal-page{min-height:calc(100vh - 280px);display:grid;place-items:center;padding:32px 0;background:#f5f8fc}
+    .patient-card{width:100%;max-width:420px;background:#fff;border-radius:8px;padding:28px;box-shadow:0 14px 38px rgba(15,23,42,.12)}
     .portal-header{text-align:center;margin-bottom:22px}
     .portal-header img{width:72px;height:72px;object-fit:contain;border-radius:16px;margin:0 auto 10px}
-    .portal-header h1{color:#052b5f;font-size:26px;font-weight:900;margin:0}
-    .tabs{display:flex;background:#eef3f9;border-radius:16px;padding:5px;margin-bottom:22px}
-    .tabs button{flex:1;border:0;padding:12px;border-radius:12px;background:transparent;font-weight:900;cursor:pointer;color:#334155}
+    .portal-header h1{color:#052b5f;font-size:25px;font-weight:900;margin:0 0 8px}
+    .portal-header p{color:#475569;font-size:15px;margin:0;line-height:1.45}
+    .tabs{display:flex;background:#eef3f9;border-radius:8px;padding:5px;margin-bottom:22px}
+    .tabs button{flex:1;border:0;padding:12px;border-radius:6px;background:transparent;font-weight:900;cursor:pointer;color:#334155;min-height:48px}
     .tabs button.active{background:#fff;color:#d60000;box-shadow:0 6px 18px rgba(0,0,0,.08)}
     .form-box{display:none}
     .form-box.active{display:block}
-    .forgot{display:block;text-align:right;margin:4px 0 16px;color:#0b5ed7;font-weight:800;font-size:14px;text-decoration:none}
+    .patient-card label{display:block;color:#0f172a;font-weight:800;margin:14px 0 6px}
+    .patient-card input{min-height:48px;border-radius:8px;font-size:16px}
+    .password-row{position:relative}
+    .password-row input{padding-right:72px}
+    .show-password{position:absolute;right:8px;top:7px;border:0;background:#eef3f9;color:#052b5f;border-radius:6px;min-height:34px;padding:0 10px;font-weight:800;cursor:pointer}
+    .forgot{display:block;text-align:right;margin:8px 0 16px;color:#0b5ed7;font-weight:800;font-size:14px;text-decoration:none}
+    .auth-links{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;font-size:14px}
+    .auth-links a,.auth-switch{color:#0b5ed7;font-weight:800;text-decoration:none;background:transparent;border:0;padding:0;cursor:pointer}
     .back{display:block;text-align:center;margin-top:18px;color:#0f172a;text-decoration:none;font-size:15px}
-    .msg{display:none;margin-top:14px;padding:12px;border-radius:12px;font-size:14px;font-weight:700}
+    .msg{display:none;margin:0 0 14px;padding:12px;border-radius:8px;font-size:14px;font-weight:700}
     .msg.error{display:block;background:#fee2e2;color:#991b1b}
     .msg.success{display:block;background:#dcfce7;color:#166534}
-    @media (max-width:480px){.patient-card{padding:24px}.portal-page{padding:32px 0}.tabs button{padding:11px 8px}}
+    .btn-full{width:100%;min-height:48px}
+    .privacy-row{display:flex;gap:10px;align-items:flex-start;margin:14px 0}.privacy-row input{width:auto;min-height:0;margin-top:3px}
+    @media (max-width:480px){.patient-card{padding:22px}.portal-page{padding:22px 0}.tabs button{padding:11px 8px}.topbar,.nav,.footer{display:none}}
   </style>
 </head>
 <body>
@@ -58,7 +68,8 @@
       <div class="patient-card">
         <div class="portal-header">
           <img src="assets/khuntest-logo.png" alt="KHUNTEST LABS Logo">
-          <h1>Patient Portal</h1>
+          <h1>Welcome to KhunTest Lab</h1>
+          <p>Log in to view your bookings, payments and laboratory reports.</p>
         </div>
 
         <div class="tabs">
@@ -68,51 +79,59 @@
 
         <div id="loginBox" class="form-box active">
           <form id="patientLoginForm">
-            <label>Email</label>
-            <input id="loginEmail" type="email" placeholder="Enter registered email" required>
+            <div id="loginMessage" class="msg"></div>
+            <label for="loginIdentifier">Mobile Number or Email</label>
+            <input id="loginIdentifier" type="text" inputmode="email" placeholder="Enter your mobile number or email" autocomplete="username" required>
 
-            <label>Password</label>
-            <input id="loginPassword" type="password" placeholder="Enter password" required>
+            <label for="loginPassword">Password</label>
+            <div class="password-row">
+              <input id="loginPassword" type="password" placeholder="Enter password" autocomplete="current-password" required>
+              <button class="show-password" data-target="loginPassword" type="button">Show</button>
+            </div>
 
             <a href="forgot-password.html?role=patient" class="forgot">Forgot Password?</a>
 
-            <button class="btn btn-red" type="submit" style="width:100%">Login</button>
+            <button id="loginButton" class="btn btn-red btn-full" type="submit">Login</button>
+            <div class="auth-links">
+              <span>New patient?</span>
+              <button class="auth-switch" type="button" data-tab="register">Create account</button>
+            </div>
           </form>
         </div>
 
         <div id="registerBox" class="form-box">
           <form id="patientRegisterForm">
-            <label>Patient Name</label>
-            <input id="regName" type="text" placeholder="Enter patient name" required>
+            <div id="registerMessage" class="msg"></div>
+            <label for="regName">Full Name</label>
+            <input id="regName" type="text" placeholder="Enter full name" autocomplete="name" required>
 
-            <label>Email</label>
-            <input id="regEmail" type="email" placeholder="Enter email" required>
+            <label for="regPhone">Mobile Number</label>
+            <input id="regPhone" type="tel" inputmode="tel" placeholder="Enter 10-digit mobile number" autocomplete="tel" required>
 
-            <label>Phone</label>
-            <input id="regPhone" type="tel" placeholder="Enter phone number" required>
+            <label for="regEmail">Email Address <span style="font-weight:600;color:#64748b">(optional)</span></label>
+            <input id="regEmail" type="email" placeholder="Enter email address" autocomplete="email">
 
-            <label>Age</label>
-            <input id="regAge" type="number" placeholder="Enter age">
+            <label for="regPassword">Password</label>
+            <div class="password-row">
+              <input id="regPassword" type="password" placeholder="Create password" autocomplete="new-password" required>
+              <button class="show-password" data-target="regPassword" type="button">Show</button>
+            </div>
 
-            <label>Gender</label>
-            <select id="regGender">
-              <option value="">Select gender</option>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
+            <label for="regConfirmPassword">Confirm Password</label>
+            <div class="password-row">
+              <input id="regConfirmPassword" type="password" placeholder="Confirm password" autocomplete="new-password" required>
+              <button class="show-password" data-target="regConfirmPassword" type="button">Show</button>
+            </div>
 
-            <label>Address</label>
-            <textarea id="regAddress" placeholder="Enter address"></textarea>
+            <label class="privacy-row"><input id="regPrivacy" type="checkbox" required><span>I accept the privacy policy.</span></label>
 
-            <label>Password</label>
-            <input id="regPassword" type="password" placeholder="Create password" required>
-
-            <button class="btn btn-red" type="submit" style="width:100%">Register</button>
+            <button id="registerButton" class="btn btn-red btn-full" type="submit">Create Account</button>
+            <div class="auth-links">
+              <span>Already registered?</span>
+              <button class="auth-switch" type="button" data-tab="login">Login</button>
+            </div>
           </form>
         </div>
-
-        <div id="message" class="msg"></div>
         <a href="index.html" class="back">← Back to Website</a>
       </div>
     </div>
@@ -131,11 +150,49 @@
   <script type="module">
     import { loginUser, logoutUser, registerPatient } from "./firebase-service.js";
 
-    const msg = document.getElementById("message");
+    let isSubmitting = false;
+    const loginMsg = document.getElementById("loginMessage");
+    const registerMsg = document.getElementById("registerMessage");
 
-    function showMessage(text, type) {
-      msg.textContent = text;
-      msg.className = "msg " + type;
+    function normalizeLoginIdentifier(value) {
+      const cleaned = String(value || "").trim();
+      const digits = cleaned.replace(/\D/g, "");
+      if (/^\+?91[\s-]?\d{10}$/.test(cleaned.replace(/\s|-/g, ""))) return digits.slice(-10);
+      if (/^\d{10}$/.test(digits)) return digits;
+      return cleaned.toLowerCase();
+    }
+
+    function normalizeIndianPhone(value) {
+      const digits = String(value || "").replace(/\D/g, "");
+      return digits.length >= 10 ? digits.slice(-10) : "";
+    }
+
+    function showMessage(target, text, type) {
+      target.textContent = text;
+      target.className = "msg " + type;
+    }
+
+    function clearMessages() {
+      [loginMsg, registerMsg].forEach((target) => {
+        target.className = "msg";
+        target.textContent = "";
+      });
+    }
+
+    function friendlyError(err) {
+      const text = String(err?.message || "").toLowerCase();
+      if (text.includes("wrong-password") || text.includes("user-not-found") || text.includes("invalid-credential") || text.includes("incorrect")) {
+        return "Mobile number/email or password is incorrect.";
+      }
+      if (text.includes("inactive")) return "Your account needs assistance. Please contact KhunTest Lab.";
+      if (text.includes("network") || text.includes("failed to fetch")) return "We could not connect to the server. Check your internet and try again.";
+      if (text.includes("email-already-in-use")) return "This mobile number or email is already registered. Please log in.";
+      return err?.message || "Login is temporarily unavailable. Please try again shortly.";
+    }
+
+    function setButtonLoading(button, isLoading, label) {
+      button.disabled = isLoading;
+      button.textContent = isLoading ? "Please wait..." : label;
     }
 
     function showTab(tab) {
@@ -143,8 +200,7 @@
       document.getElementById("registerTab").classList.toggle("active", tab === "register");
       document.getElementById("loginBox").classList.toggle("active", tab === "login");
       document.getElementById("registerBox").classList.toggle("active", tab === "register");
-      msg.className = "msg";
-      msg.textContent = "";
+      clearMessages();
     }
 
     const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
@@ -167,68 +223,120 @@
       showTab("register");
     });
 
+    document.querySelectorAll(".auth-switch").forEach((button) => {
+      button.addEventListener("click", () => showTab(button.dataset.tab));
+    });
+
+    document.querySelectorAll(".show-password").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = document.getElementById(button.dataset.target);
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        button.textContent = show ? "Hide" : "Show";
+      });
+    });
+
     document.getElementById("patientLoginForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+      if (isSubmitting) return;
 
-      const email = document.getElementById("loginEmail").value.trim();
+      const identifier = normalizeLoginIdentifier(document.getElementById("loginIdentifier").value);
       const password = document.getElementById("loginPassword").value;
+      const loginButton = document.getElementById("loginButton");
 
-      if (!email || !password) {
-        showMessage("Email and password required.", "error");
+      if (!identifier) {
+        showMessage(loginMsg, "Enter your registered mobile number or email.", "error");
+        document.getElementById("loginIdentifier").focus();
         return;
       }
 
-      showMessage("Logging in...", "success");
+      if (!password) {
+        showMessage(loginMsg, "Enter your password.", "error");
+        document.getElementById("loginPassword").focus();
+        return;
+      }
 
       try {
-        const user = await loginUser(email, password);
+        isSubmitting = true;
+        clearMessages();
+        setButtonLoading(loginButton, true, "Login");
+        const user = await loginUser(identifier, password);
 
         if (!user || user.role !== "patient") {
           await logoutUser();
-          showMessage("This account is not a patient account.", "error");
+          showMessage(loginMsg, "This account is not a patient account.", "error");
           return;
         }
 
-        showMessage("Login successful. Redirecting...", "success");
+        showMessage(loginMsg, "Login successful. Redirecting...", "success");
 
         setTimeout(function() {
-          window.location.href = "patient-dashboard.html";
+          window.location.replace("patient-dashboard.html");
         }, 500);
       } catch (err) {
         console.error(err);
-        showMessage(err.message || "Firebase login failed.", "error");
+        showMessage(loginMsg, friendlyError(err), "error");
+      } finally {
+        isSubmitting = false;
+        setButtonLoading(loginButton, false, "Login");
       }
     });
 
     document.getElementById("patientRegisterForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+      if (isSubmitting) return;
 
       const name = normalizePatientName(document.getElementById("regName").value);
-      const email = document.getElementById("regEmail").value.trim();
-      const phone = document.getElementById("regPhone").value.trim();
+      const phone = normalizeIndianPhone(document.getElementById("regPhone").value);
+      const email = document.getElementById("regEmail").value.trim().toLowerCase();
       const password = document.getElementById("regPassword").value;
-      const age = document.getElementById("regAge").value.trim();
-      const gender = document.getElementById("regGender").value;
-      const address = document.getElementById("regAddress").value.trim();
+      const confirmPassword = document.getElementById("regConfirmPassword").value;
+      const registerButton = document.getElementById("registerButton");
 
-      if (!name || !email || !phone || !password) {
-        showMessage("All fields are required.", "error");
+      if (name.length < 2) {
+        showMessage(registerMsg, "Enter your full name.", "error");
+        return;
+      }
+      if (!phone) {
+        showMessage(registerMsg, "Enter a valid 10-digit mobile number.", "error");
+        return;
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showMessage(registerMsg, "Enter a valid email address.", "error");
+        return;
+      }
+      if (password.length < 6) {
+        showMessage(registerMsg, "Password must be at least 6 characters.", "error");
+        return;
+      }
+      if (password !== confirmPassword) {
+        showMessage(registerMsg, "Passwords do not match.", "error");
+        return;
+      }
+      if (!document.getElementById("regPrivacy").checked) {
+        showMessage(registerMsg, "Please accept the privacy policy.", "error");
         return;
       }
 
       try {
-        await registerPatient({ name, email, phone, password, age, gender, address });
+        isSubmitting = true;
+        clearMessages();
+        setButtonLoading(registerButton, true, "Create Account");
+        await registerPatient({ name, email, phone, password });
 
-        showMessage("Registration successful. Please login.", "success");
-        document.getElementById("loginEmail").value = email;
+        showMessage(registerMsg, "Account created successfully. Redirecting...", "success");
+        document.getElementById("loginIdentifier").value = email || phone;
         document.getElementById("patientRegisterForm").reset();
 
         setTimeout(function() {
-          showTab("login");
-        }, 700);
+          window.location.replace("patient-dashboard.html");
+        }, 600);
       } catch (err) {
         console.error(err);
-        showMessage(err.message || "Firebase registration failed.", "error");
+        showMessage(registerMsg, friendlyError(err), "error");
+      } finally {
+        isSubmitting = false;
+        setButtonLoading(registerButton, false, "Create Account");
       }
     });
   </script>

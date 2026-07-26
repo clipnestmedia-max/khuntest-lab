@@ -34,7 +34,9 @@ app.get("/health", (req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api", publicRoutes);
+app.use("/api/patients", authRoutes);
 app.use("/api/patient", patientRoutes);
+app.use("/api/patients", patientRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/whatsapp", whatsappRoutes);

@@ -89,6 +89,28 @@
       font-weight: 900;
       color: #062b5f;
     }
+    .action-card {
+      text-decoration: none;
+      color: inherit;
+      min-height: 92px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: left;
+    }
+    .action-card strong {
+      color: #062b5f;
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+    .action-card span {
+      color: #64748b;
+      font-size: 14px;
+    }
+    button.action-card {
+      border: 0;
+      cursor: pointer;
+    }
 
     .section {
       background: #fff;
@@ -188,20 +210,12 @@
     </div>
 
     <div class="cards">
-      <div class="card">
-        <h3>Total Bookings</h3>
-        <div class="num" id="totalBookings">0</div>
-      </div>
-
-      <div class="card">
-        <h3>Reports</h3>
-        <div class="num" id="totalReports">0</div>
-      </div>
-
-      <div class="card">
-        <h3>Status</h3>
-        <div class="num" style="font-size:22px;" id="accountStatus">Active</div>
-      </div>
+      <a class="card action-card" href="#bookingArea"><strong>My Reports</strong><span id="totalReports">0 ready reports</span></a>
+      <a class="card action-card" href="#bookingArea"><strong>My Bookings</strong><span id="totalBookings">0 bookings</span></a>
+      <a class="card action-card" href="booking.html"><strong>Book a Test</strong><span>Schedule a visit or home collection</span></a>
+      <a class="card action-card" href="#bookingArea"><strong>Payment History</strong><span>See payment status with each booking</span></a>
+      <button class="card action-card" type="button" onclick="toggleProfile()"><strong>My Profile</strong><span>Update contact details</span></button>
+      <button class="card action-card" type="button" onclick="logout()"><strong>Logout</strong><span>End this session</span></button>
     </div>
 
     <div class="section">
@@ -221,6 +235,16 @@
     function getUser() {
       try { return JSON.parse(localStorage.getItem("auth_user") || "{}"); } catch (e) { return {}; }
     }
+    function getPatientToken() {
+      return localStorage.getItem("patientToken") || localStorage.getItem("authToken") || localStorage.getItem("auth_token");
+    }
+    function clearPatientSession() {
+      localStorage.removeItem("patientToken");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("patientUser");
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+    }
     let currentAuthUser = null;
     let currentProfile = {};
     let onlineRows = [];
@@ -228,10 +252,15 @@
 
     window.logout = async function() {
       await logoutUser();
+      clearPatientSession();
       window.location.href = "patient-login.html";
     };
 
     async function protectPage() {
+      if (!getPatientToken()) {
+        window.location.replace("patient-login.html");
+        return null;
+      }
       const current = await new Promise((resolve) => {
         const unsub = onAuthStateChanged(auth, (user) => {
           unsub();
@@ -243,7 +272,8 @@
       currentProfile = user;
       const role = current ? await getCurrentUserRole() : null;
       if (!current || role !== "patient") {
-        window.location.href = "patient-login.html";
+        clearPatientSession();
+        window.location.replace("patient-login.html");
         return null;
       }
       return user;
@@ -319,11 +349,11 @@
       const user = await protectPage();
       if (!user) return;
 
-      document.getElementById("welcomeName").innerText =
-        "Welcome, " + (normalizePatientName(user.name) || "Patient");
+      const firstName = normalizePatientName(user.name).split(" ")[0] || "Patient";
+      document.getElementById("welcomeName").innerText = "Hello, " + firstName;
 
       document.getElementById("patientEmail").innerText =
-        user.email || "";
+        "Your reports and bookings are available below.";
       fillProfileForm(user);
 
       try {
@@ -336,12 +366,12 @@
         if (currentAuthUser) {
           listenMyOnlineBookings(currentAuthUser.uid, (rows) => {
             onlineRows = rows;
-            document.getElementById("totalBookings").innerText = patientBookings.length + onlineRows.length;
+            document.getElementById("totalBookings").innerText = `${patientBookings.length + onlineRows.length} bookings`;
             renderBookings(patientBookings, reportFlags);
           }, (err) => console.error(err));
         }
-        document.getElementById("totalBookings").innerText = patientBookings.length;
-        document.getElementById("totalReports").innerText = reportFlags.filter(Boolean).length;
+        document.getElementById("totalBookings").innerText = `${patientBookings.length} bookings`;
+        document.getElementById("totalReports").innerText = `${reportFlags.filter(Boolean).length} ready reports`;
 
         if (!patientBookings.length && !onlineRows.length) {
           const area = document.getElementById("bookingArea");
@@ -398,7 +428,7 @@
                   <td>${safe(b.status || "Pending")}</td>
                   <td>
                     ${reportFlags[index]
-                      ? `<a class="btn" href="report.html?bill=${encodeURIComponent(bill)}" target="_blank">View Report</a>`
+                      ? `<a class="btn" href="report.html?bill=${encodeURIComponent(bill)}&from=patient">View Report</a>`
                       : "Not released"}
                     ${billButtonHtml("booking", b.id || bill)}
                   </td>
