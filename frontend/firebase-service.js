@@ -24,6 +24,8 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+export { auth, db };
+
 const C = {
   users: "users",
   bookings: "bookings",
@@ -908,15 +910,23 @@ export async function getTodayBookings() {
   return snap.docs.map(normalizeDoc).sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
 }
 
-export async function getPatientBookings(email, phone) {
+export async function getPatientBookings(email, phone, identity = {}) {
   const emailValue = cleanEmail(email);
+  const uid = String(identity.uid || identity.id || identity.patientId || "").trim();
+  const byId = new Map();
   const snap = emailValue
     ? await getDocs(query(collection(db, C.bookings), where("patientEmail", "==", emailValue)))
     : { docs: [] };
-  let rows = snap.docs.map(normalizeDoc);
+  snap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
+  if (uid) {
+    for (const field of ["patientUid", "uid", "patientId", "userId", "firebaseUid"]) {
+      const uidSnap = await getDocs(query(collection(db, C.bookings), where(field, "==", uid))).catch(() => ({ docs: [] }));
+      uidSnap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
+    }
+  }
+  let rows = Array.from(byId.values());
   const normalizedPhone = normalizeIndianPhone(phone);
   if (normalizedPhone) {
-    const byId = new Map(rows.map((row) => [row.id, row]));
     const candidates = Array.from(new Set([
       String(phone || "").trim(),
       normalizedPhone,

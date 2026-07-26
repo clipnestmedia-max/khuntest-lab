@@ -225,58 +225,34 @@
   </div>
 
   <script type="module">
-    import { auth, createCustomerBillForBooking, getCurrentUserRole, getPatientBookings, getReportByBillNo, listenMyOnlineBookings, logoutUser, resetPatientPassword, savePatientProfile } from "./firebase-service.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { createCustomerBillForBooking, getPatientBookings, getReportByBillNo, listenMyOnlineBookings, savePatientProfile } from "./firebase-service.js";
+    import { clearPatientSession, logoutPatient, requestPatientPasswordReset, requirePatientAuth } from "./js/patient-auth.js";
 
     function safe(value) {
       return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
     }
 
-    function getUser() {
-      try { return JSON.parse(localStorage.getItem("auth_user") || "{}"); } catch (e) { return {}; }
-    }
-    function getPatientToken() {
-      return localStorage.getItem("patientToken") || localStorage.getItem("authToken") || localStorage.getItem("auth_token");
-    }
-    function clearPatientSession() {
-      localStorage.removeItem("patientToken");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("patientUser");
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_user");
-    }
     let currentAuthUser = null;
     let currentProfile = {};
     let onlineRows = [];
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
 
     window.logout = async function() {
-      await logoutUser();
-      clearPatientSession();
+      await logoutPatient();
       window.location.href = "patient-login.html";
     };
 
     async function protectPage() {
-      if (!getPatientToken()) {
-        window.location.replace("patient-login.html");
-        return null;
-      }
-      const current = await new Promise((resolve) => {
-        const unsub = onAuthStateChanged(auth, (user) => {
-          unsub();
-          resolve(user);
-        });
-      });
-      const user = getUser();
-      currentAuthUser = current;
-      currentProfile = user;
-      const role = current ? await getCurrentUserRole() : null;
-      if (!current || role !== "patient") {
+      try {
+        const patient = await requirePatientAuth();
+        currentAuthUser = { uid: patient.uid || patient.id, email: patient.email };
+        currentProfile = patient;
+        return patient;
+      } catch (err) {
         clearPatientSession();
         window.location.replace("patient-login.html");
         return null;
       }
-      return user;
     }
 
     window.toggleProfile = function() {
@@ -287,7 +263,7 @@
     window.changePassword = async function() {
       const email = currentProfile.email || currentAuthUser?.email;
       if (!email) return alert("Email not found.");
-      await resetPatientPassword(email);
+      await requestPatientPasswordReset(email);
       alert("Password reset email sent.");
     };
 
@@ -346,8 +322,16 @@
     };
 
     async function loadPatientDashboard() {
-      const user = await protectPage();
-      if (!user) return;
+      let user = null;
+      try {
+        document.getElementById("patientEmail").innerText = "Loading your account...";
+        user = await protectPage();
+        if (!user) return;
+      } catch (err) {
+        document.getElementById("patientEmail").innerText = "We could not load your account information.";
+        document.getElementById("bookingArea").innerHTML = "<div class='empty'>We could not load your account information.<br><button class='btn' type='button' onclick='location.reload()'>Retry</button> <button class='btn btn-red' type='button' onclick='logout()'>Log out and sign in again</button></div>";
+        return;
+      }
 
       const firstName = normalizePatientName(user.name).split(" ")[0] || "Patient";
       document.getElementById("welcomeName").innerText = "Hello, " + firstName;
@@ -357,7 +341,7 @@
       fillProfileForm(user);
 
       try {
-        const patientBookings = await getPatientBookings(user.email, user.phone);
+        const patientBookings = await getPatientBookings(user.email, user.phone, user);
         const reportFlags = await Promise.all(patientBookings.map(async (b) => {
           const bill = b.billNo || b.bill_no || "";
           return bill ? Boolean(await getReportByBillNo(bill)) : false;
@@ -383,7 +367,9 @@
       } catch (err) {
         console.error(err);
         document.getElementById("bookingArea").innerHTML =
-          "<div class='empty'>Unable to load bookings.</div>";
+          "<div class='empty'>We could not load your account information.<br><button class='btn' type='button' onclick='location.reload()'>Retry</button> <button class='btn btn-red' type='button' onclick='logout()'>Log out and sign in again</button></div>";
+        document.getElementById("totalBookings").innerText = "Unable to load";
+        document.getElementById("totalReports").innerText = "Unable to load";
       }
     }
 

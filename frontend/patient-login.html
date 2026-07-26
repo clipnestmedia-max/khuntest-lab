@@ -148,7 +148,7 @@
   </footer>
 
   <script type="module">
-    import { loginUser, logoutUser, registerPatient } from "./firebase-service.js";
+    import { loginPatient, logoutPatient, registerPatient } from "./js/patient-auth.js";
 
     let isSubmitting = false;
     const loginMsg = document.getElementById("loginMessage");
@@ -260,10 +260,11 @@
         isSubmitting = true;
         clearMessages();
         setButtonLoading(loginButton, true, "Login");
-        const user = await loginUser(identifier, password);
+        const result = await loginPatient(identifier, password);
+        const user = result.patient;
 
         if (!user || user.role !== "patient") {
-          await logoutUser();
+          await logoutPatient();
           showMessage(loginMsg, "This account is not a patient account.", "error");
           return;
         }
