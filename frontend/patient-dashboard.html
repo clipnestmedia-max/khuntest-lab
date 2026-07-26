@@ -210,8 +210,8 @@
     </div>
 
     <div class="cards">
-      <a class="card action-card" href="#bookingArea"><strong>My Reports</strong><span id="totalReports">0 ready reports</span></a>
-      <a class="card action-card" href="#bookingArea"><strong>My Bookings</strong><span id="totalBookings">0 bookings</span></a>
+      <a class="card action-card" href="#bookingArea"><strong>My Reports</strong><span id="totalReports">Loading...</span></a>
+      <a class="card action-card" href="#bookingArea"><strong>My Bookings</strong><span id="totalBookings">Loading...</span></a>
       <a class="card action-card" href="booking.html"><strong>Book a Test</strong><span>Schedule a visit or home collection</span></a>
       <a class="card action-card" href="#bookingArea"><strong>Payment History</strong><span>See payment status with each booking</span></a>
       <button class="card action-card" type="button" onclick="toggleProfile()"><strong>My Profile</strong><span>Update contact details</span></button>
@@ -225,8 +225,8 @@
   </div>
 
   <script type="module">
-    import { createCustomerBillForBooking, getPatientBookings, getReportByBillNo, listenMyOnlineBookings, savePatientProfile } from "./firebase-service.js";
-    import { clearPatientSession, logoutPatient, requestPatientPasswordReset, requirePatientAuth } from "./js/patient-auth.js";
+    import { createCustomerBillForBooking, getMyOnlineBookings, getPatientBookings, savePatientProfile } from "./firebase-service.js";
+    import { clearPatientSession, getCurrentPatient, logoutPatient, requestPatientPasswordReset, requirePatientAuth } from "./js/patient-auth.js";
 
     function safe(value) {
       return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -235,6 +235,7 @@
     let currentAuthUser = null;
     let currentProfile = {};
     let onlineRows = [];
+    let dashboardLoadPromise = null;
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
 
     window.logout = async function() {
@@ -274,6 +275,15 @@
       });
     }
 
+    function renderCachedPatientShell() {
+      const cached = getCurrentPatient();
+      if (!cached) return;
+      const firstName = normalizePatientName(cached.name).split(" ")[0] || "Patient";
+      document.getElementById("welcomeName").innerText = "Hello, " + firstName;
+      document.getElementById("patientEmail").innerText = "Loading your latest bookings...";
+      fillProfileForm(cached);
+    }
+
     const normalizePatientName = (value) => String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
     const profileNameInput = document.querySelector('#profileForm [name="name"]');
     profileNameInput?.classList.add("patient-name-field");
@@ -304,6 +314,21 @@
       return `<button class="btn" onclick="openPatientBill('${source}','${safe(id)}')">Print Bill</button>`;
     }
 
+    function reportReadyFromBooking(booking = {}) {
+      const status = String(booking.status || booking.reportStatus || "").toLowerCase();
+      return Boolean(
+        booking.reportReleased ||
+        booking.reportBillNo ||
+        booking.reportUrl ||
+        booking.reportPdf ||
+        status.includes("reported") ||
+        status.includes("final") ||
+        (Array.isArray(booking.results) && booking.results.length) ||
+        (Array.isArray(booking.reportResults) && booking.reportResults.length) ||
+        (Array.isArray(booking.reportValues) && booking.reportValues.length)
+      );
+    }
+
     window.openPatientBill = async function(source, id) {
       const row = source === "online"
         ? onlineRows.find((booking) => String(booking.id || booking.bookingId) === String(id))
@@ -322,9 +347,17 @@
     };
 
     async function loadPatientDashboard() {
+      if (dashboardLoadPromise) return dashboardLoadPromise;
+      dashboardLoadPromise = loadPatientDashboardData();
+      return dashboardLoadPromise;
+    }
+
+    async function loadPatientDashboardData() {
       let user = null;
       try {
-        document.getElementById("patientEmail").innerText = "Loading your account...";
+        renderCachedPatientShell();
+        document.getElementById("totalBookings").innerText = "Loading...";
+        document.getElementById("totalReports").innerText = "Loading...";
         user = await protectPage();
         if (!user) return;
       } catch (err) {
@@ -341,20 +374,15 @@
       fillProfileForm(user);
 
       try {
-        const patientBookings = await getPatientBookings(user.email, user.phone, user);
-        const reportFlags = await Promise.all(patientBookings.map(async (b) => {
-          const bill = b.billNo || b.bill_no || "";
-          return bill ? Boolean(await getReportByBillNo(bill)) : false;
-        }));
+        const [patientBookingsResult, onlineBookingsResult] = await Promise.allSettled([
+          getPatientBookings(user.email, user.phone, user, { limitCount: 25 }),
+          currentAuthUser?.uid ? getMyOnlineBookings(currentAuthUser.uid, { limitCount: 25 }) : Promise.resolve([])
+        ]);
+        const patientBookings = patientBookingsResult.status === "fulfilled" ? patientBookingsResult.value : [];
+        onlineRows = onlineBookingsResult.status === "fulfilled" ? onlineBookingsResult.value : [];
+        const reportFlags = patientBookings.map(reportReadyFromBooking);
 
-        if (currentAuthUser) {
-          listenMyOnlineBookings(currentAuthUser.uid, (rows) => {
-            onlineRows = rows;
-            document.getElementById("totalBookings").innerText = `${patientBookings.length + onlineRows.length} bookings`;
-            renderBookings(patientBookings, reportFlags);
-          }, (err) => console.error(err));
-        }
-        document.getElementById("totalBookings").innerText = `${patientBookings.length} bookings`;
+        document.getElementById("totalBookings").innerText = `${patientBookings.length + onlineRows.length} bookings`;
         document.getElementById("totalReports").innerText = `${reportFlags.filter(Boolean).length} ready reports`;
 
         if (!patientBookings.length && !onlineRows.length) {

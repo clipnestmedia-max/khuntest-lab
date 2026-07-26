@@ -232,7 +232,7 @@
   <a class="whatsapp-float" href="https://wa.me/919234277007?text=Hello%20KHUNTEST%20LABS%2C%20I%20want%20to%20book%20a%20test" target="_blank">☎</a>
 
   <script type="module">
-    import { createCustomerBillForBooking, createOnlineBooking, loadAvailableTests, savePatientProfile } from "./firebase-service.js";
+    import { createCustomerBillForBooking, createOnlineBooking, loadAvailableTestSummaries, savePatientProfile } from "./firebase-service.js";
     import { fetchCurrentPatient, loginPatient, logoutPatient, normalizeIndianPhone, registerPatient, requestPatientPasswordReset } from "./js/patient-auth.js";
 
     let catalog = [];
@@ -277,6 +277,10 @@
 
     function testLabel(test) {
       return `${test.name} - ${rupees(test.price)} (${test.testCode})`;
+    }
+
+    function parameterCount(test) {
+      return Number(test.parameterCount ?? test.parameters?.length ?? 0);
     }
 
     function selectedTotal() {
@@ -409,7 +413,7 @@
           <td><b>${safe(test.name)}</b><br><small>${safe(test.testCode)}</small></td>
           <td>${safe(test.category)}</td>
           <td>${rupees(test.price)}</td>
-          <td>${safe(test.parameters?.length || 0)}</td>
+          <td>${safe(parameterCount(test))}</td>
           <td><button class="btn btn-red btn-small" type="button" onclick="selectCatalogTest(${index})">Select</button></td>
         </tr>
       `).join("") || `<tr><td colspan="5">No tests found.</td></tr>`;
@@ -427,7 +431,7 @@
           <td><b>${safe(test.name)}</b><br><small>${safe(test.testCode)}</small></td>
           <td>${safe(test.category)}</td>
           <td>${rupees(test.price)}</td>
-          <td>${safe(test.parameters?.length || 0)}</td>
+          <td>${safe(parameterCount(test))}</td>
           <td><button class="btn btn-outline btn-small" type="button" onclick="removeSelectedTest(${index})">Remove</button></td>
         </tr>
       `).join("") : `<tr><td colspan="5">No test selected.</td></tr>`;
@@ -470,21 +474,26 @@
       addSelectedTest();
     };
 
+    let catalogPromise = null;
     async function loadCatalog() {
-      const result = await loadAvailableTests();
-      catalog = result.tests || [];
-      $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
-      renderCategories();
-      renderCatalog();
-      const requested = new URLSearchParams(location.search).get("test");
-      if (requested) {
-        const match = catalog.find((test) => test.testCode === requested || test.name === requested);
-        if (match) {
-          selectedTests = [match];
-          renderSelectedTests();
+      if (catalogPromise) return catalogPromise;
+      catalogPromise = (async () => {
+        const result = await loadAvailableTestSummaries();
+        catalog = result.tests || [];
+        $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
+        renderCategories();
+        renderCatalog();
+        const requested = new URLSearchParams(location.search).get("test");
+        if (requested) {
+          const match = catalog.find((test) => test.testCode === requested || test.name === requested);
+          if (match) {
+            selectedTests = [match];
+            renderSelectedTests();
+          }
         }
-      }
-      if (!catalog.length) showMessage("error", "No tests imported yet. Admin should import tests first.");
+        if (!catalog.length) showMessage("error", "No tests imported yet. Admin should import tests first.");
+      })();
+      return catalogPromise;
     }
 
     window.bookTest = async function(e) {

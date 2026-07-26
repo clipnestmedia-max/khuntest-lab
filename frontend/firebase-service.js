@@ -49,6 +49,66 @@ let lastTestsLoadInfo = {
   error: ""
 };
 
+const CACHE_TTL = {
+  tests: 10 * 60 * 1000,
+  testSummaries: 10 * 60 * 1000,
+  patientBookings: 60 * 1000,
+  onlineBookings: 45 * 1000
+};
+const cacheMemory = new Map();
+const inFlightRequests = new Map();
+
+function cacheRead(key) {
+  const now = Date.now();
+  const memory = cacheMemory.get(key);
+  if (memory?.expiresAt > now) return memory.value;
+  if (memory) cacheMemory.delete(key);
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || "null");
+    if (saved?.expiresAt > now) {
+      cacheMemory.set(key, saved);
+      return saved.value;
+    }
+    if (saved) localStorage.removeItem(key);
+  } catch (_err) {}
+  return null;
+}
+
+function cacheWrite(key, value, ttlMs) {
+  const entry = { value, expiresAt: Date.now() + ttlMs };
+  cacheMemory.set(key, entry);
+  try { localStorage.setItem(key, JSON.stringify(entry)); } catch (_err) {}
+  return value;
+}
+
+function withRequestDedupe(key, loader) {
+  if (inFlightRequests.has(key)) return inFlightRequests.get(key);
+  const promise = Promise.resolve()
+    .then(loader)
+    .finally(() => inFlightRequests.delete(key));
+  inFlightRequests.set(key, promise);
+  return promise;
+}
+
+function revalidateCache(key, ttlMs, loader) {
+  withRequestDedupe(`revalidate:${key}`, async () => {
+    const value = await loader();
+    cacheWrite(key, value, ttlMs);
+    return value;
+  }).catch(() => {});
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+  if (typeof AbortController === "undefined") return fetch(url, options);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function cleanEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
@@ -154,6 +214,12 @@ function accessToken() {
 function toDate(value) {
   if (!value) return null;
   if (value.toDate) return value.toDate();
+  if (typeof value === "object" && typeof value.seconds === "number") {
+    return new Date((value.seconds * 1000) + Math.floor((value.nanoseconds || 0) / 1000000));
+  }
+  if (typeof value === "object" && typeof value._seconds === "number") {
+    return new Date((value._seconds * 1000) + Math.floor((value._nanoseconds || 0) / 1000000));
+  }
   const d = new Date(value);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -255,6 +321,32 @@ function normalizeTest(data) {
       : testKeywords(testCode, name, category),
     source: data.source || null,
     sourceId: data.sourceId || null
+  };
+}
+
+function summarizeTest(test) {
+  const parameterCount = Array.isArray(test.parameters)
+    ? test.parameters.length
+    : Number(test.parameterCount || test.parameter_count || 0);
+  return {
+    id: test.id || test.slug || safeSlug(`${test.testCode || test.code}-${test.name || test.testName}`),
+    testId: test.testId || test.id || test.slug || test.testCode || test.code || "",
+    slug: test.slug || safeSlug(`${test.testCode || test.code}-${test.name || test.testName}`),
+    sno: Number(test.sno || 0),
+    testCode: String(test.testCode || test.test_code || test.code || test.sourceId || safeSlug(test.name || test.testName)).trim(),
+    name: test.name || test.testName || test.test_name || "",
+    nameLower: String(test.nameLower || test.name || test.testName || "").toLowerCase(),
+    category: test.category || "Lab Test",
+    price: Number(test.price ?? test.priceInr ?? test.price_inr ?? 0),
+    sample: test.sample || "",
+    reportTime: test.reportTime || test.report_time || test.time || "Same Day",
+    isActive: test.isActive !== false && test.is_active !== 0,
+    parameterCount,
+    searchKeywords: Array.isArray(test.searchKeywords) && test.searchKeywords.length
+      ? test.searchKeywords
+      : testKeywords(test.testCode || test.test_code || test.code, test.name || test.testName, test.category),
+    source: test.source || null,
+    sourceId: test.sourceId || null
   };
 }
 
@@ -751,6 +843,29 @@ export function listenMyOnlineBookings(uid, callback, onError) {
   );
 }
 
+export async function getMyOnlineBookings(uid, options = {}) {
+  const cleanUid = String(uid || "").trim();
+  if (!cleanUid) return [];
+  const limitCount = Math.max(10, Math.min(Number(options.limitCount || 25), 100));
+  const cacheKey = `khuntest:online-bookings:v1:${cleanUid}:${limitCount}`;
+  if (!options.forceRefresh) {
+    const cached = cacheRead(cacheKey);
+    if (Array.isArray(cached)) {
+      revalidateCache(cacheKey, CACHE_TTL.onlineBookings, () => getMyOnlineBookings(cleanUid, { ...options, forceRefresh: true }));
+      return cached;
+    }
+  }
+  return withRequestDedupe(cacheKey, async () => {
+    const snap = await getDocs(query(collection(db, C.onlineBookings), where("patientUid", "==", cleanUid), limit(limitCount))).catch(() => ({ docs: [] }));
+    const rows = snap.docs
+      .map(normalizeDoc)
+      .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
+      .slice(0, limitCount);
+    cacheWrite(cacheKey, rows, CACHE_TTL.onlineBookings);
+    return rows;
+  });
+}
+
 export function listenOnlineBookings(callback, onError) {
   return onSnapshot(query(collection(db, C.onlineBookings), orderBy("createdAt", "desc")), (snap) => callback(snap.docs.map(normalizeDoc)), onError);
 }
@@ -822,7 +937,7 @@ export async function getTests({ activeOnly = true } = {}) {
 }
 
 async function loadTestsFromJson(activeOnly = true) {
-  const response = await fetch("./data/tests.json", { cache: "no-store" });
+  const response = await fetchWithTimeout("./data/tests.json", { cache: "force-cache" }, 8000);
   if (!response.ok) throw new Error(`Could not load data/tests.json (${response.status})`);
   const rows = await response.json();
   return rows
@@ -832,7 +947,18 @@ async function loadTestsFromJson(activeOnly = true) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export async function loadAvailableTests({ activeOnly = true } = {}) {
+async function loadTestSummariesFromJson(activeOnly = true) {
+  const response = await fetchWithTimeout("./data/tests.json", { cache: "force-cache" }, 8000);
+  if (!response.ok) throw new Error(`Could not load data/tests.json (${response.status})`);
+  const rows = await response.json();
+  return rows
+    .map((row) => summarizeTest(row))
+    .filter((test) => !activeOnly || test.isActive)
+    .filter((test) => test.name)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function loadAvailableTestsFresh(activeOnly = true) {
   let firestoreError = "";
   let firestoreWasEmpty = false;
   try {
@@ -888,6 +1014,70 @@ export async function loadAvailableTests({ activeOnly = true } = {}) {
   }
 }
 
+export async function loadAvailableTests({ activeOnly = true, forceRefresh = false } = {}) {
+  const cacheKey = `khuntest:tests:v2:${activeOnly ? "active" : "all"}`;
+  if (!forceRefresh) {
+    const cached = cacheRead(cacheKey);
+    if (cached?.tests?.length) {
+      lastTestsLoadInfo = {
+        source: `cache:${cached.source || "tests"}`,
+        count: cached.tests.length,
+        firestoreCount: cached.source === "firestore" ? cached.tests.length : 0,
+        jsonCount: cached.source === "data/tests.json" ? cached.tests.length : 0,
+        error: cached.error || ""
+      };
+      revalidateCache(cacheKey, CACHE_TTL.tests, () => loadAvailableTestsFresh(activeOnly));
+      return { ...cached, source: "cache", error: cached.error || null };
+    }
+  }
+  return withRequestDedupe(cacheKey, async () => {
+    const result = await loadAvailableTestsFresh(activeOnly);
+    if (result.tests?.length) cacheWrite(cacheKey, result, CACHE_TTL.tests);
+    return result;
+  });
+}
+
+async function loadAvailableTestSummariesFresh(activeOnly = true) {
+  let firestoreError = "";
+  let firestoreWasEmpty = false;
+  try {
+    const snap = await getDocs(collection(db, C.tests));
+    const firestoreTests = snap.docs
+      .map((docSnap) => summarizeTest({ ...(docSnap.data() || {}), id: docSnap.id, testId: docSnap.id }))
+      .filter((test) => !activeOnly || test.isActive)
+      .filter((test) => test.name)
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (firestoreTests.length) return { tests: firestoreTests, source: "firestore", error: null };
+    firestoreWasEmpty = true;
+  } catch (err) {
+    firestoreError = err.message || String(err);
+  }
+
+  try {
+    const jsonTests = await loadTestSummariesFromJson(activeOnly);
+    return { tests: jsonTests, source: "data/tests.json", error: firestoreError || (firestoreWasEmpty ? null : null) };
+  } catch (fallbackErr) {
+    const message = fallbackErr.message || String(fallbackErr);
+    return { tests: [], source: "none", error: message };
+  }
+}
+
+export async function loadAvailableTestSummaries({ activeOnly = true, forceRefresh = false } = {}) {
+  const cacheKey = `khuntest:test-summaries:v2:${activeOnly ? "active" : "all"}`;
+  if (!forceRefresh) {
+    const cached = cacheRead(cacheKey);
+    if (cached?.tests?.length) {
+      revalidateCache(cacheKey, CACHE_TTL.testSummaries, () => loadAvailableTestSummariesFresh(activeOnly));
+      return { ...cached, source: "cache", error: cached.error || null };
+    }
+  }
+  return withRequestDedupe(cacheKey, async () => {
+    const result = await loadAvailableTestSummariesFresh(activeOnly);
+    if (result.tests?.length) cacheWrite(cacheKey, result, CACHE_TTL.testSummaries);
+    return result;
+  });
+}
+
 export function getTestsLoadInfo() {
   return { ...lastTestsLoadInfo };
 }
@@ -910,21 +1100,20 @@ export async function getTodayBookings() {
   return snap.docs.map(normalizeDoc).sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
 }
 
-export async function getPatientBookings(email, phone, identity = {}) {
+async function getPatientBookingsFresh(email, phone, identity = {}, options = {}) {
   const emailValue = cleanEmail(email);
   const uid = String(identity.uid || identity.id || identity.patientId || "").trim();
   const byId = new Map();
-  const snap = emailValue
-    ? await getDocs(query(collection(db, C.bookings), where("patientEmail", "==", emailValue)))
-    : { docs: [] };
-  snap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
-  if (uid) {
-    for (const field of ["patientUid", "uid", "patientId", "userId", "firebaseUid"]) {
-      const uidSnap = await getDocs(query(collection(db, C.bookings), where(field, "==", uid))).catch(() => ({ docs: [] }));
-      uidSnap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
-    }
+  const queryLimit = Math.max(10, Math.min(Number(options.limitCount || 50), 100));
+  const tasks = [];
+  if (emailValue) {
+    tasks.push(getDocs(query(collection(db, C.bookings), where("patientEmail", "==", emailValue), limit(queryLimit))));
   }
-  let rows = Array.from(byId.values());
+  if (uid) {
+    ["patientUid", "uid", "patientId", "userId", "firebaseUid"].forEach((field) => {
+      tasks.push(getDocs(query(collection(db, C.bookings), where(field, "==", uid), limit(queryLimit))).catch(() => ({ docs: [] })));
+    });
+  }
   const normalizedPhone = normalizeIndianPhone(phone);
   if (normalizedPhone) {
     const candidates = Array.from(new Set([
@@ -938,13 +1127,38 @@ export async function getPatientBookings(email, phone, identity = {}) {
       normalizedPhone.replace(/(\d{5})(\d{5})/, "$1-$2")
     ].filter(Boolean)));
 
-    for (const candidate of candidates) {
-      const phoneSnap = await getDocs(query(collection(db, C.bookings), where("phone", "==", candidate)));
-      phoneSnap.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
-    }
-    rows = Array.from(byId.values());
+    candidates.forEach((candidate) => {
+      tasks.push(getDocs(query(collection(db, C.bookings), where("phone", "==", candidate), limit(queryLimit))).catch(() => ({ docs: [] })));
+    });
   }
-  return rows.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
+  const settled = await Promise.allSettled(tasks);
+  settled.forEach((result) => {
+    if (result.status !== "fulfilled") return;
+    result.value.docs.map(normalizeDoc).forEach((row) => byId.set(row.id, row));
+  });
+  return Array.from(byId.values())
+    .sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0))
+    .slice(0, queryLimit);
+}
+
+export async function getPatientBookings(email, phone, identity = {}, options = {}) {
+  const emailValue = cleanEmail(email);
+  const uid = String(identity.uid || identity.id || identity.patientId || "").trim();
+  const normalizedPhone = normalizeIndianPhone(phone);
+  const limitCount = Math.max(10, Math.min(Number(options.limitCount || 50), 100));
+  const cacheKey = `khuntest:patient-bookings:v2:${uid || "no-uid"}:${emailValue || "no-email"}:${normalizedPhone || "no-phone"}:${limitCount}`;
+  if (!options.forceRefresh) {
+    const cached = cacheRead(cacheKey);
+    if (Array.isArray(cached)) {
+      revalidateCache(cacheKey, CACHE_TTL.patientBookings, () => getPatientBookingsFresh(email, phone, identity, options));
+      return cached;
+    }
+  }
+  return withRequestDedupe(cacheKey, async () => {
+    const rows = await getPatientBookingsFresh(email, phone, identity, { ...options, limitCount });
+    cacheWrite(cacheKey, rows, CACHE_TTL.patientBookings);
+    return rows;
+  });
 }
 
 export async function saveReport({ billNo, patientName, patientEmail, phone, whatsapp, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate }) {
@@ -1303,12 +1517,14 @@ export const KTFirebase = {
   markAdminNotificationRead,
   updateOnlineBooking,
   convertOnlineBookingToBooking,
+  getMyOnlineBookings,
   getAllBookings,
   getTodayBookings,
   getPatientBookings,
   assignStaff,
   getTests,
   loadAvailableTests,
+  loadAvailableTestSummaries,
   getTestsLoadInfo,
   getAllTests,
   searchTests,
