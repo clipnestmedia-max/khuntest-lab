@@ -549,6 +549,7 @@ function normalizeResult(row) {
     method: row.method || row.methodName || row.method_name || "",
     sample: row.sample || row.sampleType || row.sample_type || "",
     comment: row.comment || row.remarks || "",
+    esrHour: row.esrHour || "",
     details: row.details || [],
     isHeading: Boolean(row.isHeading || row.heading || row.type === "heading")
   };
@@ -1161,7 +1162,7 @@ export async function getPatientBookings(email, phone, identity = {}, options = 
   });
 }
 
-export async function saveReport({ billNo, patientName, patientEmail, phone, whatsapp, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate }) {
+export async function saveReport({ billNo, patientName, patientEmail, phone, whatsapp, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate, esrFirstHour, esrSecondHour }) {
   const selectedTests = Array.isArray(tests) ? tests.map(normalizeSelectedTest) : [];
   const report = {
     billNo: String(billNo || ""),
@@ -1179,6 +1180,8 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, wha
     tests: selectedTests,
     selectedTests,
     results: Array.isArray(results) ? results.map(normalizeResult) : [],
+    esrFirstHour: esrFirstHour || "",
+    esrSecondHour: esrSecondHour || "",
     status: "Final",
     reportStatus: "Final",
     releasedAt: serverTimestamp(),

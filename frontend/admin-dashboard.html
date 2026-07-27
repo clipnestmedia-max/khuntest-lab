@@ -744,6 +744,35 @@ function isLFTTest(test) {
   return compactLftKey(text).includes("lft") || text.includes("liver function");
 }
 
+function isESRTest(test) {
+  const key = String(`${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`).toLowerCase().replace(/[^a-z0-9]/g, "");
+  return key === "esr" || key.includes("kt0239") || key.includes("erythrocytesedimentationrate");
+}
+
+function isESRParameterName(name) {
+  const key = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return key === "esr" || key === "result" || key.includes("esr1sthour") || key.includes("esrfirsthour") || key.includes("esr2ndhour") || key.includes("esrsecondhour");
+}
+
+function getESRParameters() {
+  return [
+    {
+      name: "ESR (1st Hour)",
+      normalRange: "Male: 0-15 mm/hr\nFemale: 0-20 mm/hr\nChildren: 0-10 mm/hr",
+      unit: "mm/hr",
+      esrHour: "first",
+      sortOrder: 1
+    },
+    {
+      name: "ESR (2nd Hour)",
+      normalRange: "Male: 0-30 mm/hr\nFemale: 0-40 mm/hr\nChildren: 0-20 mm/hr",
+      unit: "mm/hr",
+      esrHour: "second",
+      sortOrder: 2
+    }
+  ];
+}
+
 function getFullCBCParameters() {
   return [
     { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
@@ -772,6 +801,7 @@ function getFullCBCParameters() {
 
 function normalizeTestParameters(test) {
   if (isCBCTest(test)) return getFullCBCParameters();
+  if (isESRTest(test)) return getESRParameters();
   return Array.isArray(test?.parameters) && test.parameters.length
     ? test.parameters.map((p, index) => ({
         name: p.name || p.parameterName || "Result",
@@ -781,6 +811,7 @@ function normalizeTestParameters(test) {
         method: p.method || "",
         sample: p.sample || test.sample || "",
         type: p.type || "",
+        esrHour: p.esrHour || "",
         isHeading: Boolean(p.isHeading || p.heading || p.type === "heading"),
         precision: p.precision ?? p.decimalPlaces ?? p.decimal_places ?? p.decimals ?? "",
         calculated: Boolean(p.calculated || p.isCalculated || p.is_calculated),
@@ -2668,6 +2699,7 @@ function reportResultFromEditorRow(row) {
     method: row.method || "",
     sample: row.sample || "",
     type: row.type || "",
+    esrHour: row.esrHour || "",
     isHeading: row.type === "heading" || row.isHeading === "true" || row.isHeading === true,
     comment: row.comment || "",
     source: row.source || "",
@@ -2692,6 +2724,7 @@ function editorRowFromReportResult(result) {
     method: result.method || "",
     sample: result.sample || "",
     type: result.type || "",
+    esrHour: result.esrHour || "",
     isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
     status: "Draft",
     comment: result.comment || "",
@@ -2755,6 +2788,7 @@ function reportResultsFromRows(rows) {
         method: "",
         sample: "",
         type: "heading",
+        esrHour: row.esrHour || "",
         isHeading: true,
         comment: row.comment || ""
       });
@@ -2773,6 +2807,7 @@ function reportResultsFromRows(rows) {
         method: detail.method || row.method || "",
         sample: detail.sample || row.sample || "",
         comment: row.comment || "",
+        esrHour: detail.esrHour || row.esrHour || "",
         calculated: Boolean(detail.calculated || row.calculated === true || row.calculated === "true"),
         formula: detail.formula || row.formula || "",
         sourceParameters: Array.isArray(detail.sourceParameters) ? detail.sourceParameters : Array.isArray(row.sourceParameters) ? row.sourceParameters : []
@@ -2792,6 +2827,7 @@ function reportResultsFromRows(rows) {
       method: row.method || "",
       sample: row.sample || "",
       comment: row.comment || "",
+      esrHour: row.esrHour || "",
       calculated: row.calculated === true || row.calculated === "true",
       formula: row.formula || "",
       sourceParameters: Array.isArray(row.sourceParameters) ? row.sourceParameters : []
@@ -2834,6 +2870,11 @@ function paintFindingRows(rows) {
     }
     const isCalculated = row.calculated === true || row.calculated === "true";
     const isReadOnly = row.readOnly === true || row.readOnly === "true" || isCalculated || isIndirectBilirubinParameter(row);
+    const isESRRow = isESRTest(row) || isESRParameterName(row.name || row.parameterName);
+    const numericAttrs = isESRRow ? ' inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-numeric="true"' : "";
+    const referenceHtml = isESRRow
+      ? `<div style="font-size:12px;line-height:1.45;white-space:pre-line;"><b>Reference Value</b>\n${html(row.normal || row.normalRange || "")}</div><input type="hidden" data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}">`
+      : `<input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly>`;
     const rowClass = [
       row.source === "machine" ? "machine-filled-row" : "",
       isReadOnly ? "calculated-row" : ""
@@ -2850,6 +2891,7 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="method" data-i="${index}" value="${html(row.method || "")}">
         <input type="hidden" data-r="sample" data-i="${index}" value="${html(row.sample || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="${html(row.type || "")}">
+        <input type="hidden" data-r="esrHour" data-i="${index}" value="${html(row.esrHour || "")}">
         <input type="hidden" data-r="source" data-i="${index}" value="${html(row.source || "")}">
         <input type="hidden" data-r="calculated" data-i="${index}" value="${isCalculated ? "true" : ""}">
         <input type="hidden" data-r="readOnly" data-i="${index}" value="${isReadOnly ? "true" : ""}">
@@ -2858,8 +2900,8 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="sourceParameters" data-i="${index}" value="${html(JSON.stringify(row.sourceParameters || []))}">
         <input type="hidden" data-r="precision" data-i="${index}" value="${html(row.precision ?? "")}">
       </td>
-      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}" ${isReadOnly ? "readonly" : ""}></td>
-      <td><input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly></td>
+      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
+      <td>${referenceHtml}</td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
   `;
@@ -2870,6 +2912,10 @@ function paintFindingRows(rows) {
   }
   body.querySelectorAll('input[data-r="finding"]:not([readonly])').forEach((input) => {
     input.addEventListener("input", () => {
+      if (input.dataset.numeric === "true") {
+        const cleaned = input.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
+        if (input.value !== cleaned) input.value = cleaned;
+      }
       const name = input.closest("tr")?.querySelector('[data-r="name"]')?.value || "";
       if (["bilirubintotal", "totalbilirubin", "tbilirubin", "bilirubindirect", "directbilirubin", "dbilirubin"].includes(compactLftKey(name))) {
         const currentScroll = window.scrollY;
@@ -3176,7 +3222,7 @@ function renderAdminEntryTests() {
 
 function reportRowsForTest(test, existingResults = []) {
   const params = normalizeTestParameters(test);
-  if (!isCBCTest(test) && existingResults.length) {
+  if (!isCBCTest(test) && !isESRTest(test) && existingResults.length) {
     return existingResults.map((result) => ({
       code: result.code || result.parameterCode || "",
       name: result.parameterName || result.name || "Result",
@@ -3188,6 +3234,7 @@ function reportRowsForTest(test, existingResults = []) {
       method: result.method || "",
       sample: result.sample || "",
       type: result.type || "",
+      esrHour: result.esrHour || "",
       isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
       status: "Draft",
       comment: result.comment || "",
@@ -3201,7 +3248,13 @@ function reportRowsForTest(test, existingResults = []) {
     }));
   }
   return params.map((p) => {
-    const existing = existingResults.find((result) => cbcParameterKey(result.parameterName || result.name) === cbcParameterKey(p.name));
+    const existing = isESRTest(test)
+      ? existingResults.find((result) => (
+          String(result.esrHour || "") === String(p.esrHour || "")
+          || (p.esrHour === "first" && isESRParameterName(result.parameterName || result.name))
+          || cbcParameterKey(result.parameterName || result.name) === cbcParameterKey(p.name)
+        ))
+      : existingResults.find((result) => cbcParameterKey(result.parameterName || result.name) === cbcParameterKey(p.name));
     return {
       code: p.code || existing?.code || "",
       name: p.name || test.name || "Test",
@@ -3213,6 +3266,7 @@ function reportRowsForTest(test, existingResults = []) {
       method: p.method || existing?.method || "",
       sample: p.sample || test.sample || existing?.sample || "",
       type: p.type || existing?.type || "",
+      esrHour: p.esrHour || existing?.esrHour || "",
       isHeading: Boolean(p.isHeading || p.heading || p.type === "heading" || existing?.isHeading),
       status: "Final",
       comment: existing?.comment || "",
@@ -3315,6 +3369,7 @@ window.loadReportEditor = async function(id) {
           method: result.method || "",
           sample: result.sample || "",
           type: result.type || "",
+          esrHour: result.esrHour || "",
           isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
           status: existingReport.reportStatus || existingReport.status || "Draft",
           comment: result.comment || "",
@@ -3453,6 +3508,36 @@ function hasBlockingLftValidation(payload) {
   return payload?.lftValidationWarning === INDIRECT_BILIRUBIN_WARNING;
 }
 
+function isNumericResult(value) {
+  return value === "" || /^\d+(\.\d+)?$/.test(String(value || "").trim());
+}
+
+function esrValuesFromRows(rows) {
+  const values = { esrFirstHour: "", esrSecondHour: "" };
+  rows.forEach((row) => {
+    if (!(isESRTest(row) || isESRParameterName(row.name || row.parameterName))) return;
+    const key = String(row.esrHour || "").toLowerCase();
+    const nameKey = String(row.name || row.parameterName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (key === "second" || nameKey.includes("2ndhour") || nameKey.includes("secondhour")) {
+      values.esrSecondHour = row.finding || row.resultValue || "";
+    } else {
+      values.esrFirstHour = row.finding || row.resultValue || "";
+    }
+  });
+  return values;
+}
+
+function validateEsrRows(rows) {
+  const invalid = rows.find((row) => (
+    (isESRTest(row) || isESRParameterName(row.name || row.parameterName))
+    && !isNumericResult(row.finding || row.resultValue || "")
+  ));
+  if (!invalid) return true;
+  alert("ESR results must be numeric values only.");
+  paintFindingRows(rows);
+  return false;
+}
+
 function showLftValidationWarning(payload) {
   if (!hasBlockingLftValidation(payload)) return false;
   alert(INDIRECT_BILIRUBIN_WARNING);
@@ -3466,6 +3551,7 @@ window.openReportPreview = async function() {
     return;
   }
   const payload = reportPayload("Draft");
+  if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
   const bill = currentReportBooking.billNo || currentReportBooking.id;
@@ -3478,6 +3564,7 @@ window.printGeneratedReport = async function() {
     return;
   }
   const payload = reportPayload("Draft");
+  if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
   const bill = currentReportBooking.billNo || currentReportBooking.id;
@@ -3487,8 +3574,10 @@ window.printGeneratedReport = async function() {
 function reportPayload(status = "Draft") {
   if (!currentReportBooking) return null;
   const rows = currentFindingRows();
+  if (!validateEsrRows(rows)) return null;
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   const reportingDate = document.getElementById("rReportingDate")?.value || "";
+  const esrValues = esrValuesFromRows(rows);
   const payload = {
     billNo: bill,
     bookingId: currentReportBooking.id,
@@ -3504,6 +3593,7 @@ function reportPayload(status = "Draft") {
     reportingDate,
     tests: bookingTests(currentReportBooking),
     results: reportResultsFromRows(rows),
+    ...esrValues,
     reportStatus: status,
     status
   };
@@ -3525,6 +3615,7 @@ window.releaseGeneratedReport = async function() {
     return;
   }
   const payload = reportPayload("Final");
+  if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReport(payload);
   currentReportBooking.reportReleased = true;
