@@ -1121,6 +1121,12 @@
         code: pick(row, ["code", "parameterCode", "parameter_code"], ""),
         esrHour: pick(row, ["esrHour", "esr_hour"], ""),
         flag: pick(row, ["flag", "abnormalFlag", "abnormal_flag", "resultFlag", "result_flag", "statusFlag", "status_flag"], ""),
+        finalInterpretation: pick(row, ["finalInterpretation", "interpretation"], ""),
+        generatedInterpretation: pick(row, ["generatedInterpretation"], ""),
+        clinicalNote: pick(row, ["clinicalNote", "clinicalNotes"], ""),
+        recommendation: pick(row, ["recommendation"], ""),
+        reportComment: pick(row, ["reportComment"], ""),
+        interpretationWarnings: Array.isArray(row.interpretationWarnings) ? row.interpretationWarnings : [],
         calculated: Boolean(row.calculated || row.isCalculated || row.is_calculated || row.calculationSource || row.calculation_source),
         sourceParameters: Array.isArray(row.sourceParameters) ? row.sourceParameters : [],
         details: Array.isArray(row.details) ? row.details : [],
@@ -1204,10 +1210,11 @@
         return `<tr class="subhead-row"><td colspan="4">${safe(row.parameterName)}</td></tr>`;
       }
 
+      const resultWithFlag = [row.resultValue, row.flag].filter(Boolean).join(" ");
       let html = `
         <tr>
           <td class="test-col"><span class="parameter-name">${safe(row.parameterName || row.testName)}</span></td>
-          <td class="result-col result-value">${safe(row.resultValue)}</td>
+          <td class="result-col result-value">${safe(resultWithFlag)}</td>
           <td class="range-col">${safe(row.normalValue)}</td>
           <td class="unit-col">${safe(row.unit)}</td>
         </tr>
@@ -1221,6 +1228,12 @@
       if (row.comment && (row.method || row.sample || row.parameterName !== row.testName)) {
         html += `<tr class="comment-row"><td colspan="4">${safe(row.comment)}</td></tr>`;
       }
+
+      const interpretation = row.finalInterpretation || row.generatedInterpretation;
+      if (interpretation) html += `<tr class="comment-row"><td colspan="4"><b>Interpretation:</b> ${safe(interpretation)}</td></tr>`;
+      if (row.clinicalNote) html += `<tr class="comment-row"><td colspan="4"><b>Clinical Notes:</b> ${safe(row.clinicalNote)}</td></tr>`;
+      if (row.recommendation) html += `<tr class="comment-row"><td colspan="4"><b>Recommendation:</b> ${safe(row.recommendation)}</td></tr>`;
+      if (row.reportComment) html += `<tr class="comment-row"><td colspan="4"><b>Comments:</b> ${safe(row.reportComment)}</td></tr>`;
 
       row.details.forEach((detail) => {
         const detailRow = normalizeResult(detail);

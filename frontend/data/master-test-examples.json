@@ -1,0 +1,70 @@
+{
+  "approvalNotice": "Requires laboratory approval before production use. Do not overwrite existing laboratory-approved ranges.",
+  "examples": [
+    {
+      "code": "SERUM_IGE",
+      "name": "Serum IgE",
+      "displayName": "Serum IgE (Total IgE)",
+      "shortName": "Total IgE",
+      "department": "Immunology",
+      "category": "Special Test",
+      "sampleType": "Serum",
+      "method": "",
+      "analyzer": "",
+      "resultType": "numeric",
+      "decimalPlaces": 0,
+      "defaultUnit": "IU/mL",
+      "allowedUnits": ["IU/mL"],
+      "referenceRanges": [],
+      "interpretationRules": [],
+      "generalInterpretation": "Total serum IgE should be interpreted with clinical findings. Elevated levels may be observed in allergic, parasitic and certain immunological conditions. A normal total IgE result does not exclude a specific allergy. Clinical correlation is recommended.",
+      "clinicalNotes": "Informational laboratory comment only. Requires laboratory approval before production use.",
+      "recommendation": "Clinical correlation is recommended.",
+      "reportComment": "",
+      "criticalValueEnabled": false,
+      "autoFlagEnabled": true,
+      "autoInterpretationEnabled": true,
+      "showMethodOnReport": true,
+      "showSampleOnReport": true,
+      "showInterpretationOnReport": true,
+      "showClinicalNotesOnReport": true,
+      "status": "draft",
+      "version": 1
+    },
+    {
+      "code": "ESR",
+      "name": "ESR",
+      "displayName": "ESR",
+      "department": "HAEMATOLOGY",
+      "category": "Lab Test",
+      "sampleType": "Whole Blood",
+      "method": "",
+      "resultType": "multi_parameter",
+      "defaultUnit": "mm/hr",
+      "allowedUnits": ["mm/hr"],
+      "parameters": [
+        {
+          "name": "ESR (1st Hour)",
+          "resultType": "first_second_hour",
+          "unit": "mm/hr",
+          "referenceRanges": [],
+          "interpretationRules": [],
+          "reportComment": "Requires laboratory-approved ESR 1st-hour reference ranges."
+        },
+        {
+          "name": "ESR (2nd Hour)",
+          "resultType": "first_second_hour",
+          "unit": "mm/hr",
+          "referenceRanges": [],
+          "interpretationRules": [],
+          "reportComment": "Requires laboratory-approved ESR 2nd-hour reference ranges."
+        }
+      ],
+      "generalInterpretation": "ESR is a non-specific laboratory marker and should be interpreted with clinical findings. Clinical correlation is recommended.",
+      "clinicalNotes": "Do not derive 2nd-hour ESR from 1st-hour ESR unless the laboratory configures a validated calculation.",
+      "recommendation": "Clinical correlation is recommended.",
+      "status": "draft",
+      "version": 1
+    }
+  ]
+}

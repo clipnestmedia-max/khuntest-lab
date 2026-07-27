@@ -6,6 +6,10 @@ const pool = require("../db");
 const auth = require("../middlewares/auth");
 const { makeCode } = require("../utils/ids");
 const { sendWhatsAppText, sendWhatsAppDocument } = require("../services/whatsappService");
+const {
+  generateTestInterpretation,
+  normalizeMasterTest
+} = require("../../../shared/interpretation-engine.js");
 
 const router = express.Router();
 
@@ -209,6 +213,231 @@ router.post("/tests", auth("admin"), async (req, res) => {
   }
 
   res.json({ message: "Test added" });
+});
+
+function masterRow(row = {}) {
+  return {
+    id: row.id,
+    code: row.test_code,
+    testCode: row.test_code,
+    displayName: row.display_name,
+    shortName: row.short_name,
+    department: row.department,
+    category: row.category,
+    sampleType: row.sample_type,
+    method: row.method,
+    analyzer: row.analyzer,
+    resultType: row.result_type,
+    decimalPlaces: row.decimal_places,
+    defaultUnit: row.default_unit,
+    allowedUnits: row.allowed_units ? JSON.parse(row.allowed_units) : [],
+    generalInterpretation: row.general_interpretation || "",
+    clinicalNotes: row.clinical_notes || "",
+    recommendation: row.recommendation || "",
+    reportComment: row.report_comment || "",
+    criticalValueEnabled: Boolean(row.critical_value_enabled),
+    autoFlagEnabled: row.auto_flag_enabled !== 0,
+    autoInterpretationEnabled: row.auto_interpretation_enabled !== 0,
+    showMethodOnReport: row.show_method_on_report !== 0,
+    showSampleOnReport: row.show_sample_on_report !== 0,
+    showInterpretationOnReport: row.show_interpretation_on_report !== 0,
+    showClinicalNotesOnReport: row.show_clinical_notes_on_report !== 0,
+    displayOrder: row.display_order,
+    status: row.status,
+    version: row.version
+  };
+}
+
+function rangeRow(row = {}) {
+  return {
+    id: row.id,
+    label: row.label,
+    gender: row.gender,
+    minimumAgeDays: row.minimum_age_days,
+    maximumAgeDays: row.maximum_age_days,
+    pregnancyStatus: row.pregnancy_status,
+    trimester: row.trimester,
+    method: row.method,
+    unit: row.unit,
+    lowerLimit: row.lower_limit === null ? null : Number(row.lower_limit),
+    upperLimit: row.upper_limit === null ? null : Number(row.upper_limit),
+    lowerInclusive: row.lower_inclusive !== 0,
+    upperInclusive: row.upper_inclusive !== 0,
+    textRange: row.text_range || "",
+    priority: row.priority,
+    enabled: row.enabled !== 0,
+    version: row.version
+  };
+}
+
+function ruleRow(row = {}) {
+  return {
+    id: row.id,
+    name: row.name,
+    resultType: row.result_type,
+    operator: row.operator,
+    minimumValue: row.minimum_value === null ? null : Number(row.minimum_value),
+    maximumValue: row.maximum_value === null ? null : Number(row.maximum_value),
+    qualitativeValue: row.qualitative_value || "",
+    gender: row.gender,
+    minimumAgeDays: row.minimum_age_days,
+    maximumAgeDays: row.maximum_age_days,
+    pregnancyStatus: row.pregnancy_status,
+    method: row.method,
+    unit: row.unit,
+    flag: row.flag,
+    severity: row.severity,
+    interpretation: row.interpretation || "",
+    clinicalNote: row.clinical_note || "",
+    recommendation: row.recommendation || "",
+    priority: row.priority,
+    enabled: row.enabled !== 0,
+    version: row.version
+  };
+}
+
+async function auditMaster(conn, testId, testCode, fieldChanged, oldValue, newValue, user, reason = "") {
+  await conn.query(
+    "INSERT INTO test_master_audit (test_master_id,test_code,field_changed,old_value,new_value,changed_by,version,reason) VALUES (?,?,?,?,?,?,COALESCE((SELECT version FROM test_master_configs WHERE id=?),1),?)",
+    [testId || null, testCode || "", fieldChanged, JSON.stringify(oldValue || null), JSON.stringify(newValue || null), user?.email || user?.id || "", testId || null, reason]
+  );
+}
+
+router.get("/test-master", auth("admin"), async (req, res) => {
+  const [rows] = await pool.query("SELECT * FROM test_master_configs ORDER BY display_order, display_name");
+  res.json(rows.map(masterRow));
+});
+
+router.get("/test-master/:id", auth("admin"), async (req, res) => {
+  const [[test]] = await pool.query("SELECT * FROM test_master_configs WHERE id=? OR test_code=? LIMIT 1", [req.params.id, req.params.id]);
+  if (!test) return res.status(404).json({ message: "Test master not found" });
+  const [ranges] = await pool.query("SELECT * FROM test_reference_ranges WHERE test_master_id=? ORDER BY priority DESC,id", [test.id]);
+  const [rules] = await pool.query("SELECT * FROM test_interpretation_rules WHERE test_master_id=? ORDER BY priority DESC,id", [test.id]);
+  res.json({ ...masterRow(test), referenceRanges: ranges.map(rangeRow), interpretationRules: rules.map(ruleRow) });
+});
+
+router.post("/test-master", auth("admin"), async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const test = normalizeMasterTest(req.body);
+    await conn.beginTransaction();
+    const [result] = await conn.query(
+      `INSERT INTO test_master_configs
+      (test_code,display_name,short_name,department,category,sample_type,method,analyzer,result_type,decimal_places,default_unit,allowed_units,general_interpretation,clinical_notes,recommendation,report_comment,critical_value_enabled,auto_flag_enabled,auto_interpretation_enabled,show_method_on_report,show_sample_on_report,show_interpretation_on_report,show_clinical_notes_on_report,display_order,status,version,created_by,updated_by)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [test.code, test.displayName, test.shortName, test.department, test.category, test.sampleType, test.method, test.analyzer, test.resultType, test.decimalPlaces || null, test.defaultUnit, JSON.stringify(test.allowedUnits || []), test.generalInterpretation, test.clinicalNotes, test.recommendation, test.reportComment, test.criticalValueEnabled ? 1 : 0, test.autoFlagEnabled ? 1 : 0, test.autoInterpretationEnabled ? 1 : 0, test.showMethodOnReport ? 1 : 0, test.showSampleOnReport ? 1 : 0, test.showInterpretationOnReport ? 1 : 0, test.showClinicalNotesOnReport ? 1 : 0, test.displayOrder, test.status, test.version, req.user?.email || req.user?.id || "", req.user?.email || req.user?.id || ""]
+    );
+    await auditMaster(conn, result.insertId, test.code, "create", null, test, req.user, req.body.reason || "");
+    await conn.commit();
+    res.status(201).json({ id: result.insertId, ...test });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ message: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+router.put("/test-master/:id", auth("admin"), async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    const [[existing]] = await conn.query("SELECT * FROM test_master_configs WHERE id=? OR test_code=? LIMIT 1", [req.params.id, req.params.id]);
+    if (!existing) return res.status(404).json({ message: "Test master not found" });
+    const patch = normalizeMasterTest({ ...masterRow(existing), ...req.body, code: req.body.code || req.body.testCode || existing.test_code });
+    await conn.beginTransaction();
+    await conn.query(
+      `UPDATE test_master_configs SET display_name=?,short_name=?,department=?,category=?,sample_type=?,method=?,analyzer=?,result_type=?,decimal_places=?,default_unit=?,allowed_units=?,general_interpretation=?,clinical_notes=?,recommendation=?,report_comment=?,critical_value_enabled=?,auto_flag_enabled=?,auto_interpretation_enabled=?,show_method_on_report=?,show_sample_on_report=?,show_interpretation_on_report=?,show_clinical_notes_on_report=?,display_order=?,status=?,version=version+1,updated_by=? WHERE id=?`,
+      [patch.displayName, patch.shortName, patch.department, patch.category, patch.sampleType, patch.method, patch.analyzer, patch.resultType, patch.decimalPlaces || null, patch.defaultUnit, JSON.stringify(patch.allowedUnits || []), patch.generalInterpretation, patch.clinicalNotes, patch.recommendation, patch.reportComment, patch.criticalValueEnabled ? 1 : 0, patch.autoFlagEnabled ? 1 : 0, patch.autoInterpretationEnabled ? 1 : 0, patch.showMethodOnReport ? 1 : 0, patch.showSampleOnReport ? 1 : 0, patch.showInterpretationOnReport ? 1 : 0, patch.showClinicalNotesOnReport ? 1 : 0, patch.displayOrder, patch.status, req.user?.email || req.user?.id || "", existing.id]
+    );
+    await auditMaster(conn, existing.id, existing.test_code, "update", masterRow(existing), patch, req.user, req.body.reason || "");
+    await conn.commit();
+    res.json({ id: existing.id, ...patch, version: Number(existing.version || 1) + 1 });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ message: err.message });
+  } finally {
+    conn.release();
+  }
+});
+
+router.delete("/test-master/:id", auth("admin"), async (req, res) => {
+  await pool.query("UPDATE test_master_configs SET status='archived' WHERE id=? OR test_code=?", [req.params.id, req.params.id]);
+  res.json({ message: "Test master archived" });
+});
+
+router.get("/test-master/:id/reference-ranges", auth("admin"), async (req, res) => {
+  const [[test]] = await pool.query("SELECT id FROM test_master_configs WHERE id=? OR test_code=? LIMIT 1", [req.params.id, req.params.id]);
+  if (!test) return res.status(404).json({ message: "Test master not found" });
+  const [rows] = await pool.query("SELECT * FROM test_reference_ranges WHERE test_master_id=? ORDER BY priority DESC,id", [test.id]);
+  res.json(rows.map(rangeRow));
+});
+
+router.post("/test-master/:id/reference-ranges", auth("admin"), async (req, res) => {
+  const [[test]] = await pool.query("SELECT * FROM test_master_configs WHERE id=? OR test_code=? LIMIT 1", [req.params.id, req.params.id]);
+  if (!test) return res.status(404).json({ message: "Test master not found" });
+  const r = req.body;
+  const [result] = await pool.query(
+    "INSERT INTO test_reference_ranges (test_master_id,label,gender,minimum_age_days,maximum_age_days,pregnancy_status,trimester,method,unit,lower_limit,upper_limit,lower_inclusive,upper_inclusive,text_range,priority,enabled) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    [test.id, r.label || "", r.gender || "all", r.minimumAgeDays ?? null, r.maximumAgeDays ?? null, r.pregnancyStatus || "all", r.trimester || null, r.method || "", r.unit || "", r.lowerLimit ?? null, r.upperLimit ?? null, r.lowerInclusive === false ? 0 : 1, r.upperInclusive === false ? 0 : 1, r.textRange || "", r.priority || 0, r.enabled === false ? 0 : 1]
+  );
+  res.status(201).json({ id: result.insertId, ...r });
+});
+
+router.put("/reference-ranges/:rangeId", auth("admin"), async (req, res) => {
+  const r = req.body;
+  await pool.query(
+    "UPDATE test_reference_ranges SET label=?,gender=?,minimum_age_days=?,maximum_age_days=?,pregnancy_status=?,trimester=?,method=?,unit=?,lower_limit=?,upper_limit=?,lower_inclusive=?,upper_inclusive=?,text_range=?,priority=?,enabled=?,version=version+1 WHERE id=?",
+    [r.label || "", r.gender || "all", r.minimumAgeDays ?? null, r.maximumAgeDays ?? null, r.pregnancyStatus || "all", r.trimester || null, r.method || "", r.unit || "", r.lowerLimit ?? null, r.upperLimit ?? null, r.lowerInclusive === false ? 0 : 1, r.upperInclusive === false ? 0 : 1, r.textRange || "", r.priority || 0, r.enabled === false ? 0 : 1, req.params.rangeId]
+  );
+  res.json({ message: "Reference range updated" });
+});
+
+router.delete("/reference-ranges/:rangeId", auth("admin"), async (_req, res) => {
+  await pool.query("UPDATE test_reference_ranges SET enabled=0 WHERE id=?", [_req.params.rangeId]);
+  res.json({ message: "Reference range disabled" });
+});
+
+router.get("/test-master/:id/interpretation-rules", auth("admin"), async (req, res) => {
+  const [[test]] = await pool.query("SELECT id FROM test_master_configs WHERE id=? OR test_code=? LIMIT 1", [req.params.id, req.params.id]);
+  if (!test) return res.status(404).json({ message: "Test master not found" });
+  const [rows] = await pool.query("SELECT * FROM test_interpretation_rules WHERE test_master_id=? ORDER BY priority DESC,id", [test.id]);
+  res.json(rows.map(ruleRow));
+});
+
+router.post("/test-master/:id/interpretation-rules", auth("admin"), async (req, res) => {
+  const [[test]] = await pool.query("SELECT * FROM test_master_configs WHERE id=? OR test_code=? LIMIT 1", [req.params.id, req.params.id]);
+  if (!test) return res.status(404).json({ message: "Test master not found" });
+  const r = req.body;
+  const [result] = await pool.query(
+    "INSERT INTO test_interpretation_rules (test_master_id,name,result_type,operator,minimum_value,maximum_value,qualitative_value,gender,minimum_age_days,maximum_age_days,pregnancy_status,method,unit,flag,severity,interpretation,clinical_note,recommendation,priority,enabled) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    [test.id, r.name || "", r.resultType || "numeric", r.operator || "between", r.minimumValue ?? null, r.maximumValue ?? null, r.qualitativeValue || "", r.gender || "all", r.minimumAgeDays ?? null, r.maximumAgeDays ?? null, r.pregnancyStatus || "all", r.method || "", r.unit || "", r.flag || "", r.severity || "", r.interpretation || "", r.clinicalNote || "", r.recommendation || "", r.priority || 0, r.enabled === false ? 0 : 1]
+  );
+  res.status(201).json({ id: result.insertId, ...r });
+});
+
+router.put("/interpretation-rules/:ruleId", auth("admin"), async (req, res) => {
+  const r = req.body;
+  await pool.query(
+    "UPDATE test_interpretation_rules SET name=?,result_type=?,operator=?,minimum_value=?,maximum_value=?,qualitative_value=?,gender=?,minimum_age_days=?,maximum_age_days=?,pregnancy_status=?,method=?,unit=?,flag=?,severity=?,interpretation=?,clinical_note=?,recommendation=?,priority=?,enabled=?,version=version+1 WHERE id=?",
+    [r.name || "", r.resultType || "numeric", r.operator || "between", r.minimumValue ?? null, r.maximumValue ?? null, r.qualitativeValue || "", r.gender || "all", r.minimumAgeDays ?? null, r.maximumAgeDays ?? null, r.pregnancyStatus || "all", r.method || "", r.unit || "", r.flag || "", r.severity || "", r.interpretation || "", r.clinicalNote || "", r.recommendation || "", r.priority || 0, r.enabled === false ? 0 : 1, req.params.ruleId]
+  );
+  res.json({ message: "Interpretation rule updated" });
+});
+
+router.delete("/interpretation-rules/:ruleId", auth("admin"), async (req, res) => {
+  await pool.query("UPDATE test_interpretation_rules SET enabled=0 WHERE id=?", [req.params.ruleId]);
+  res.json({ message: "Interpretation rule disabled" });
+});
+
+router.post("/interpretation/preview", auth("admin"), async (req, res) => {
+  const result = generateTestInterpretation(req.body);
+  res.json(result);
+});
+
+router.post("/reports/:reportId/regenerate-interpretations", auth("admin"), async (_req, res) => {
+  res.status(202).json({
+    message: "Regeneration preview endpoint accepted. Finalized historical reports are not silently changed; apply amendments through the report amendment workflow."
+  });
 });
 
 router.get("/staff", auth("admin"), async (req, res) => {

@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="styles.css">
 <script src="seo.js" defer></script>
+<script src="shared/interpretation-engine.js"></script>
 <style>
   .modal-overlay, .admin-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 9999; }
   .modal-overlay.hidden, .admin-modal.hidden { display: none; }
@@ -413,6 +414,8 @@ import {
   isAstAltRatioParameter,
   isIndirectBilirubinParameter
 } from "./scripts/lft-calculations.mjs";
+
+const interpretationEngine = window.KhunTestInterpretationEngine;
 
 console.log("Admin dashboard loading...");
 console.log("Firebase db:", db);
@@ -2550,16 +2553,134 @@ window.closeParameterModal = function() {
   document.getElementById("parameterModal")?.classList.add("hidden");
 };
 
+function masterRangesText(test) {
+  return (test.referenceRanges || []).map((range) => [
+    range.label || "",
+    range.gender || "all",
+    range.minimumAgeDays ?? "",
+    range.maximumAgeDays ?? "",
+    range.pregnancyStatus || "all",
+    range.method || "",
+    range.unit || test.defaultUnit || "",
+    range.lowerLimit ?? "",
+    range.upperLimit ?? "",
+    range.textRange || "",
+    range.priority ?? 0,
+    range.enabled === false ? "disabled" : "enabled"
+  ].join(" | ")).join("\n");
+}
+
+function masterRulesText(test) {
+  return (test.interpretationRules || []).map((rule) => [
+    rule.name || "",
+    rule.operator || "between",
+    rule.minimumValue ?? "",
+    rule.maximumValue ?? "",
+    rule.qualitativeValue || "",
+    rule.flag || "",
+    rule.severity || "",
+    rule.interpretation || "",
+    rule.clinicalNote || "",
+    rule.recommendation || "",
+    rule.priority ?? 0,
+    rule.enabled === false ? "disabled" : "enabled"
+  ].join(" | ")).join("\n");
+}
+
+function parseMasterRanges(text, defaultUnit) {
+  return String(text || "").split(/\n+/).map((line, index) => {
+    const [label, gender, minimumAgeDays, maximumAgeDays, pregnancyStatus, method, unit, lowerLimit, upperLimit, textRange, priority, enabled] = line.split("|").map((part) => part.trim());
+    if (!label && !lowerLimit && !upperLimit && !textRange) return null;
+    return {
+      id: `range-${Date.now()}-${index}`,
+      label,
+      gender: gender || "all",
+      minimumAgeDays: minimumAgeDays === "" ? null : Number(minimumAgeDays),
+      maximumAgeDays: maximumAgeDays === "" ? null : Number(maximumAgeDays),
+      pregnancyStatus: pregnancyStatus || "all",
+      method: method || "",
+      unit: unit || defaultUnit || "",
+      lowerLimit: lowerLimit === "" ? null : Number(lowerLimit),
+      upperLimit: upperLimit === "" ? null : Number(upperLimit),
+      textRange: textRange || "",
+      priority: Number(priority || 0),
+      enabled: enabled !== "disabled"
+    };
+  }).filter(Boolean);
+}
+
+function parseMasterRules(text, resultType) {
+  return String(text || "").split(/\n+/).map((line, index) => {
+    const [name, operator, minimumValue, maximumValue, qualitativeValue, flag, severity, interpretation, clinicalNote, recommendation, priority, enabled] = line.split("|").map((part) => part.trim());
+    if (!name && !interpretation && !flag) return null;
+    return {
+      id: `rule-${Date.now()}-${index}`,
+      name,
+      resultType: resultType || "numeric",
+      operator: operator || "between",
+      minimumValue: minimumValue === "" ? null : Number(minimumValue),
+      maximumValue: maximumValue === "" ? null : Number(maximumValue),
+      qualitativeValue,
+      flag,
+      severity,
+      interpretation,
+      clinicalNote,
+      recommendation,
+      priority: Number(priority || 0),
+      enabled: enabled !== "disabled"
+    };
+  }).filter(Boolean);
+}
+
+function masterWarningsHtml(test) {
+  const warnings = [];
+  (test.referenceRanges || []).forEach((range) => {
+    const errors = interpretationEngine?.validateReferenceRange(range) || [];
+    errors.forEach((error) => warnings.push(`${range.label || "Range"}: ${error}`));
+  });
+  if (!(test.referenceRanges || []).length) warnings.push("No structured reference range is configured. Legacy range will be preserved until lab approval.");
+  return warnings.length ? `<div class="notice full">${warnings.map(html).join("<br>")}</div>` : "";
+}
+
 window.editFirestoreTest = async function(testId) {
   const test = allLabTests.find((t) => [t.id, t.slug, t.testCode, t.testId].includes(testId));
   if (!test) return alert("Test not found.");
   document.getElementById("testEditTitle").textContent = `Edit Test - ${test.name}`;
   document.getElementById("testEditBody").innerHTML = `
     <form id="testEditForm" class="modal-form-grid">
+      <label>Test code<input name="testCode" value="${html(test.testCode || "")}"></label>
+      <label>Display name<input name="displayName" value="${html(test.displayName || test.name || "")}"></label>
+      <label>Short name<input name="shortName" value="${html(test.shortName || "")}"></label>
+      <label>Department<input name="department" value="${html(test.department || test.category || "")}"></label>
       <label>Price<input name="price" type="number" value="${Number(test.price || 0)}"></label>
       <label>Category<input name="category" value="${html(test.category || "")}"></label>
+      <label>Status<select name="status">${["active","draft","inactive","archived"].map((x) => `<option value="${x}" ${String(test.status || (test.isActive ? "active" : "inactive")) === x ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+      <label>Display order<input name="displayOrder" type="number" value="${Number(test.displayOrder || test.sortOrder || 0)}"></label>
+      <label>Result type<select name="resultType">${["numeric","decimal","integer","positive_negative","reactive_non_reactive","detected_not_detected","text","titre","ratio","percentage","time","calculated","multi_parameter","first_second_hour","custom_select"].map((x) => `<option value="${x}" ${String(test.resultType || "text") === x ? "selected" : ""}>${x.replaceAll("_", " ")}</option>`).join("")}</select></label>
+      <label>Decimal places<input name="decimalPlaces" type="number" value="${html(test.decimalPlaces ?? "")}"></label>
+      <label>Default unit<input name="defaultUnit" value="${html(test.defaultUnit || test.unit || "")}"></label>
+      <label>Allowed units<input name="allowedUnits" value="${html((test.allowedUnits || []).join(", "))}"></label>
+      <label>Sample type<input name="sampleType" value="${html(test.sampleType || test.sample || "")}"></label>
+      <label>Method<input name="method" value="${html(test.method || "")}"></label>
+      <label>Analyzer<input name="analyzer" value="${html(test.analyzer || "")}"></label>
       <label class="full">Parameters<textarea name="parameters" rows="12">${html((test.parameters || []).map((p) => `${p.name || ""} | ${p.normalRange || ""} | ${p.unit || ""} | ${p.method || ""} | ${p.sample || ""}`).join("\n"))}</textarea></label>
       <div class="notice full">Enter one parameter per line: name | normal range | unit | method | sample</div>
+      <label class="full">Reference ranges<textarea name="referenceRanges" rows="7">${html(masterRangesText(test))}</textarea></label>
+      <div class="notice full">Range format: label | gender | min age days | max age days | pregnancy | method | unit | lower | upper | text range | priority | enabled/disabled</div>
+      <label class="full">Interpretation rules<textarea name="interpretationRules" rows="7">${html(masterRulesText(test))}</textarea></label>
+      <div class="notice full">Rule format: name | operator | min | max | qualitative value | flag | severity | interpretation | clinical note | recommendation | priority | enabled/disabled</div>
+      <label class="full">General interpretation<textarea name="generalInterpretation" rows="3">${html(test.generalInterpretation || "")}</textarea></label>
+      <label class="full">Clinical notes<textarea name="clinicalNotes" rows="3">${html(test.clinicalNotes || "")}</textarea></label>
+      <label class="full">Recommendation<textarea name="recommendation" rows="2">${html(test.recommendation || "")}</textarea></label>
+      <label class="full">Report comment<textarea name="reportComment" rows="2">${html(test.reportComment || "")}</textarea></label>
+      <label><input name="autoFlagEnabled" type="checkbox" ${test.autoFlagEnabled !== false ? "checked" : ""}> Automatic flag</label>
+      <label><input name="autoInterpretationEnabled" type="checkbox" ${test.autoInterpretationEnabled !== false ? "checked" : ""}> Automatic interpretation</label>
+      <label><input name="showMethodOnReport" type="checkbox" ${test.showMethodOnReport !== false ? "checked" : ""}> Show method</label>
+      <label><input name="showSampleOnReport" type="checkbox" ${test.showSampleOnReport !== false ? "checked" : ""}> Show sample</label>
+      <label><input name="showInterpretationOnReport" type="checkbox" ${test.showInterpretationOnReport !== false ? "checked" : ""}> Show interpretation</label>
+      <label><input name="showClinicalNotesOnReport" type="checkbox" ${test.showClinicalNotesOnReport !== false ? "checked" : ""}> Show clinical notes</label>
+      ${masterWarningsHtml(test)}
+      <div class="notice full">Interpretation templates are informational laboratory comments only and require laboratory approval before production use.</div>
       <div class="sticky-actions full"><button class="btn btn-outline" type="button" onclick="closeTestEditModal()">Cancel</button><button class="btn btn-red" type="submit">Save Changes</button></div>
     </form>`;
   document.getElementById("testEditForm").addEventListener("submit", (event) => saveFirestoreTestEdit(event, test));
@@ -2574,18 +2695,76 @@ async function saveFirestoreTestEdit(event, test) {
   event.preventDefault();
   const f = event.target;
   const priceValue = f.price.value;
+  const resultType = f.resultType.value || "text";
+  const defaultUnit = f.defaultUnit.value.trim();
   const category = f.category.value.trim() || test.category || "Lab Test";
   const paramsText = f.parameters.value;
   const parameters = paramsText.split(/\n+/).map((line, index) => {
     const [name, normalRange, unit, method, sample] = line.split("|").map((part) => part.trim());
     return name ? { name, normalRange: normalRange || "", unit: unit || "", method: method || "", sample: sample || "", sortOrder: index + 1 } : null;
   }).filter(Boolean);
-  await updateTest(test.id || test.slug || test.testCode, {
+  const referenceRanges = parseMasterRanges(f.referenceRanges.value, defaultUnit);
+  const rangeErrors = referenceRanges.flatMap((range) => interpretationEngine?.validateReferenceRange(range) || []);
+  if (rangeErrors.length) return alert(rangeErrors.join("\n"));
+  const patch = {
+    testCode: f.testCode.value.trim() || test.testCode,
+    displayName: f.displayName.value.trim() || test.name,
+    shortName: f.shortName.value.trim(),
+    department: f.department.value.trim() || category,
     price: Number(priceValue || 0),
     category,
+    status: f.status.value,
+    isActive: f.status.value === "active",
+    displayOrder: Number(f.displayOrder.value || 0),
+    resultType,
+    decimalPlaces: f.decimalPlaces.value === "" ? "" : Number(f.decimalPlaces.value),
+    defaultUnit,
+    allowedUnits: f.allowedUnits.value.split(",").map((unit) => unit.trim()).filter(Boolean),
+    sampleType: f.sampleType.value.trim(),
+    sample: f.sampleType.value.trim(),
+    method: f.method.value.trim(),
+    analyzer: f.analyzer.value.trim(),
     parameters,
+    referenceRanges,
+    interpretationRules: parseMasterRules(f.interpretationRules.value, resultType),
+    generalInterpretation: f.generalInterpretation.value.trim(),
+    clinicalNotes: f.clinicalNotes.value.trim(),
+    recommendation: f.recommendation.value.trim(),
+    reportComment: f.reportComment.value.trim(),
+    autoFlagEnabled: f.autoFlagEnabled.checked,
+    autoInterpretationEnabled: f.autoInterpretationEnabled.checked,
+    showMethodOnReport: f.showMethodOnReport.checked,
+    showSampleOnReport: f.showSampleOnReport.checked,
+    showInterpretationOnReport: f.showInterpretationOnReport.checked,
+    showClinicalNotesOnReport: f.showClinicalNotesOnReport.checked,
+    version: Number(test.version || 1) + 1,
+    updatedBy: currentAdmin?.email || currentAdmin?.uid || "",
     needsParameterReview: false,
     searchKeywords: [test.testCode, test.name, category, ...parameters.map((p) => p.name)].join(" ").toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 1)
+  };
+  await updateTest(test.id || test.slug || test.testCode, patch);
+  await addDoc(collection(db, "testMasterAudit"), {
+    testId: test.id || test.slug || test.testCode,
+    testCode: test.testCode || "",
+    fieldChanged: "masterTestConfiguration",
+    oldValue: JSON.stringify({
+      category: test.category,
+      parameters: test.parameters,
+      referenceRanges: test.referenceRanges,
+      interpretationRules: test.interpretationRules,
+      version: test.version || 1
+    }),
+    newValue: JSON.stringify({
+      category: patch.category,
+      parameters: patch.parameters,
+      referenceRanges: patch.referenceRanges,
+      interpretationRules: patch.interpretationRules,
+      version: patch.version
+    }),
+    changedBy: currentAdmin?.email || currentAdmin?.uid || "",
+    changedAt: serverTimestamp(),
+    version: patch.version,
+    reason: "Admin test-master edit"
   });
   closeTestEditModal();
   showAdminToast("Test updated in Firestore.");
@@ -2698,6 +2877,17 @@ function reportResultFromEditorRow(row) {
     unit: row.unit || "",
     method: row.method || "",
     sample: row.sample || "",
+    displayName: row.displayName || row.name || row.parameterName || "",
+    testDisplayName: row.testDisplayName || row.testName || "",
+    testCode: row.testCode || "",
+    department: row.department || row.category || "",
+    resultType: row.resultType || "",
+    referenceRanges: Array.isArray(row.referenceRanges) ? row.referenceRanges : [],
+    interpretationRules: Array.isArray(row.interpretationRules) ? row.interpretationRules : [],
+    generalInterpretation: row.generalInterpretation || "",
+    clinicalNotes: row.clinicalNotes || "",
+    recommendation: row.recommendation || "",
+    reportComment: row.reportComment || "",
     type: row.type || "",
     esrHour: row.esrHour || "",
     isHeading: row.type === "heading" || row.isHeading === "true" || row.isHeading === true,
@@ -2723,6 +2913,17 @@ function editorRowFromReportResult(result) {
     unit: result.unit || "",
     method: result.method || "",
     sample: result.sample || "",
+    displayName: result.displayName || result.parameterName || result.name || "",
+    testDisplayName: result.testDisplayName || result.testName || "",
+    testCode: result.testCode || "",
+    department: result.department || result.category || "",
+    resultType: result.resultType || "",
+    referenceRanges: Array.isArray(result.referenceRanges) ? result.referenceRanges : [],
+    interpretationRules: Array.isArray(result.interpretationRules) ? result.interpretationRules : [],
+    generalInterpretation: result.generalInterpretation || "",
+    clinicalNotes: result.clinicalNotes || "",
+    recommendation: result.recommendation || "",
+    reportComment: result.reportComment || "",
     type: result.type || "",
     esrHour: result.esrHour || "",
     isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
@@ -2760,8 +2961,8 @@ function currentFindingRows() {
     controls.forEach((el) => {
       if (el.dataset.r === "details") {
         try { obj.details = JSON.parse(el.value || "[]"); } catch (e) { obj.details = []; }
-      } else if (el.dataset.r === "sourceParameters") {
-        try { obj.sourceParameters = JSON.parse(el.value || "[]"); } catch (e) { obj.sourceParameters = []; }
+      } else if (["sourceParameters", "referenceRanges", "interpretationRules"].includes(el.dataset.r)) {
+        try { obj[el.dataset.r] = JSON.parse(el.value || "[]"); } catch (e) { obj[el.dataset.r] = []; }
       } else {
         obj[el.dataset.r] = el.value;
       }
@@ -2814,26 +3015,87 @@ function reportResultsFromRows(rows) {
       }));
       return;
     }
+    const generated = generateInterpretationForEditorRow(row);
+    const finalInterpretation = row.finalInterpretation || generated.interpretation || "";
     results.push({
       code: row.code || "",
       name: row.name || "",
       category: row.category || "",
       testName: row.testName || row.name || "",
       parameterName: row.name || "",
+      displayName: row.displayName || row.name || "",
+      testDisplayName: row.testDisplayName || row.testName || "",
+      testCode: row.testCode || "",
+      department: row.department || row.category || "",
       resultValue: row.finding || "",
       value: row.finding || "",
-      normalRange: row.normal || "",
+      normalRange: generated.displayRange || row.normal || "",
       unit: row.unit || "",
       method: row.method || "",
       sample: row.sample || "",
       comment: row.comment || "",
       esrHour: row.esrHour || "",
+      resultType: row.resultType || "",
+      selectedReferenceRange: generated.selectedReferenceRange || null,
+      flag: generated.flag || "",
+      severity: generated.severity || "",
+      generatedInterpretation: generated.interpretation || "",
+      finalInterpretation,
+      interpretationEdited: Boolean(row.interpretationEdited),
+      interpretationEditedBy: row.interpretationEditedBy || "",
+      interpretationEditedAt: row.interpretationEditedAt || "",
+      matchedInterpretationRuleId: generated.matchedRuleId || "",
+      interpretationEngineVersion: generated.interpretationEngineVersion || "",
+      clinicalNote: generated.clinicalNote || row.clinicalNotes || "",
+      recommendation: generated.recommendation || row.recommendation || "",
+      reportComment: row.reportComment || "",
+      interpretationWarnings: generated.warnings || [],
+      masterTestVersion: row.version || "",
       calculated: row.calculated === true || row.calculated === "true",
       formula: row.formula || "",
       sourceParameters: Array.isArray(row.sourceParameters) ? row.sourceParameters : []
     });
   });
   return results;
+}
+
+function patientForInterpretation() {
+  return {
+    age: currentReportBooking?.age || "",
+    gender: currentReportBooking?.gender || "",
+    pregnancyStatus: currentReportBooking?.pregnancyStatus || currentReportBooking?.pregnancy || "all"
+  };
+}
+
+function generateInterpretationForEditorRow(row) {
+  if (!interpretationEngine) return { displayRange: row.normal || "", warnings: ["Interpretation engine unavailable."] };
+  const test = {
+    id: row.testCode || row.code || row.name,
+    code: row.testCode || row.code || row.name,
+    name: row.name || row.parameterName || "",
+    displayName: row.displayName || row.name || "",
+    department: row.department || row.category || "",
+    category: row.category || "",
+    sampleType: row.sample || "",
+    method: row.method || "",
+    resultType: row.resultType || row.type || "text",
+    defaultUnit: row.unit || "",
+    referenceRanges: Array.isArray(row.referenceRanges) ? row.referenceRanges : [],
+    interpretationRules: Array.isArray(row.interpretationRules) ? row.interpretationRules : [],
+    generalInterpretation: row.generalInterpretation || "",
+    clinicalNotes: row.clinicalNotes || "",
+    recommendation: row.recommendation || "",
+    reportComment: row.reportComment || "",
+    autoFlagEnabled: row.autoFlagEnabled !== false,
+    autoInterpretationEnabled: row.autoInterpretationEnabled !== false
+  };
+  return interpretationEngine.generateTestInterpretation({
+    test,
+    result: row.finding || row.resultValue || "",
+    patient: patientForInterpretation(),
+    method: row.method || "",
+    unit: row.unit || ""
+  });
 }
 
 window.setTab = function(tab) {
@@ -2872,9 +3134,14 @@ function paintFindingRows(rows) {
     const isReadOnly = row.readOnly === true || row.readOnly === "true" || isCalculated || isIndirectBilirubinParameter(row);
     const isESRRow = isESRTest(row) || isESRParameterName(row.name || row.parameterName);
     const numericAttrs = isESRRow ? ' inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-numeric="true"' : "";
+    const generated = generateInterpretationForEditorRow(row);
+    const displayRange = generated.displayRange && generated.displayRange !== "Reference range not configured" ? generated.displayRange : (row.normal || row.normalRange || generated.displayRange || "");
+    const flagPreview = generated.flag ? `<br><small><b>Flag:</b> ${html(generated.flag)} ${html(generated.flagLabel || "")}</small>` : "";
+    const interpretationPreview = generated.interpretation ? `<br><small><b>Interpretation:</b> ${html(generated.interpretation)}</small>` : "";
+    const warningPreview = (generated.warnings || []).length ? `<br><small style="color:#9a3412;"><b>Warning:</b> ${html(generated.warnings.join(" "))}</small>` : "";
     const referenceHtml = isESRRow
-      ? `<div style="font-size:12px;line-height:1.45;white-space:pre-line;"><b>Reference Value</b>\n${html(row.normal || row.normalRange || "")}</div><input type="hidden" data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}">`
-      : `<input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly>`;
+      ? `<div style="font-size:12px;line-height:1.45;white-space:pre-line;"><b>Reference Value</b>\n${html(displayRange)}</div><input type="hidden" data-r="normal" data-i="${index}" value="${html(displayRange)}">`
+      : `<input data-r="normal" data-i="${index}" value="${html(displayRange)}" readonly>${flagPreview}${interpretationPreview}${warningPreview}`;
     const rowClass = [
       row.source === "machine" ? "machine-filled-row" : "",
       isReadOnly ? "calculated-row" : ""
@@ -2888,8 +3155,19 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "Result")}">
         <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
+        <input type="hidden" data-r="displayName" data-i="${index}" value="${html(row.displayName || row.name || row.parameterName || "")}">
+        <input type="hidden" data-r="testDisplayName" data-i="${index}" value="${html(row.testDisplayName || row.testName || "")}">
+        <input type="hidden" data-r="testCode" data-i="${index}" value="${html(row.testCode || "")}">
+        <input type="hidden" data-r="department" data-i="${index}" value="${html(row.department || "")}">
         <input type="hidden" data-r="method" data-i="${index}" value="${html(row.method || "")}">
         <input type="hidden" data-r="sample" data-i="${index}" value="${html(row.sample || "")}">
+        <input type="hidden" data-r="resultType" data-i="${index}" value="${html(row.resultType || "")}">
+        <input type="hidden" data-r="referenceRanges" data-i="${index}" value="${html(JSON.stringify(row.referenceRanges || []))}">
+        <input type="hidden" data-r="interpretationRules" data-i="${index}" value="${html(JSON.stringify(row.interpretationRules || []))}">
+        <input type="hidden" data-r="generalInterpretation" data-i="${index}" value="${html(row.generalInterpretation || "")}">
+        <input type="hidden" data-r="clinicalNotes" data-i="${index}" value="${html(row.clinicalNotes || "")}">
+        <input type="hidden" data-r="recommendation" data-i="${index}" value="${html(row.recommendation || "")}">
+        <input type="hidden" data-r="reportComment" data-i="${index}" value="${html(row.reportComment || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="${html(row.type || "")}">
         <input type="hidden" data-r="esrHour" data-i="${index}" value="${html(row.esrHour || "")}">
         <input type="hidden" data-r="source" data-i="${index}" value="${html(row.source || "")}">
@@ -2900,7 +3178,7 @@ function paintFindingRows(rows) {
         <input type="hidden" data-r="sourceParameters" data-i="${index}" value="${html(JSON.stringify(row.sourceParameters || []))}">
         <input type="hidden" data-r="precision" data-i="${index}" value="${html(row.precision ?? "")}">
       </td>
-      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
+      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}>${flagPreview}</td>
       <td>${referenceHtml}</td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
@@ -2995,17 +3273,53 @@ function selectedTestSnapshot(test, packageName = "") {
     id: test.id || test.testId || test.slug || test.testCode,
     testCode: test.testCode,
     name: test.name,
+    displayName: test.displayName || test.name,
+    shortName: test.shortName || "",
+    department: test.department || test.category || "Lab Test",
     category: test.category || "Lab Test",
     price: Number(test.price || 0),
     sample: test.sample || "",
+    sampleType: test.sampleType || test.sample || "",
+    method: test.method || "",
+    analyzer: test.analyzer || "",
+    resultType: test.resultType || "text",
+    decimalPlaces: test.decimalPlaces ?? "",
+    defaultUnit: test.defaultUnit || test.unit || "",
+    allowedUnits: Array.isArray(test.allowedUnits) ? test.allowedUnits : [],
+    referenceRanges: Array.isArray(test.referenceRanges) ? test.referenceRanges : [],
+    interpretationRules: Array.isArray(test.interpretationRules) ? test.interpretationRules : [],
+    generalInterpretation: test.generalInterpretation || "",
+    clinicalNotes: test.clinicalNotes || "",
+    recommendation: test.recommendation || "",
+    reportComment: test.reportComment || "",
+    criticalValueEnabled: Boolean(test.criticalValueEnabled),
+    autoFlagEnabled: test.autoFlagEnabled !== false,
+    autoInterpretationEnabled: test.autoInterpretationEnabled !== false,
+    showMethodOnReport: test.showMethodOnReport !== false,
+    showSampleOnReport: test.showSampleOnReport !== false,
+    showInterpretationOnReport: test.showInterpretationOnReport !== false,
+    showClinicalNotesOnReport: test.showClinicalNotesOnReport !== false,
+    version: Number(test.version || 1),
     reportTime: test.reportTime || "Same Day",
     parameters: normalizeTestParameters(test).map((p, index) => ({
       name: p.name || p.parameterName || "Result",
+      displayName: p.displayName || p.name || p.parameterName || "Result",
       code: p.code || p.parameterCode || p.parameter_code || "",
       normalRange: p.normalRange || p.normalValue || p.normal || "",
       unit: p.unit || "",
       method: p.method || "",
       sample: p.sample || test.sample || "",
+      resultType: p.resultType || test.resultType || "",
+      referenceRanges: Array.isArray(p.referenceRanges) ? p.referenceRanges : [],
+      interpretationRules: Array.isArray(p.interpretationRules) ? p.interpretationRules : [],
+      generalInterpretation: p.generalInterpretation || "",
+      clinicalNotes: p.clinicalNotes || "",
+      recommendation: p.recommendation || "",
+      reportComment: p.reportComment || "",
+      autoFlagEnabled: p.autoFlagEnabled !== false,
+      autoInterpretationEnabled: p.autoInterpretationEnabled !== false,
+      showInterpretationOnReport: p.showInterpretationOnReport !== false,
+      showClinicalNotesOnReport: p.showClinicalNotesOnReport !== false,
       type: p.type || "",
       isHeading: Boolean(p.isHeading || p.heading || p.type === "heading"),
       precision: p.precision ?? p.decimalPlaces ?? p.decimal_places ?? p.decimals ?? "",
@@ -3228,11 +3542,22 @@ function reportRowsForTest(test, existingResults = []) {
       name: result.parameterName || result.name || "Result",
       category: result.category || test.category || "",
       testName: result.testName || test.name || "",
+      displayName: result.displayName || result.parameterName || result.name || "Result",
+      testDisplayName: test.displayName || test.name || "",
+      testCode: test.testCode || test.code || "",
+      department: result.department || test.department || test.category || "",
       normal: result.normalRange || result.normal || "",
       finding: result.resultValue || result.finding || "",
       unit: result.unit || "",
       method: result.method || "",
       sample: result.sample || "",
+      resultType: result.resultType || test.resultType || "",
+      referenceRanges: Array.isArray(result.referenceRanges) ? result.referenceRanges : Array.isArray(test.referenceRanges) ? test.referenceRanges : [],
+      interpretationRules: Array.isArray(result.interpretationRules) ? result.interpretationRules : Array.isArray(test.interpretationRules) ? test.interpretationRules : [],
+      generalInterpretation: result.generalInterpretation || test.generalInterpretation || "",
+      clinicalNotes: result.clinicalNotes || test.clinicalNotes || "",
+      recommendation: result.recommendation || test.recommendation || "",
+      reportComment: result.reportComment || test.reportComment || "",
       type: result.type || "",
       esrHour: result.esrHour || "",
       isHeading: Boolean(result.isHeading || result.heading || result.type === "heading"),
@@ -3260,11 +3585,22 @@ function reportRowsForTest(test, existingResults = []) {
       name: p.name || test.name || "Test",
       category: test.category || existing?.category || "",
       testName: test.name || existing?.testName || "",
+      displayName: p.displayName || p.name || "",
+      testDisplayName: test.displayName || test.name || "",
+      testCode: test.testCode || test.code || "",
+      department: test.department || test.category || "",
       normal: p.normalRange || p.normalValue || p.normal || existing?.normalRange || "",
       finding: existing?.resultValue || existing?.finding || p.finding || "",
       unit: p.unit || existing?.unit || "",
       method: p.method || existing?.method || "",
       sample: p.sample || test.sample || existing?.sample || "",
+      resultType: p.resultType || test.resultType || "",
+      referenceRanges: Array.isArray(p.referenceRanges) && p.referenceRanges.length ? p.referenceRanges : Array.isArray(test.referenceRanges) ? test.referenceRanges : [],
+      interpretationRules: Array.isArray(p.interpretationRules) && p.interpretationRules.length ? p.interpretationRules : Array.isArray(test.interpretationRules) ? test.interpretationRules : [],
+      generalInterpretation: p.generalInterpretation || test.generalInterpretation || "",
+      clinicalNotes: p.clinicalNotes || test.clinicalNotes || "",
+      recommendation: p.recommendation || test.recommendation || "",
+      reportComment: p.reportComment || test.reportComment || "",
       type: p.type || existing?.type || "",
       esrHour: p.esrHour || existing?.esrHour || "",
       isHeading: Boolean(p.isHeading || p.heading || p.type === "heading" || existing?.isHeading),

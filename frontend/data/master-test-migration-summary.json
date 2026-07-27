@@ -1,0 +1,47 @@
+{
+  "mode": "dry-run",
+  "generatedAt": "2026-07-27T09:51:19.462Z",
+  "totalTests": 684,
+  "migrated": 684,
+  "duplicateCodes": [],
+  "rangeValidationErrors": [],
+  "requiresLabApproval": 684,
+  "examples": [
+    {
+      "code": "KT0127",
+      "name": "Blood Sugar (Fasting)",
+      "displayName": "Blood Sugar (Fasting)",
+      "resultType": "text",
+      "defaultUnit": "",
+      "referenceRangeCount": 0,
+      "approvalNote": "Requires laboratory approval before production use."
+    },
+    {
+      "code": "KT0239",
+      "name": "ESR",
+      "displayName": "ESR",
+      "resultType": "text",
+      "defaultUnit": "",
+      "referenceRangeCount": 0,
+      "approvalNote": "Requires laboratory approval before production use."
+    },
+    {
+      "code": "KT0299",
+      "name": "HBA1C",
+      "displayName": "HBA1C",
+      "resultType": "text",
+      "defaultUnit": "",
+      "referenceRangeCount": 0,
+      "approvalNote": "Requires laboratory approval before production use."
+    },
+    {
+      "code": "KT0521",
+      "name": "SERUM IgE",
+      "displayName": "SERUM IgE",
+      "resultType": "text",
+      "defaultUnit": "",
+      "referenceRangeCount": 0,
+      "approvalNote": "Requires laboratory approval before production use."
+    }
+  ]
+}
