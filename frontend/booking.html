@@ -241,6 +241,8 @@
     let currentUser = null;
     let currentProfile = {};
     let lastSavedBooking = null;
+    let isBookingSubmitting = false;
+    let currentBookingIdempotencyKey = "";
     const $ = (id) => document.getElementById(id);
     const safe = (value) => String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
     const rupees = (value) => "₹" + Number(value || 0).toLocaleString("en-IN");
@@ -281,6 +283,17 @@
 
     function parameterCount(test) {
       return Number(test.parameterCount ?? test.parameters?.length ?? 0);
+    }
+
+    function stableTestId(test) {
+      return String(test?.testId || test?.id || test?.testCode || test?.slug || "").trim();
+    }
+
+    function uniqueSelectedTests() {
+      return Array.from(new Map(selectedTests
+        .map((test) => [stableTestId(test), test])
+        .filter(([id]) => id)
+      ).values());
     }
 
     function selectedTotal() {
@@ -451,7 +464,7 @@
         showMessage("error", "Please select a valid test from the catalog.");
         return;
       }
-      if (selectedTests.some((item) => item.testCode === test.testCode && item.name === test.name)) {
+      if (selectedTests.some((item) => stableTestId(item) === stableTestId(test))) {
         showMessage("error", "This test is already selected.");
         return;
       }
@@ -499,19 +512,25 @@
     window.bookTest = async function(e) {
       e.preventDefault();
       const f = e.target;
+      const submitBtn = f.querySelector(".booking-submit-btn");
+      if (isBookingSubmitting) return;
       if (!currentUser) {
         showMessage("error", "Please login or create an account before booking.");
         return;
       }
+      selectedTests = uniqueSelectedTests();
       if (!selectedTests.length) {
         showMessage("error", "Please add at least one test.");
         return;
       }
+      renderSelectedTests();
       const subtotal = selectedTotal();
       const charge = collectionCharge(f);
       const total = grandTotal(f);
+      currentBookingIdempotencyKey = currentBookingIdempotencyKey || crypto.randomUUID();
       const booking = {
         bookingId: `OB${Date.now()}`,
+        idempotencyKey: currentBookingIdempotencyKey,
         patientName: normalizePatientName(f.patientName.value),
         patientUid: currentUser.uid,
         patientEmail: f.email.value.trim().toLowerCase(),
@@ -543,6 +562,11 @@
       };
 
       try {
+        isBookingSubmitting = true;
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Booking...";
+        }
         await savePatientProfile(currentUser.uid, {
           uid: currentUser.uid,
           name: booking.patientName,
@@ -568,9 +592,18 @@
         renderSelectedTests();
         f.reset();
         setStep("stepPayment");
+        setTimeout(() => {
+          window.location.href = `patient-dashboard.html?booking=${encodeURIComponent(saved.bookingId || saved.id || "")}`;
+        }, 900);
       } catch (err) {
         console.error(err);
         showMessage("error", err.message || "Booking could not be saved.");
+        isBookingSubmitting = false;
+        currentBookingIdempotencyKey = "";
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Booking";
+        }
       }
     };
 

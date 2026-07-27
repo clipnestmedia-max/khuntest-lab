@@ -974,14 +974,13 @@
 
     function completeESRResults(report, results) {
       const tests = [
+        ...(Array.isArray(report.reportItems) ? report.reportItems : []),
         ...(Array.isArray(report.tests) ? report.tests : []),
         ...(Array.isArray(report.selectedTests) ? report.selectedTests : [])
       ];
       const esrRows = results.filter(isESRResultRow);
-      const hasESR = tests.some((test) => isESRText(`${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`))
-        || esrRows.length
-        || report.esrFirstHour
-        || report.esrSecondHour;
+      const hasLinkedESR = tests.some((test) => isESRText(`${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""} ${test?.testId || ""}`));
+      const hasESR = hasLinkedESR || report.esrFirstHour || report.esrSecondHour;
       if (!hasESR) return results;
 
       const first = esrRows.find((row) => esrHourKey(row) === "first");
@@ -993,7 +992,7 @@
         normalizeResult({
           category,
           testName: "ESR",
-          parameterName: "ESR (1st Hour)",
+          parameterName: "ESR - 1st Hour",
           resultValue: report.esrFirstHour || first?.resultValue || "",
           normalRange: "Male 0-15\nFemale 0-20",
           unit: "mm/hr",
@@ -1005,7 +1004,7 @@
         normalizeResult({
           category,
           testName: "ESR",
-          parameterName: "ESR (2nd Hour)",
+          parameterName: "ESR - 2nd Hour",
           resultValue: report.esrSecondHour || second?.resultValue || "",
           normalRange: "Male 0-30\nFemale 0-40",
           unit: "mm/hr",

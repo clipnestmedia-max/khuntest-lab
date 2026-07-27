@@ -28,6 +28,17 @@
   .entry-suggestion:hover { background: #f5f9ff; }
   .entry-suggestion small { color: #5e6f86; }
   .test-suggestions { margin-top: 6px; max-height: 240px; overflow: auto; border: 1px solid #dce4f2; border-radius: 8px; background: #fff; box-shadow: 0 12px 24px rgba(18, 38, 63, 0.08); }
+  .report-test-header-row td { padding: 12px 14px; background: #f8fbff; border-top: 12px solid #fff; }
+  .report-test-card-head { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+  .report-test-card-head b { color: #062b59; font-size: 16px; }
+  .report-test-card-head small { display: block; color: #52657d; margin-top: 4px; }
+  .report-test-status { display: inline-block; margin-top: 8px; padding: 4px 8px; border-radius: 6px; background: #edf2f8; color: #062b59; font-weight: 800; font-size: 12px; }
+  .report-test-status.complete { background: #dcfce7; color: #166534; }
+  .report-test-status.progress { background: #fef3c7; color: #92400e; }
+  .report-test-param-row.collapsed { display: none; }
+  .report-test-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .report-test-save-note { color: #166534; font-weight: 800; font-size: 12px; }
+  @media(max-width:760px){.report-test-card-head{grid-template-columns:1fr}.report-test-actions{justify-content:flex-start}}
   .test-suggestion-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 9px 11px; border-bottom: 1px solid #edf2f8; background: #fff; cursor: pointer; }
   .test-suggestion-item:hover { background: #f5f9ff; }
   .test-suggestion-item span { color: #5e6f86; }
@@ -632,11 +643,17 @@ function ktNowLocal() {
 }
 
 function bookingTests(b) {
-  return Array.isArray(b.selectedTests) && b.selectedTests.length
+  const tests = Array.isArray(b.selectedTests) && b.selectedTests.length
     ? b.selectedTests
     : Array.isArray(b.tests)
       ? b.tests
       : [];
+  const map = new Map();
+  tests.forEach((test) => {
+    const key = String(test.testId || test.id || test.testCode || test.slug || "").trim().toLowerCase();
+    if (key && !map.has(key)) map.set(key, test);
+  });
+  return Array.from(map.values());
 }
 
 function timestampValue(value) {
@@ -751,20 +768,22 @@ function isESRTest(test) {
 
 function isESRParameterName(name) {
   const key = String(name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  return key === "esr" || key === "result" || key.includes("esr1sthour") || key.includes("esrfirsthour") || key.includes("esr2ndhour") || key.includes("esrsecondhour");
+  return key === "esr" || key.includes("esr1sthour") || key.includes("esrfirsthour") || key.includes("esr2ndhour") || key.includes("esrsecondhour");
 }
 
 function getESRParameters() {
   return [
     {
-      name: "ESR (1st Hour)",
+      code: "ESR_1ST_HOUR",
+      name: "ESR - 1st Hour",
       normalRange: "Male: 0-15 mm/hr\nFemale: 0-20 mm/hr\nChildren: 0-10 mm/hr",
       unit: "mm/hr",
       esrHour: "first",
       sortOrder: 1
     },
     {
-      name: "ESR (2nd Hour)",
+      code: "ESR_2ND_HOUR",
+      name: "ESR - 2nd Hour",
       normalRange: "Male: 0-30 mm/hr\nFemale: 0-40 mm/hr\nChildren: 0-20 mm/hr",
       unit: "mm/hr",
       esrHour: "second",
@@ -1368,6 +1387,29 @@ async function createBooking(data) {
   const payload = {
     ...data,
     patientName: normalizePatientName(data.patientName),
+    bookingItems: bookingTests(data).map((test, index) => ({
+      bookingId: data.billNo || "",
+      patientId: data.patientUid || "",
+      testId: test.testId || test.id || test.testCode || "",
+      testCode: test.testCode || "",
+      testName: test.name || test.testName || "",
+      addedBy: currentAdmin?.email || currentAdmin?.uid || "",
+      addedAt: new Date().toISOString(),
+      source: test.source || "admin-added",
+      displayOrder: index + 1
+    })),
+    bookingAuditTrail: bookingTests(data).map((test) => ({
+      action: "add-test",
+      testId: test.testId || test.id || test.testCode || "",
+      testName: test.name || test.testName || "",
+      patientId: data.patientUid || "",
+      bookingId: data.billNo || "",
+      addedBy: currentAdmin?.email || currentAdmin?.uid || "",
+      addedAt: new Date().toISOString(),
+      source: test.source || "admin-added",
+      previousState: null,
+      newState: "selected"
+    })),
     createdByUid: data.createdByUid || currentAdmin?.uid || "",
     createdByName: safeStaffDisplayName(data.createdByName, staffName),
     labAttendantName: safeStaffDisplayName(data.labAttendantName, staffName),
@@ -1391,6 +1433,10 @@ async function findReportForBill(billNo) {
 async function upsertReport(payload) {
   const billNo = String(payload.billNo || "");
   const existing = await findReportForBill(billNo);
+  if (existing?.id && isFinalReport(existing) && String(payload.reportStatus || payload.status || "").toLowerCase() === "draft") {
+    if (typeof showAdminToast === "function") showAdminToast("Finalized report preserved. Draft preview did not overwrite it.");
+    return existing;
+  }
   const reportData = {
     ...payload,
     billNo,
@@ -2845,16 +2891,48 @@ window.setTab = function(tab) {
   });
 };
 
-function paintFindingRows(rows) {
-  const body = document.getElementById("findingRows");
-  if (!body) return;
-  rows = applyLftCalculationsToEditorRows(rows);
-  reportResults = rows;
-  body.innerHTML = rows.length ? rows.map((row, index) => {
+let openReportTestKey = "";
+
+function reportTestKeyForRow(row, index = 0) {
+  return String(row.testId || row.testCode || row.testName || row.category || `test-${index}`).toLowerCase().replace(/[^a-z0-9]+/g, "-") || `test-${index}`;
+}
+
+function rowHasEnteredResult(row) {
+  if (row.type === "heading" || row.isHeading === true || row.isHeading === "true") return false;
+  return String(row.finding ?? row.resultValue ?? "").trim() !== "";
+}
+
+function reportTestGroups(rows) {
+  const groups = [];
+  const map = new Map();
+  rows.forEach((row, index) => {
+    const title = row.testName || row.category || row.name || "Report";
+    const key = reportTestKeyForRow({ ...row, testName: title }, groups.length);
+    if (!map.has(key)) {
+      const group = { key, title, category: row.category || "", rows: [], indexes: [] };
+      map.set(key, group);
+      groups.push(group);
+    }
+    const group = map.get(key);
+    group.rows.push(row);
+    group.indexes.push(index);
+  });
+  return groups;
+}
+
+function reportGroupStatus(group) {
+  const editableRows = group.rows.filter((row) => !(row.type === "heading" || row.isHeading === true || row.isHeading === "true"));
+  const entered = editableRows.filter(rowHasEnteredResult).length;
+  const total = editableRows.length;
+  const label = entered === 0 ? "Not Started" : entered >= total ? "Completed" : "In Progress";
+  return { entered, total, label };
+}
+
+function findingRowHtml(row, index, groupKey, isOpen) {
     const isHeading = row.type === "heading" || row.isHeading === true;
     if (isHeading) {
       return `
-    <tr class="finding-heading-row ${row.source === "machine" ? "machine-filled-row" : ""}">
+    <tr class="finding-heading-row report-test-param-row ${isOpen ? "" : "collapsed"} ${row.source === "machine" ? "machine-filled-row" : ""}" data-test-group="${html(groupKey)}">
       <td colspan="4">
         <b>${html(row.name || row.parameterName || "")}</b>
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "")}">
@@ -2876,11 +2954,13 @@ function paintFindingRows(rows) {
       ? `<div style="font-size:12px;line-height:1.45;white-space:pre-line;"><b>Reference Value</b>\n${html(row.normal || row.normalRange || "")}</div><input type="hidden" data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}">`
       : `<input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly>`;
     const rowClass = [
+      "report-test-param-row",
+      isOpen ? "" : "collapsed",
       row.source === "machine" ? "machine-filled-row" : "",
       isReadOnly ? "calculated-row" : ""
     ].filter(Boolean).join(" ");
     return `
-    <tr class="${rowClass}">
+    <tr class="${rowClass}" data-test-group="${html(groupKey)}">
       <td>
         <b>${html(row.name || row.parameterName || "Result")}</b>
         <br><small>${html(row.label || (isCalculated ? "Auto-calculated" : row.testName || row.category || ""))}</small>
@@ -2905,6 +2985,44 @@ function paintFindingRows(rows) {
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
   `;
+}
+
+function reportGroupHeaderHtml(group, isOpen) {
+  const status = reportGroupStatus(group);
+  const statusClass = status.label === "Completed" ? "complete" : status.label === "In Progress" ? "progress" : "";
+  return `
+    <tr class="report-test-header-row" data-test-header="${html(group.key)}">
+      <td colspan="4">
+        <div class="report-test-card-head">
+          <div>
+            <b>${html(group.title)}</b>
+            <small>${status.entered} of ${status.total} parameters entered</small>
+            <span class="report-test-status ${statusClass}">${status.label}</span>
+          </div>
+          <div class="report-test-actions">
+            <button class="btn btn-outline btn-small" type="button" onclick="toggleReportTestCard('${html(group.key)}')">${isOpen ? "Close Parameters" : "Open Parameters"}</button>
+            <button class="btn btn-green btn-small" type="button" onclick="saveReportTestCard('${html(group.key)}')">Save ${html(group.title)}</button>
+            <button class="btn btn-outline btn-small" type="button" onclick="clearReportTestCard('${html(group.key)}')">Clear Test</button>
+            <span class="report-test-save-note hidden" data-save-note="${html(group.key)}">Saved</span>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function paintFindingRows(rows) {
+  const body = document.getElementById("findingRows");
+  if (!body) return;
+  rows = applyLftCalculationsToEditorRows(rows);
+  reportResults = rows;
+  const groups = reportTestGroups(rows);
+  if (openReportTestKey !== "__none__" && (!openReportTestKey || !groups.some((group) => group.key === openReportTestKey))) {
+    openReportTestKey = groups[0]?.key || "";
+  }
+  body.innerHTML = groups.length ? groups.map((group) => {
+    const isOpen = group.key === openReportTestKey;
+    return reportGroupHeaderHtml(group, isOpen) + group.rows.map((row, offset) => findingRowHtml(row, group.indexes[offset], group.key, isOpen)).join("");
   }).join("") : `<tr><td colspan="4">No parameters found. A default result row is available after selecting a booking.</td></tr>`;
   const warning = window.currentLftValidationWarning || "";
   if (warning) {
@@ -2938,6 +3056,38 @@ function paintFindingRows(rows) {
     });
   });
 }
+
+window.toggleReportTestCard = function(groupKey) {
+  const currentScroll = window.scrollY;
+  openReportTestKey = openReportTestKey === groupKey ? "__none__" : groupKey;
+  paintFindingRows(currentFindingRows());
+  requestAnimationFrame(() => window.scrollTo(0, currentScroll));
+};
+
+window.saveReportTestCard = async function(groupKey) {
+  if (!currentReportBooking) return alert("Please select booking.");
+  openReportTestKey = "";
+  const payload = reportPayload("Draft");
+  if (!payload) return;
+  if (showLftValidationWarning(payload)) return;
+  await saveReportDraft(payload);
+  openReportTestKey = "__none__";
+  paintFindingRows(reportResults);
+  const note = document.querySelector(`[data-save-note="${CSS.escape(groupKey)}"]`);
+  if (note) {
+    note.classList.remove("hidden");
+    setTimeout(() => note.classList.add("hidden"), 1800);
+  }
+};
+
+window.clearReportTestCard = function(groupKey) {
+  if (!confirm("Clear entered results for this test?")) return;
+  const rows = currentFindingRows().map((row) => {
+    if (reportTestKeyForRow(row) !== groupKey || row.type === "heading" || row.isHeading === true || row.isHeading === "true" || row.readOnly === "true") return row;
+    return { ...row, finding: "", resultValue: "" };
+  });
+  paintFindingRows(rows);
+};
 
 window.firebaseUpdateStatus = async function(bookingId, status) {
   await updateBookingStatus(bookingId, status);
@@ -2990,8 +3140,9 @@ function testMatchesQuery(test, queryText) {
 }
 
 function selectedTestSnapshot(test, packageName = "") {
+  const testId = test.testId || test.id || test.slug || test.testCode;
   return {
-    testId: test.testId || test.id || test.slug || test.testCode,
+    testId,
     id: test.id || test.testId || test.slug || test.testCode,
     testCode: test.testCode,
     name: test.name,
@@ -3012,7 +3163,10 @@ function selectedTestSnapshot(test, packageName = "") {
       calculated: Boolean(p.calculated || p.isCalculated || p.is_calculated),
       sortOrder: Number(p.sortOrder || index + 1)
     })),
-    package: packageName
+    package: packageName,
+    selectedBy: currentAdmin?.email || currentAdmin?.uid || "admin",
+    selectedAt: new Date().toISOString(),
+    source: packageName ? "admin-package" : "admin-added"
   };
 }
 
@@ -3314,6 +3468,7 @@ window.filterAdminBookings = function() {
 window.loadReportEditor = async function(id) {
   currentReportBooking = bookingBySelectorValue(id);
   selectedBookingForReport = currentReportBooking;
+  openReportTestKey = "";
   const box = document.getElementById("reportEditor");
   if (!box) return;
   if (!currentReportBooking) {
@@ -3578,6 +3733,19 @@ function reportPayload(status = "Draft") {
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   const reportingDate = document.getElementById("rReportingDate")?.value || "";
   const esrValues = esrValuesFromRows(rows);
+  const linkedTests = bookingTests(currentReportBooking);
+  const reportItems = linkedTests.map((test, index) => ({
+    reportId: bill,
+    bookingId: currentReportBooking.id,
+    patientId: currentReportBooking.patientUid || currentReportBooking.uid || "",
+    testId: test.testId || test.id || test.testCode || "",
+    testCode: test.testCode || "",
+    testName: test.name || test.testName || "",
+    selectedBy: test.selectedBy || currentReportBooking.createdByUid || currentAdmin?.uid || "",
+    selectedAt: test.selectedAt || currentReportBooking.createdAt || "",
+    source: test.source || "booking",
+    displayOrder: index + 1
+  }));
   const payload = {
     billNo: bill,
     bookingId: currentReportBooking.id,
@@ -3591,7 +3759,9 @@ function reportPayload(status = "Draft") {
     refBy: currentReportBooking.refBy || currentReportBooking.doctor,
     collectionDate: currentReportBooking.collDate || currentReportBooking.collectionDate || currentReportBooking.date,
     reportingDate,
-    tests: bookingTests(currentReportBooking),
+    tests: linkedTests,
+    selectedTests: linkedTests,
+    reportItems,
     results: reportResultsFromRows(rows),
     ...esrValues,
     reportStatus: status,

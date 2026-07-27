@@ -174,7 +174,7 @@ class FirebaseService {
       refBy: booking.refBy || booking.doctor || "",
       collectionDate: booking.collDate || booking.collectionDate || booking.date || "",
       reportingDate: new Date().toISOString(),
-      tests: booking.selectedTests || booking.tests || [{ testCode: "CBC", name: "COMPLETE BLOOD COUNT(CBC)", category: "HAEMATOLOGY" }],
+      tests: booking.selectedTests || booking.tests || [],
       selectedTests: booking.selectedTests || booking.tests || [],
       results: mapMachineResultsToReport(parsed),
       reportStatus: "Draft",

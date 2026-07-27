@@ -21,6 +21,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  runTransaction,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -251,6 +252,18 @@ function isCBCTest(test) {
   return text.includes("cbc") || text.includes("complete blood count");
 }
 
+function isESRTest(test) {
+  const key = String(`${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`).toLowerCase().replace(/[^a-z0-9]/g, "");
+  return key === "esr" || key.includes("kt0239") || key.includes("erythrocytesedimentationrate");
+}
+
+function getESRParameters() {
+  return [
+    { code: "ESR_1ST_HOUR", name: "ESR - 1st Hour", normalRange: "Male: 0-15\nFemale: 0-20", unit: "mm/hr", esrHour: "first", sortOrder: 1 },
+    { code: "ESR_2ND_HOUR", name: "ESR - 2nd Hour", normalRange: "Male: 0-30\nFemale: 0-40", unit: "mm/hr", esrHour: "second", sortOrder: 2 }
+  ];
+}
+
 function getFullCBCParameters() {
   return [
     { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
@@ -298,6 +311,8 @@ function normalizeTest(data) {
   const sample = data.sample || "";
   const parameters = isCBCTest({ name, testCode })
     ? getFullCBCParameters().map((p) => normalizeParameter(p, { name, sample }))
+    : isESRTest({ name, testCode })
+      ? getESRParameters().map((p) => normalizeParameter(p, { name, sample }))
     : Array.isArray(data.parameters)
       ? data.parameters.map((p) => normalizeParameter(p, { name, sample }))
     : [];
@@ -363,6 +378,21 @@ function normalizeSelectedTest(data) {
     reportTime: test.reportTime,
     parameters: test.parameters
   };
+}
+
+function stableTestKey(test) {
+  return String(test?.testId || test?.id || test?.testCode || test?.slug || "").trim().toLowerCase();
+}
+
+function uniqueSelectedTests(tests) {
+  const map = new Map();
+  (Array.isArray(tests) ? tests : []).forEach((raw) => {
+    const normalized = normalizeSelectedTest(raw || {});
+    const key = stableTestKey(normalized);
+    if (!key || map.has(key)) return;
+    map.set(key, normalized);
+  });
+  return Array.from(map.values());
 }
 
 function normalizeBooking(data) {
@@ -742,7 +772,9 @@ export async function createBooking(bookingData) {
 export async function createOnlineBooking(bookingData) {
   const user = await requireAuth();
   const bookingId = bookingData.bookingId || `OB${Date.now()}`;
-  const tests = Array.isArray(bookingData.tests) ? bookingData.tests.map(normalizeSelectedTest) : [];
+  const idempotencyKey = String(bookingData.idempotencyKey || bookingData.idempotency_key || bookingId).trim();
+  const tests = uniqueSelectedTests(bookingData.tests);
+  if (!tests.length) throw new Error("Please add at least one unique test.");
   const subtotal = Number(bookingData.subtotal || tests.reduce((sum, test) => sum + Number(test.price || 0), 0));
   const collectionCharge = Number(bookingData.collectionCharge || 0);
   const discount = Number(bookingData.discount || 0);
@@ -750,6 +782,7 @@ export async function createOnlineBooking(bookingData) {
   const paymentStatus = bookingData.paymentStatus || (Number(bookingData.paidAmount || 0) >= totalAmount ? "Paid" : "Pending");
   const payload = {
     bookingId,
+    idempotencyKey,
     patientUid: user.uid,
     patientName: normalizePatientName(bookingData.patientName || ""),
     age: bookingData.age || "",
@@ -775,6 +808,17 @@ export async function createOnlineBooking(bookingData) {
     remarks: bookingData.remarks || bookingData.notes || "",
     tests,
     selectedTests: tests,
+    bookingItems: tests.map((test, index) => ({
+      bookingId,
+      patientUid: user.uid,
+      testId: test.testId || test.id || test.testCode,
+      testCode: test.testCode || "",
+      testName: test.name || "",
+      selectedBy: user.uid,
+      selectedAt: new Date().toISOString(),
+      source: "booking",
+      displayOrder: index + 1
+    })),
     test: tests.map((test) => test.name).join(", "),
     subtotal,
     collectionCharge,
@@ -799,16 +843,41 @@ export async function createOnlineBooking(bookingData) {
   let savedCollection = C.onlineBookings;
   let savedId = bookingId;
   try {
-    await setDoc(doc(db, C.onlineBookings, bookingId), payload);
-  } catch (err) {
-    const fallbackRef = await addDoc(collection(db, C.bookings), {
-      ...payload,
-      onlineBookingId: bookingId,
-      source: "online",
-      status: payload.bookingStatus
+    const bookingRef = doc(db, C.onlineBookings, idempotencyKey);
+    await runTransaction(db, async (transaction) => {
+      const existing = await transaction.get(bookingRef);
+      if (existing.exists()) {
+        const existingData = existing.data() || {};
+        if (existingData.patientUid && existingData.patientUid !== user.uid) {
+          throw new Error("This booking request does not belong to the signed-in patient.");
+        }
+        savedId = existing.id;
+        return;
+      }
+      transaction.set(bookingRef, payload);
     });
-    savedCollection = C.bookings;
-    savedId = fallbackRef.id;
+  } catch (err) {
+    if (!String(err?.message || "").includes("signed-in patient")) {
+      const fallbackRef = doc(db, C.bookings, idempotencyKey);
+      const existingFallback = await getDoc(fallbackRef).catch(() => null);
+      if (existingFallback?.exists()) {
+        const existingData = existingFallback.data() || {};
+        if (existingData.patientUid && existingData.patientUid !== user.uid) {
+          throw new Error("This booking request does not belong to the signed-in patient.");
+        }
+      } else {
+        await setDoc(fallbackRef, {
+          ...payload,
+          onlineBookingId: bookingId,
+          source: "online",
+          status: payload.bookingStatus
+        }, { merge: false });
+      }
+      savedCollection = C.bookings;
+      savedId = fallbackRef.id;
+    } else {
+      throw err;
+    }
   }
   await savePatientProfile(user.uid, {
     uid: user.uid,
