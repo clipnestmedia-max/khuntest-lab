@@ -4,6 +4,15 @@ const { makeCode } = require("../utils/ids");
 
 const router = express.Router();
 
+function hasReportValue(value) {
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function firstReportValue(...values) {
+  const value = values.find(hasReportValue);
+  return hasReportValue(value) ? String(value) : "";
+}
+
 /* =========================
    GET ALL TESTS
    Current DB columns:
@@ -404,7 +413,7 @@ router.post("/reports/save", async (req, res) => {
           billNo,
           r.testName || "",
           r.parameterName || "",
-          r.finding || "",
+          firstReportValue(r.value, r.resultValue, r.result_value, r.finding, r.result, r.parameterValue, r.enteredValue, r.testResult, r.finalResult, r.reportedValue, r.observation, r.observedValue),
           r.unit || "",
           r.normalValue || "",
           r.comment || ""
@@ -510,7 +519,7 @@ router.post("/reports/save", async (req, res) => {
           patientName || "",
           testName || "",
           r.parameterName || r.parameter_name || "",
-          r.resultValue || r.result_value || "",
+          firstReportValue(r.value, r.resultValue, r.result_value, r.finding, r.result, r.parameterValue, r.enteredValue, r.testResult, r.finalResult, r.reportedValue, r.observation, r.observedValue),
           r.normalValue || r.normal_value || "",
           r.unit || "",
           r.comment || ""

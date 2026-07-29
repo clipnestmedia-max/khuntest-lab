@@ -609,6 +609,15 @@ function html(value) {
   return String(value ?? "").replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
 }
 
+function hasReportValue(value) {
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function firstReportValue(...values) {
+  const value = values.find(hasReportValue);
+  return hasReportValue(value) ? String(value) : "";
+}
+
 function normalizePatientName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
 }
@@ -759,6 +768,23 @@ function isCBCTest(test) {
 function isLFTTest(test) {
   const text = `${test?.name || ""} ${test?.testName || ""} ${test?.testCode || ""}`.toLowerCase();
   return compactLftKey(text).includes("lft") || text.includes("liver function");
+}
+
+function isLFTParameterName(value) {
+  const text = String(value || "").toLowerCase();
+  return [
+    "bilirubin",
+    "sgot",
+    "sgpt",
+    " ast",
+    " alt",
+    "alkaline phosphatase",
+    "total protein",
+    "albumin",
+    "globulin",
+    "a/g ratio",
+    "ag ratio"
+  ].some((term) => text.includes(term));
 }
 
 function isESRTest(test) {
@@ -2452,7 +2478,7 @@ function reportRowsFromMachineResult(row) {
       category: "HAEMATOLOGY",
       testName: "COMPLETE BLOOD COUNT(CBC)",
       parameterName: parameter.name,
-      resultValue: match?.value || "",
+      resultValue: firstReportValue(match?.value, match?.resultValue, match?.finding, match?.result),
       normalRange: parameter.normalRange || match?.normalRange || "",
       unit: parameter.unit || match?.unit || "",
       method: parameter.method || "Machine: Mindray BC-5000",
@@ -2732,14 +2758,21 @@ function renderReportEntryDedupeDebug() {
 }
 
 function reportResultFromEditorRow(row) {
+  const value = firstReportValue(row.finding, row.resultValue, row.value, row.result, row.result_value, row.parameterValue, row.enteredValue, row.testResult, row.finalResult, row.reportedValue, row.observation, row.observedValue);
+  const code = row.code || row.parameterCode || "";
+  const name = row.name || row.parameterName || "Result";
   return {
-    code: row.code || "",
-    name: row.name || row.parameterName || "Result",
+    code,
+    parameterCode: code,
+    parameterId: row.parameterId || code || cbcParameterKey(name),
+    name,
     category: row.category || "",
-    testName: row.testName || row.name || "",
-    parameterName: row.name || row.parameterName || "Result",
-    resultValue: row.finding || row.resultValue || "",
-    value: row.finding || row.resultValue || "",
+    testName: row.testName || name,
+    parameterName: name,
+    resultValue: value,
+    value,
+    valueType: row.valueType || (isNumericResult(value) ? "numeric" : "text"),
+    isEntered: hasReportValue(value),
     normalRange: row.normal || row.normalRange || "",
     unit: row.unit || "",
     method: row.method || "",
@@ -2759,13 +2792,16 @@ function reportResultFromEditorRow(row) {
 }
 
 function editorRowFromReportResult(result) {
+  const value = firstReportValue(result.value, result.resultValue, result.result_value, result.finding, result.result, result.parameterValue, result.enteredValue, result.testResult, result.finalResult, result.reportedValue, result.observation, result.observedValue);
   return {
-    code: result.code || "",
+    code: result.code || result.parameterCode || "",
+    parameterId: result.parameterId || "",
+    parameterCode: result.parameterCode || result.code || "",
     name: result.parameterName || result.name || "Result",
     category: result.category || "",
     testName: result.testName || "",
     normal: result.normalRange || result.normal || "",
-    finding: result.resultValue || result.value || result.finding || "",
+    finding: value,
     unit: result.unit || "",
     method: result.method || "",
     sample: result.sample || "",
@@ -2841,33 +2877,45 @@ function reportResultsFromRows(rows) {
       return;
     }
     if (Array.isArray(row.details) && row.details.length) {
-      row.details.forEach((detail) => results.push({
-        code: detail.code || row.code || "",
-        category: row.category || "",
-        testName: row.testName || row.name || "",
-        parameterName: detail.parameter || row.name || "",
-        resultValue: detail.finding || "",
-        value: detail.finding || "",
-        normalRange: detail.normal || "",
-        unit: detail.unit || "",
-        method: detail.method || row.method || "",
-        sample: detail.sample || row.sample || "",
-        comment: row.comment || "",
-        esrHour: detail.esrHour || row.esrHour || "",
-        calculated: Boolean(detail.calculated || row.calculated === true || row.calculated === "true"),
-        formula: detail.formula || row.formula || "",
-        sourceParameters: Array.isArray(detail.sourceParameters) ? detail.sourceParameters : Array.isArray(row.sourceParameters) ? row.sourceParameters : []
-      }));
+      row.details.forEach((detail) => {
+        const detailValue = firstReportValue(detail.finding, detail.value, detail.resultValue, detail.result_value, detail.result, detail.parameterValue, detail.enteredValue, detail.testResult, detail.finalResult, detail.reportedValue, detail.observation, detail.observedValue);
+        results.push({
+          code: detail.code || row.code || "",
+          parameterCode: detail.parameterCode || detail.code || row.parameterCode || row.code || "",
+          parameterId: detail.parameterId || detail.code || row.parameterId || row.code || "",
+          category: row.category || "",
+          testName: row.testName || row.name || "",
+          parameterName: detail.parameter || row.name || "",
+          resultValue: detailValue,
+          value: detailValue,
+          valueType: detail.valueType || (isNumericResult(detailValue) ? "numeric" : "text"),
+          isEntered: hasReportValue(detailValue),
+          normalRange: detail.normal || "",
+          unit: detail.unit || "",
+          method: detail.method || row.method || "",
+          sample: detail.sample || row.sample || "",
+          comment: row.comment || "",
+          esrHour: detail.esrHour || row.esrHour || "",
+          calculated: Boolean(detail.calculated || row.calculated === true || row.calculated === "true"),
+          formula: detail.formula || row.formula || "",
+          sourceParameters: Array.isArray(detail.sourceParameters) ? detail.sourceParameters : Array.isArray(row.sourceParameters) ? row.sourceParameters : []
+        });
+      });
       return;
     }
+    const value = firstReportValue(row.finding, row.value, row.resultValue, row.result_value, row.result, row.parameterValue, row.enteredValue, row.testResult, row.finalResult, row.reportedValue, row.observation, row.observedValue);
     results.push({
       code: row.code || "",
+      parameterCode: row.parameterCode || row.code || "",
+      parameterId: row.parameterId || row.code || cbcParameterKey(row.name),
       name: row.name || "",
       category: row.category || "",
       testName: row.testName || row.name || "",
       parameterName: row.name || "",
-      resultValue: row.finding || "",
-      value: row.finding || "",
+      resultValue: value,
+      value,
+      valueType: row.valueType || (isNumericResult(value) ? "numeric" : "text"),
+      isEntered: hasReportValue(value),
       normalRange: row.normal || "",
       unit: row.unit || "",
       method: row.method || "",
@@ -2980,7 +3028,7 @@ function findingRowHtml(row, index, groupKey, isOpen) {
         <input type="hidden" data-r="sourceParameters" data-i="${index}" value="${html(JSON.stringify(row.sourceParameters || []))}">
         <input type="hidden" data-r="precision" data-i="${index}" value="${html(row.precision ?? "")}">
       </td>
-      <td><input data-r="finding" data-i="${index}" value="${html(row.finding || row.resultValue || "")}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
+      <td><input data-r="finding" data-i="${index}" value="${html(firstReportValue(row.finding, row.value, row.resultValue))}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
       <td>${referenceHtml}</td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
@@ -3379,11 +3427,13 @@ function reportRowsForTest(test, existingResults = []) {
   if (!isCBCTest(test) && !isESRTest(test) && existingResults.length) {
     return existingResults.map((result) => ({
       code: result.code || result.parameterCode || "",
+      parameterId: result.parameterId || "",
+      parameterCode: result.parameterCode || result.code || "",
       name: result.parameterName || result.name || "Result",
       category: result.category || test.category || "",
       testName: result.testName || test.name || "",
       normal: result.normalRange || result.normal || "",
-      finding: result.resultValue || result.finding || "",
+      finding: firstReportValue(result.value, result.resultValue, result.result_value, result.finding, result.result, result.parameterValue, result.enteredValue, result.testResult, result.finalResult, result.reportedValue, result.observation, result.observedValue),
       unit: result.unit || "",
       method: result.method || "",
       sample: result.sample || "",
@@ -3410,12 +3460,14 @@ function reportRowsForTest(test, existingResults = []) {
         ))
       : existingResults.find((result) => cbcParameterKey(result.parameterName || result.name) === cbcParameterKey(p.name));
     return {
-      code: p.code || existing?.code || "",
+      code: p.code || existing?.code || existing?.parameterCode || "",
+      parameterId: p.parameterId || existing?.parameterId || p.code || existing?.code || "",
+      parameterCode: p.parameterCode || p.code || existing?.parameterCode || existing?.code || "",
       name: p.name || test.name || "Test",
       category: test.category || existing?.category || "",
       testName: test.name || existing?.testName || "",
       normal: p.normalRange || p.normalValue || p.normal || existing?.normalRange || "",
-      finding: existing?.resultValue || existing?.finding || p.finding || "",
+      finding: firstReportValue(existing?.value, existing?.resultValue, existing?.result_value, existing?.finding, existing?.result, existing?.parameterValue, existing?.enteredValue, existing?.testResult, existing?.finalResult, existing?.reportedValue, existing?.observation, existing?.observedValue, p.finding),
       unit: p.unit || existing?.unit || "",
       method: p.method || existing?.method || "",
       sample: p.sample || test.sample || existing?.sample || "",
@@ -3509,17 +3561,20 @@ window.loadReportEditor = async function(id) {
         const matchingResults = existingResults.filter((result) => (
           String(result.testName || "").trim().toLowerCase() === String(t.name || t.testName || "").trim().toLowerCase()
           || (isCBCTest(t) && isCBCTest({ name: result.testName || result.parameterName }))
+          || (isLFTTest(t) && isLFTParameterName(result.parameterName || result.name || result.testName))
         ));
         return reportRowsForTest(t, matchingResults);
       })
     : existingResults.length
       ? existingResults.map((result) => ({
           code: result.code || result.parameterCode || "",
+          parameterId: result.parameterId || "",
+          parameterCode: result.parameterCode || result.code || "",
           name: result.parameterName || result.name || "Result",
           category: result.category || "",
           testName: result.testName || "",
           normal: result.normalRange || result.normal || "",
-          finding: result.resultValue || result.finding || "",
+          finding: firstReportValue(result.value, result.resultValue, result.result_value, result.finding, result.result, result.parameterValue, result.enteredValue, result.testResult, result.finalResult, result.reportedValue, result.observation, result.observedValue),
           unit: result.unit || "",
           method: result.method || "",
           sample: result.sample || "",
@@ -3674,9 +3729,9 @@ function esrValuesFromRows(rows) {
     const key = String(row.esrHour || "").toLowerCase();
     const nameKey = String(row.name || row.parameterName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     if (key === "second" || nameKey.includes("2ndhour") || nameKey.includes("secondhour")) {
-      values.esrSecondHour = row.finding || row.resultValue || "";
+      values.esrSecondHour = firstReportValue(row.finding, row.value, row.resultValue);
     } else {
-      values.esrFirstHour = row.finding || row.resultValue || "";
+      values.esrFirstHour = firstReportValue(row.finding, row.value, row.resultValue);
     }
   });
   return values;
@@ -3685,7 +3740,7 @@ function esrValuesFromRows(rows) {
 function validateEsrRows(rows) {
   const invalid = rows.find((row) => (
     (isESRTest(row) || isESRParameterName(row.name || row.parameterName))
-    && !isNumericResult(row.finding || row.resultValue || "")
+    && !isNumericResult(firstReportValue(row.finding, row.value, row.resultValue))
   ));
   if (!invalid) return true;
   alert("ESR results must be numeric values only.");

@@ -933,6 +933,15 @@
       return fallback;
     }
 
+    function hasReportValue(value) {
+      return value !== null && value !== undefined && String(value).trim() !== "";
+    }
+
+    function firstReportValue(...values) {
+      const value = values.find(hasReportValue);
+      return hasReportValue(value) ? String(value) : "";
+    }
+
     function formatDate(value) {
       if (!value) return "";
       const date = value.toDate ? value.toDate() : new Date(value);
@@ -993,7 +1002,7 @@
           category,
           testName: "ESR",
           parameterName: "ESR - 1st Hour",
-          resultValue: report.esrFirstHour || first?.resultValue || "",
+          resultValue: firstReportValue(report.esrFirstHour, first?.value, first?.resultValue, first?.finding),
           normalRange: "Male 0-15\nFemale 0-20",
           unit: "mm/hr",
           method: first?.method || "",
@@ -1005,7 +1014,7 @@
           category,
           testName: "ESR",
           parameterName: "ESR - 2nd Hour",
-          resultValue: report.esrSecondHour || second?.resultValue || "",
+          resultValue: firstReportValue(report.esrSecondHour, second?.value, second?.resultValue, second?.finding),
           normalRange: "Male 0-30\nFemale 0-40",
           unit: "mm/hr",
           method: second?.method || "",
@@ -1104,12 +1113,35 @@
     function normalizeResult(row) {
       const testName = pick(row, ["testName", "test_name", "test", "groupName", "group"], "");
       const parameterName = pick(row, ["parameterName", "parameter_name", "parameter", "test_parameter", "name"], testName);
+      const resultValue = firstReportValue(
+        row.value,
+        row.resultValue,
+        row.result_value,
+        row.finding,
+        row.result,
+        row.parameterValue,
+        row.parameter_value,
+        row.enteredValue,
+        row.entered_value,
+        row.testResult,
+        row.test_result,
+        row.finalResult,
+        row.final_result,
+        row.reportedValue,
+        row.reported_value,
+        row.observation,
+        row.observedValue,
+        row.observed_value
+      );
       const headingText = String(parameterName || "").toLowerCase();
       return {
         category: pick(row, ["category", "department", "section"], ""),
         testName,
         parameterName,
-        resultValue: pick(row, ["resultValue", "result_value", "value", "finding", "result"], ""),
+        resultValue,
+        value: resultValue,
+        valueType: pick(row, ["valueType", "value_type"], hasReportValue(resultValue) && /^-?\d+(\.\d+)?$/.test(resultValue.trim()) ? "numeric" : "text"),
+        isEntered: row.isEntered === true || row.is_entered === true || hasReportValue(resultValue),
         normalValue: pick(row, ["normalRange", "normalValue", "normal_value", "referenceRange", "reference_range", "range", "normal"], ""),
         unit: pick(row, ["unit", "units"], ""),
         method: pick(row, ["method", "methodName", "method_name"], ""),
@@ -1151,7 +1183,7 @@
           category: cbcCategory,
           testName: cbcName,
           parameterName: parameter.name,
-          resultValue: existing?.resultValue || "",
+          resultValue: firstReportValue(existing?.value, existing?.resultValue, existing?.finding),
           normalRange: parameter.normalRange || existing?.normalValue || "",
           unit: parameter.unit || existing?.unit || "",
           method: parameter.method || existing?.method || "",
@@ -1287,7 +1319,7 @@
     function lftRowHtml(row) {
       const flag = normalizeFlag(row.flag);
       const rowClass = flag ? flag.className : "";
-      const resultValue = row.resultValue || (row.calculated ? "Not available" : "");
+      const resultValue = firstReportValue(row.value, row.resultValue, row.finding) || (row.calculated ? "Not available" : "");
       return `
         <tr class="${rowClass}">
           <td class="lft-investigation-col">

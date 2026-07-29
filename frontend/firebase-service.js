@@ -230,6 +230,15 @@ function normalizeDoc(snap) {
   return { id: snap.id, ...data };
 }
 
+function hasReportValue(value) {
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function firstReportValue(...values) {
+  const value = values.find(hasReportValue);
+  return hasReportValue(value) ? String(value) : "";
+}
+
 function safeSlug(value) {
   return String(value || "")
     .toLowerCase()
@@ -568,11 +577,38 @@ async function withResolvedLabAttendant(bill = {}) {
 }
 
 function normalizeResult(row) {
+  const value = firstReportValue(
+    row.value,
+    row.resultValue,
+    row.result_value,
+    row.finding,
+    row.result,
+    row.parameterValue,
+    row.parameter_value,
+    row.enteredValue,
+    row.entered_value,
+    row.testResult,
+    row.test_result,
+    row.finalResult,
+    row.final_result,
+    row.reportedValue,
+    row.reported_value,
+    row.observation,
+    row.observedValue,
+    row.observed_value
+  );
+  const parameterName = row.parameterName || row.parameter_name || row.parameter || row.name || "";
+  const parameterCode = row.parameterCode || row.parameter_code || row.code || "";
   return {
     category: row.category || row.department || row.section || "",
     testName: row.testName || row.test_name || row.name || "",
-    parameterName: row.parameterName || row.parameter_name || row.parameter || row.name || "",
-    resultValue: row.resultValue || row.result_value || row.finding || row.value || "",
+    parameterName,
+    parameterId: row.parameterId || row.parameter_id || parameterCode || "",
+    parameterCode,
+    resultValue: value,
+    value,
+    valueType: row.valueType || row.value_type || (hasReportValue(value) && /^-?\d+(\.\d+)?$/.test(value.trim()) ? "numeric" : "text"),
+    isEntered: row.isEntered === true || row.is_entered === true || hasReportValue(value),
     normalRange: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
     normalValue: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
     unit: row.unit || row.units || "",
@@ -1300,7 +1336,7 @@ export async function getReportByBillNo(billNoValue) {
             category: row.category || row.department || "",
             testName: row.testName || row.test_name || row.name || booking.test || "",
             parameterName: row.parameterName || row.parameter_name || row.parameter || row.name || "",
-            resultValue: row.resultValue || row.result_value || row.finding || row.value || "",
+            resultValue: firstReportValue(row.value, row.resultValue, row.result_value, row.finding, row.result, row.parameterValue, row.enteredValue, row.testResult, row.finalResult, row.reportedValue, row.observation, row.observedValue),
             normalRange: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",
             unit: row.unit || row.units || "",
             method: row.method || "",
@@ -1447,6 +1483,7 @@ export async function saveReportDraft(reportData) {
   const draft = {
     ...reportData,
     billNo: bill,
+    results: Array.isArray(reportData.results) ? reportData.results.map(normalizeResult) : [],
     reportStatus: "Draft",
     status: "Draft",
     updatedAt: serverTimestamp(),
