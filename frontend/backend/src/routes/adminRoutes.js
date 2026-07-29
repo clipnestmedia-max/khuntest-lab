@@ -9,6 +9,15 @@ const { sendWhatsAppText, sendWhatsAppDocument } = require("../services/whatsapp
 
 const router = express.Router();
 
+function hasReportValue(value) {
+  return value !== null && value !== undefined && String(value).trim() !== "";
+}
+
+function firstReportValue(...values) {
+  const value = values.find(hasReportValue);
+  return hasReportValue(value) ? String(value) : "";
+}
+
 const uploadDir = process.env.UPLOAD_DIR || "uploads";
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -76,7 +85,15 @@ router.post("/bookings/:id/report-values", auth("admin"), async (req, res) => {
         const v = test.values[i];
         await conn.query(
           "INSERT INTO report_values (booking_test_id,parameter_name,normal_value,finding,unit,comment,sort_order) VALUES (?,?,?,?,?,?,?)",
-          [bookingTestId, v.parameter_name, v.normal_value || "", v.finding || "", v.unit || "", v.comment || "", i + 1]
+          [
+            bookingTestId,
+            v.parameter_name || v.parameterName || v.name || v.parameter || v.parameter_id || v.parameterId || "",
+            v.normal_value || v.normalValue || "",
+            firstReportValue(v.value, v.resultValue, v.result_value, v.finding, v.result, v.parameterValue, v.enteredValue, v.testResult, v.finalResult, v.reportedValue, v.observation, v.observedValue),
+            v.unit || "",
+            v.comment || "",
+            i + 1
+          ]
         );
       }
 

@@ -239,6 +239,29 @@ function firstReportValue(...values) {
   return hasReportValue(value) ? String(value) : "";
 }
 
+function canonicalResultValue(row = {}) {
+  return firstReportValue(
+    row.value,
+    row.resultValue,
+    row.result_value,
+    row.finding,
+    row.result,
+    row.parameterValue,
+    row.parameter_value,
+    row.enteredValue,
+    row.entered_value,
+    row.testResult,
+    row.test_result,
+    row.finalResult,
+    row.final_result,
+    row.reportedValue,
+    row.reported_value,
+    row.observation,
+    row.observedValue,
+    row.observed_value
+  );
+}
+
 function safeSlug(value) {
   return String(value || "")
     .toLowerCase()
@@ -577,26 +600,7 @@ async function withResolvedLabAttendant(bill = {}) {
 }
 
 function normalizeResult(row) {
-  const value = firstReportValue(
-    row.value,
-    row.resultValue,
-    row.result_value,
-    row.finding,
-    row.result,
-    row.parameterValue,
-    row.parameter_value,
-    row.enteredValue,
-    row.entered_value,
-    row.testResult,
-    row.test_result,
-    row.finalResult,
-    row.final_result,
-    row.reportedValue,
-    row.reported_value,
-    row.observation,
-    row.observedValue,
-    row.observed_value
-  );
+  const value = canonicalResultValue(row);
   const parameterName = row.parameterName || row.parameter_name || row.parameter || row.name || "";
   const parameterCode = row.parameterCode || row.parameter_code || row.code || "";
   return {
@@ -607,6 +611,7 @@ function normalizeResult(row) {
     parameterCode,
     resultValue: value,
     value,
+    finding: value,
     valueType: row.valueType || row.value_type || (hasReportValue(value) && /^-?\d+(\.\d+)?$/.test(value.trim()) ? "numeric" : "text"),
     isEntered: row.isEntered === true || row.is_entered === true || hasReportValue(value),
     normalRange: row.normalRange || row.normalValue || row.normal_value || row.normal || row.referenceRange || "",

@@ -618,6 +618,29 @@ function firstReportValue(...values) {
   return hasReportValue(value) ? String(value) : "";
 }
 
+function canonicalResultValue(row = {}) {
+  return firstReportValue(
+    row.value,
+    row.resultValue,
+    row.result_value,
+    row.finding,
+    row.result,
+    row.parameterValue,
+    row.parameter_value,
+    row.enteredValue,
+    row.entered_value,
+    row.testResult,
+    row.test_result,
+    row.finalResult,
+    row.final_result,
+    row.reportedValue,
+    row.reported_value,
+    row.observation,
+    row.observedValue,
+    row.observed_value
+  );
+}
+
 function normalizePatientName(value) {
   return String(value || "").trim().replace(/\s+/g, " ").toUpperCase();
 }
@@ -2758,7 +2781,7 @@ function renderReportEntryDedupeDebug() {
 }
 
 function reportResultFromEditorRow(row) {
-  const value = firstReportValue(row.finding, row.resultValue, row.value, row.result, row.result_value, row.parameterValue, row.enteredValue, row.testResult, row.finalResult, row.reportedValue, row.observation, row.observedValue);
+  const value = canonicalResultValue(row);
   const code = row.code || row.parameterCode || "";
   const name = row.name || row.parameterName || "Result";
   return {
@@ -2792,7 +2815,7 @@ function reportResultFromEditorRow(row) {
 }
 
 function editorRowFromReportResult(result) {
-  const value = firstReportValue(result.value, result.resultValue, result.result_value, result.finding, result.result, result.parameterValue, result.enteredValue, result.testResult, result.finalResult, result.reportedValue, result.observation, result.observedValue);
+  const value = canonicalResultValue(result);
   return {
     code: result.code || result.parameterCode || "",
     parameterId: result.parameterId || "",
@@ -2878,7 +2901,7 @@ function reportResultsFromRows(rows) {
     }
     if (Array.isArray(row.details) && row.details.length) {
       row.details.forEach((detail) => {
-        const detailValue = firstReportValue(detail.finding, detail.value, detail.resultValue, detail.result_value, detail.result, detail.parameterValue, detail.enteredValue, detail.testResult, detail.finalResult, detail.reportedValue, detail.observation, detail.observedValue);
+        const detailValue = canonicalResultValue(detail);
         results.push({
           code: detail.code || row.code || "",
           parameterCode: detail.parameterCode || detail.code || row.parameterCode || row.code || "",
@@ -2903,7 +2926,7 @@ function reportResultsFromRows(rows) {
       });
       return;
     }
-    const value = firstReportValue(row.finding, row.value, row.resultValue, row.result_value, row.result, row.parameterValue, row.enteredValue, row.testResult, row.finalResult, row.reportedValue, row.observation, row.observedValue);
+    const value = canonicalResultValue(row);
     results.push({
       code: row.code || "",
       parameterCode: row.parameterCode || row.code || "",
@@ -2947,7 +2970,7 @@ function reportTestKeyForRow(row, index = 0) {
 
 function rowHasEnteredResult(row) {
   if (row.type === "heading" || row.isHeading === true || row.isHeading === "true") return false;
-  return String(row.finding ?? row.resultValue ?? "").trim() !== "";
+  return hasReportValue(canonicalResultValue(row));
 }
 
 function reportTestGroups(rows) {
@@ -2985,6 +3008,8 @@ function findingRowHtml(row, index, groupKey, isOpen) {
         <b>${html(row.name || row.parameterName || "")}</b>
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "")}">
         <input type="hidden" data-r="code" data-i="${index}" value="${html(row.code || "")}">
+        <input type="hidden" data-r="parameterId" data-i="${index}" value="${html(row.parameterId || "")}">
+        <input type="hidden" data-r="parameterCode" data-i="${index}" value="${html(row.parameterCode || row.code || "")}">
         <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
         <input type="hidden" data-r="type" data-i="${index}" value="heading">
@@ -3013,6 +3038,8 @@ function findingRowHtml(row, index, groupKey, isOpen) {
         <b>${html(row.name || row.parameterName || "Result")}</b>
         <br><small>${html(row.label || (isCalculated ? "Auto-calculated" : row.testName || row.category || ""))}</small>
         <input type="hidden" data-r="code" data-i="${index}" value="${html(row.code || "")}">
+        <input type="hidden" data-r="parameterId" data-i="${index}" value="${html(row.parameterId || row.code || cbcParameterKey(row.name || row.parameterName || "Result"))}">
+        <input type="hidden" data-r="parameterCode" data-i="${index}" value="${html(row.parameterCode || row.code || "")}">
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "Result")}">
         <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
@@ -3028,7 +3055,7 @@ function findingRowHtml(row, index, groupKey, isOpen) {
         <input type="hidden" data-r="sourceParameters" data-i="${index}" value="${html(JSON.stringify(row.sourceParameters || []))}">
         <input type="hidden" data-r="precision" data-i="${index}" value="${html(row.precision ?? "")}">
       </td>
-      <td><input data-r="finding" data-i="${index}" value="${html(firstReportValue(row.finding, row.value, row.resultValue))}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
+      <td><input data-r="finding" data-i="${index}" value="${html(canonicalResultValue(row))}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
       <td>${referenceHtml}</td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
@@ -3433,7 +3460,7 @@ function reportRowsForTest(test, existingResults = []) {
       category: result.category || test.category || "",
       testName: result.testName || test.name || "",
       normal: result.normalRange || result.normal || "",
-      finding: firstReportValue(result.value, result.resultValue, result.result_value, result.finding, result.result, result.parameterValue, result.enteredValue, result.testResult, result.finalResult, result.reportedValue, result.observation, result.observedValue),
+      finding: canonicalResultValue(result),
       unit: result.unit || "",
       method: result.method || "",
       sample: result.sample || "",
@@ -3467,7 +3494,7 @@ function reportRowsForTest(test, existingResults = []) {
       category: test.category || existing?.category || "",
       testName: test.name || existing?.testName || "",
       normal: p.normalRange || p.normalValue || p.normal || existing?.normalRange || "",
-      finding: firstReportValue(existing?.value, existing?.resultValue, existing?.result_value, existing?.finding, existing?.result, existing?.parameterValue, existing?.enteredValue, existing?.testResult, existing?.finalResult, existing?.reportedValue, existing?.observation, existing?.observedValue, p.finding),
+      finding: firstReportValue(canonicalResultValue(existing), p.finding),
       unit: p.unit || existing?.unit || "",
       method: p.method || existing?.method || "",
       sample: p.sample || test.sample || existing?.sample || "",
@@ -3574,7 +3601,7 @@ window.loadReportEditor = async function(id) {
           category: result.category || "",
           testName: result.testName || "",
           normal: result.normalRange || result.normal || "",
-          finding: firstReportValue(result.value, result.resultValue, result.result_value, result.finding, result.result, result.parameterValue, result.enteredValue, result.testResult, result.finalResult, result.reportedValue, result.observation, result.observedValue),
+          finding: canonicalResultValue(result),
           unit: result.unit || "",
           method: result.method || "",
           sample: result.sample || "",
@@ -3729,9 +3756,9 @@ function esrValuesFromRows(rows) {
     const key = String(row.esrHour || "").toLowerCase();
     const nameKey = String(row.name || row.parameterName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     if (key === "second" || nameKey.includes("2ndhour") || nameKey.includes("secondhour")) {
-      values.esrSecondHour = firstReportValue(row.finding, row.value, row.resultValue);
+      values.esrSecondHour = canonicalResultValue(row);
     } else {
-      values.esrFirstHour = firstReportValue(row.finding, row.value, row.resultValue);
+      values.esrFirstHour = canonicalResultValue(row);
     }
   });
   return values;
@@ -3740,7 +3767,7 @@ function esrValuesFromRows(rows) {
 function validateEsrRows(rows) {
   const invalid = rows.find((row) => (
     (isESRTest(row) || isESRParameterName(row.name || row.parameterName))
-    && !isNumericResult(firstReportValue(row.finding, row.value, row.resultValue))
+    && !isNumericResult(canonicalResultValue(row))
   ));
   if (!invalid) return true;
   alert("ESR results must be numeric values only.");

@@ -415,7 +415,7 @@ router.post("/reports/save", async (req, res) => {
           r.parameterName || "",
           firstReportValue(r.value, r.resultValue, r.result_value, r.finding, r.result, r.parameterValue, r.enteredValue, r.testResult, r.finalResult, r.reportedValue, r.observation, r.observedValue),
           r.unit || "",
-          r.normalValue || "",
+          r.normalValue || r.normal_value || r.normalRange || r.referenceRange || "",
           r.comment || ""
         ]
       );
@@ -520,7 +520,7 @@ router.post("/reports/save", async (req, res) => {
           testName || "",
           r.parameterName || r.parameter_name || "",
           firstReportValue(r.value, r.resultValue, r.result_value, r.finding, r.result, r.parameterValue, r.enteredValue, r.testResult, r.finalResult, r.reportedValue, r.observation, r.observedValue),
-          r.normalValue || r.normal_value || "",
+          r.normalValue || r.normal_value || r.normalRange || r.referenceRange || "",
           r.unit || "",
           r.comment || ""
         ]

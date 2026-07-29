@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:image" content="https://khuntest.com/favicon/android-chrome-512x512.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KHUNTEST LABS Report</title>
@@ -409,6 +415,13 @@
     .result-col {
       width: 18%;
       text-align: center;
+      min-width: 24mm;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      color: #000 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .range-col {
@@ -443,6 +456,7 @@
 
     .result-value {
       font-weight: 700;
+      white-space: normal;
     }
 
     .note-row td {
@@ -806,6 +820,16 @@
         break-after: auto;
       }
 
+      .result-col,
+      .result-value {
+        display: table-cell !important;
+        color: #000 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+      }
+
       .lft-table tr,
       .lft-notes li {
         break-inside: avoid;
@@ -940,6 +964,29 @@
     function firstReportValue(...values) {
       const value = values.find(hasReportValue);
       return hasReportValue(value) ? String(value) : "";
+    }
+
+    function canonicalResultValue(row = {}) {
+      return firstReportValue(
+        row.value,
+        row.resultValue,
+        row.result_value,
+        row.finding,
+        row.result,
+        row.parameterValue,
+        row.parameter_value,
+        row.enteredValue,
+        row.entered_value,
+        row.testResult,
+        row.test_result,
+        row.finalResult,
+        row.final_result,
+        row.reportedValue,
+        row.reported_value,
+        row.observation,
+        row.observedValue,
+        row.observed_value
+      );
     }
 
     function formatDate(value) {
@@ -1113,31 +1160,14 @@
     function normalizeResult(row) {
       const testName = pick(row, ["testName", "test_name", "test", "groupName", "group"], "");
       const parameterName = pick(row, ["parameterName", "parameter_name", "parameter", "test_parameter", "name"], testName);
-      const resultValue = firstReportValue(
-        row.value,
-        row.resultValue,
-        row.result_value,
-        row.finding,
-        row.result,
-        row.parameterValue,
-        row.parameter_value,
-        row.enteredValue,
-        row.entered_value,
-        row.testResult,
-        row.test_result,
-        row.finalResult,
-        row.final_result,
-        row.reportedValue,
-        row.reported_value,
-        row.observation,
-        row.observedValue,
-        row.observed_value
-      );
+      const resultValue = canonicalResultValue(row);
       const headingText = String(parameterName || "").toLowerCase();
       return {
         category: pick(row, ["category", "department", "section"], ""),
         testName,
         parameterName,
+        parameterId: pick(row, ["parameterId", "parameter_id", "id"], ""),
+        parameterCode: pick(row, ["parameterCode", "parameter_code", "code"], ""),
         resultValue,
         value: resultValue,
         valueType: pick(row, ["valueType", "value_type"], hasReportValue(resultValue) && /^-?\d+(\.\d+)?$/.test(resultValue.trim()) ? "numeric" : "text"),
@@ -1183,7 +1213,7 @@
           category: cbcCategory,
           testName: cbcName,
           parameterName: parameter.name,
-          resultValue: firstReportValue(existing?.value, existing?.resultValue, existing?.finding),
+          resultValue: canonicalResultValue(existing),
           normalRange: parameter.normalRange || existing?.normalValue || "",
           unit: parameter.unit || existing?.unit || "",
           method: parameter.method || existing?.method || "",
@@ -1238,7 +1268,7 @@
       let html = `
         <tr>
           <td class="test-col"><span class="parameter-name">${safe(row.parameterName || row.testName)}</span></td>
-          <td class="result-col result-value">${safe(row.resultValue)}</td>
+          <td class="result-col result-value">${safe(hasReportValue(row.value) ? row.value : "")}</td>
           <td class="range-col">${safe(row.normalValue)}</td>
           <td class="unit-col">${safe(row.unit)}</td>
         </tr>
@@ -1258,7 +1288,7 @@
         html += `
           <tr>
             <td class="test-col"><span class="parameter-name">${safe(detailRow.parameterName || detailRow.testName)}</span></td>
-            <td class="result-col result-value">${safe(detailRow.resultValue)}</td>
+            <td class="result-col result-value">${safe(hasReportValue(detailRow.value) ? detailRow.value : "")}</td>
             <td class="range-col">${safe(detailRow.normalValue)}</td>
             <td class="unit-col">${safe(detailRow.unit)}</td>
           </tr>
@@ -1319,7 +1349,7 @@
     function lftRowHtml(row) {
       const flag = normalizeFlag(row.flag);
       const rowClass = flag ? flag.className : "";
-      const resultValue = firstReportValue(row.value, row.resultValue, row.finding) || (row.calculated ? "Not available" : "");
+      const resultValue = hasReportValue(row.value) ? String(row.value) : (row.calculated ? "Not available" : "");
       return `
         <tr class="${rowClass}">
           <td class="lft-investigation-col">
