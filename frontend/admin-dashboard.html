@@ -279,14 +279,14 @@
             </table>
           </div>
           <div class="report-actions">
-            <button class="btn btn-outline" onclick="saveGeneratedDraft()">Save Draft</button>
-            <button class="btn btn-outline" onclick="openReportPreview()">Preview Report</button>
-            <button class="btn btn-outline" onclick="printGeneratedReport()">Print Report</button>
-            <button class="btn btn-outline" onclick="printCurrentBookingBill()">Print Bill</button>
-            <button class="btn btn-outline" onclick="downloadCurrentBookingBillPdf()">Download Bill PDF</button>
-            <button class="btn btn-outline" onclick="shareCurrentBookingBill()">Share Bill</button>
-            <button class="btn btn-green" onclick="releaseGeneratedReport()">RELEASE REPORT</button>
-            <button class="btn btn-navy" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Send WhatsApp</button>
+            <button class="btn btn-outline" type="button" onclick="saveGeneratedDraft()">Save Draft</button>
+            <button class="btn btn-outline" type="button" onclick="openReportPreview()">Preview Report</button>
+            <button class="btn btn-outline" type="button" onclick="printGeneratedReport()">Print Report</button>
+            <button class="btn btn-outline" type="button" onclick="printCurrentBookingBill()">Print Bill</button>
+            <button class="btn btn-outline" type="button" onclick="downloadCurrentBookingBillPdf()">Download Bill PDF</button>
+            <button class="btn btn-outline" type="button" onclick="shareCurrentBookingBill()">Share Bill</button>
+            <button class="btn btn-green" type="button" onclick="releaseGeneratedReport()">RELEASE REPORT</button>
+            <button class="btn btn-navy" type="button" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Send WhatsApp</button>
             <span id="reportShareHint" class="notice" style="display:inline-block;margin:0;">Release report first to send WhatsApp.</span>
           </div>
           <div id="machineReportNotice" class="notice hidden" style="margin:0 18px 18px;">Machine results imported as draft. Verify before release.</div>
@@ -1003,7 +1003,7 @@ async function getCurrentUserRole() {
 }
 
 function activeAdminVerified() {
-  return currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive !== false && currentAdminProfile?.active !== false;
+  return currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive === true;
 }
 
 async function loadListenerReleaseMetadata() {
@@ -1472,11 +1472,26 @@ async function createBooking(data) {
 async function findReportForBill(billNo) {
   const bill = String(billNo || "");
   if (!bill) return null;
-  const local = allReports.find((report) => String(report.billNo || report.id || "") === bill);
-  if (local) return local;
-  const snap = await getDocs(query(collection(db, "reports"), where("billNo", "==", bill)));
-  const first = snap.docs[0];
-  return first ? { id: first.id, ...(first.data() || {}) } : null;
+  const remote = await findLatestReportForBill(bill).catch((error) => {
+    console.error("Latest report lookup failed:", error);
+    return null;
+  });
+  if (remote) return remote;
+  return allReports.find((report) => String(report.billNo || report.id || "") === bill) || null;
+}
+
+async function findLatestReportForBill(billNo) {
+  const bill = String(billNo || "").trim();
+  if (!bill) return null;
+  const snapshot = await getDocs(query(collection(db, "reports"), where("billNo", "==", bill)));
+  if (snapshot.empty) return null;
+  const reports = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() || {}) }));
+  reports.sort((a, b) => {
+    const aTime = a.updatedAt?.toMillis?.() || a.releasedAt?.toMillis?.() || 0;
+    const bTime = b.updatedAt?.toMillis?.() || b.releasedAt?.toMillis?.() || 0;
+    return bTime - aTime;
+  });
+  return reports[0];
 }
 
 async function upsertReport(payload) {
@@ -1500,6 +1515,56 @@ async function upsertReport(payload) {
     createdAt: serverTimestamp()
   });
   return { id: docRef.id, ...payload };
+}
+
+function updateLocalReportCaches(savedReport) {
+  if (!savedReport?.id) return;
+  const updateCache = (cache) => {
+    const index = cache.findIndex((item) => (
+      item.id === savedReport.id
+      || String(item.billNo || "") === String(savedReport.billNo || "")
+    ));
+    if (index >= 0) {
+      cache[index] = { ...cache[index], ...savedReport };
+    } else {
+      cache.unshift(savedReport);
+    }
+  };
+  updateCache(allReports);
+  updateCache(firebaseReports);
+}
+
+async function verifyReportSavedValues(reportDocumentId, expectedResults) {
+  const snapshot = await getDoc(doc(db, "reports", reportDocumentId));
+  if (!snapshot.exists()) {
+    throw new Error("Saved report was not found in Firestore.");
+  }
+  const saved = { id: snapshot.id, ...(snapshot.data() || {}) };
+  const savedResults = Array.isArray(saved.results) ? saved.results : [];
+  const savedMap = new Map(savedResults.map((item) => [
+    String(item.parameterId || item.parameterCode || item.code || ""),
+    canonicalResultValue(item)
+  ]));
+
+  for (const expected of expectedResults) {
+    const key = String(expected.parameterId || expected.parameterCode || expected.code || "");
+    const expectedValue = canonicalResultValue(expected);
+    if (!hasReportValue(expectedValue)) continue;
+    const actualValue = savedMap.get(key);
+    if (String(actualValue ?? "") !== String(expectedValue)) {
+      throw new Error(`Firestore verification failed for ${key}.`);
+    }
+  }
+
+  return saved;
+}
+
+function reportSaveErrorMessage(error) {
+  const message = String(error?.message || error || "");
+  if (message.toLowerCase().includes("permission")) {
+    return `Report could not be saved. Admin permission is missing. Check users/${currentAdmin?.uid || "<uid>"}/isActive.`;
+  }
+  return message || "Results could not be saved.";
 }
 
 async function saveReportDraft(payload) {
@@ -1864,9 +1929,9 @@ async function checkAdminAuth() {
   currentAdminUser = user;
   const profileSnap = await getDoc(doc(db, "users", user.uid));
   currentAdminProfile = profileSnap.exists() ? profileSnap.data() : null;
-  const isAllowed = currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive !== false && currentAdminProfile?.active !== false;
+  const isAllowed = currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive === true;
   if (!isAllowed) {
-    alert("Admin access denied. Please login with an active admin account.");
+    alert(`Admin access denied. Check users/${user.uid}/isActive is true.`);
     await signOut(auth);
     window.location.href = "admin-login.html";
     return null;
@@ -3070,17 +3135,27 @@ function updateParameterState({ reportId, reportTestId, testId, parameterId, par
 }
 
 function updateTestProgress(reportTestId) {
-  const group = reportTestGroups(currentFindingRows()).find((item) => item.key === reportTestId);
-  const header = document.querySelector(`[data-test-header="${CSS.escape(reportTestId)}"]`);
-  if (!group || !header) return;
-  const status = reportGroupStatus(group);
+  updateTestProgressFromDom(reportTestId);
+}
+
+function updateTestProgressFromDom(reportTestId) {
+  const escaped = CSS.escape(reportTestId);
+  const rows = Array.from(document.querySelectorAll(`#findingRows tr[data-test-group="${escaped}"]`));
+  const inputs = rows
+    .map((row) => row.querySelector('input[data-r="finding"]'))
+    .filter(Boolean);
+  const entered = inputs.filter((input) => hasReportValue(input.value)).length;
+  const total = inputs.length;
+  const label = entered === 0 ? "Not Started" : entered >= total ? "Completed" : "In Progress";
+  const header = document.querySelector(`[data-test-header="${escaped}"]`);
+  if (!header) return;
   const count = header.querySelector("small");
   const badge = header.querySelector(".report-test-status");
-  if (count) count.textContent = `${status.entered} of ${status.total} parameters entered`;
+  if (count) count.textContent = `${entered} of ${total} parameters entered`;
   if (badge) {
-    badge.textContent = status.label;
-    badge.classList.toggle("complete", status.label === "Completed");
-    badge.classList.toggle("progress", status.label === "In Progress");
+    badge.textContent = label;
+    badge.classList.toggle("complete", label === "Completed");
+    badge.classList.toggle("progress", label === "In Progress");
   }
 }
 
@@ -3104,23 +3179,58 @@ function bindReportEntryInputDelegation() {
   reportEntryContainer.addEventListener("input", (event) => {
     const input = event.target.closest('[data-result-input="true"][data-parameter-id]');
     if (!input) return;
-
-    const reportId = String(input.dataset.reportId || "").trim();
-    const reportTestId = String(input.dataset.reportTestId || "").trim();
-    const testId = String(input.dataset.testId || "").trim();
-    const parameterId = String(input.dataset.parameterId || "").trim();
-    const parameterCode = String(input.dataset.parameterCode || "").trim();
-    const value = input.value === null || input.value === undefined ? "" : String(input.value);
-
-    if (!reportId || !reportTestId || !parameterId) {
-      console.error("Result input identifiers missing", { reportId, reportTestId, testId, parameterId, parameterCode });
-      if (typeof showAdminToast === "function") showAdminToast("This parameter cannot be saved because its ID is missing.");
-      return;
-    }
-
-    updateParameterState({ reportId, reportTestId, testId, parameterId, parameterCode, value });
-    updateTestProgress(reportTestId);
+    if (input.dataset.directResultInputBound === "true") return;
+    handleReportResultInput(input);
   });
+}
+
+function handleReportResultInput(input) {
+  const reportTestId = String(input.dataset.reportTestId || "").trim();
+  const parameterId = String(input.dataset.parameterId || "").trim();
+  const rowIndex = Number(input.dataset.i);
+  const value = input.value == null ? "" : String(input.value);
+
+  if (!reportTestId || !parameterId) {
+    console.error("Missing result identifiers", { reportTestId, parameterId, rowIndex });
+    if (typeof showAdminToast === "function") showAdminToast("Parameter ID is missing. Result cannot be saved.");
+    return;
+  }
+
+  updateParameterState({
+    reportId: String(input.dataset.reportId || ""),
+    reportTestId,
+    testId: String(input.dataset.testId || ""),
+    parameterId,
+    parameterCode: String(input.dataset.parameterCode || ""),
+    value
+  });
+
+  if (Number.isInteger(rowIndex) && rowIndex >= 0 && reportResults[rowIndex]) {
+    reportResults[rowIndex] = {
+      ...reportResults[rowIndex],
+      finding: value,
+      resultValue: value,
+      value,
+      isEntered: hasReportValue(value)
+    };
+  }
+
+  updateTestProgressFromDom(reportTestId);
+}
+
+function syncReportResultsFromDom() {
+  const latestRows = currentFindingRows();
+  reportResults = latestRows.map((row) => {
+    const value = canonicalResultValue(row);
+    return {
+      ...row,
+      finding: value,
+      resultValue: value,
+      value,
+      isEntered: hasReportValue(value)
+    };
+  });
+  return reportResults;
 }
 
 function rowHasEnteredResult(row) {
@@ -3267,18 +3377,20 @@ function paintFindingRows(rows) {
     body.insertAdjacentHTML("afterbegin", `<tr class="finding-warning-row"><td colspan="4">${html(warning)}</td></tr>`);
   }
   body.querySelectorAll('input[data-r="finding"]:not([readonly])').forEach((input) => {
-    input.addEventListener("input", () => {
+    const syncInput = () => {
       if (input.dataset.numeric === "true") {
         const cleaned = input.value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
         if (input.value !== cleaned) input.value = cleaned;
       }
+      handleReportResultInput(input);
       const name = input.closest("tr")?.querySelector('[data-r="name"]')?.value || "";
       if (["bilirubintotal", "totalbilirubin", "tbilirubin", "bilirubindirect", "directbilirubin", "dbilirubin"].includes(compactLftKey(name))) {
         const currentScroll = window.scrollY;
+        const latestRows = currentFindingRows();
         const rowIndex = input.dataset.i || "";
         const selectionStart = input.selectionStart;
         const selectionEnd = input.selectionEnd;
-        paintFindingRows(currentFindingRows());
+        paintFindingRows(latestRows);
         requestAnimationFrame(() => {
           const restoredInput = Array.from(document.querySelectorAll('#findingRows input[data-r="finding"]:not([readonly])'))
             .find((field) => String(field.dataset.i || "") === String(rowIndex));
@@ -3291,31 +3403,77 @@ function paintFindingRows(rows) {
           window.scrollTo(0, currentScroll);
         });
       }
-    });
+  };
+    input.dataset.directResultInputBound = "true";
+    input.addEventListener("input", syncInput);
+    input.addEventListener("change", syncInput);
   });
+  groups.forEach((group) => updateTestProgressFromDom(group.key));
 }
 
 window.toggleReportTestCard = function(groupKey) {
   const currentScroll = window.scrollY;
+  const latestRows = currentFindingRows();
   openReportTestKey = openReportTestKey === groupKey ? "__none__" : groupKey;
-  paintFindingRows(currentFindingRows());
+  paintFindingRows(latestRows);
   requestAnimationFrame(() => window.scrollTo(0, currentScroll));
 };
 
 window.saveReportTestCard = async function(groupKey) {
-  if (!currentReportBooking) return alert("Please select booking.");
-  openReportTestKey = "";
-  const payload = reportPayload("Draft");
-  if (!payload) return;
-  if (showLftValidationWarning(payload)) return;
-  await saveReportDraft(payload);
-  markReportEntrySaved();
-  openReportTestKey = "__none__";
-  paintFindingRows(reportResults);
-  const note = document.querySelector(`[data-save-note="${CSS.escape(groupKey)}"]`);
-  if (note) {
-    note.classList.remove("hidden");
-    setTimeout(() => note.classList.add("hidden"), 1800);
+  if (!currentReportBooking) {
+    alert("Please select booking.");
+    return;
+  }
+
+  const button = document.querySelector(`[data-test-header="${CSS.escape(groupKey)}"] .btn-green`);
+  if (button?.dataset.saving === "true") return;
+  const originalText = button?.textContent || "Save Test";
+
+  try {
+    if (button) {
+      button.dataset.saving = "true";
+      button.disabled = true;
+      button.textContent = "Saving...";
+    }
+
+    const latestRows = syncReportResultsFromDom();
+    const payload = reportPayload("Draft", latestRows);
+    if (!payload) throw new Error("Could not create report payload.");
+    if (showLftValidationWarning(payload)) return;
+
+    const groupResults = payload.results.filter((result) => {
+      const key = reportTestKeyForRow({
+        testId: result.testId,
+        testCode: result.testCode,
+        testName: result.testName,
+        category: result.category
+      });
+      return key === groupKey;
+    });
+
+    if (!groupResults.some((result) => hasReportValue(canonicalResultValue(result)))) {
+      throw new Error("No entered results were detected. The input state is not synchronized.");
+    }
+
+    const savedReport = await saveReportDraft(payload);
+    if (!savedReport?.id) throw new Error("Firestore did not return a saved report.");
+    const verifiedReport = await verifyReportSavedValues(savedReport.id, groupResults);
+    updateLocalReportCaches({ ...savedReport, ...verifiedReport });
+    markReportEntrySaved();
+
+    openReportTestKey = "__none__";
+    paintFindingRows(latestRows);
+    showAdminToast(`${groupResults.length} result rows saved successfully.`);
+  } catch (error) {
+    console.error("Save test results failed:", error);
+    showAdminToast(reportSaveErrorMessage(error));
+    openReportTestKey = groupKey;
+  } finally {
+    if (button) {
+      button.dataset.saving = "false";
+      button.disabled = false;
+      button.textContent = originalText;
+    }
   }
 };
 
@@ -3751,7 +3909,12 @@ window.loadReportEditor = async function(id) {
     }
     testsWithParams.push(full);
   }
-  const existingReport = allReports.find((report) => String(report.billNo || report.id || "") === String(reportBill(b)));
+  const existingReport = await findLatestReportForBill(reportBill(b)).catch((error) => {
+    console.error("Latest report load failed:", error);
+    showAdminToast(reportSaveErrorMessage(error));
+    return allReports.find((report) => String(report.billNo || report.id || "") === String(reportBill(b))) || null;
+  });
+  if (existingReport) updateLocalReportCaches(existingReport);
   const existingResults = Array.isArray(existingReport?.results) ? existingReport.results : [];
   const rows = testsWithParams.length
     ? testsWithParams.flatMap((t) => {
@@ -3950,7 +4113,7 @@ function validateEsrRows(rows) {
 function showLftValidationWarning(payload) {
   if (!hasBlockingLftValidation(payload)) return false;
   alert(INDIRECT_BILIRUBIN_WARNING);
-  paintFindingRows(currentFindingRows());
+  paintFindingRows(syncReportResultsFromDom());
   return true;
 }
 
@@ -3959,13 +4122,21 @@ window.openReportPreview = async function() {
     alert("Please select booking.");
     return;
   }
-  const payload = reportPayload("Draft");
-  if (!payload) return;
-  if (showLftValidationWarning(payload)) return;
-  await saveReportDraft(payload);
-  markReportEntrySaved();
-  const bill = currentReportBooking.billNo || currentReportBooking.id;
-  window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
+  try {
+    const latestRows = syncReportResultsFromDom();
+    const payload = reportPayload("Draft", latestRows);
+    if (!payload) return;
+    if (showLftValidationWarning(payload)) return;
+    const savedReport = await saveReportDraft(payload);
+    const verifiedReport = await verifyReportSavedValues(savedReport.id, payload.results);
+    updateLocalReportCaches({ ...savedReport, ...verifiedReport });
+    markReportEntrySaved();
+    const bill = currentReportBooking.billNo || currentReportBooking.id;
+    window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
+  } catch (error) {
+    console.error("Report preview save failed:", error);
+    showAdminToast(reportSaveErrorMessage(error));
+  }
 };
 
 window.printGeneratedReport = async function() {
@@ -3973,18 +4144,26 @@ window.printGeneratedReport = async function() {
     alert("Please select booking.");
     return;
   }
-  const payload = reportPayload("Draft");
-  if (!payload) return;
-  if (showLftValidationWarning(payload)) return;
-  await saveReportDraft(payload);
-  markReportEntrySaved();
-  const bill = currentReportBooking.billNo || currentReportBooking.id;
-  window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
+  try {
+    const latestRows = syncReportResultsFromDom();
+    const payload = reportPayload("Draft", latestRows);
+    if (!payload) return;
+    if (showLftValidationWarning(payload)) return;
+    const savedReport = await saveReportDraft(payload);
+    const verifiedReport = await verifyReportSavedValues(savedReport.id, payload.results);
+    updateLocalReportCaches({ ...savedReport, ...verifiedReport });
+    markReportEntrySaved();
+    const bill = currentReportBooking.billNo || currentReportBooking.id;
+    window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
+  } catch (error) {
+    console.error("Report print save failed:", error);
+    showAdminToast(reportSaveErrorMessage(error));
+  }
 };
 
-function reportPayload(status = "Draft") {
+function reportPayload(status = "Draft", suppliedRows = null) {
   if (!currentReportBooking) return null;
-  const rows = currentFindingRows();
+  const rows = Array.isArray(suppliedRows) ? suppliedRows : currentFindingRows();
   if (!validateEsrRows(rows)) return null;
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   const reportingDate = document.getElementById("rReportingDate")?.value || "";
@@ -4027,13 +4206,21 @@ function reportPayload(status = "Draft") {
 }
 
 window.saveGeneratedDraft = async function() {
-  const payload = reportPayload("Draft");
-  if (!payload) return alert("Please select booking.");
-  if (showLftValidationWarning(payload)) return;
-  await saveReportDraft(payload);
-  markReportEntrySaved();
-  alert("Draft saved to Firestore.");
-  await refreshFirebaseDashboard();
+  try {
+    const latestRows = syncReportResultsFromDom();
+    const payload = reportPayload("Draft", latestRows);
+    if (!payload) return alert("Please select booking.");
+    if (showLftValidationWarning(payload)) return;
+    const savedReport = await saveReportDraft(payload);
+    const verifiedReport = await verifyReportSavedValues(savedReport.id, payload.results);
+    updateLocalReportCaches({ ...savedReport, ...verifiedReport });
+    markReportEntrySaved();
+    showAdminToast("Draft saved and verified in Firestore.");
+    await refreshFirebaseDashboard();
+  } catch (error) {
+    console.error("Draft save failed:", error);
+    showAdminToast(reportSaveErrorMessage(error));
+  }
 };
 
 window.releaseGeneratedReport = async function() {
@@ -4041,17 +4228,25 @@ window.releaseGeneratedReport = async function() {
     alert("Please select booking.");
     return;
   }
-  const payload = reportPayload("Final");
-  if (!payload) return;
-  if (showLftValidationWarning(payload)) return;
-  await saveReport(payload);
-  markReportEntrySaved();
-  currentReportBooking.reportReleased = true;
-  currentReportBooking.reportBillNo = payload.billNo;
-  currentReportBooking.status = "Reported";
-  updateReportActionState();
-  alert("Report released and saved to Firestore.");
-  await refreshFirebaseDashboard();
+  try {
+    const latestRows = syncReportResultsFromDom();
+    const payload = reportPayload("Final", latestRows);
+    if (!payload) return;
+    if (showLftValidationWarning(payload)) return;
+    const savedReport = await saveReport(payload);
+    const verifiedReport = await verifyReportSavedValues(savedReport.id, payload.results);
+    updateLocalReportCaches({ ...savedReport, ...verifiedReport });
+    markReportEntrySaved();
+    currentReportBooking.reportReleased = true;
+    currentReportBooking.reportBillNo = payload.billNo;
+    currentReportBooking.status = "Reported";
+    updateReportActionState();
+    showAdminToast("Report released and verified in Firestore.");
+    await refreshFirebaseDashboard();
+  } catch (error) {
+    console.error("Report release failed:", error);
+    showAdminToast(reportSaveErrorMessage(error));
+  }
 };
 
 function updateReportActionState() {

@@ -9,31 +9,36 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function isActiveUser() {
+      return userDoc().data.isActive == true
+        || userDoc().data.active == true;
+    }
+
     function isAdmin() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && userDoc().data.role == "admin"
-        && userDoc().data.isActive == true;
+        && isActiveUser();
     }
 
     function isPatient() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && userDoc().data.role == "patient"
-        && userDoc().data.isActive == true;
+        && isActiveUser();
     }
 
     function isStaff() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && (userDoc().data.role == "staff" || userDoc().data.role == "admin")
-        && userDoc().data.isActive == true;
+        && isActiveUser();
     }
 
     function sameEmail(email) {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && userDoc().data.isActive == true
+        && isActiveUser()
         && userDoc().data.email == email;
     }
 
