@@ -246,7 +246,7 @@
           <select id="reportBookingSelect" onchange="loadReportEditor(this.value)"></select>
           <div id="reportEntryDedupeDebug" class="notice hidden" style="margin-top:10px;"></div>
         </div>
-        <div id="reportEditor" class="hidden">
+        <div id="reportEditor" class="hidden" data-report-entry-container="true">
           <div class="toolbar"><button class="btn btn-outline btn-small" type="button" onclick="editCurrentReportBooking()">Edit Patient / Booking Details</button></div>
           <div class="legacy-form-grid report-info-grid">
             <div>
@@ -2788,6 +2788,8 @@ function reportResultFromEditorRow(row) {
     code,
     parameterCode: code,
     parameterId: row.parameterId || code || cbcParameterKey(name),
+    testId: row.testId || "",
+    testCode: row.testCode || "",
     name,
     category: row.category || "",
     testName: row.testName || name,
@@ -2820,6 +2822,8 @@ function editorRowFromReportResult(result) {
     code: result.code || result.parameterCode || "",
     parameterId: result.parameterId || "",
     parameterCode: result.parameterCode || result.code || "",
+    testId: result.testId || "",
+    testCode: result.testCode || "",
     name: result.parameterName || result.name || "Result",
     category: result.category || "",
     testName: result.testName || "",
@@ -2906,6 +2910,8 @@ function reportResultsFromRows(rows) {
           code: detail.code || row.code || "",
           parameterCode: detail.parameterCode || detail.code || row.parameterCode || row.code || "",
           parameterId: detail.parameterId || detail.code || row.parameterId || row.code || "",
+          testId: row.testId || "",
+          testCode: row.testCode || "",
           category: row.category || "",
           testName: row.testName || row.name || "",
           parameterName: detail.parameter || row.name || "",
@@ -2931,6 +2937,8 @@ function reportResultsFromRows(rows) {
       code: row.code || "",
       parameterCode: row.parameterCode || row.code || "",
       parameterId: row.parameterId || row.code || cbcParameterKey(row.name),
+      testId: row.testId || "",
+      testCode: row.testCode || "",
       name: row.name || "",
       category: row.category || "",
       testName: row.testName || row.name || "",
@@ -2963,9 +2971,156 @@ window.setTab = function(tab) {
 };
 
 let openReportTestKey = "";
+const reportEntryState = {
+  reportId: "",
+  tests: {}
+};
+
+function hasEnteredValue(value) {
+  return hasReportValue(value);
+}
+
+function safeDomId(value) {
+  return String(value || "").trim().replace(/[^a-zA-Z0-9_-]+/g, "_") || "unknown";
+}
 
 function reportTestKeyForRow(row, index = 0) {
   return String(row.testId || row.testCode || row.testName || row.category || `test-${index}`).toLowerCase().replace(/[^a-z0-9]+/g, "-") || `test-${index}`;
+}
+
+function reportEntryReportId() {
+  return String(currentReportBooking?.billNo || currentReportBooking?.id || "").trim();
+}
+
+function rowParameterId(row, index) {
+  return String(row.parameterId || row.parameterCode || row.code || cbcParameterKey(row.name || row.parameterName || `parameter-${index}`) || `parameter-${index}`).trim();
+}
+
+function rowParameterCode(row, index) {
+  return String(row.parameterCode || row.code || cbcParameterKey(row.name || row.parameterName || `parameter-${index}`)).trim();
+}
+
+function primeReportEntryState(rows) {
+  reportEntryState.reportId = reportEntryReportId();
+  reportEntryState.tests = {};
+  reportTestGroups(rows).forEach((group) => {
+    reportEntryState.tests[group.key] = {
+      reportTestId: group.key,
+      testId: group.rows.find((row) => row.testId || row.testCode)?.testId || group.rows.find((row) => row.testCode)?.testCode || group.key,
+      testName: group.title,
+      parameters: {}
+    };
+    group.rows.forEach((row, offset) => {
+      if (row.type === "heading" || row.isHeading === true || row.isHeading === "true") return;
+      const index = group.indexes[offset];
+      const parameterId = rowParameterId(row, index);
+      const value = canonicalResultValue(row);
+      reportEntryState.tests[group.key].parameters[parameterId] = {
+        rowIndex: index,
+        parameterId,
+        parameterCode: rowParameterCode(row, index),
+        parameterName: row.name || row.parameterName || "Result",
+        value,
+        isEntered: hasEnteredValue(value),
+        isDirty: false,
+        lastSavedValue: value
+      };
+    });
+  });
+}
+
+function updateParameterState({ reportId, reportTestId, testId, parameterId, parameterCode, value }) {
+  if (reportId && reportEntryState.reportId && reportId !== reportEntryState.reportId) {
+    console.warn("Result input report mismatch", { reportId, stateReportId: reportEntryState.reportId });
+  }
+  const test = reportEntryState.tests[reportTestId];
+  if (!test) {
+    console.error("Test state missing", reportTestId);
+    return;
+  }
+  test.testId = test.testId || testId || reportTestId;
+  if (!test.parameters[parameterId]) {
+    test.parameters[parameterId] = {
+      rowIndex: null,
+      parameterId,
+      parameterCode,
+      parameterName: "",
+      value: "",
+      isEntered: false,
+      isDirty: false,
+      lastSavedValue: ""
+    };
+  }
+  const parameter = test.parameters[parameterId];
+  parameter.parameterCode = parameter.parameterCode || parameterCode;
+  parameter.value = value;
+  parameter.isEntered = hasEnteredValue(value);
+  parameter.isDirty = value !== parameter.lastSavedValue;
+
+  const rowIndex = Number(parameter.rowIndex ?? -1);
+  if (rowIndex >= 0 && reportResults[rowIndex]) {
+    reportResults[rowIndex] = {
+      ...reportResults[rowIndex],
+      finding: value,
+      resultValue: value,
+      value,
+      isEntered: parameter.isEntered
+    };
+  }
+}
+
+function updateTestProgress(reportTestId) {
+  const group = reportTestGroups(currentFindingRows()).find((item) => item.key === reportTestId);
+  const header = document.querySelector(`[data-test-header="${CSS.escape(reportTestId)}"]`);
+  if (!group || !header) return;
+  const status = reportGroupStatus(group);
+  const count = header.querySelector("small");
+  const badge = header.querySelector(".report-test-status");
+  if (count) count.textContent = `${status.entered} of ${status.total} parameters entered`;
+  if (badge) {
+    badge.textContent = status.label;
+    badge.classList.toggle("complete", status.label === "Completed");
+    badge.classList.toggle("progress", status.label === "In Progress");
+  }
+}
+
+function markReportEntrySaved() {
+  Object.values(reportEntryState.tests).forEach((test) => {
+    Object.values(test.parameters).forEach((parameter) => {
+      parameter.lastSavedValue = parameter.value;
+      parameter.isDirty = false;
+    });
+  });
+}
+
+function bindReportEntryInputDelegation() {
+  const reportEntryContainer = document.querySelector('[data-report-entry-container="true"]');
+  if (!reportEntryContainer) {
+    console.error("Report Entry container not found");
+    return;
+  }
+  if (reportEntryContainer.dataset.resultInputBound === "true") return;
+  reportEntryContainer.dataset.resultInputBound = "true";
+  reportEntryContainer.addEventListener("input", (event) => {
+    const input = event.target.closest('[data-result-input="true"][data-parameter-id]');
+    if (!input) return;
+
+    const reportId = String(input.dataset.reportId || "").trim();
+    const reportTestId = String(input.dataset.reportTestId || "").trim();
+    const testId = String(input.dataset.testId || "").trim();
+    const parameterId = String(input.dataset.parameterId || "").trim();
+    const parameterCode = String(input.dataset.parameterCode || "").trim();
+    const value = input.value === null || input.value === undefined ? "" : String(input.value);
+
+    if (!reportId || !reportTestId || !parameterId) {
+      console.error("Result input identifiers missing", { reportId, reportTestId, testId, parameterId, parameterCode });
+      if (typeof showAdminToast === "function") showAdminToast("This parameter cannot be saved because its ID is missing.");
+      return;
+    }
+
+    updateParameterState({ reportId, reportTestId, testId, parameterId, parameterCode, value });
+    updateTestProgress(reportTestId);
+  });
 }
 
 function rowHasEnteredResult(row) {
@@ -3023,6 +3178,12 @@ function findingRowHtml(row, index, groupKey, isOpen) {
     const isReadOnly = row.readOnly === true || row.readOnly === "true" || isCalculated || isIndirectBilirubinParameter(row);
     const isESRRow = isESRTest(row) || isESRParameterName(row.name || row.parameterName);
     const numericAttrs = isESRRow ? ' inputmode="decimal" pattern="[0-9]*[.]?[0-9]*" data-numeric="true"' : "";
+    const reportId = reportEntryReportId();
+    const reportTestId = groupKey;
+    const testId = row.testId || row.testCode || groupKey;
+    const parameterId = rowParameterId(row, index);
+    const parameterCode = rowParameterCode(row, index);
+    const resultInputId = `result_${safeDomId(reportTestId)}_${safeDomId(parameterId)}`;
     const referenceHtml = isESRRow
       ? `<div style="font-size:12px;line-height:1.45;white-space:pre-line;"><b>Reference Value</b>\n${html(row.normal || row.normalRange || "")}</div><input type="hidden" data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}">`
       : `<input data-r="normal" data-i="${index}" value="${html(row.normal || row.normalRange || "")}" readonly>`;
@@ -3038,8 +3199,8 @@ function findingRowHtml(row, index, groupKey, isOpen) {
         <b>${html(row.name || row.parameterName || "Result")}</b>
         <br><small>${html(row.label || (isCalculated ? "Auto-calculated" : row.testName || row.category || ""))}</small>
         <input type="hidden" data-r="code" data-i="${index}" value="${html(row.code || "")}">
-        <input type="hidden" data-r="parameterId" data-i="${index}" value="${html(row.parameterId || row.code || cbcParameterKey(row.name || row.parameterName || "Result"))}">
-        <input type="hidden" data-r="parameterCode" data-i="${index}" value="${html(row.parameterCode || row.code || "")}">
+        <input type="hidden" data-r="parameterId" data-i="${index}" value="${html(parameterId)}">
+        <input type="hidden" data-r="parameterCode" data-i="${index}" value="${html(parameterCode)}">
         <input type="hidden" data-r="name" data-i="${index}" value="${html(row.name || row.parameterName || "Result")}">
         <input type="hidden" data-r="testName" data-i="${index}" value="${html(row.testName || "")}">
         <input type="hidden" data-r="category" data-i="${index}" value="${html(row.category || "")}">
@@ -3055,7 +3216,7 @@ function findingRowHtml(row, index, groupKey, isOpen) {
         <input type="hidden" data-r="sourceParameters" data-i="${index}" value="${html(JSON.stringify(row.sourceParameters || []))}">
         <input type="hidden" data-r="precision" data-i="${index}" value="${html(row.precision ?? "")}">
       </td>
-      <td><input data-r="finding" data-i="${index}" value="${html(canonicalResultValue(row))}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
+      <td><input id="${html(resultInputId)}" name="result_${html(parameterId)}" data-r="finding" data-i="${index}" data-report-id="${html(reportId)}" data-report-test-id="${html(reportTestId)}" data-test-id="${html(testId)}" data-parameter-id="${html(parameterId)}" data-parameter-code="${html(parameterCode)}" data-result-input="true" value="${html(canonicalResultValue(row))}" placeholder="${isReadOnly ? "Auto-calculated" : "Enter result"}"${numericAttrs} ${isReadOnly ? "readonly" : ""}></td>
       <td>${referenceHtml}</td>
       <td><input data-r="unit" data-i="${index}" value="${html(row.unit || "")}" readonly></td>
     </tr>
@@ -3091,6 +3252,8 @@ function paintFindingRows(rows) {
   if (!body) return;
   rows = applyLftCalculationsToEditorRows(rows);
   reportResults = rows;
+  primeReportEntryState(rows);
+  bindReportEntryInputDelegation();
   const groups = reportTestGroups(rows);
   if (openReportTestKey !== "__none__" && (!openReportTestKey || !groups.some((group) => group.key === openReportTestKey))) {
     openReportTestKey = groups[0]?.key || "";
@@ -3146,6 +3309,7 @@ window.saveReportTestCard = async function(groupKey) {
   if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
+  markReportEntrySaved();
   openReportTestKey = "__none__";
   paintFindingRows(reportResults);
   const note = document.querySelector(`[data-save-note="${CSS.escape(groupKey)}"]`);
@@ -3451,11 +3615,15 @@ function renderAdminEntryTests() {
 
 function reportRowsForTest(test, existingResults = []) {
   const params = normalizeTestParameters(test);
+  const testId = test.testId || test.id || test.slug || test.testCode || "";
+  const testCode = test.testCode || test.code || "";
   if (!isCBCTest(test) && !isESRTest(test) && existingResults.length) {
     return existingResults.map((result) => ({
       code: result.code || result.parameterCode || "",
       parameterId: result.parameterId || "",
       parameterCode: result.parameterCode || result.code || "",
+      testId: result.testId || testId,
+      testCode: result.testCode || testCode,
       name: result.parameterName || result.name || "Result",
       category: result.category || test.category || "",
       testName: result.testName || test.name || "",
@@ -3490,6 +3658,8 @@ function reportRowsForTest(test, existingResults = []) {
       code: p.code || existing?.code || existing?.parameterCode || "",
       parameterId: p.parameterId || existing?.parameterId || p.code || existing?.code || "",
       parameterCode: p.parameterCode || p.code || existing?.parameterCode || existing?.code || "",
+      testId: existing?.testId || testId,
+      testCode: existing?.testCode || testCode,
       name: p.name || test.name || "Test",
       category: test.category || existing?.category || "",
       testName: test.name || existing?.testName || "",
@@ -3597,6 +3767,8 @@ window.loadReportEditor = async function(id) {
           code: result.code || result.parameterCode || "",
           parameterId: result.parameterId || "",
           parameterCode: result.parameterCode || result.code || "",
+          testId: result.testId || "",
+          testCode: result.testCode || "",
           name: result.parameterName || result.name || "Result",
           category: result.category || "",
           testName: result.testName || "",
@@ -3791,6 +3963,7 @@ window.openReportPreview = async function() {
   if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
+  markReportEntrySaved();
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
 };
@@ -3804,6 +3977,7 @@ window.printGeneratedReport = async function() {
   if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
+  markReportEntrySaved();
   const bill = currentReportBooking.billNo || currentReportBooking.id;
   window.open(`report.html?bill=${encodeURIComponent(bill)}`, "_blank");
 };
@@ -3857,6 +4031,7 @@ window.saveGeneratedDraft = async function() {
   if (!payload) return alert("Please select booking.");
   if (showLftValidationWarning(payload)) return;
   await saveReportDraft(payload);
+  markReportEntrySaved();
   alert("Draft saved to Firestore.");
   await refreshFirebaseDashboard();
 };
@@ -3870,6 +4045,7 @@ window.releaseGeneratedReport = async function() {
   if (!payload) return;
   if (showLftValidationWarning(payload)) return;
   await saveReport(payload);
+  markReportEntrySaved();
   currentReportBooking.reportReleased = true;
   currentReportBooking.reportBillNo = payload.billNo;
   currentReportBooking.status = "Reported";
