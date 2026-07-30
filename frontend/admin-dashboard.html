@@ -210,7 +210,7 @@
               <div id="testSuggestions" class="test-suggestions hidden"></div>
             </div>
             <div><label>TEST_RATE</label><input id="testRateInput" readonly></div>
-            <button type="button" id="addTestBtn" class="legacy-green">&lt;&lt; Add Test &gt;&gt;</button>
+            <button type="button" id="addTestButton" class="legacy-green">&lt;&lt; Add Test &gt;&gt;</button>
             <button type="button" class="legacy-blue" onclick="addEntryPackage()">&lt;&lt; Add Package &gt;&gt;</button>
           </div>
 
@@ -2003,6 +2003,34 @@ function showAdminError(message) {
   renderDebugPanel();
 }
 
+function normalizeTestDocument(documentId, data = {}) {
+  const id = String(data.id || data.testId || documentId || "").trim();
+  const testCode = String(data.testCode || data.code || id).trim();
+  const name = String(data.displayName || data.testName || data.name || "").trim();
+  const rate = Number(data.rate ?? data.price ?? data.testRate ?? 0);
+  return {
+    ...data,
+    id,
+    testId: String(data.testId || data.id || documentId || "").trim(),
+    testCode,
+    code: String(data.code || data.testCode || testCode).trim(),
+    name,
+    testName: String(data.testName || name).trim(),
+    displayName: String(data.displayName || name).trim(),
+    nameLower: String(data.nameLower || name).toLowerCase(),
+    category: data.category || "Lab Test",
+    price: Number.isFinite(rate) ? rate : 0,
+    rate: Number.isFinite(rate) ? rate : 0,
+    sample: data.sample || "",
+    method: data.method || "",
+    reportTime: data.reportTime || "Same Day",
+    isActive: data.isActive !== false,
+    parameters: Array.isArray(data.parameters) ? data.parameters : [],
+    searchKeywords: Array.isArray(data.searchKeywords) ? data.searchKeywords : [],
+    needsParameterReview: !!data.needsParameterReview
+  };
+}
+
 async function loadAdminTestsDirect() {
   try {
     console.log("Loading tests from Firestore...");
@@ -2011,27 +2039,13 @@ async function loadAdminTestsDirect() {
 
     const tests = snap.docs.map((docSnap) => {
       const d = docSnap.data() || {};
-      return {
-        id: docSnap.id,
-        testId: docSnap.id,
-        testCode: d.testCode || docSnap.id,
-        name: d.name || d.testName || "",
-        nameLower: (d.nameLower || d.name || d.testName || "").toLowerCase(),
-        category: d.category || "Lab Test",
-        price: Number(d.price || d.rate || d.testRate || 0),
-        sample: d.sample || "",
-        method: d.method || "",
-        reportTime: d.reportTime || "Same Day",
-        isActive: d.isActive !== false,
-        parameters: Array.isArray(d.parameters) ? d.parameters : [],
-        searchKeywords: Array.isArray(d.searchKeywords) ? d.searchKeywords : [],
-        needsParameterReview: !!d.needsParameterReview
-      };
+      return normalizeTestDocument(docSnap.id, d);
     })
       .filter((test) => test.name && test.isActive !== false)
       .sort((a, b) => a.name.localeCompare(b.name));
 
     console.log("Admin tests loaded:", tests.length);
+    console.log("Loaded tests count:", tests.length);
     allLabTests = tests;
     firebaseTests = tests;
     window.allLabTests = tests;
@@ -2048,6 +2062,7 @@ async function loadAdminTestsDirect() {
     lastFirestoreError = lastTestLoadingError;
     lastAdminTestSource = "Firestore direct failed";
     updateAdminDebugBox();
+    showAdminToast("Tests Library could not be loaded.");
     return [];
   }
 }
@@ -3535,12 +3550,48 @@ function entrySuggestionsBox() {
   return document.getElementById("testSuggestions") || document.getElementById("entryTestSuggestions");
 }
 
+function normalizeTestText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 function findFirebaseCatalogTest(value) {
-  const q = String(value || "").trim().toLowerCase();
+  const q = normalizeTestText(value);
   const tests = allLabTests;
-  return tests.find((t) => entryTestLabel(t).toLowerCase() === q)
-    || tests.find((t) => String(t.testCode || "").toLowerCase() === q || String(t.name || "").toLowerCase() === q)
+  return tests.find((t) => normalizeTestText(entryTestLabel(t)) === q)
+    || tests.find((t) => (
+      normalizeTestText(t.id) === q
+      || normalizeTestText(t.testId) === q
+      || normalizeTestText(t.testCode) === q
+      || normalizeTestText(t.code) === q
+      || normalizeTestText(t.name) === q
+      || normalizeTestText(t.testName) === q
+      || normalizeTestText(t.displayName) === q
+    ))
     || tests.find((t) => testMatchesQuery(t, q));
+}
+
+function resolveSelectedEntryTest() {
+  const selected = window.selectedCurrentTest || selectedCurrentTest;
+  if (selected && (selected.id || selected.testId || selected.testCode)) {
+    return normalizeTestDocument(selected.id || selected.testId || selected.testCode, selected);
+  }
+
+  const typedName = normalizeTestText(entryTestInput()?.value);
+  if (!typedName) return null;
+
+  return allLabTests.find((test) => (
+    normalizeTestText(test.name) === typedName
+    || normalizeTestText(test.testName) === typedName
+    || normalizeTestText(test.displayName) === typedName
+    || normalizeTestText(test.testCode) === typedName
+    || normalizeTestText(test.code) === typedName
+    || normalizeTestText(test.id) === typedName
+    || normalizeTestText(test.testId) === typedName
+    || normalizeTestText(entryTestLabel(test)) === typedName
+  )) || null;
 }
 
 function populateEntryTestDatalist() {
@@ -3596,12 +3647,27 @@ function selectedTestSnapshot(test, packageName = "") {
 }
 
 function addTestToEntry(test, packageName = "") {
-  if (!test) return false;
-  if (adminEntryTests.some((item) => item.testCode === test.testCode && item.name === test.name)) return false;
-  adminEntryTests.push(selectedTestSnapshot(test, packageName));
+  if (!test) {
+    showAdminToast("Please select a valid test from the Tests Library.");
+    return false;
+  }
+  const normalizedTest = normalizeTestDocument(test.id || test.testId || test.testCode, test);
+  const testId = String(normalizedTest.testId || normalizedTest.id || "").trim();
+  const testName = String(normalizedTest.name || normalizedTest.testName || "").trim();
+  const rate = Number(entryRateInput()?.value || normalizedTest.price || normalizedTest.rate || 0);
+  if (!testId) throw new Error("Selected test ID is missing.");
+  if (!testName) throw new Error("Selected test name is missing.");
+  if (!Number.isFinite(rate) || rate < 0) throw new Error("Selected test rate is invalid.");
+  const duplicate = adminEntryTests.some((item) => String(item.testId || item.id || item.testCode) === testId);
+  if (duplicate) {
+    showAdminToast(`${testName} is already added.`);
+    return false;
+  }
+  adminEntryTests.push(selectedTestSnapshot({ ...normalizedTest, price: rate, rate }, packageName));
   selectedTests = adminEntryTests;
   renderAdminEntryTests();
   window.refreshEntryTotals();
+  showAdminToast(`${testName} added successfully.`);
   return true;
 }
 
@@ -3701,10 +3767,18 @@ function setupAdminTestSearch() {
 window.setupTestAutocomplete = setupAdminTestSearch;
 
 window.setupAddTestButton = function() {
-  const btn = document.getElementById("addTestBtn");
-  if (btn && btn.dataset.bound !== "true") {
+  const btn = document.getElementById("addTestButton") || document.getElementById("addTestBtn");
+  if (!btn) {
+    throw new Error("Add Test button not found");
+  }
+  btn.type = "button";
+  if (btn.dataset.bound !== "true") {
     btn.dataset.bound = "true";
-    btn.addEventListener("click", window.addEntryTest);
+    btn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      await window.addEntryTest(event);
+    });
   }
 };
 
@@ -3770,18 +3844,29 @@ window.pickEntrySuggestion = function(testId) {
   hideEntrySuggestions();
 };
 
-window.addEntryTest = function() {
-  const test = window.selectedCurrentTest || selectedCurrentTest;
-  if (!test) {
-    alert(allLabTests.length ? "Please select a test first." : "No tests loaded. Check Firebase Debug for the last test loading error.");
-    return;
+window.addEntryTest = async function() {
+  try {
+    if (!allLabTests.length) {
+      showAdminToast("Tests Library could not be loaded.");
+      return;
+    }
+    const test = resolveSelectedEntryTest();
+    if (!test) {
+      showAdminToast("Please select a valid test from the Tests Library.");
+      entryTestInput()?.focus();
+      return;
+    }
+    const added = addTestToEntry(test);
+    if (!added) return;
+    if (entryTestInput()) entryTestInput().value = "";
+    if (entryRateInput()) entryRateInput().value = "";
+    selectedCurrentTest = null;
+    window.selectedCurrentTest = null;
+    hideEntrySuggestions();
+  } catch (error) {
+    console.error("Add Test failed:", error);
+    showAdminToast(error?.message || "Test could not be added.");
   }
-  addTestToEntry(test);
-  if (entryTestInput()) entryTestInput().value = "";
-  if (entryRateInput()) entryRateInput().value = "";
-  selectedCurrentTest = null;
-  window.selectedCurrentTest = null;
-  hideEntrySuggestions();
 };
 
 window.addEntryPackage = function() {
