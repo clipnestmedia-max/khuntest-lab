@@ -33,6 +33,7 @@ jobs:
           firebase deploy --only firestore:rules --project khuntest-lab-e5966 --non-interactive
 
       - name: Deploy Firebase Hosting
+        if: always()
         working-directory: ./frontend
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
