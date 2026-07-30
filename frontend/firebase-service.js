@@ -630,10 +630,19 @@ export async function loginUser(email, password) {
   const identifier = normalizeLoginIdentifier(email);
   const loginEmail = await resolvePatientLoginEmail(identifier);
   const cred = await signInWithEmailAndPassword(auth, loginEmail, password);
+  console.info("[Firebase login] Auth succeeded.");
+  console.info("[Firebase login] Current UID exists:", Boolean(cred.user?.uid), cred.user?.uid || "");
+  console.info("[Firebase login] User profile read started.");
   const profileSnap = await getDoc(doc(db, C.users, cred.user.uid));
   if (!profileSnap.exists()) throw new Error("User profile not found in Firestore.");
   const profile = normalizeDoc(profileSnap);
-  if (profile.isActive === false) throw new Error("This account is inactive.");
+  console.info("[Firebase login] User role:", profile.role || "missing");
+  console.info("[Firebase login] Active status:", {
+    isActive: profile.isActive === true,
+    active: profile.active === true
+  });
+  if ((profile.role === "admin" || profile.role === "staff") && !isProfileActive(profile)) throw new Error("This account is inactive.");
+  if (profile.role === "patient" && profile.isActive === false) throw new Error("This account is inactive.");
   const token = await cred.user.getIdToken();
   localStorage.setItem("auth_user", JSON.stringify(profile));
   localStorage.setItem("auth_token", cred.user.uid);
@@ -702,7 +711,11 @@ export async function getCurrentUserProfile() {
 
 export async function isAdmin() {
   const profile = await getCurrentUserProfile().catch(() => null);
-  return Boolean(profile && profile.role === "admin" && profile.isActive !== false);
+  return Boolean(profile && profile.role === "admin" && isProfileActive(profile));
+}
+
+export function isProfileActive(profile) {
+  return profile?.isActive === true || profile?.active === true;
 }
 
 export async function logoutUser() {
@@ -726,6 +739,7 @@ export async function getCurrentUserRole() {
   const snap = await getDoc(doc(db, C.users, user.uid));
   if (!snap.exists()) return null;
   const profile = normalizeDoc(snap);
+  if (profile.role === "admin" || profile.role === "staff") return isProfileActive(profile) ? profile.role : null;
   return profile.isActive === false ? null : profile.role;
 }
 
@@ -1420,7 +1434,7 @@ export async function getCustomerBill(billNoValue, token = "") {
   if (!user) throw new Error("Please login to view this bill.");
   const profileSnap = await getDoc(doc(db, C.users, user.uid)).catch(() => null);
   const profile = profileSnap?.exists() ? profileSnap.data() : {};
-  const isAdminUser = profile?.role === "admin" && profile?.isActive !== false;
+  const isAdminUser = profile?.role === "admin" && isProfileActive(profile);
   const isPatientOwner = bill.patientId === user.uid || cleanEmail(bill.patientEmail) === cleanEmail(user.email);
   if (!isAdminUser && !isPatientOwner) throw new Error("You are not authorized to view this bill.");
   return withResolvedLabAttendant(bill);

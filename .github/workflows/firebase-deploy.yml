@@ -25,19 +25,19 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy Firebase Hosting
-        working-directory: ./frontend
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: |
-          firebase deploy --only hosting --project khuntest-lab-e5966 --non-interactive
-
       - name: Deploy Firestore rules
         working-directory: ./frontend
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         run: |
           firebase deploy --only firestore:rules --project khuntest-lab-e5966 --non-interactive
+
+      - name: Deploy Firebase Hosting
+        working-directory: ./frontend
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: |
+          firebase deploy --only hosting --project khuntest-lab-e5966 --non-interactive
 
       - name: Cleanup service account
         if: always()

@@ -96,18 +96,46 @@
   </footer>
 
   <script type="module">
-    import { loginUser, logoutUser } from "./firebase-service.js";
+    import { auth, db } from "./firebase-config.js";
+    import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const form = document.getElementById("adminLoginForm");
     const msg = document.getElementById("loginMessage");
+    const submitButton = form.querySelector("button[type='submit']");
+
+    function isProfileActive(profile) {
+      return profile?.isActive === true || profile?.active === true;
+    }
+
+    function setSubmitting(isSubmitting) {
+      submitButton.disabled = isSubmitting;
+      submitButton.textContent = isSubmitting ? "Logging in..." : "Login";
+    }
 
     function showMessage(text, type) {
       msg.textContent = text;
       msg.className = "message " + type;
     }
 
+    function loginErrorMessage(err) {
+      const code = err?.code || "";
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+        return "Incorrect email or password.";
+      }
+      if (code === "auth/user-disabled") return "This account has been disabled.";
+      if (code === "permission-denied" || code === "firestore/permission-denied") {
+        return "Admin profile access is blocked by Firestore permissions.";
+      }
+      if (err?.message === "missing-admin-profile") return "Admin profile is not configured in Firestore.";
+      if (err?.message === "wrong-admin-role") return "This account does not have admin access.";
+      if (err?.message === "inactive-admin") return "Your admin account is inactive. Contact the system administrator.";
+      return "Admin login failed. Please try again.";
+    }
+
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
+      if (submitButton.disabled) return;
 
       const email = document.getElementById("adminEmail").value.trim();
       const password = document.getElementById("adminPassword").value;
@@ -118,15 +146,30 @@
       }
 
       showMessage("Logging in...", "success");
+      setSubmitting(true);
 
       try {
-        const user = await loginUser(email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        console.info("[Admin login] Auth succeeded.");
+        console.info("[Admin login] Current UID exists:", Boolean(cred.user?.uid), cred.user?.uid || "");
 
-        if (!user || user.role !== "admin") {
-          await logoutUser();
-          showMessage("This account is not an admin account.", "error");
-          return;
-        }
+        const profileRef = doc(db, "users", cred.user.uid);
+        console.info("[Admin login] User profile read started.");
+        const profileSnap = await getDoc(profileRef);
+        if (!profileSnap.exists()) throw new Error("missing-admin-profile");
+
+        const profile = profileSnap.data() || {};
+        console.info("[Admin login] User role:", profile.role || "missing");
+        console.info("[Admin login] Active status:", {
+          isActive: profile.isActive === true,
+          active: profile.active === true
+        });
+
+        if (profile.role !== "admin") throw new Error("wrong-admin-role");
+        if (!isProfileActive(profile)) throw new Error("inactive-admin");
+
+        localStorage.setItem("auth_user", JSON.stringify({ ...profile, uid: cred.user.uid }));
+        localStorage.setItem("auth_token", cred.user.uid);
 
         showMessage("Login successful. Redirecting...", "success");
 
@@ -134,8 +177,10 @@
           window.location.href = "admin-dashboard.html";
         }, 700);
       } catch (err) {
-        console.error(err);
-        showMessage(err.message || "Firebase login failed.", "error");
+        console.info("[Admin login] Firestore/Auth error code:", err?.code || err?.message || "unknown");
+        await signOut(auth).catch(() => {});
+        showMessage(loginErrorMessage(err), "error");
+        setSubmitting(false);
       }
     });
   </script>

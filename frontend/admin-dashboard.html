@@ -999,11 +999,15 @@ async function logoutUser() {
 }
 
 async function getCurrentUserRole() {
-  return currentAdminProfile?.role || null;
+  return isProfileActive(currentAdminProfile) ? currentAdminProfile?.role || null : null;
+}
+
+function isProfileActive(profile) {
+  return profile?.isActive === true || profile?.active === true;
 }
 
 function activeAdminVerified() {
-  return currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive === true;
+  return currentAdminProfile?.role === "admin" && isProfileActive(currentAdminProfile);
 }
 
 async function loadListenerReleaseMetadata() {
@@ -1927,11 +1931,35 @@ async function checkAdminAuth() {
   }
   currentAdmin = user;
   currentAdminUser = user;
-  const profileSnap = await getDoc(doc(db, "users", user.uid));
-  currentAdminProfile = profileSnap.exists() ? profileSnap.data() : null;
-  const isAllowed = currentAdminProfile?.role === "admin" && currentAdminProfile?.isActive === true;
+  let profileSnap = null;
+  try {
+    console.info("[Admin dashboard] User profile read started.");
+    profileSnap = await getDoc(doc(db, "users", user.uid));
+  } catch (err) {
+    console.info("[Admin dashboard] Firestore error code:", err?.code || "unknown");
+    alert("Admin profile access is blocked by Firestore permissions.");
+    await signOut(auth);
+    window.location.href = "admin-login.html";
+    return null;
+  }
+  if (!profileSnap.exists()) {
+    alert("Admin profile is not configured in Firestore.");
+    await signOut(auth);
+    window.location.href = "admin-login.html";
+    return null;
+  }
+  currentAdminProfile = profileSnap.data() || null;
+  console.info("[Admin dashboard] User role:", currentAdminProfile?.role || "missing");
+  console.info("[Admin dashboard] Active status:", {
+    isActive: currentAdminProfile?.isActive === true,
+    active: currentAdminProfile?.active === true
+  });
+  const isAllowed = currentAdminProfile?.role === "admin" && isProfileActive(currentAdminProfile);
   if (!isAllowed) {
-    alert(`Admin access denied. Check users/${user.uid}/isActive is true.`);
+    const message = currentAdminProfile?.role !== "admin"
+      ? "This account does not have admin access."
+      : "This admin account is inactive.";
+    alert(message);
     await signOut(auth);
     window.location.href = "admin-login.html";
     return null;
