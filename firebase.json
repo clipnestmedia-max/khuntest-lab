@@ -1,0 +1,31 @@
+{
+  "firestore": {
+    "rules": "frontend/firestore.rules"
+  },
+  "hosting": {
+    "public": "frontend",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "backend/**",
+      "database/**",
+      "backups/**",
+      "**/.env",
+      "**/*.sql",
+      "**/*.zip",
+      "**/*.pdf"
+    ],
+    "headers": [
+      {
+        "source": "/listener-release.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      }
+    ]
+  }
+}

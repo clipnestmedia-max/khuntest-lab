@@ -5,8 +5,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function userProfileExists() {
+      return signedIn() && exists(userPath());
+    }
+
     function userDoc() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return get(userPath());
     }
 
     function isActiveUser() {
@@ -15,39 +23,37 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return userProfileExists()
         && userDoc().data.role == "admin"
         && isActiveUser();
     }
 
     function isPatient() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return userProfileExists()
         && userDoc().data.role == "patient"
         && isActiveUser();
     }
 
     function isStaff() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return userProfileExists()
         && (userDoc().data.role == "staff" || userDoc().data.role == "admin")
         && isActiveUser();
     }
 
     function sameEmail(email) {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return userProfileExists()
         && isActiveUser()
         && userDoc().data.email == email;
     }
 
     match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if isAdmin();
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.role == "patient";
       allow create: if isAdmin();
-      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow read: if isAdmin();
       allow update: if isAdmin()
         || (
           signedIn()
