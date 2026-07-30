@@ -1,20 +1,10 @@
 {
-  "firestore": {
-    "rules": "frontend/firestore.rules"
-  },
   "hosting": {
     "public": "frontend",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "backend/**",
-      "database/**",
-      "backups/**",
-      "**/.env",
-      "**/*.sql",
-      "**/*.zip",
-      "**/*.pdf"
+      "**/node_modules/**"
     ],
     "headers": [
       {
