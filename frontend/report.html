@@ -885,7 +885,7 @@
   <main id="app" class="loading">Loading report...</main>
 
   <script type="module">
-    import { getBookingByBillNo, getReportByBillNo } from "./firebase-service.js";
+    import { getBookingByBillNo, getReportByBillNo, getReportById } from "./firebase-service.js";
 
     const ROWS_PER_PAGE = 22;
 
@@ -896,6 +896,11 @@
     function getBillNo() {
       const params = getParams();
       return params.get("bill") || params.get("billNo") || params.get("bill_no") || "";
+    }
+
+    function getReportId() {
+      const params = getParams();
+      return params.get("reportId") || params.get("id") || params.get("report") || "";
     }
 
     function getStoredUser() {
@@ -918,7 +923,10 @@
       const userEmail = cleanEmail(user.email);
       const reportPhone = normalizeIndianPhone(pick(report, ["phone", "whatsapp", "contactNo"]));
       const userPhone = normalizeIndianPhone(user.phone || user.whatsapp || user.mobile);
+      const reportUid = String(pick(report, ["patientUid", "authUid", "userId"], "") || "");
+      const userUid = String(user.uid || user.authUid || user.firebaseUid || user.id || "");
       return Boolean(
+        (reportUid && userUid && reportUid === userUid) ||
         (reportEmail && userEmail && reportEmail === userEmail) ||
         (reportPhone && userPhone && reportPhone === userPhone)
       );
@@ -1573,7 +1581,10 @@
       if (!phone) return alert("No WhatsApp/phone number available for this patient.");
       const fullPhone = phone.length === 10 ? "91" + phone : phone;
       const patientName = normalizePatientName(pick(report, ["patientName", "patient_name", "name"], "Patient")) || "Patient";
-      const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
+      const reportId = report.id || report.reportDocumentId || "";
+      const reportUrl = reportId
+        ? `https://khuntest.com/report.html?reportId=${encodeURIComponent(reportId)}&bill=${encodeURIComponent(billNo)}`
+        : `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
       const message = `Hello ${patientName},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
       window.open(`https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`, "_blank");
     };
@@ -1648,6 +1659,7 @@
     async function loadReport() {
       const params = getParams();
       const billNo = getBillNo();
+      const reportId = getReportId();
 
       if (params.get("mock") === "1" || params.get("mock") === "lft") {
         const report = params.get("mock") === "lft" ? mockLFTReport() : mockReport();
@@ -1655,23 +1667,24 @@
         return;
       }
 
-      if (!billNo) {
+      if (!billNo && !reportId) {
         showError("Bill number missing in report link.");
         return;
       }
 
       try {
-        const report = await getReportByBillNo(billNo);
+        const report = reportId ? await getReportById(reportId) : await getReportByBillNo(billNo);
+        const displayBillNo = billNo || report?.billNo || report?.bill_no || reportId;
         if (!report) {
-          await getBookingByBillNo(billNo);
-          showError(`Report not found or not released yet.<br><br>Bill No: ${safe(billNo)}`);
+          if (billNo) await getBookingByBillNo(billNo);
+          showError(`Report not found or not released yet.<br><br>Bill No: ${safe(displayBillNo)}`);
           return;
         }
         if (!isPatientReportOwner(report)) {
           showError("You are not allowed to view this report.");
           return;
         }
-        renderReport(report, billNo);
+        renderReport(report, displayBillNo);
         if (params.get("print") === "1") setTimeout(() => window.print(), 350);
       } catch (err) {
         console.error(err);

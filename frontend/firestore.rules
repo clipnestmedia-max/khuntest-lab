@@ -46,6 +46,29 @@ service cloud.firestore {
         && userDoc().data.email == email;
     }
 
+    function patientOwnsReport() {
+      return signedIn()
+        && (
+          resource.data.patientUid == request.auth.uid
+          || resource.data.authUid == request.auth.uid
+          || resource.data.userId == request.auth.uid
+          || sameEmail(resource.data.patientEmail)
+          || sameEmail(resource.data.email)
+        );
+    }
+
+    function reportIsReleased() {
+      return resource.data.reportStatus == "released"
+        || resource.data.reportStatus == "Released"
+        || resource.data.reportStatus == "Final"
+        || resource.data.reportStatus == "final"
+        || resource.data.status == "released"
+        || resource.data.status == "Released"
+        || resource.data.status == "Final"
+        || resource.data.status == "final"
+        || resource.data.reportReleased == true;
+    }
+
     match /users/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
@@ -88,11 +111,15 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    match /reports/{billNo} {
-      allow read: if isAdmin()
+    match /reports/{reportId} {
+      allow get: if isAdmin()
+        || (patientOwnsReport() && reportIsReleased());
+      allow list: if isAdmin()
         || (
-          sameEmail(resource.data.patientEmail)
-          && (resource.data.reportStatus == "Final" || resource.data.status == "Final")
+          signedIn()
+          && request.query.limit <= 50
+          && patientOwnsReport()
+          && reportIsReleased()
         );
       allow create, update, delete: if isAdmin();
     }

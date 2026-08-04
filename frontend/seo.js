@@ -5,7 +5,7 @@
     name: "KhunTest Lab",
     legalName: "KHUNTEST LABS",
     url: "https://khuntest.com",
-    logo: "https://khuntest.com/assets/khuntest-logo.png",
+    logo: "https://khuntest.com/favicon/android-chrome-512x512.png",
     phone: "+919234277007",
     displayPhone: "+91 9234277007",
     email: "khuntest@yahoo.com",
@@ -170,14 +170,18 @@
     Object.entries(attrs).forEach(([key, value]) => tag.setAttribute(key, value));
   }
 
-  function upsertLink(rel, href) {
-    let tag = document.head.querySelector(`link[rel="${rel}"]`);
+  function upsertLink(rel, href, attrs = {}) {
+    const selector = attrs.selector || `link[rel="${rel}"]`;
+    let tag = document.head.querySelector(selector);
     if (!tag) {
       tag = document.createElement("link");
       tag.setAttribute("rel", rel);
       document.head.appendChild(tag);
     }
     tag.setAttribute("href", href);
+    Object.entries(attrs).forEach(([key, value]) => {
+      if (key !== "selector") tag.setAttribute(key, value);
+    });
   }
 
   document.title = meta.title;
@@ -190,6 +194,25 @@
   if (googleVerification) upsertMeta('meta[name="google-site-verification"]', { name: "google-site-verification", content: googleVerification });
   upsertLink("canonical", canonicalUrl);
   upsertLink("preload", "/assets/khuntest-logo.png");
+  upsertLink("icon", "/favicon/favicon.ico", {
+    selector: 'link[rel="icon"][type="image/x-icon"]',
+    type: "image/x-icon"
+  });
+  upsertLink("icon", "/favicon/favicon-16x16.png", {
+    selector: 'link[rel="icon"][sizes="16x16"]',
+    type: "image/png",
+    sizes: "16x16"
+  });
+  upsertLink("icon", "/favicon/favicon-32x32.png", {
+    selector: 'link[rel="icon"][sizes="32x32"]',
+    type: "image/png",
+    sizes: "32x32"
+  });
+  upsertLink("apple-touch-icon", "/favicon/apple-touch-icon.png", {
+    selector: 'link[rel="apple-touch-icon"][sizes="180x180"]',
+    sizes: "180x180"
+  });
+  upsertLink("manifest", "/manifest.json");
   const preload = document.head.querySelector('link[rel="preload"][href="/assets/khuntest-logo.png"]');
   if (preload) {
     preload.setAttribute("as", "image");

@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:image" content="https://khuntest.com/favicon/android-chrome-512x512.png">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Dashboard - KHUNTEST LABS</title>
@@ -314,6 +320,15 @@
       return `<button class="btn" onclick="openPatientBill('${source}','${safe(id)}')">Print Bill</button>`;
     }
 
+    function patientReportUrl(booking = {}) {
+      const bill = booking.bill_no || booking.billNo || booking.reportBillNo || "";
+      const reportId = booking.reportDocumentId || booking.reportId || booking.reportDocId || "";
+      const params = new URLSearchParams({ from: "patient" });
+      if (reportId) params.set("reportId", reportId);
+      if (bill) params.set("bill", bill);
+      return `report.html?${params.toString()}`;
+    }
+
     function reportReadyFromBooking(booking = {}) {
       const status = String(booking.status || booking.reportStatus || "").toLowerCase();
       return Boolean(
@@ -428,7 +443,7 @@
             </thead>
             <tbody>
               ${patientBookings.map((b, index) => {
-                const bill = b.bill_no || b.billNo || "";
+                const bill = b.bill_no || b.billNo || b.reportBillNo || "";
                 const selectedTests = Array.isArray(b.selectedTests) && b.selectedTests.length ? b.selectedTests : (Array.isArray(b.tests) ? b.tests : []);
                 const tests = selectedTests.length
                   ? selectedTests.map(t => t.name || t.test_name || t.testName).filter(Boolean).join(", ")
@@ -442,7 +457,7 @@
                   <td>${safe(b.status || "Pending")}</td>
                   <td>
                     ${reportFlags[index]
-                      ? `<a class="btn" href="report.html?bill=${encodeURIComponent(bill)}&from=patient">View Report</a>`
+                      ? `<a class="btn" href="${safe(patientReportUrl(b))}">View Report</a>`
                       : "Not released"}
                     ${billButtonHtml("booking", b.id || bill)}
                   </td>

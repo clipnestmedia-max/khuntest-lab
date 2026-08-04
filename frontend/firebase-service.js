@@ -230,6 +230,28 @@ function normalizeDoc(snap) {
   return { id: snap.id, ...data };
 }
 
+function waitForAuthUser() {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        unsubscribe();
+        resolve(user);
+      },
+      reject
+    );
+  });
+}
+
+function patientUidFrom(...sources) {
+  for (const source of sources) {
+    const uid = source?.patientUid || source?.authUid || source?.firebaseUid || source?.userId || source?.uid || "";
+    if (String(uid).trim()) return String(uid).trim();
+  }
+  return "";
+}
+
 function hasReportValue(value) {
   return value !== null && value !== undefined && String(value).trim() !== "";
 }
@@ -1286,11 +1308,19 @@ export async function getPatientBookings(email, phone, identity = {}, options = 
   });
 }
 
-export async function saveReport({ billNo, patientName, patientEmail, phone, whatsapp, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate, esrFirstHour, esrSecondHour }) {
+export async function saveReport({ billNo, patientName, patientEmail, phone, whatsapp, tests, results, bookingId, age, gender, doctor, refBy, createdAt, collectionDate, reportingDate, esrFirstHour, esrSecondHour, patientUid, authUid, userId, patientId }) {
+  const bookingSnap = bookingId ? await getDoc(doc(db, C.bookings, bookingId)).catch(() => null) : null;
+  const booking = bookingSnap?.exists() ? normalizeDoc(bookingSnap) : null;
+  const resolvedPatientUid = patientUidFrom({ patientUid, authUid, userId }, booking, { uid: patientId });
+  if (!resolvedPatientUid) {
+    throw new Error("This patient account is not linked to a Firebase user.");
+  }
   const selectedTests = Array.isArray(tests) ? tests.map(normalizeSelectedTest) : [];
   const report = {
     billNo: String(billNo || ""),
     bookingId: bookingId || "",
+    patientUid: resolvedPatientUid,
+    patientId: patientId || booking?.patientId || bookingId || "",
     patientName: normalizePatientName(patientName),
     patientEmail: cleanEmail(patientEmail),
     phone: phone || "",
@@ -1317,6 +1347,8 @@ export async function saveReport({ billNo, patientName, patientEmail, phone, wha
       status: "Reported",
       reportReleased: true,
       reportBillNo: report.billNo,
+      reportDocumentId: report.billNo,
+      patientUid: resolvedPatientUid,
       reportingDate: reportingDate || "",
       updatedAt: serverTimestamp()
     });
@@ -1332,16 +1364,34 @@ export async function getReportByBillNo(billNoValue) {
   const bill = String(billNoValue || "").trim();
   if (!bill) return null;
 
-  const directReport = await getDoc(doc(db, C.reports, bill));
-  if (directReport.exists()) return normalizeDoc(directReport);
+  const directReport = await getDoc(doc(db, C.reports, bill)).catch(() => null);
+  if (directReport?.exists()) return normalizeDoc(directReport);
 
-  const reportSnap = await getDocs(query(collection(db, C.reports), where("billNo", "==", bill), limit(1)));
+  const user = await waitForAuthUser();
+  const profileSnap = user ? await getDoc(doc(db, C.users, user.uid)).catch(() => null) : null;
+  const profile = profileSnap?.exists() ? profileSnap.data() : {};
+  const email = cleanEmail(profile.email || user?.email || "");
+  const patientQueries = [];
+  if (user?.uid) {
+    patientQueries.push(query(collection(db, C.reports), where("billNo", "==", bill), where("patientUid", "==", user.uid), where("reportStatus", "==", "Final"), limit(1)));
+    patientQueries.push(query(collection(db, C.reports), where("billNo", "==", bill), where("patientUid", "==", user.uid), where("status", "==", "Final"), limit(1)));
+  }
+  if (email) {
+    patientQueries.push(query(collection(db, C.reports), where("billNo", "==", bill), where("patientEmail", "==", email), where("reportStatus", "==", "Final"), limit(1)));
+    patientQueries.push(query(collection(db, C.reports), where("billNo", "==", bill), where("patientEmail", "==", email), where("status", "==", "Final"), limit(1)));
+  }
+  for (const reportQuery of patientQueries) {
+    const snap = await getDocs(reportQuery).catch(() => ({ empty: true, docs: [] }));
+    if (!snap.empty) return normalizeDoc(snap.docs[0]);
+  }
+
+  const reportSnap = await getDocs(query(collection(db, C.reports), where("billNo", "==", bill), limit(1))).catch(() => ({ empty: true, docs: [] }));
   if (!reportSnap.empty) return normalizeDoc(reportSnap.docs[0]);
 
-  const directBooking = await getDoc(doc(db, C.bookings, bill));
-  const bookingDoc = directBooking.exists()
+  const directBooking = await getDoc(doc(db, C.bookings, bill)).catch(() => null);
+  const bookingDoc = directBooking?.exists()
     ? directBooking
-    : (await getDocs(query(collection(db, C.bookings), where("billNo", "==", bill), limit(1)))).docs[0];
+    : (await getDocs(query(collection(db, C.bookings), where("billNo", "==", bill), limit(1))).catch(() => ({ docs: [] }))).docs[0];
 
   if (!bookingDoc) return null;
 
@@ -1381,6 +1431,14 @@ export async function getReportByBillNo(billNoValue) {
     tests: booking.selectedTests || booking.tests || [],
     results: results.map(normalizeResult)
   };
+}
+
+export async function getReportById(reportIdValue) {
+  const reportId = String(reportIdValue || "").trim();
+  if (!reportId) return null;
+  await waitForAuthUser();
+  const snap = await getDoc(doc(db, C.reports, reportId));
+  return snap.exists() ? normalizeDoc(snap) : null;
 }
 
 export async function getBookingByBillNo(billNoValue) {
@@ -1499,9 +1557,13 @@ export async function updateTest(testId, patch) {
 export async function saveReportDraft(reportData) {
   const bill = String(reportData.billNo || "");
   if (!bill) throw new Error("Bill number is required.");
+  const bookingSnap = reportData.bookingId ? await getDoc(doc(db, C.bookings, reportData.bookingId)).catch(() => null) : null;
+  const booking = bookingSnap?.exists() ? normalizeDoc(bookingSnap) : null;
+  const resolvedPatientUid = patientUidFrom(reportData, booking);
   const draft = {
     ...reportData,
     billNo: bill,
+    patientUid: resolvedPatientUid || reportData.patientUid || "",
     results: Array.isArray(reportData.results) ? reportData.results.map(normalizeResult) : [],
     reportStatus: "Draft",
     status: "Draft",
@@ -1523,7 +1585,7 @@ export const getAllReports = getReports;
 export async function getPatientReports(user) {
   const email = cleanEmail(user?.email || user?.patientEmail);
   if (!email) return [];
-  const snap = await getDocs(query(collection(db, C.reports), where("patientEmail", "==", email)));
+  const snap = await getDocs(query(collection(db, C.reports), where("patientEmail", "==", email), where("reportStatus", "==", "Final"), limit(50)));
   return snap.docs.map(normalizeDoc).sort((a, b) => (toDate(b.releasedAt)?.getTime() || 0) - (toDate(a.releasedAt)?.getTime() || 0));
 }
 

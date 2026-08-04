@@ -701,12 +701,16 @@ function normalizeBookingRecord(row, sourceCollection = "bookings") {
     documentId: row.documentId || row.id || "",
     bookingId: row.bookingId || row.onlineBookingId || row.id || "",
     billNo: String(row.billNo || row.bill_no || row.billNumber || row.reportBillNo || "").trim(),
-    patientUid: row.patientUid || row.uid || "",
+    patientUid: row.patientUid || row.authUid || row.firebaseUid || row.userId || row.uid || "",
     patientName: row.patientName || row.patient_name || row.name || "",
     tests,
     collectionDate: row.collectionDate || row.collDate || row.preferredDate || row.date || "",
     updatedAt: row.updatedAt || row.createdAt || ""
   };
+}
+
+function patientUidFromRecord(row = {}) {
+  return String(row.patientUid || row.authUid || row.firebaseUid || row.userId || row.uid || row.patientId || "").trim();
 }
 
 function sourceRank(source) {
@@ -1514,11 +1518,11 @@ async function upsertReport(payload) {
     await updateDoc(doc(db, "reports", existing.id), reportData);
     return { ...existing, ...payload, id: existing.id };
   }
-  const docRef = await addDoc(collection(db, "reports"), {
+  await setDoc(doc(db, "reports", billNo), {
     ...reportData,
     createdAt: serverTimestamp()
-  });
-  return { id: docRef.id, ...payload };
+  }, { merge: true });
+  return { id: billNo, ...payload };
 }
 
 function updateLocalReportCaches(savedReport) {
@@ -1580,8 +1584,13 @@ async function saveReportDraft(payload) {
 }
 
 async function saveReport(payload) {
+  const resolvedPatientUid = patientUidFromRecord(payload);
+  if (!resolvedPatientUid) {
+    throw new Error("This patient account is not linked to a Firebase user.");
+  }
   const saved = await upsertReport({
     ...payload,
+    patientUid: resolvedPatientUid,
     reportStatus: "Final",
     status: "Final",
     reportReleased: true,
@@ -1592,6 +1601,8 @@ async function saveReport(payload) {
       status: "Reported",
       reportReleased: true,
       reportBillNo: payload.billNo,
+      reportDocumentId: saved.id || payload.billNo,
+      patientUid: resolvedPatientUid,
       updatedAt: serverTimestamp()
     });
   }
@@ -1667,6 +1678,7 @@ async function syncReportMetadata(row, patch) {
   const existing = await findReportForBill(bill);
   if (!existing?.id) return;
   await setDoc(doc(db, "reports", existing.id), {
+    patientUid: patientUidFromRecord(patch) || patientUidFromRecord(row) || existing.patientUid || "",
     patientName: patch.patientName,
     patientEmail: patch.patientEmail || patch.email || "",
     phone: patch.phone || "",
@@ -4297,6 +4309,8 @@ function reportPayload(status = "Draft", suppliedRows = null) {
   const payload = {
     billNo: bill,
     bookingId: currentReportBooking.id,
+    patientUid: patientUidFromRecord(currentReportBooking),
+    patientId: currentReportBooking.patientId || currentReportBooking.id || "",
     patientName: normalizePatientName(currentReportBooking.patientName),
     patientEmail: currentReportBooking.patientEmail || currentReportBooking.email || "",
     phone: currentReportBooking.phone || "",

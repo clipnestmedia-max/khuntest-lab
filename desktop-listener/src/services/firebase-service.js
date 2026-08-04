@@ -164,6 +164,8 @@ class FirebaseService {
     const reportDraft = {
       billNo,
       bookingId: booking.id,
+      patientUid: booking.patientUid || booking.authUid || booking.firebaseUid || booking.userId || booking.uid || "",
+      patientId: booking.patientId || booking.id || "",
       patientName: booking.patientName || parsed.patientName || "",
       patientEmail: booking.patientEmail || booking.email || "",
       phone: booking.phone || "",
