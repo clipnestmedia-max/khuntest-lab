@@ -286,9 +286,13 @@
             <button class="btn btn-outline" type="button" onclick="downloadCurrentBookingBillPdf()">Download Bill PDF</button>
             <button class="btn btn-outline" type="button" onclick="shareCurrentBookingBill()">Share Bill</button>
             <button class="btn btn-green" type="button" onclick="releaseGeneratedReport()">RELEASE REPORT</button>
-            <button class="btn btn-navy" type="button" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Send WhatsApp</button>
-            <span id="reportShareHint" class="notice" style="display:inline-block;margin:0;">Release report first to send WhatsApp.</span>
+            <button class="btn btn-navy" type="button" id="reportWhatsAppBtn" onclick="sendCurrentReportWhatsApp()" disabled>Share on WhatsApp</button>
+            <button class="btn btn-outline" type="button" id="reportCopyLinkBtn" onclick="copyCurrentReportShareLink()" disabled>Copy Secure Link</button>
+            <button class="btn btn-outline" type="button" id="reportRegenerateLinkBtn" onclick="regenerateCurrentReportShareLink()" disabled>Regenerate Link</button>
+            <button class="btn btn-outline" type="button" id="reportRevokeLinkBtn" onclick="revokeCurrentReportShareLink()" disabled>Revoke Link</button>
+            <span id="reportShareHint" class="notice" style="display:inline-block;margin:0;">Release report first to share.</span>
           </div>
+          <div id="reportShareStatusRow" class="notice" style="margin:0 18px 12px;font-weight:700;">Share Link: Not Created &bull; Payment: Pending &bull; Report: Draft</div>
           <div id="machineReportNotice" class="notice hidden" style="margin:0 18px 18px;">Machine results imported as draft. Verify before release.</div>
         </div>
       </div>
@@ -424,6 +428,14 @@ import {
   isAstAltRatioParameter,
   isIndirectBilirubinParameter
 } from "./scripts/lft-calculations.mjs";
+import {
+  prepareWhatsAppShare,
+  getShareStatus,
+  revokeSharesForReport,
+  regenerateShareForReport,
+  getOrCreateShareForReport,
+  buildShareUrl
+} from "./js/whatsapp-report-share.js";
 
 console.log("Admin dashboard loading...");
 console.log("Firebase db:", db);
@@ -928,25 +940,73 @@ function normalizeIndianPhone(phone) {
   return digits;
 }
 
-function openWhatsAppReport(phone, patientName, billNo) {
-  const clean = normalizeIndianPhone(phone);
-  if (!clean) {
-    alert("No WhatsApp/phone number available for this patient.");
-    return;
-  }
-  const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
-  const message = `Hello ${displayPatientName(patientName) || "Patient"},\n\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
-  window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, "_blank");
+// Registry keyed by billNo (== the reports/{reportId} doc id) so row buttons
+// rendered as plain HTML strings can look up the data they need without
+// embedding patient names/phone numbers into onclick="" attributes (which
+// would both be an escaping hazard and a way to leak PII into page markup).
+const reportShareRowData = new Map();
+
+function registerReportShareRow({ billNo, bookingId, patientName, phone }) {
+  if (!billNo) return "";
+  reportShareRowData.set(billNo, { reportId: billNo, bookingId: bookingId || "", billNo, patientName: patientName || "", phone: phone || "" });
+  return billNo;
 }
 
-function whatsappReportLink(b) {
-  const bill = reportBill(b);
-  const phone = normalizeIndianPhone(b.whatsapp || b.phone || b.contactNo);
-  if (!phone || !bill) return "";
-  const reportUrl = `https://khuntest.com/report.html?bill=${encodeURIComponent(bill)}`;
-  const message = `Hello ${displayPatientName(b.patientName) || "Patient"},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
-  return `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(message)}`;
+function reportShareControlsHtml(rowKey, shareStatusLabel, paymentStatus) {
+  return `
+    <div class="notice" style="margin:4px 0 2px;font-weight:700;">Share Link: ${html(shareStatusLabel)} &bull; Payment: ${html(paymentStatus)}</div>
+    <button class="btn btn-navy btn-small" type="button" onclick="shareReportRowAction('whatsapp','${html(rowKey)}')">Share on WhatsApp</button>
+    <button class="btn btn-outline btn-small" type="button" onclick="shareReportRowAction('copy','${html(rowKey)}')">Copy Secure Link</button>
+    <button class="btn btn-outline btn-small" type="button" onclick="shareReportRowAction('regenerate','${html(rowKey)}')">Regenerate Link</button>
+    <button class="btn btn-outline btn-small" type="button" onclick="shareReportRowAction('revoke','${html(rowKey)}')">Revoke Link</button>
+  `;
 }
+
+window.shareReportRowAction = async function(action, rowKey) {
+  const data = reportShareRowData.get(rowKey);
+  if (!data) {
+    alert("Report details not loaded. Please refresh and try again.");
+    return;
+  }
+  try {
+    if (action === "whatsapp") {
+      let result = await prepareWhatsAppShare(data);
+      if (!result.ok && result.reason === "needs-regenerate") {
+        if (!confirm("A secure link already exists for this report but isn't available on this device. Regenerate a new one now? The old link will stop working.")) return;
+        await regenerateShareForReport(data);
+        result = await prepareWhatsAppShare(data);
+      }
+      if (!result.ok) {
+        alert(result.reason === "no-phone" ? "No WhatsApp/phone number available for this patient." : "Could not create a secure share link.");
+        return;
+      }
+      window.open(result.url, "_blank");
+    } else if (action === "copy") {
+      let { rawToken } = await getOrCreateShareForReport(data);
+      if (!rawToken) {
+        if (!confirm("A secure link already exists for this report but isn't available on this device. Regenerate a new one now?")) return;
+        ({ rawToken } = await regenerateShareForReport(data));
+      }
+      await navigator.clipboard.writeText(buildShareUrl(rawToken));
+      showAdminToast("Secure report link copied.");
+    } else if (action === "revoke") {
+      if (!confirm("Revoke the secure share link for this report? Anyone with the old link will lose access.")) return;
+      await revokeSharesForReport(data.reportId);
+      showAdminToast("Secure report link revoked.");
+    } else if (action === "regenerate") {
+      if (!confirm("Create a new secure link for this report? The previous link will stop working.")) return;
+      const { rawToken } = await regenerateShareForReport(data);
+      await navigator.clipboard.writeText(buildShareUrl(rawToken)).catch(() => {});
+      showAdminToast("New secure report link created and copied.");
+    }
+  } catch (err) {
+    console.error(`Share action "${action}" failed`, err);
+    alert("Something went wrong with the secure link. Please try again.");
+  } finally {
+    if (typeof window.renderReportsPanel === "function") window.renderReportsPanel();
+    if (typeof renderFirebaseBookings === "function") renderFirebaseBookings();
+  }
+};
 
 function createdText(value) {
   const d = value?.toDate ? value.toDate() : new Date(value || Date.now());
@@ -2514,7 +2574,8 @@ function renderFirebaseBookings() {
   body.innerHTML = rows.length ? rows.map((b) => {
     const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
     const bill = reportBill(b);
-    const wa = whatsappReportLink(b);
+    const released = hasFirestoreReport(b);
+    const rowKey = released ? registerReportShareRow({ billNo: bill, bookingId: b.id, patientName: b.patientName, phone: b.whatsapp || b.phone || b.contactNo }) : "";
     const rowText = `${bill} ${b.patientName || ""} ${b.phone || ""} ${tests}`.toLowerCase();
     return `<tr data-status="${html(b.status || "Pending")}" data-date="${html(b.date || createdDateKey(b.createdAt))}" data-search="${html(rowText)}">
       <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
@@ -2528,8 +2589,8 @@ function renderFirebaseBookings() {
         <button class="btn btn-outline btn-small" type="button" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit</button>
         ${billActionsHtml(b, "booking")}
         ${b.machineResultReceived ? `<br><span class="status reported">Machine Result Received</span>` : ""}
-        ${hasFirestoreReport(b) ? `<br>${reportActionsHtml(b)}` : ""}
-        ${hasFirestoreReport(b) && wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">Send WhatsApp</a>` : ""}
+        ${released ? `<br>${reportActionsHtml(b)}` : ""}
+        ${rowKey ? `<br><button class="btn btn-navy btn-small" type="button" onclick="shareReportRowAction('whatsapp','${html(rowKey)}')">Share on WhatsApp</button>` : ""}
       </td>
     </tr>`;
   }).join("") : `<tr><td colspan="7">No bookings found.</td></tr>`;
@@ -2845,18 +2906,32 @@ window.renderPatientsPanel = function() {
   }).join("") || `<tr><td colspan="6">No patients found.</td></tr>`;
 };
 
-window.renderReportsPanel = function() {
+let reportsPanelRenderSeq = 0;
+window.renderReportsPanel = async function() {
   const body = document.getElementById("reportsBody");
   if (!body) return;
+  const mySeq = ++reportsPanelRenderSeq;
   const q = (document.getElementById("reportSearch")?.value || "").toLowerCase();
   const rows = uniqueReportsForDisplay(firebaseReports).filter((r) => isFinalReport(r) && (!q || [r.billNo, r.patientName, r.phone].join(" ").toLowerCase().includes(q)));
-  body.innerHTML = rows.map((r) => {
-    const b = uniqueDisplayBookings("report-entry").find((booking) => String(reportBill(booking)) === String(r.billNo || r.id)) || r;
-    const wa = whatsappReportLink(b);
-    const editButton = uniqueDisplayBookings("report-entry").some((booking) => booking.id === b?.id) ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
+  body.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
+
+  const rowsHtml = await Promise.all(rows.map(async (r) => {
+    const bookingMatch = uniqueDisplayBookings("report-entry").find((booking) => String(reportBill(booking)) === String(r.billNo || r.id));
+    const b = bookingMatch || r;
+    const billNo = r.billNo || r.id;
+    const rowKey = registerReportShareRow({ billNo, bookingId: b?.id, patientName: r.patientName, phone: b.whatsapp || b.phone || b.contactNo });
+    const paymentStatus = bookingMatch ? currentReportPaymentStatus(bookingMatch) : "Unknown";
+    const shareStatus = await getShareStatus(billNo).catch(() => "unknown");
+    const shareLabel = shareStatus === "active" ? "Active" : shareStatus === "revoked" ? "Revoked" : shareStatus === "unknown" ? "Unknown" : "Not Created";
+    const editButton = bookingMatch ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
     const billButtons = b?.id ? `<br>${billActionsHtml(b, "booking", "Reprint Bill")}` : "";
-    return `<tr><td><b>${html(r.billNo || r.id)}</b></td><td>${html(displayPatientName(r.patientName))}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(r.billNo || r.id)}">View/Print</a>${wa ? `<br><a class="report-link" target="_blank" href="${html(wa)}">WhatsApp</a>` : ""}${editButton}${billButtons}</td></tr>`;
-  }).join("") || `<tr><td colspan="5">No released reports found.</td></tr>`;
+    return `<tr><td><b>${html(billNo)}</b></td><td>${html(displayPatientName(r.patientName))}<br><small>${html(r.phone)}</small></td><td>${html((r.tests || []).map((t) => t.name).join(", "))}</td><td>${html(createdText(r.releasedAt || r.createdAt))}</td><td><a class="report-link" target="_blank" href="report.html?bill=${encodeURIComponent(billNo)}">View/Print (admin)</a>${rowKey ? `<br>${reportShareControlsHtml(rowKey, shareLabel, paymentStatus)}` : ""}${editButton}${billButtons}</td></tr>`;
+  }));
+
+  // If the search box changed again while these awaits were in flight, this
+  // pass is stale - let the newer renderReportsPanel() call win.
+  if (mySeq !== reportsPanelRenderSeq) return;
+  body.innerHTML = rowsHtml.join("") || `<tr><td colspan="5">No released reports found.</td></tr>`;
 };
 
 function renderFirebaseReportSelect() {
@@ -4376,25 +4451,134 @@ window.releaseGeneratedReport = async function() {
   }
 };
 
-function updateReportActionState() {
+function currentReportPaymentStatus(booking) {
+  if (booking.paymentStatus) return booking.paymentStatus;
+  const balance = Number(booking.balanceDue ?? booking.dueAmount ?? 0);
+  return balance <= 0 ? "Paid" : "Pending";
+}
+
+async function updateReportActionState() {
   const btn = document.getElementById("reportWhatsAppBtn");
   const hint = document.getElementById("reportShareHint");
+  const copyBtn = document.getElementById("reportCopyLinkBtn");
+  const revokeBtn = document.getElementById("reportRevokeLinkBtn");
+  const regenBtn = document.getElementById("reportRegenerateLinkBtn");
+  const statusRow = document.getElementById("reportShareStatusRow");
   if (!btn || !hint || !currentReportBooking) return;
   const released = hasFirestoreReport(currentReportBooking);
   const hasPhone = Boolean(normalizeIndianPhone(currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo));
   btn.disabled = !released || !hasPhone;
-  btn.textContent = hasPhone ? "Send WhatsApp" : "No WhatsApp number";
-  hint.textContent = !released ? "Release report first to send WhatsApp." : hasPhone ? "WhatsApp share is ready." : "Report released. No WhatsApp/phone number saved.";
-}
+  btn.textContent = hasPhone ? "Share on WhatsApp" : "No WhatsApp number";
+  hint.textContent = !released ? "Release report first to share." : hasPhone ? "WhatsApp share is ready." : "Report released. No WhatsApp/phone number saved.";
+  if (copyBtn) copyBtn.disabled = !released;
+  if (revokeBtn) revokeBtn.disabled = !released;
+  if (regenBtn) regenBtn.disabled = !released;
 
-window.sendCurrentReportWhatsApp = function() {
-  if (!currentReportBooking || !hasFirestoreReport(currentReportBooking)) {
-    alert("Release report first to send WhatsApp.");
+  if (!statusRow) return;
+  const paymentStatus = currentReportPaymentStatus(currentReportBooking);
+  const reportState = released ? "Released" : "Draft";
+  if (!released) {
+    statusRow.textContent = `Share Link: Not Created • Payment: ${paymentStatus} • Report: ${reportState}`;
     return;
   }
-  const url = whatsappReportLink(currentReportBooking);
-  if (!url) return alert("No WhatsApp/phone number available for this patient.");
-  openWhatsAppReport(currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo, currentReportBooking.patientName, reportBill(currentReportBooking));
+  const reportId = reportBill(currentReportBooking);
+  try {
+    const shareStatus = await getShareStatus(reportId);
+    const label = shareStatus === "active" ? "Active" : shareStatus === "revoked" ? "Revoked" : "Not Created";
+    statusRow.textContent = `Share Link: ${label} • Payment: ${paymentStatus} • Report: ${reportState}`;
+  } catch (err) {
+    console.error("Failed to load share status", err);
+    statusRow.textContent = `Share Link: Unknown • Payment: ${paymentStatus} • Report: ${reportState}`;
+  }
+}
+
+window.sendCurrentReportWhatsApp = async function() {
+  if (!currentReportBooking || !hasFirestoreReport(currentReportBooking)) {
+    alert("Release report first to share.");
+    return;
+  }
+  const reportId = reportBill(currentReportBooking);
+  const phone = currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo;
+  const btn = document.getElementById("reportWhatsAppBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "Preparing link..."; }
+  try {
+    const result = await prepareWhatsAppShare({
+      reportId,
+      bookingId: currentReportBooking.id,
+      billNo: reportId,
+      patientName: currentReportBooking.patientName,
+      phone
+    });
+    if (!result.ok) {
+      if (result.reason === "no-phone") {
+        alert("No WhatsApp/phone number available for this patient.");
+      } else if (result.reason === "needs-regenerate") {
+        if (confirm("A secure link already exists for this report but isn't available on this device. Regenerate a new link now? The old link will stop working.")) {
+          await window.regenerateCurrentReportShareLink(true);
+        }
+      }
+      return;
+    }
+    window.open(result.url, "_blank");
+  } catch (err) {
+    console.error("Failed to prepare WhatsApp share link", err);
+    alert("Could not create a secure share link. Please try again.");
+  } finally {
+    updateReportActionState();
+  }
+};
+
+window.copyCurrentReportShareLink = async function() {
+  if (!currentReportBooking || !hasFirestoreReport(currentReportBooking)) {
+    alert("Release report first to share.");
+    return;
+  }
+  const reportId = reportBill(currentReportBooking);
+  try {
+    const { rawToken } = await getOrCreateShareForReport({ reportId, bookingId: currentReportBooking.id, billNo: reportId });
+    if (!rawToken) {
+      alert("A secure link already exists for this report but isn't available on this device. Use Regenerate Link to create a new one.");
+      return;
+    }
+    await navigator.clipboard.writeText(buildShareUrl(rawToken));
+    showAdminToast("Secure report link copied.");
+  } catch (err) {
+    console.error("Failed to copy share link", err);
+    alert("Could not copy the secure link.");
+  } finally {
+    updateReportActionState();
+  }
+};
+
+window.revokeCurrentReportShareLink = async function() {
+  if (!currentReportBooking) return;
+  if (!confirm("Revoke the secure share link for this report? Anyone with the old link will lose access.")) return;
+  const reportId = reportBill(currentReportBooking);
+  try {
+    await revokeSharesForReport(reportId);
+    showAdminToast("Secure report link revoked.");
+  } catch (err) {
+    console.error("Failed to revoke share link", err);
+    alert("Could not revoke the secure link.");
+  } finally {
+    updateReportActionState();
+  }
+};
+
+window.regenerateCurrentReportShareLink = async function(silent) {
+  if (!currentReportBooking) return;
+  if (!silent && !confirm("Create a new secure link for this report? The previous link will stop working.")) return;
+  const reportId = reportBill(currentReportBooking);
+  try {
+    const { rawToken } = await regenerateShareForReport({ reportId, bookingId: currentReportBooking.id, billNo: reportId });
+    await navigator.clipboard.writeText(buildShareUrl(rawToken)).catch(() => {});
+    showAdminToast("New secure report link created and copied.");
+  } catch (err) {
+    console.error("Failed to regenerate share link", err);
+    alert("Could not regenerate the secure link.");
+  } finally {
+    updateReportActionState();
+  }
 };
 
 window.printCurrentBookingBill = function() {
