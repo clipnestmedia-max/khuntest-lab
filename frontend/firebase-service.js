@@ -231,12 +231,17 @@ function normalizeDoc(snap) {
 }
 
 function waitForAuthUser() {
-  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+  if (auth.currentUser) {
+    console.log("[report-auth] auth already initialized, uid:", auth.currentUser.uid);
+    return Promise.resolve(auth.currentUser);
+  }
+  console.log("[report-auth] waiting for onAuthStateChanged before any Firestore read...");
   return new Promise((resolve, reject) => {
     const unsubscribe = onAuthStateChanged(
       auth,
       (user) => {
         unsubscribe();
+        console.log("[report-auth] onAuthStateChanged resolved, uid:", user ? user.uid : "(not signed in)");
         resolve(user);
       },
       reject
@@ -1364,11 +1369,27 @@ export async function getReportByBillNo(billNoValue) {
   const bill = String(billNoValue || "").trim();
   if (!bill) return null;
 
-  const directReport = await getDoc(doc(db, C.reports, bill)).catch(() => null);
+  // Auth must finish initializing before any Firestore read is attempted -
+  // querying while auth.currentUser is still unresolved (common on mobile,
+  // where persisted-session restore is slower) causes a spurious
+  // "Missing or insufficient permissions" error even for the report's owner.
+  const user = await waitForAuthUser();
+  console.log("[report-load] getReportByBillNo start", { billNo: bill, uid: user?.uid || "(anonymous)" });
+
+  const reportPath = `${C.reports}/${bill}`;
+  let directReport = null;
+  try {
+    directReport = await getDoc(doc(db, C.reports, bill));
+    console.log("[report-load] direct doc get", { path: reportPath, exists: directReport.exists() });
+  } catch (err) {
+    console.error("[report-load] permission/error on direct doc get", { path: reportPath, code: err.code, message: err.message });
+  }
   if (directReport?.exists()) return normalizeDoc(directReport);
 
-  const user = await waitForAuthUser();
-  const profileSnap = user ? await getDoc(doc(db, C.users, user.uid)).catch(() => null) : null;
+  const profileSnap = user ? await getDoc(doc(db, C.users, user.uid)).catch((err) => {
+    console.error("[report-load] failed to load user profile", { uid: user.uid, code: err.code, message: err.message });
+    return null;
+  }) : null;
   const profile = profileSnap?.exists() ? profileSnap.data() : {};
   const email = cleanEmail(profile.email || user?.email || "");
   const patientQueries = [];
@@ -1381,11 +1402,17 @@ export async function getReportByBillNo(billNoValue) {
     patientQueries.push(query(collection(db, C.reports), where("billNo", "==", bill), where("patientEmail", "==", email), where("status", "==", "Final"), limit(1)));
   }
   for (const reportQuery of patientQueries) {
-    const snap = await getDocs(reportQuery).catch(() => ({ empty: true, docs: [] }));
+    const snap = await getDocs(reportQuery).catch((err) => {
+      console.error("[report-load] permission/error on patient query", { billNo: bill, uid: user?.uid, email, code: err.code, message: err.message });
+      return { empty: true, docs: [] };
+    });
     if (!snap.empty) return normalizeDoc(snap.docs[0]);
   }
 
-  const reportSnap = await getDocs(query(collection(db, C.reports), where("billNo", "==", bill), limit(1))).catch(() => ({ empty: true, docs: [] }));
+  const reportSnap = await getDocs(query(collection(db, C.reports), where("billNo", "==", bill), limit(1))).catch((err) => {
+    console.error("[report-load] permission/error on fallback billNo query", { billNo: bill, uid: user?.uid, code: err.code, message: err.message });
+    return { empty: true, docs: [] };
+  });
   if (!reportSnap.empty) return normalizeDoc(reportSnap.docs[0]);
 
   const directBooking = await getDoc(doc(db, C.bookings, bill)).catch(() => null);
@@ -1436,9 +1463,17 @@ export async function getReportByBillNo(billNoValue) {
 export async function getReportById(reportIdValue) {
   const reportId = String(reportIdValue || "").trim();
   if (!reportId) return null;
-  await waitForAuthUser();
-  const snap = await getDoc(doc(db, C.reports, reportId));
-  return snap.exists() ? normalizeDoc(snap) : null;
+  const user = await waitForAuthUser();
+  const reportPath = `${C.reports}/${reportId}`;
+  console.log("[report-load] getReportById start", { reportId, path: reportPath, uid: user?.uid || "(anonymous)" });
+  try {
+    const snap = await getDoc(doc(db, C.reports, reportId));
+    console.log("[report-load] getReportById result", { path: reportPath, exists: snap.exists() });
+    return snap.exists() ? normalizeDoc(snap) : null;
+  } catch (err) {
+    console.error("[report-load] permission/error on getReportById", { path: reportPath, uid: user?.uid || "(anonymous)", code: err.code, message: err.message });
+    throw err;
+  }
 }
 
 export async function getBookingByBillNo(billNoValue) {

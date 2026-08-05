@@ -885,7 +885,44 @@
   <main id="app" class="loading">Loading report...</main>
 
   <script type="module">
+    import { auth } from "./firebase-config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import { getBookingByBillNo, getReportByBillNo, getReportById } from "./firebase-service.js";
+
+    // Firebase auth restores the persisted session asynchronously (this can be
+    // noticeably slower on mobile browsers). Firestore reads must not fire
+    // until that restore finishes, otherwise the report's own patient looks
+    // "unauthenticated" to security rules and gets a permission error.
+    function waitForAuthReady(timeoutMs = 8000) {
+      return new Promise((resolve) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          console.warn("[report] auth init timed out after", timeoutMs, "ms - proceeding as unauthenticated");
+          resolve(null);
+        }, timeoutMs);
+        const unsubscribe = onAuthStateChanged(
+          auth,
+          (user) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            unsubscribe();
+            console.log("[report] auth ready, uid:", user ? user.uid : "(not signed in)");
+            resolve(user);
+          },
+          (err) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            unsubscribe();
+            console.error("[report] auth init error:", err.code, err.message);
+            resolve(null);
+          }
+        );
+      });
+    }
 
     const ROWS_PER_PAGE = 22;
 
@@ -1660,6 +1697,7 @@
       const params = getParams();
       const billNo = getBillNo();
       const reportId = getReportId();
+      console.log("[report] page params", { billNo, reportId, url: window.location.href });
 
       if (params.get("mock") === "1" || params.get("mock") === "lft") {
         const report = params.get("mock") === "lft" ? mockLFTReport() : mockReport();
@@ -1672,23 +1710,44 @@
         return;
       }
 
+      // Do not touch Firestore until Firebase Auth has finished restoring the
+      // session - see waitForAuthReady() above.
+      const user = await waitForAuthReady();
+      console.log("[report] proceeding to Firestore read", { uid: user?.uid || "(anonymous)", billNo, reportId });
+
       try {
         const report = reportId ? await getReportById(reportId) : await getReportByBillNo(billNo);
         const displayBillNo = billNo || report?.billNo || report?.bill_no || reportId;
+        console.log("[report] document exists:", Boolean(report));
         if (!report) {
           if (billNo) await getBookingByBillNo(billNo);
           showError(`Report not found or not released yet.<br><br>Bill No: ${safe(displayBillNo)}`);
           return;
         }
         if (!isPatientReportOwner(report)) {
+          console.warn("[report] local ownership check rejected this report for the signed-in patient");
           showError("You are not allowed to view this report.");
           return;
         }
         renderReport(report, displayBillNo);
         if (params.get("print") === "1") setTimeout(() => window.print(), 350);
       } catch (err) {
-        console.error(err);
-        showError(`Report loading failed.<br><br>${safe(err.message)}`);
+        console.error("[report] failed to load report", {
+          billNo,
+          reportId,
+          uid: user?.uid || "(anonymous)",
+          code: err.code,
+          message: err.message
+        });
+        if (err.code === "permission-denied") {
+          showError(
+            user
+              ? "You do not have permission to view this report. Please make sure you are logged in with the account this report was issued to, then try again."
+              : "Please log in to your patient account to view this report, then try again."
+          );
+        } else {
+          showError(`Report loading failed.<br><br>${safe(err.message)}`);
+        }
       }
     }
 

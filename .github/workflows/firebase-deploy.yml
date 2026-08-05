@@ -17,6 +17,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Deploy Firestore security rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KHUNTEST_LAB_E5966 }}
+        run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/firebase-service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-service-account.json
+          npx --yes firebase-tools@latest deploy --only firestore:rules --project khuntest-lab-e5966 --non-interactive
+          rm -f /tmp/firebase-service-account.json
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

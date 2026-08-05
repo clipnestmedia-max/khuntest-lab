@@ -1,4 +1,7 @@
 {
+  "firestore": {
+    "rules": "frontend/firestore.rules"
+  },
   "hosting": {
     "public": "frontend",
     "ignore": [
@@ -9,6 +12,15 @@
     "headers": [
       {
         "source": "/listener-release.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.js",
         "headers": [
           {
             "key": "Cache-Control",
