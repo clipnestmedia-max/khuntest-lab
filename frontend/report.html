@@ -778,6 +778,78 @@
       color: #991b1b;
     }
 
+    .payment-pending-card {
+      max-width: 560px;
+      margin: 40px auto;
+      padding: 28px;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 10px 35px rgba(0,0,0,.15);
+      text-align: center;
+    }
+
+    .payment-pending-card h1 {
+      margin: 0 0 12px;
+      color: #92400e;
+      font-size: 20px;
+    }
+
+    .payment-pending-card p {
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .payment-pending-details {
+      margin: 18px 0;
+      padding: 14px;
+      border-radius: 10px;
+      background: #f8fafc;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .payment-pending-details div {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+    }
+
+    .payment-pending-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .payment-pending-actions button,
+    .payment-pending-actions a {
+      flex: 1 1 160px;
+      min-height: 46px;
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 10px;
+      background: #062b59;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .payment-pending-actions .secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .payment-pending-actions .whatsapp {
+      background: #16a34a;
+    }
+
     @media (max-width: 900px) {
       .report-page {
         margin: 12px;
@@ -874,9 +946,9 @@
   </style>
 </head>
 <body>
-  <div class="no-print">
-    <button onclick="window.print()">Print Report</button>
-    <button class="pdf-btn" onclick="window.print()">Download/Save PDF</button>
+  <div id="topActionBar" class="no-print">
+    <button id="printReportBtn" onclick="window.print()">Print Report</button>
+    <button id="downloadPdfBtn" class="pdf-btn" onclick="window.print()">Download/Save PDF</button>
     <button id="shareWhatsAppBtn" class="hidden" onclick="shareReportWhatsApp()">Share on WhatsApp</button>
     <button id="backDashboardBtn" class="back-btn" onclick="window.location.href='admin-dashboard.html'">Back to Dashboard</button>
     <div class="print-note">For best print: Paper A4, Scale 100%, Margins None/Default, Background Graphics ON.</div>
@@ -888,6 +960,7 @@
     import { auth } from "./firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import { getBookingByBillNo, getReportByBillNo, getReportById } from "./firebase-service.js";
+    import { fetchSharedReport, PAYMENT_PENDING_COPY, LAB_CONTACT } from "./js/shared-report.js";
 
     // Firebase auth restores the persisted session asynchronously (this can be
     // noticeably slower on mobile browsers). Firestore reads must not fire
@@ -938,6 +1011,11 @@
     function getReportId() {
       const params = getParams();
       return params.get("reportId") || params.get("id") || params.get("report") || "";
+    }
+
+    function getShareToken() {
+      const params = getParams();
+      return params.get("share") || "";
     }
 
     function getStoredUser() {
@@ -1610,26 +1688,137 @@
       document.getElementById("shareWhatsAppBtn").classList.toggle("hidden", !phone);
     }
 
-    window.shareReportWhatsApp = function() {
+    // Only reachable in authenticated mode (the button is always hidden in
+    // shared mode - see loadSharedReport()). Builds a secure share link
+    // instead of the old predictable ?bill=/?reportId= URL; this Firestore
+    // write only succeeds for a signed-in admin (see firestore.rules), which
+    // is the only caller expected to use this button in practice.
+    window.shareReportWhatsApp = async function() {
       const current = window.currentReportForShare;
       if (!current) return;
       const { report, billNo } = current;
-      const phone = String(report.whatsapp || report.phone || report.contactNo || "").replace(/\D/g, "");
-      if (!phone) return alert("No WhatsApp/phone number available for this patient.");
-      const fullPhone = phone.length === 10 ? "91" + phone : phone;
+      const phone = report.whatsapp || report.phone || report.contactNo || "";
       const patientName = normalizePatientName(pick(report, ["patientName", "patient_name", "name"], "Patient")) || "Patient";
-      const reportId = report.id || report.reportDocumentId || "";
-      const reportUrl = reportId
-        ? `https://khuntest.com/report.html?reportId=${encodeURIComponent(reportId)}&bill=${encodeURIComponent(billNo)}`
-        : `https://khuntest.com/report.html?bill=${encodeURIComponent(billNo)}`;
-      const message = `Hello ${patientName},\nYour KHUNTEST LABS report is ready.\n\nDownload report:\n${reportUrl}\n\nThank you,\nKHUNTEST LABS\n+91 9234277007`;
-      window.open(`https://wa.me/${encodeURIComponent(fullPhone)}?text=${encodeURIComponent(message)}`, "_blank");
+      const reportId = report.id || report.reportDocumentId || billNo;
+      try {
+        const { prepareWhatsAppShare } = await import("./js/whatsapp-report-share.js");
+        const result = await prepareWhatsAppShare({ reportId, bookingId: report.bookingId, billNo, patientName, phone });
+        if (!result.ok) {
+          alert(result.reason === "no-phone"
+            ? "No WhatsApp/phone number available for this patient."
+            : "A secure link already exists for this report but isn't available on this device. Use the Reports screen in the Admin Dashboard to regenerate it.");
+          return;
+        }
+        window.open(result.url, "_blank");
+      } catch (err) {
+        console.error("[report] failed to prepare secure WhatsApp share link", err);
+        alert("Could not create a secure share link. Please try again from the Admin Dashboard.");
+      }
     };
 
     function showError(message) {
       const app = document.getElementById("app");
       app.className = "error-box";
       app.innerHTML = message;
+    }
+
+    function setTopActionBarVisible(visible) {
+      const bar = document.getElementById("topActionBar");
+      if (bar) bar.classList.toggle("hidden", !visible);
+    }
+
+    // In shared (public, unauthenticated) mode, Print/Download/Back/Share
+    // controls only ever appear once the server has confirmed the report is
+    // released AND paid (state === "available") - see loadSharedReport().
+    function hideSharedModeChrome() {
+      setTopActionBarVisible(false);
+      const wa = document.getElementById("shareWhatsAppBtn");
+      const back = document.getElementById("backDashboardBtn");
+      if (wa) wa.classList.add("hidden");
+      if (back) back.classList.add("hidden");
+    }
+
+    function rupeesDisplay(value) {
+      const num = Number(value);
+      return Number.isFinite(num) ? `Rs. ${num.toFixed(2)}` : "";
+    }
+
+    function renderPaymentPendingCard(body, billNo) {
+      const balanceDue = body?.payment?.balanceDue;
+      const app = document.getElementById("app");
+      app.className = "";
+      const whatsappMessage = `Hello, I would like to clear my pending payment for KhunTest Lab Bill No: ${billNo || ""}.`;
+      const whatsappUrl = `https://wa.me/${LAB_CONTACT.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
+      app.innerHTML = `
+        <div class="payment-pending-card">
+          <h1>${safe(PAYMENT_PENDING_COPY.title)}</h1>
+          <p>${safe(PAYMENT_PENDING_COPY.body)}</p>
+          <div class="payment-pending-details">
+            ${billNo ? `<div><span>Bill Number</span><span>${safe(billNo)}</span></div>` : ""}
+            ${Number.isFinite(Number(balanceDue)) ? `<div><span>Balance Due</span><span>${safe(rupeesDisplay(balanceDue))}</span></div>` : ""}
+            <div><span>Lab Contact</span><span>${safe(LAB_CONTACT.phone)}</span></div>
+          </div>
+          <div class="payment-pending-actions">
+            <a class="whatsapp" href="${whatsappUrl}" target="_blank" rel="noopener">Contact KhunTest Lab</a>
+            <button class="secondary" type="button" onclick="loadReport()">Try Again</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderShareStateMessage(state, message) {
+      const app = document.getElementById("app");
+      app.className = "";
+      const titles = {
+        invalid_link: "Invalid Link",
+        revoked: "Link No Longer Active",
+        expired: "Link Expired",
+        not_released: "Report Not Ready",
+        error: "Something Went Wrong"
+      };
+      app.innerHTML = `
+        <div class="payment-pending-card">
+          <h1>${safe(titles[state] || "Unable to Load Report")}</h1>
+          <p>${safe(message || "This report link cannot be used.")}</p>
+          <div class="payment-pending-actions">
+            <a class="whatsapp" href="https://wa.me/${LAB_CONTACT.whatsapp}" target="_blank" rel="noopener">Contact KhunTest Lab</a>
+            ${state === "error" ? `<button class="secondary" type="button" onclick="loadReport()">Try Again</button>` : ""}
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadSharedReport(token) {
+      console.log("[report] shared-mode load, token length:", token.length);
+      hideSharedModeChrome();
+      const app = document.getElementById("app");
+      app.className = "loading";
+      app.textContent = "Loading report...";
+
+      const result = await fetchSharedReport(token);
+      console.log("[report] shared-mode result state:", result.state);
+
+      if (result.success && result.state === "available" && result.report) {
+        renderReport(result.report, result.report.billNo || "");
+        setTopActionBarVisible(true);
+        // renderReport() re-shows shareWhatsAppBtn if the report has a phone
+        // number, but the sanitized shared-report payload never includes one
+        // (see functions/lib/sanitize.js) - hide it explicitly too, along
+        // with "Back to Dashboard", since neither applies to a public
+        // shared-link visitor.
+        document.getElementById("shareWhatsAppBtn")?.classList.add("hidden");
+        document.getElementById("backDashboardBtn")?.classList.add("hidden");
+        const params = getParams();
+        if (params.get("print") === "1") setTimeout(() => window.print(), 350);
+        return;
+      }
+
+      if (result.state === "payment_pending") {
+        renderPaymentPendingCard(result, result.billNo);
+        return;
+      }
+
+      renderShareStateMessage(result.state || "error", result.message);
     }
 
     function mockLFTReport() {
@@ -1697,7 +1886,16 @@
       const params = getParams();
       const billNo = getBillNo();
       const reportId = getReportId();
-      console.log("[report] page params", { billNo, reportId, url: window.location.href });
+      const shareToken = getShareToken();
+      console.log("[report] page params", { billNo, reportId, hasShareToken: Boolean(shareToken), url: window.location.href });
+
+      // SHARED MODE (?share=<token>): public, unauthenticated link opened
+      // from a WhatsApp message. This path never touches Firebase Auth or
+      // Firestore directly - see loadSharedReport()/js/shared-report.js.
+      if (shareToken) {
+        await loadSharedReport(shareToken);
+        return;
+      }
 
       if (params.get("mock") === "1" || params.get("mock") === "lft") {
         const report = params.get("mock") === "lft" ? mockLFTReport() : mockReport();
@@ -1710,8 +1908,10 @@
         return;
       }
 
-      // Do not touch Firestore until Firebase Auth has finished restoring the
-      // session - see waitForAuthReady() above.
+      // AUTHENTICATED MODE (?bill=/?reportId=): used from the Patient or
+      // Admin Dashboard by an already-logged-in user. Do not touch Firestore
+      // until Firebase Auth has finished restoring the session - see
+      // waitForAuthReady() above.
       const user = await waitForAuthReady();
       console.log("[report] proceeding to Firestore read", { uid: user?.uid || "(anonymous)", billNo, reportId });
 
@@ -1740,10 +1940,14 @@
           message: err.message
         });
         if (err.code === "permission-denied") {
+          // An anonymous visitor here almost always means an old WhatsApp
+          // link (?bill=/?reportId=) that predates secure share tokens -
+          // point them at requesting a new one rather than inviting a login
+          // flow that was never the intended access path for a shared link.
           showError(
             user
               ? "You do not have permission to view this report. Please make sure you are logged in with the account this report was issued to, then try again."
-              : "Please log in to your patient account to view this report, then try again."
+              : "This report link has expired. Please contact KhunTest Lab to request a new secure link."
           );
         } else {
           showError(`Report loading failed.<br><br>${safe(err.message)}`);
