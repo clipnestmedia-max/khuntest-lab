@@ -2,12 +2,25 @@
   "firestore": {
     "rules": "frontend/firestore.rules"
   },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs20"
+    }
+  ],
   "hosting": {
     "public": "frontend",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/shared-report/**",
+        "function": "getSharedReport"
+      }
     ],
     "headers": [
       {
@@ -21,6 +34,15 @@
       },
       {
         "source": "**/*.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/report.html",
         "headers": [
           {
             "key": "Cache-Control",

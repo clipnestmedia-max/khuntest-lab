@@ -124,6 +124,23 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Secure WhatsApp report-share tokens. The public report page never reads
+    // this collection directly - only the getSharedReport Cloud Function
+    // (Admin SDK, bypasses these rules) resolves a token to a report. Admins
+    // manage share records from the authenticated dashboard; nobody else may
+    // read or write here, so a token's existence/validity can't be probed
+    // by querying Firestore directly.
+    match /reportShares/{shareId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Access log written by the Cloud Function via the Admin SDK (bypasses
+    // rules). Admins may review it; no client ever writes to it directly.
+    match /reportShareAccess/{accessId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     match /bills/{billNo} {
       allow read: if isAdmin()
         || sameEmail(resource.data.patientEmail)
