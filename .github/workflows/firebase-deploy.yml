@@ -20,15 +20,26 @@ jobs:
       - name: Deploy Firestore security rules
         # Must never block the Hosting deploy below: if the service account
         # lacks Firestore rules permission this step fails, but the site
-        # (with the actual bug fix) still has to go live.
+        # (with the actual bug fix) still has to go live. On failure this
+        # also emits a ::error:: annotation with the real Firebase CLI
+        # output, since the raw job log isn't readable without a GitHub
+        # token but annotations are visible on the public run page.
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KHUNTEST_LAB_E5966 }}
         run: |
+          set +e
           echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/firebase-service-account.json
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-service-account.json
-          npx --yes firebase-tools@latest deploy --only firestore:rules --project khuntest-lab-e5966 --non-interactive
+          OUTPUT=$(npx --yes firebase-tools@latest deploy --only firestore:rules --project khuntest-lab-e5966 --non-interactive 2>&1)
+          STATUS=$?
+          echo "$OUTPUT"
           rm -f /tmp/firebase-service-account.json
+          if [ $STATUS -ne 0 ]; then
+            ENCODED=$(printf '%s' "$OUTPUT" | tail -c 3000 | python3 -c "import sys; s=sys.stdin.read(); print(s.replace('%','%25').replace(chr(13),'%0D').replace(chr(10),'%0A'), end='')")
+            echo "::error::Firestore rules deploy failed (exit $STATUS): $ENCODED"
+          fi
+          exit 0
 
       - name: Set up Node for Cloud Functions
         uses: actions/setup-node@v4
@@ -37,19 +48,39 @@ jobs:
 
       - name: Test and deploy Cloud Functions (getSharedReport)
         # Same reasoning as the rules step above: a functions-deploy problem
-        # (missing IAM role, failing test) must not take Hosting down with it.
+        # (missing IAM role, failing test) must not take Hosting down with
+        # it, and failures are surfaced as ::error:: annotations for the
+        # same log-visibility reason.
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KHUNTEST_LAB_E5966 }}
         run: |
-          (cd functions && npm ci && npm test)
+          set +e
+          encode() {
+            printf '%s' "$1" | tail -c 3000 | python3 -c "import sys; s=sys.stdin.read(); print(s.replace('%','%25').replace(chr(13),'%0D').replace(chr(10),'%0A'), end='')"
+          }
+
+          NPM_OUTPUT=$(cd functions && npm ci 2>&1 && npm test 2>&1)
+          NPM_STATUS=$?
+          echo "$NPM_OUTPUT"
+          if [ $NPM_STATUS -ne 0 ]; then
+            echo "::error::functions npm ci/test failed (exit $NPM_STATUS): $(encode "$NPM_OUTPUT")"
+            exit 0
+          fi
+
           echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/firebase-service-account.json
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-service-account.json
           # Must run from the repo root (where firebase.json lives, with
           # functions[].source: "functions") - running it from inside
           # functions/ silently deployed nothing (exit 0, no function).
-          npx --yes firebase-tools@latest deploy --only functions --project khuntest-lab-e5966 --non-interactive
+          DEPLOY_OUTPUT=$(npx --yes firebase-tools@latest deploy --only functions --project khuntest-lab-e5966 --non-interactive 2>&1)
+          DEPLOY_STATUS=$?
+          echo "$DEPLOY_OUTPUT"
           rm -f /tmp/firebase-service-account.json
+          if [ $DEPLOY_STATUS -ne 0 ]; then
+            echo "::error::firebase deploy --only functions failed (exit $DEPLOY_STATUS): $(encode "$DEPLOY_OUTPUT")"
+          fi
+          exit 0
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
