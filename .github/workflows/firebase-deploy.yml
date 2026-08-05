@@ -42,11 +42,12 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KHUNTEST_LAB_E5966 }}
         run: |
-          cd functions
-          npm ci
-          npm test
+          (cd functions && npm ci && npm test)
           echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/firebase-service-account.json
           export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-service-account.json
+          # Must run from the repo root (where firebase.json lives, with
+          # functions[].source: "functions") - running it from inside
+          # functions/ silently deployed nothing (exit 0, no function).
           npx --yes firebase-tools@latest deploy --only functions --project khuntest-lab-e5966 --non-interactive
           rm -f /tmp/firebase-service-account.json
 
