@@ -30,6 +30,26 @@ jobs:
           npx --yes firebase-tools@latest deploy --only firestore:rules --project khuntest-lab-e5966 --non-interactive
           rm -f /tmp/firebase-service-account.json
 
+      - name: Set up Node for Cloud Functions
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test and deploy Cloud Functions (getSharedReport)
+        # Same reasoning as the rules step above: a functions-deploy problem
+        # (missing IAM role, failing test) must not take Hosting down with it.
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KHUNTEST_LAB_E5966 }}
+        run: |
+          cd functions
+          npm ci
+          npm test
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/firebase-service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-service-account.json
+          npx --yes firebase-tools@latest deploy --only functions --project khuntest-lab-e5966 --non-interactive
+          rm -f /tmp/firebase-service-account.json
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
