@@ -18,6 +18,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy Firestore security rules
+        # Must never block the Hosting deploy below: if the service account
+        # lacks Firestore rules permission this step fails, but the site
+        # (with the actual bug fix) still has to go live.
+        continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KHUNTEST_LAB_E5966 }}
         run: |
