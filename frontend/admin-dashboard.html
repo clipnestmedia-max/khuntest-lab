@@ -437,6 +437,12 @@ import {
   buildShareUrl,
   syncSharePaymentHint
 } from "./js/whatsapp-report-share.js";
+import { auditReportShares } from "./js/admin-report-share-repair.js";
+
+// Console-only admin tool - see admin-report-share-repair.js for usage.
+// Not wired to any UI button on purpose: it writes data and should be run
+// deliberately (dry run first), not clicked by accident.
+window.repairReportShares = auditReportShares;
 
 console.log("Admin dashboard loading...");
 console.log("Firebase db:", db);
@@ -941,15 +947,24 @@ function normalizeIndianPhone(phone) {
   return digits;
 }
 
-// Registry keyed by billNo (== the reports/{reportId} doc id) so row buttons
-// rendered as plain HTML strings can look up the data they need without
-// embedding patient names/phone numbers into onclick="" attributes (which
-// would both be an escaping hazard and a way to leak PII into page markup).
+// Registry keyed by billNo (a stable, unique-enough row key for onclick="")
+// so row buttons rendered as plain HTML strings can look up the data they
+// need without embedding patient names/phone numbers into onclick=""
+// attributes (which would both be an escaping hazard and a way to leak PII
+// into page markup).
+//
+// NOTE: billNo is only usually the reports/{reportId} doc id - a report
+// keeps its original doc id forever once created, but its billNo field can
+// later diverge (e.g. the linked booking's bill number gets corrected).
+// Callers must pass the real Firestore document id explicitly as
+// `reportId`; this falls back to billNo only for callers that don't have
+// it yet (e.g. legacy rows), matching whatsapp-report-share.js's own
+// billNo-query fallback.
 const reportShareRowData = new Map();
 
-function registerReportShareRow({ billNo, bookingId, patientName, phone }) {
+function registerReportShareRow({ reportId, billNo, bookingId, patientName, phone }) {
   if (!billNo) return "";
-  reportShareRowData.set(billNo, { reportId: billNo, bookingId: bookingId || "", billNo, patientName: patientName || "", phone: phone || "" });
+  reportShareRowData.set(billNo, { reportId: reportId || billNo, bookingId: bookingId || "", billNo, patientName: patientName || "", phone: phone || "" });
   return billNo;
 }
 
@@ -1021,6 +1036,14 @@ function createdDateKey(value) {
 
 function reportBill(b) {
   return b.reportBillNo || b.billNo || b.bill_no || b.id || "";
+}
+
+// The reports/{reportId} document id to use for share links - prefers the
+// real Firestore doc id (captured onto the booking at release time and
+// refreshed by loadReportEditor()) over billNo, which can diverge from it.
+// See reportShareRowData's comment above registerReportShareRow().
+function currentReportDocumentId() {
+  return currentReportBooking?.reportDocumentId || reportBill(currentReportBooking);
 }
 
 function isFinalReport(report) {
@@ -2433,6 +2456,22 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
     updatedAt: serverTimestamp(),
     updatedBy: currentAdmin?.uid || ""
   };
+  // Admin explicitly marking Paid must zero the stored balance too, not
+  // just the status label - firestore.rules already treats an explicit
+  // "Paid" status as sufficient on its own to unlock a shared report
+  // regardless of a stale balance, but leaving balanceDue/dueAmount
+  // untouched here means the patient's payment-pending card (which reads
+  // reportShares' denormalized balanceDueHint - see syncSharePaymentHint()
+  // below) can still show a nonzero due amount for a report that's fully
+  // accessible. Only zero it when the status is actually going to Paid;
+  // never touch balance for any other status so a genuine partial/pending
+  // balance isn't silently erased.
+  if (String(patch.paymentStatus).toLowerCase() === "paid") {
+    patch.balanceDue = 0;
+    patch.dueAmount = 0;
+    patch.isPaid = true;
+    patch.paidAt = serverTimestamp();
+  }
   const attendant = selectedAttendantSnapshot(f.labAttendantId.value, { includeInactive: true });
   if (f.labAttendantId.value && !attendant) return alert("Selected lab attendant is not available.");
   if (attendant && String(before.labAttendantId || "") !== String(attendant.labAttendantId)) {
@@ -2582,7 +2621,7 @@ function renderFirebaseBookings() {
     const tests = bookingTests(b).map((t) => t.name || t.testName || t.test_name).join(", ") || (b.test || "");
     const bill = reportBill(b);
     const released = hasFirestoreReport(b);
-    const rowKey = released ? registerReportShareRow({ billNo: bill, bookingId: b.id, patientName: b.patientName, phone: b.whatsapp || b.phone || b.contactNo }) : "";
+    const rowKey = released ? registerReportShareRow({ reportId: b.reportDocumentId || bill, billNo: bill, bookingId: b.id, patientName: b.patientName, phone: b.whatsapp || b.phone || b.contactNo }) : "";
     const rowText = `${bill} ${b.patientName || ""} ${b.phone || ""} ${tests}`.toLowerCase();
     return `<tr data-status="${html(b.status || "Pending")}" data-date="${html(b.date || createdDateKey(b.createdAt))}" data-search="${html(rowText)}">
       <td><b>${html(bill)}</b><br><small>${html(createdText(b.createdAt))}</small></td>
@@ -2926,6 +2965,12 @@ window.renderReportsPanel = async function() {
     const bookingMatch = uniqueDisplayBookings("report-entry").find((booking) => String(reportBill(booking)) === String(r.billNo || r.id));
     const b = bookingMatch || r;
     const billNo = r.billNo || r.id;
+    // r.id is this report's real Firestore document id (see getReports()) -
+    // it's usually equal to billNo but can diverge if the report was
+    // re-saved after its booking's bill number changed (upsertReport()
+    // updates the existing doc rather than moving it). Always use r.id for
+    // share lookups so this stays correct even when it doesn't match billNo.
+    const reportDocId = r.id || billNo;
     // r.bookingId is the report document's own stored booking reference
     // (set at release time - see reportPayload()) and is authoritative.
     // bookingMatch?.id is only a fallback for older reports that predate
@@ -2933,9 +2978,9 @@ window.renderReportsPanel = async function() {
     // dropped out of the "report-entry" list (b then falls back to the
     // report itself, whose .id is the billNo, not a real booking id).
     const shareBookingId = r.bookingId || bookingMatch?.id || "";
-    const rowKey = registerReportShareRow({ billNo, bookingId: shareBookingId, patientName: r.patientName, phone: b.whatsapp || b.phone || b.contactNo });
+    const rowKey = registerReportShareRow({ reportId: reportDocId, billNo, bookingId: shareBookingId, patientName: r.patientName, phone: b.whatsapp || b.phone || b.contactNo });
     const paymentStatus = bookingMatch ? currentReportPaymentStatus(bookingMatch) : "Unknown";
-    const shareStatus = await getShareStatus(billNo).catch(() => "unknown");
+    const shareStatus = await getShareStatus(reportDocId).catch(() => "unknown");
     const shareLabel = shareStatus === "active" ? "Active" : shareStatus === "revoked" ? "Revoked" : shareStatus === "unknown" ? "Unknown" : "Not Created";
     const editButton = bookingMatch ? `<br><button class="btn btn-outline btn-small" onclick="openBookingEditModal('booking','${html(b.id)}')">Edit Details</button>` : "";
     const billButtons = b?.id ? `<br>${billActionsHtml(b, "booking", "Reprint Bill")}` : "";
@@ -4128,6 +4173,10 @@ window.loadReportEditor = async function(id) {
     showAdminToast(reportSaveErrorMessage(error));
     return allReports.find((report) => String(report.billNo || report.id || "") === String(reportBill(b))) || null;
   });
+  // Capture the report's real Firestore document id - it can diverge from
+  // billNo (see reportShareRowData's comment) - so Share on WhatsApp uses
+  // the same id View/Print already resolves via getReportByBillNo().
+  currentReportBooking.reportDocumentId = existingReport?.id || currentReportBooking.reportDocumentId || null;
   if (existingReport) updateLocalReportCaches(existingReport);
   const existingResults = Array.isArray(existingReport?.results) ? existingReport.results : [];
   const rows = testsWithParams.length
@@ -4495,7 +4544,7 @@ async function updateReportActionState() {
     statusRow.textContent = `Share Link: Not Created • Payment: ${paymentStatus} • Report: ${reportState}`;
     return;
   }
-  const reportId = reportBill(currentReportBooking);
+  const reportId = currentReportDocumentId();
   try {
     const shareStatus = await getShareStatus(reportId);
     const label = shareStatus === "active" ? "Active" : shareStatus === "revoked" ? "Revoked" : "Not Created";
@@ -4511,15 +4560,17 @@ window.sendCurrentReportWhatsApp = async function() {
     alert("Release report first to share.");
     return;
   }
-  const reportId = reportBill(currentReportBooking);
+  const reportId = currentReportDocumentId();
+  const billNo = reportBill(currentReportBooking);
   const phone = currentReportBooking.whatsapp || currentReportBooking.phone || currentReportBooking.contactNo;
+  console.info("Share request identifiers", { reportId, billNo, bookingId: currentReportBooking.id });
   const btn = document.getElementById("reportWhatsAppBtn");
   if (btn) { btn.disabled = true; btn.textContent = "Preparing link..."; }
   try {
     const result = await prepareWhatsAppShare({
       reportId,
       bookingId: currentReportBooking.id,
-      billNo: reportId,
+      billNo,
       patientName: currentReportBooking.patientName,
       phone
     });
@@ -4547,9 +4598,10 @@ window.copyCurrentReportShareLink = async function() {
     alert("Release report first to share.");
     return;
   }
-  const reportId = reportBill(currentReportBooking);
+  const reportId = currentReportDocumentId();
+  const billNo = reportBill(currentReportBooking);
   try {
-    const { rawToken } = await getOrCreateShareForReport({ reportId, bookingId: currentReportBooking.id, billNo: reportId });
+    const { rawToken } = await getOrCreateShareForReport({ reportId, bookingId: currentReportBooking.id, billNo });
     if (!rawToken) {
       alert("A secure link already exists for this report but isn't available on this device. Use Regenerate Link to create a new one.");
       return;
@@ -4567,7 +4619,7 @@ window.copyCurrentReportShareLink = async function() {
 window.revokeCurrentReportShareLink = async function() {
   if (!currentReportBooking) return;
   if (!confirm("Revoke the secure share link for this report? Anyone with the old link will lose access.")) return;
-  const reportId = reportBill(currentReportBooking);
+  const reportId = currentReportDocumentId();
   try {
     await revokeSharesForReport(reportId);
     showAdminToast("Secure report link revoked.");
@@ -4582,9 +4634,10 @@ window.revokeCurrentReportShareLink = async function() {
 window.regenerateCurrentReportShareLink = async function(silent) {
   if (!currentReportBooking) return;
   if (!silent && !confirm("Create a new secure link for this report? The previous link will stop working.")) return;
-  const reportId = reportBill(currentReportBooking);
+  const reportId = currentReportDocumentId();
+  const billNo = reportBill(currentReportBooking);
   try {
-    const { rawToken } = await regenerateShareForReport({ reportId, bookingId: currentReportBooking.id, billNo: reportId });
+    const { rawToken } = await regenerateShareForReport({ reportId, bookingId: currentReportBooking.id, billNo });
     await navigator.clipboard.writeText(buildShareUrl(rawToken)).catch(() => {});
     showAdminToast("New secure report link created and copied.");
   } catch (err) {

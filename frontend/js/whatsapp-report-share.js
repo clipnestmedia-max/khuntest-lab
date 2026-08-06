@@ -119,6 +119,41 @@ async function findAnyShare(reportId) {
   return snap.docs;
 }
 
+// Resolves the canonical reports/{id} document for a share request.
+//
+// The reports collection is normally keyed by billNo (see admin-dashboard.html
+// upsertReport()), but that's only true the first time a report is created.
+// If a report is later re-saved after its booking's bill number changed,
+// upsertReport() updates the *existing* document (found by querying the
+// billNo field) rather than moving it to a new doc id - so the document id
+// can permanently diverge from the current billNo. report.html's
+// getReportByBillNo() already tolerates this with a billNo-field query
+// fallback; this mirrors that so "Share on WhatsApp" is exactly as
+// resilient as View/Print instead of failing with "report not found"
+// whenever a report's id and billNo have drifted apart.
+export async function resolveReportDoc(reportId, billNo) {
+  const directSnap = await getDoc(doc(db, "reports", reportId));
+  if (directSnap.exists()) return directSnap;
+  if (!billNo) return directSnap;
+
+  const byString = await getDocs(query(collection(db, "reports"), where("billNo", "==", String(billNo)), limit(2)));
+  if (byString.size === 1) return byString.docs[0];
+  if (byString.size > 1) {
+    throw new Error("Multiple reports found for this bill number. Please contact support.");
+  }
+
+  const numericBill = Number(billNo);
+  if (String(billNo).trim() !== "" && Number.isFinite(numericBill)) {
+    const byNumber = await getDocs(query(collection(db, "reports"), where("billNo", "==", numericBill), limit(2)));
+    if (byNumber.size === 1) return byNumber.docs[0];
+    if (byNumber.size > 1) {
+      throw new Error("Multiple reports found for this bill number. Please contact support.");
+    }
+  }
+
+  return directSnap;
+}
+
 async function createShare({ reportId, bookingId, billNo }) {
   if (!reportId) throw new Error("reportId is required to create a share link.");
   if (!bookingId) {
@@ -132,12 +167,22 @@ async function createShare({ reportId, bookingId, billNo }) {
     throw new Error(`Cannot create a share link: report ${billNo || reportId} has no linked booking id.`);
   }
 
+  console.info("Share request identifiers", { reportId, billNo: billNo || "", bookingId });
+
   const [reportSnap, bookingSnap] = await Promise.all([
-    getDoc(doc(db, "reports", reportId)),
+    resolveReportDoc(reportId, billNo),
     getDoc(doc(db, "bookings", bookingId)).catch(() => null)
   ]);
   if (!reportSnap.exists()) {
-    throw new Error("Cannot create a share link: report not found.");
+    throw new Error(
+      billNo
+        ? "Report could not be found in Firestore for the supplied report ID or bill number."
+        : "Cannot create a share link: report not found."
+    );
+  }
+  const canonicalReportId = reportSnap.id;
+  if (canonicalReportId !== reportId) {
+    console.info("Share request resolved report via billNo fallback", { requestedReportId: reportId, canonicalReportId, billNo });
   }
   if (!bookingSnap || !bookingSnap.exists()) {
     throw new Error(`Cannot create a share link: linked booking ${bookingId} was not found.`);
@@ -149,7 +194,7 @@ async function createShare({ reportId, bookingId, billNo }) {
   const tokenHash = await hashTokenHex(rawToken);
 
   await setDoc(doc(db, SHARE_COLLECTION, tokenHash), {
-    reportId: String(reportId || ""),
+    reportId: String(canonicalReportId || ""),
     bookingId: String(bookingId || ""),
     billNo: String(billNo || ""),
     tokenHash,
@@ -172,8 +217,8 @@ async function createShare({ reportId, bookingId, billNo }) {
 
   await setDoc(doc(db, RESULTS_COLLECTION, tokenHash), sanitizeReportForShare(report));
 
-  cacheToken(reportId, tokenHash, rawToken);
-  return { shareId: tokenHash, rawToken, reused: false };
+  cacheToken(canonicalReportId, tokenHash, rawToken);
+  return { shareId: tokenHash, rawToken, reused: false, canonicalReportId };
 }
 
 /**
@@ -203,12 +248,26 @@ export async function syncSharePaymentHint(bookingId, { paymentStatus, balanceDu
  */
 export async function getOrCreateShareForReport({ reportId, bookingId, billNo }) {
   if (!reportId) throw new Error("reportId is required to create a share link.");
-  const existing = await findActiveShare(reportId);
+  // Resolve to the canonical report doc id *before* checking for an existing
+  // share - otherwise a caller passing a stale id (e.g. billNo when the
+  // report doc has since diverged from it) would never find the share
+  // filed under the canonical id and would create a fresh duplicate on
+  // every click. See resolveReportDoc() for why ids can diverge.
+  const reportSnap = await resolveReportDoc(reportId, billNo);
+  if (!reportSnap.exists()) {
+    throw new Error(
+      billNo
+        ? "Report could not be found in Firestore for the supplied report ID or bill number."
+        : "Cannot create a share link: report not found."
+    );
+  }
+  const canonicalReportId = reportSnap.id;
+  const existing = await findActiveShare(canonicalReportId);
   if (existing) {
-    const rawToken = cachedTokenFor(reportId, existing.id);
+    const rawToken = cachedTokenFor(canonicalReportId, existing.id);
     return { shareId: existing.id, rawToken, reused: true, share: existing.data() };
   }
-  return createShare({ reportId, bookingId, billNo });
+  return createShare({ reportId: canonicalReportId, bookingId, billNo });
 }
 
 export async function getShareStatus(reportId) {
