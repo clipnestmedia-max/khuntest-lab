@@ -1001,8 +1001,8 @@ window.shareReportRowAction = async function(action, rowKey) {
       showAdminToast("New secure report link created and copied.");
     }
   } catch (err) {
-    console.error(`Share action "${action}" failed`, err);
-    alert("Something went wrong with the secure link. Please try again.");
+    console.error(`Share action "${action}" failed`, { data, code: err.code, message: err.message });
+    alert(`Something went wrong with the secure link (${err.code || "error"}): ${err.message || "Please try again."}`);
   } finally {
     if (typeof window.renderReportsPanel === "function") window.renderReportsPanel();
     if (typeof renderFirebaseBookings === "function") renderFirebaseBookings();
@@ -2926,7 +2926,14 @@ window.renderReportsPanel = async function() {
     const bookingMatch = uniqueDisplayBookings("report-entry").find((booking) => String(reportBill(booking)) === String(r.billNo || r.id));
     const b = bookingMatch || r;
     const billNo = r.billNo || r.id;
-    const rowKey = registerReportShareRow({ billNo, bookingId: b?.id, patientName: r.patientName, phone: b.whatsapp || b.phone || b.contactNo });
+    // r.bookingId is the report document's own stored booking reference
+    // (set at release time - see reportPayload()) and is authoritative.
+    // bookingMatch?.id is only a fallback for older reports that predate
+    // that field; b?.id must NOT be used here once a report has already
+    // dropped out of the "report-entry" list (b then falls back to the
+    // report itself, whose .id is the billNo, not a real booking id).
+    const shareBookingId = r.bookingId || bookingMatch?.id || "";
+    const rowKey = registerReportShareRow({ billNo, bookingId: shareBookingId, patientName: r.patientName, phone: b.whatsapp || b.phone || b.contactNo });
     const paymentStatus = bookingMatch ? currentReportPaymentStatus(bookingMatch) : "Unknown";
     const shareStatus = await getShareStatus(billNo).catch(() => "unknown");
     const shareLabel = shareStatus === "active" ? "Active" : shareStatus === "revoked" ? "Revoked" : shareStatus === "unknown" ? "Unknown" : "Not Created";
@@ -4528,8 +4535,8 @@ window.sendCurrentReportWhatsApp = async function() {
     }
     window.open(result.url, "_blank");
   } catch (err) {
-    console.error("Failed to prepare WhatsApp share link", err);
-    alert("Could not create a secure share link. Please try again.");
+    console.error("Failed to prepare WhatsApp share link", { reportId, bookingId: currentReportBooking.id, code: err.code, message: err.message });
+    alert(`Could not create a secure share link (${err.code || "error"}): ${err.message || "Please try again."}`);
   } finally {
     updateReportActionState();
   }
@@ -4550,8 +4557,8 @@ window.copyCurrentReportShareLink = async function() {
     await navigator.clipboard.writeText(buildShareUrl(rawToken));
     showAdminToast("Secure report link copied.");
   } catch (err) {
-    console.error("Failed to copy share link", err);
-    alert("Could not copy the secure link.");
+    console.error("Failed to copy share link", { reportId, code: err.code, message: err.message });
+    alert(`Could not copy the secure link (${err.code || "error"}): ${err.message || ""}`);
   } finally {
     updateReportActionState();
   }
@@ -4565,8 +4572,8 @@ window.revokeCurrentReportShareLink = async function() {
     await revokeSharesForReport(reportId);
     showAdminToast("Secure report link revoked.");
   } catch (err) {
-    console.error("Failed to revoke share link", err);
-    alert("Could not revoke the secure link.");
+    console.error("Failed to revoke share link", { reportId, code: err.code, message: err.message });
+    alert(`Could not revoke the secure link (${err.code || "error"}): ${err.message || ""}`);
   } finally {
     updateReportActionState();
   }
@@ -4581,8 +4588,8 @@ window.regenerateCurrentReportShareLink = async function(silent) {
     await navigator.clipboard.writeText(buildShareUrl(rawToken)).catch(() => {});
     showAdminToast("New secure report link created and copied.");
   } catch (err) {
-    console.error("Failed to regenerate share link", err);
-    alert("Could not regenerate the secure link.");
+    console.error("Failed to regenerate share link", { reportId, code: err.code, message: err.message });
+    alert(`Could not regenerate the secure link (${err.code || "error"}): ${err.message || ""}`);
   } finally {
     updateReportActionState();
   }

@@ -121,16 +121,29 @@ async function findAnyShare(reportId) {
 
 async function createShare({ reportId, bookingId, billNo }) {
   if (!reportId) throw new Error("reportId is required to create a share link.");
+  if (!bookingId) {
+    // The shared-link payment check (firestore.rules reportShareBookingPaid)
+    // re-reads bookings/{bookingId} live on every access - without a real
+    // booking id it can never confirm payment, so the link would be stuck
+    // showing "payment pending" forever regardless of actual payment
+    // status. Fail loudly here instead of writing a share that can never
+    // work - see admin-dashboard.html's renderReportsPanel() for where a
+    // wrong/missing bookingId (e.g. billNo used as a stand-in) got fixed.
+    throw new Error(`Cannot create a share link: report ${billNo || reportId} has no linked booking id.`);
+  }
 
   const [reportSnap, bookingSnap] = await Promise.all([
     getDoc(doc(db, "reports", reportId)),
-    bookingId ? getDoc(doc(db, "bookings", bookingId)).catch(() => null) : Promise.resolve(null)
+    getDoc(doc(db, "bookings", bookingId)).catch(() => null)
   ]);
   if (!reportSnap.exists()) {
     throw new Error("Cannot create a share link: report not found.");
   }
+  if (!bookingSnap || !bookingSnap.exists()) {
+    throw new Error(`Cannot create a share link: linked booking ${bookingId} was not found.`);
+  }
   const report = reportSnap.data();
-  const booking = bookingSnap && bookingSnap.exists() ? bookingSnap.data() : {};
+  const booking = bookingSnap.data();
 
   const rawToken = generateSecureShareToken();
   const tokenHash = await hashTokenHex(rawToken);
