@@ -82,12 +82,23 @@ service cloud.firestore {
         && (share.get('expiresAt', null) == null || share.expiresAt > request.time);
     }
 
+    // "Paid" here must match how the rest of this app already decides it
+    // (see admin-dashboard.html currentReportPaymentStatus() / firebase-
+    // service.js): many bookings never get an explicit paymentStatus value
+    // written at all and are treated as paid purely because balanceDue hit
+    // 0 (e.g. cash settled without ever touching the status dropdown) - a
+    // rule that required the literal string "Paid" denied those bookings
+    // even though the admin UI itself already shows them as fully paid.
+    // Only an EXPLICIT non-paid status (Pending/Partial/Failed) overrides a
+    // zero balance and blocks access.
     function reportShareBookingPaid(tokenHash) {
       let share = get(/databases/$(database)/documents/reportShares/$(tokenHash)).data;
       let bookingId = share.get('bookingId', '');
       let booking = get(/databases/$(database)/documents/bookings/$(bookingId)).data;
+      let status = booking.get('paymentStatus', '');
       let balance = booking.get('balanceDue', booking.get('dueAmount', 0));
-      return booking.get('paymentStatus', '') == 'Paid' && balance <= 0;
+      let explicitlyUnpaid = status in ['Pending', 'pending', 'Partial', 'partial', 'Failed', 'failed'];
+      return !explicitlyUnpaid && balance <= 0;
     }
 
     match /users/{uid} {
