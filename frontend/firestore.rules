@@ -69,6 +69,27 @@ service cloud.firestore {
         || resource.data.reportReleased == true;
     }
 
+    // Shared WhatsApp report links: the reportShares/{tokenHash} document id
+    // IS the SHA-256 hash of the 256-bit random share token, so a client
+    // must already know the exact unguessable id to get() it - never a
+    // query - and `allow list` stays admin-only so the collection can't be
+    // enumerated. Same "unguessable id is the authorization" pattern
+    // billAccess/{token} already uses below, extended with an explicit
+    // enabled/revoked/expiry check plus a live payment re-check.
+    function shareIsActive(share) {
+      return share.get('enabled', false) == true
+        && share.get('revoked', false) != true
+        && (share.get('expiresAt', null) == null || share.expiresAt > request.time);
+    }
+
+    function reportShareBookingPaid(tokenHash) {
+      let share = get(/databases/$(database)/documents/reportShares/$(tokenHash)).data;
+      let bookingId = share.get('bookingId', '');
+      let booking = get(/databases/$(database)/documents/bookings/$(bookingId)).data;
+      let balance = booking.get('balanceDue', booking.get('dueAmount', 0));
+      return booking.get('paymentStatus', '') == 'Paid' && balance <= 0;
+    }
+
     match /users/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
@@ -124,14 +145,25 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Secure WhatsApp report-share tokens. The public report page never reads
-    // this collection directly - only the getSharedReport Cloud Function
-    // (Admin SDK, bypasses these rules) resolves a token to a report. Admins
-    // manage share records from the authenticated dashboard; nobody else may
-    // read or write here, so a token's existence/validity can't be probed
-    // by querying Firestore directly.
-    match /reportShares/{shareId} {
-      allow read, write: if isAdmin();
+    // Metadata only (no medical content) - readable by anyone who already
+    // has the exact tokenHash (unguessable, 256 bits) so the client can
+    // show an accurate invalid/revoked/expired message. `allow list` stays
+    // admin-only so the collection itself can never be enumerated.
+    match /reportShares/{tokenHash} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Denormalized, sanitized report content for an active share - kept in
+    // a separate collection (same tokenHash id) so a client can be told
+    // "payment pending" vs "invalid link" without ever touching medical
+    // results until payment is confirmed.
+    match /reportShareResults/{tokenHash} {
+      allow get: if shareIsActive(get(/databases/$(database)/documents/reportShares/$(tokenHash)).data)
+        && reportShareBookingPaid(tokenHash);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     // Access log written by the Cloud Function via the Admin SDK (bypasses

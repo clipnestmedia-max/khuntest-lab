@@ -2,9 +2,17 @@
 // tokens and builds the WhatsApp message. Used from admin-dashboard.html.
 //
 // Security model: the raw token is never written to Firestore (only its
-// SHA-256 hash, which also doubles as the reportShares document ID so the
-// public getSharedReport Cloud Function can look it up with a single get()
-// and no query). Because the raw token can't be recovered from Firestore,
+// SHA-256 hash, which also doubles as the reportShares document ID, so a
+// client must already know the exact unguessable id to get() it - no query,
+// no enumeration - see frontend/firestore.rules). The sanitized report
+// content lives in a second collection (reportShareResults, same id) whose
+// rule re-checks the linked booking's payment status live on every read, so
+// a link starts working the moment admin marks payment Paid with no new
+// token needed. There is no Cloud Function in this flow (this project's GCP
+// APIs for Cloud Functions/Cloud Build aren't enabled yet) - everything here
+// talks to Firestore directly, gated entirely by firestore.rules.
+//
+// Because the raw token can't be recovered from Firestore once written,
 // this module caches it in this admin browser's localStorage purely as a
 // UX convenience for repeat "Copy Link"/"Share on WhatsApp" clicks. If that
 // cache is gone (different device, cleared storage), the caller should fall
@@ -14,6 +22,7 @@ import { auth, db } from "../firebase-config.js";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   limit,
   query,
@@ -22,10 +31,40 @@ import {
   updateDoc,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { hashTokenHex } from "./shared-report-logic.js";
 
 const SHARE_COLLECTION = "reportShares";
+const RESULTS_COLLECTION = "reportShareResults";
 const TOKEN_BYTES = 32; // 256 bits of randomness, well above the 128-bit minimum
 const CACHE_KEY = "khuntest_share_token_cache_v1";
+
+// Mirrors functions/lib/sanitize.js's allowlist - only what report.html
+// needs to render, never Firebase UIDs, internal ids, or contact info.
+const SHARE_REPORT_FIELDS = [
+  "billNo", "patientName", "age", "gender", "refBy", "doctor",
+  "collectionDate", "registeredDate", "reportingDate", "reportStatus", "status",
+  "tests", "selectedTests", "reportItems", "results", "reportResults",
+  "esrFirstHour", "esrSecondHour"
+];
+const SHARE_DATE_FIELDS = ["collectionDate", "registeredDate", "reportingDate", "releasedAt", "createdAt"];
+
+function toIsoOrValue(value) {
+  if (value && typeof value.toDate === "function") return value.toDate().toISOString();
+  return value ?? "";
+}
+
+function sanitizeReportForShare(report) {
+  const sanitized = {};
+  SHARE_REPORT_FIELDS.forEach((field) => {
+    if (report[field] !== undefined) sanitized[field] = report[field];
+  });
+  SHARE_DATE_FIELDS.forEach((field) => {
+    if (sanitized[field] !== undefined) sanitized[field] = toIsoOrValue(sanitized[field]);
+  });
+  if (report.releasedAt !== undefined) sanitized.releasedAt = toIsoOrValue(report.releasedAt);
+  if (report.createdAt !== undefined) sanitized.createdAt = toIsoOrValue(report.createdAt);
+  return sanitized;
+}
 
 export function generateSecureShareToken() {
   const bytes = new Uint8Array(TOKEN_BYTES);
@@ -33,11 +72,7 @@ export function generateSecureShareToken() {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function hashTokenHex(rawToken) {
-  const data = new TextEncoder().encode(rawToken);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-}
+export { hashTokenHex };
 
 function readCache() {
   try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}"); } catch (_err) { return {}; }
@@ -85,8 +120,21 @@ async function findAnyShare(reportId) {
 }
 
 async function createShare({ reportId, bookingId, billNo }) {
+  if (!reportId) throw new Error("reportId is required to create a share link.");
+
+  const [reportSnap, bookingSnap] = await Promise.all([
+    getDoc(doc(db, "reports", reportId)),
+    bookingId ? getDoc(doc(db, "bookings", bookingId)).catch(() => null) : Promise.resolve(null)
+  ]);
+  if (!reportSnap.exists()) {
+    throw new Error("Cannot create a share link: report not found.");
+  }
+  const report = reportSnap.data();
+  const booking = bookingSnap && bookingSnap.exists() ? bookingSnap.data() : {};
+
   const rawToken = generateSecureShareToken();
   const tokenHash = await hashTokenHex(rawToken);
+
   await setDoc(doc(db, SHARE_COLLECTION, tokenHash), {
     reportId: String(reportId || ""),
     bookingId: String(bookingId || ""),
@@ -98,10 +146,40 @@ async function createShare({ reportId, bookingId, billNo }) {
     createdAt: serverTimestamp(),
     createdBy: auth.currentUser?.uid || "",
     lastAccessedAt: null,
-    accessCount: 0
+    accessCount: 0,
+    // Denormalized display-only copy of payment state, kept in sync by
+    // syncSharePaymentHint() whenever admin edits the booking - the actual
+    // access decision is re-checked live against the booking by
+    // firestore.rules on every read, this is only for the payment-pending
+    // card's "Balance Due" line so it doesn't need a live read of its own
+    // (which an anonymous visitor isn't allowed anyway).
+    paymentStatusHint: booking.paymentStatus || "",
+    balanceDueHint: Number(booking.balanceDue ?? booking.dueAmount ?? 0)
   });
+
+  await setDoc(doc(db, RESULTS_COLLECTION, tokenHash), sanitizeReportForShare(report));
+
   cacheToken(reportId, tokenHash, rawToken);
   return { shareId: tokenHash, rawToken, reused: false };
+}
+
+/**
+ * Call after any write that changes a booking's payment fields, so already-
+ * issued share links reflect the new balance without needing a live read
+ * (anonymous shared-link visitors can't read bookings/{bookingId} directly).
+ * Safe to call for bookings that have no share yet - it's then a no-op.
+ */
+export async function syncSharePaymentHint(bookingId, { paymentStatus, balanceDue, dueAmount } = {}) {
+  if (!bookingId) return;
+  const q = query(collection(db, SHARE_COLLECTION), where("bookingId", "==", String(bookingId)), where("enabled", "==", true), limit(10));
+  const snap = await getDocs(q).catch((err) => {
+    console.warn("Failed to look up shares for payment hint sync", err);
+    return { docs: [] };
+  });
+  await Promise.all(snap.docs.map((d) => updateDoc(doc(db, SHARE_COLLECTION, d.id), {
+    paymentStatusHint: paymentStatus || "",
+    balanceDueHint: Number(balanceDue ?? dueAmount ?? 0)
+  }).catch((err) => console.warn("Failed to sync share payment hint", d.id, err))));
 }
 
 /**

@@ -1,40 +1,90 @@
 // Public, unauthenticated report-sharing client used by report.html when a
-// `?share=<token>` link is opened. This module never touches Firebase Auth
-// or Firestore directly - it only talks to the trusted getSharedReport
-// Cloud Function (via the same-origin /api/shared-report/:token Hosting
-// rewrite), which is what actually enforces release + payment gating.
-const SHARED_REPORT_ENDPOINT = "/api/shared-report/";
+// `?share=<token>` link is opened.
+//
+// This talks to Firestore directly (no Cloud Function - this project's GCP
+// APIs for Cloud Functions/Cloud Build aren't enabled yet, see functions/
+// for the dormant server-side version to migrate back to later). Security
+// is enforced entirely by frontend/firestore.rules:
+//   - reportShares/{tokenHash}: metadata only, world-readable by exact id
+//     (the id IS the SHA-256 hash of a 256-bit token - unguessable, and
+//     `list` stays admin-only so it can't be enumerated).
+//   - reportShareResults/{tokenHash}: the actual sanitized report content,
+//     readable only while the share is active AND the linked booking's
+//     payment status is live-checked as Paid - so this module never even
+//     receives medical results before payment clears, let alone displays
+//     them. This deliberately never touches Firebase Auth.
+import { db } from "../firebase-config.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { isValidTokenFormat, hashTokenHex, shareState, MESSAGES } from "./shared-report-logic.js";
 
-const REQUEST_TIMEOUT_MS = 15000;
+const SHARE_COLLECTION = "reportShares";
+const RESULTS_COLLECTION = "reportShareResults";
 
-export async function fetchSharedReport(token) {
-  const url = SHARED_REPORT_ENDPOINT + encodeURIComponent(token);
-  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-  const timer = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
+export async function fetchSharedReport(rawToken) {
+  // Never log the raw token itself (it's the secret) - length/prefix only.
+  console.log("[shared-report] lookup start", { tokenLength: rawToken ? rawToken.length : 0 });
+
+  if (!isValidTokenFormat(rawToken)) {
+    console.warn("[shared-report] token failed format validation");
+    return { success: false, state: "invalid_link", message: MESSAGES.invalid_link };
+  }
+
+  let tokenHash;
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-      signal: controller?.signal
-    });
-    let body = null;
-    try { body = await response.json(); } catch (_err) { body = null; }
-    if (!body) {
-      return { success: false, state: "error", message: "Unable to load report right now. Please try again shortly." };
-    }
-    return body;
+    tokenHash = await hashTokenHex(rawToken.trim());
   } catch (err) {
-    const timedOut = err?.name === "AbortError";
-    console.error("[shared-report] network error fetching share token", timedOut ? "request timed out" : err.message);
+    console.error("[shared-report] failed to hash token", err.message);
+    return { success: false, state: "error", message: "Report could not be loaded. Please try again." };
+  }
+  console.log("[shared-report] tokenHash computed, querying reportShares", { path: `${SHARE_COLLECTION}/${tokenHash}` });
+
+  let shareSnap;
+  try {
+    shareSnap = await getDoc(doc(db, SHARE_COLLECTION, tokenHash));
+  } catch (err) {
+    console.error("[shared-report] permission/error reading reportShares", { code: err.code, message: err.message });
+    return { success: false, state: "error", message: "Report could not be loaded. Please try again." };
+  }
+
+  console.log("[shared-report] reportShares document exists:", shareSnap.exists());
+  if (!shareSnap.exists()) {
+    return { success: false, state: "invalid_link", message: MESSAGES.invalid_link };
+  }
+
+  const share = shareSnap.data();
+  const state = shareState(share);
+  console.log("[shared-report] share state:", state);
+  if (state !== "active") {
+    return { success: false, state, message: MESSAGES[state], billNo: share.billNo || "" };
+  }
+
+  console.log("[shared-report] share active, querying reportShareResults", { path: `${RESULTS_COLLECTION}/${tokenHash}` });
+  let resultsSnap;
+  try {
+    resultsSnap = await getDoc(doc(db, RESULTS_COLLECTION, tokenHash));
+  } catch (err) {
+    // firestore.rules denies this read unless the linked booking's payment
+    // is live-confirmed as Paid - a permission-denied here, given the share
+    // itself is already confirmed active above, means payment is pending.
+    console.log("[shared-report] reportShareResults denied (payment not cleared):", err.code);
     return {
       success: false,
-      state: "error",
-      message: timedOut ? "The request took too long. Please try again." : "Could not reach the server. Check your connection and try again."
+      state: "payment_pending",
+      message: MESSAGES.payment_pending,
+      billNo: share.billNo || "",
+      payment: { status: (share.paymentStatusHint || "pending").toLowerCase(), balanceDue: Number(share.balanceDueHint || 0) }
     };
-  } finally {
-    if (timer) clearTimeout(timer);
   }
+
+  console.log("[shared-report] reportShareResults document exists:", resultsSnap.exists());
+  if (!resultsSnap.exists()) {
+    // Payment is cleared (the read succeeded) but the content doc is
+    // missing - shouldn't happen since both docs are written together, but
+    // fail toward "contact the lab" rather than a silent blank report.
+    return { success: false, state: "error", message: "Report could not be loaded. Please try again." };
+  }
+
+  return { success: true, state: "available", report: resultsSnap.data() };
 }
 
 export const PAYMENT_PENDING_COPY = {

@@ -434,7 +434,8 @@ import {
   revokeSharesForReport,
   regenerateShareForReport,
   getOrCreateShareForReport,
-  buildShareUrl
+  buildShareUrl,
+  syncSharePaymentHint
 } from "./js/whatsapp-report-share.js";
 
 console.log("Admin dashboard loading...");
@@ -2466,7 +2467,13 @@ async function saveBookingEdit(event, kind, id, previousTestCount) {
   }
   await setDoc(doc(db, collectionName, id), patch, { merge: true });
   await syncPatientMetadata({ ...before, ...patch, id }, patch);
-  if (collectionName === "bookings") await syncReportMetadata({ ...before, ...patch, id }, patch);
+  if (collectionName === "bookings") {
+    await syncReportMetadata({ ...before, ...patch, id }, patch);
+    // Keep any already-issued WhatsApp share link's displayed balance in
+    // sync - the actual access decision is re-checked live by
+    // firestore.rules, this only updates the payment-pending card's copy.
+    await syncSharePaymentHint(id, patch).catch((err) => console.warn("Failed to sync share payment hint", err));
+  }
   await addDoc(collection(db, "bookingAuditTrail"), {
     bookingCollection: collectionName,
     bookingId: id,
