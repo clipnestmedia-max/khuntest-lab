@@ -91,14 +91,24 @@ service cloud.firestore {
     // even though the admin UI itself already shows them as fully paid.
     // Only an EXPLICIT non-paid status (Pending/Partial/Failed) overrides a
     // zero balance and blocks access.
+    //
+    // Symmetrically, an EXPLICIT "Paid" status must override a stale
+    // nonzero balanceDue: saveBookingEdit() writes paymentStatus from the
+    // admin's dropdown without also zeroing balanceDue/dueAmount, and
+    // currentReportPaymentStatus() already trusts paymentStatus alone when
+    // it's set (balance is only its fallback for an unset status) - so
+    // this rule must use that same precedence, or a booking the admin UI
+    // already displays as "Paid" can stay permanently stuck on
+    // payment_pending for the patient's link.
     function reportShareBookingPaid(tokenHash) {
       let share = get(/databases/$(database)/documents/reportShares/$(tokenHash)).data;
       let bookingId = share.get('bookingId', '');
       let booking = get(/databases/$(database)/documents/bookings/$(bookingId)).data;
       let status = booking.get('paymentStatus', '');
       let balance = booking.get('balanceDue', booking.get('dueAmount', 0));
+      let explicitlyPaid = status in ['Paid', 'paid', 'Completed', 'completed'];
       let explicitlyUnpaid = status in ['Pending', 'pending', 'Partial', 'partial', 'Failed', 'failed'];
-      return !explicitlyUnpaid && balance <= 0;
+      return explicitlyPaid || (!explicitlyUnpaid && balance <= 0);
     }
 
     match /users/{uid} {
