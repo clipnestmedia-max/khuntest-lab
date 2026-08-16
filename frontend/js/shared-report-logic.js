@@ -38,9 +38,17 @@ export function shareState(share, now = Date.now()) {
 // decision is always re-checked live by that rule, this hint can go stale
 // (e.g. a Final report reverted to Draft after being shared) without ever
 // granting access it shouldn't.
-export function isReleasedStatusHint(statusHint) {
+//
+// Returns true only when the share doc has a *recorded* hint that
+// positively says the report isn't released yet. Shares created before
+// reportStatusHint existed (or any other reason the field is missing) have
+// no hint at all - treat that as "unknown", not "not released", and let
+// the live reportShareResults read decide, otherwise every pre-existing
+// share link would wrongly show "Report Not Ready".
+export function isExplicitlyNotReleasedHint(statusHint) {
   const status = String(statusHint || "").trim().toLowerCase();
-  return ["released", "final", "completed"].includes(status);
+  if (!status) return false;
+  return !["released", "final", "completed"].includes(status);
 }
 
 export const MESSAGES = {

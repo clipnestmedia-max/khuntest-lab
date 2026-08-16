@@ -15,7 +15,7 @@
 //     them. This deliberately never touches Firebase Auth.
 import { db } from "../firebase-config.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { isValidTokenFormat, hashTokenHex, shareState, isReleasedStatusHint, MESSAGES } from "./shared-report-logic.js";
+import { isValidTokenFormat, hashTokenHex, shareState, isExplicitlyNotReleasedHint, MESSAGES } from "./shared-report-logic.js";
 
 const SHARE_COLLECTION = "reportShares";
 const RESULTS_COLLECTION = "reportShareResults";
@@ -64,7 +64,7 @@ export async function fetchSharedReport(rawToken) {
   // denial - check the creation-time hint first so the common case (a
   // report shared before it was actually Final) shows "still under
   // review" instead of misleadingly asking the patient to pay.
-  if (!isReleasedStatusHint(share.reportStatusHint)) {
+  if (isExplicitlyNotReleasedHint(share.reportStatusHint)) {
     console.log("[shared-report] report not released per hint:", share.reportStatusHint);
     return { success: false, state: "not_released", message: MESSAGES.not_released, billNo: share.billNo || "" };
   }

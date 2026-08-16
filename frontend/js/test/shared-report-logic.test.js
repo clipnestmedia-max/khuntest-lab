@@ -61,12 +61,12 @@ test("shareState: Firestore Timestamp-shaped expiresAt (toMillis) is handled", a
   assert.equal(shareState({ enabled: true, revoked: false, expiresAt: pastTimestamp }, now), "expired");
 });
 
-test("isReleasedStatusHint accepts Final/Released/Completed in any case, rejects Draft/empty", async () => {
-  const { isReleasedStatusHint } = await loadLogic();
-  assert.equal(isReleasedStatusHint("Final"), true);
-  assert.equal(isReleasedStatusHint("released"), true);
-  assert.equal(isReleasedStatusHint("Completed"), true);
-  assert.equal(isReleasedStatusHint("Draft"), false);
-  assert.equal(isReleasedStatusHint(""), false);
-  assert.equal(isReleasedStatusHint(undefined), false);
+test("isExplicitlyNotReleasedHint flags Draft, accepts Final/Released/Completed, treats missing hint as unknown", async () => {
+  const { isExplicitlyNotReleasedHint } = await loadLogic();
+  assert.equal(isExplicitlyNotReleasedHint("Draft"), true);
+  assert.equal(isExplicitlyNotReleasedHint("Final"), false);
+  assert.equal(isExplicitlyNotReleasedHint("released"), false);
+  assert.equal(isExplicitlyNotReleasedHint("Completed"), false);
+  assert.equal(isExplicitlyNotReleasedHint(""), false);
+  assert.equal(isExplicitlyNotReleasedHint(undefined), false);
 });
