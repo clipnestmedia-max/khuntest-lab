@@ -27,17 +27,27 @@ function isReportPaymentCleared({ booking, report }) {
     ""
   ).trim().toLowerCase();
 
+  // An explicit Paid/Completed status (or isPaid flag) must unlock the
+  // report on its own, even if balanceDue/dueAmount is stale - mirrors
+  // firestore.rules' reportShareBookingPaid(), which is what's actually
+  // live in production (see functions/README.md). Admin's saveBookingEdit()
+  // writes paymentStatus from a dropdown without always re-zeroing balance,
+  // so requiring both would leave an already-"Paid" report stuck showing
+  // Payment Pending.
+  const explicitlyPaid = (
+    booking?.isPaid === true ||
+    report?.isPaid === true ||
+    status === "paid" ||
+    status === "completed" ||
+    status === "payment completed"
+  );
+  if (explicitlyPaid) return true;
+
   const balanceRaw = booking?.balanceDue ?? booking?.dueAmount ?? report?.balanceDue ?? report?.dueAmount ?? 0;
   const balance = Number(balanceRaw);
+  const explicitlyUnpaid = ["pending", "partial", "failed"].includes(status);
 
-  const statusSaysPaid = (
-    status === "paid" ||
-    status === "payment completed" ||
-    booking?.isPaid === true ||
-    report?.isPaid === true
-  );
-
-  return statusSaysPaid && (!Number.isFinite(balance) || balance <= 0);
+  return !explicitlyUnpaid && Number.isFinite(balance) && balance <= 0;
 }
 
 function paymentSummary({ booking, report }) {

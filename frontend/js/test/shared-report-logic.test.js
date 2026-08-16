@@ -60,3 +60,13 @@ test("shareState: Firestore Timestamp-shaped expiresAt (toMillis) is handled", a
   const pastTimestamp = { toMillis: () => now - 5000 };
   assert.equal(shareState({ enabled: true, revoked: false, expiresAt: pastTimestamp }, now), "expired");
 });
+
+test("isReleasedStatusHint accepts Final/Released/Completed in any case, rejects Draft/empty", async () => {
+  const { isReleasedStatusHint } = await loadLogic();
+  assert.equal(isReleasedStatusHint("Final"), true);
+  assert.equal(isReleasedStatusHint("released"), true);
+  assert.equal(isReleasedStatusHint("Completed"), true);
+  assert.equal(isReleasedStatusHint("Draft"), false);
+  assert.equal(isReleasedStatusHint(""), false);
+  assert.equal(isReleasedStatusHint(undefined), false);
+});

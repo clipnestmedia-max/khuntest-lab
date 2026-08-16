@@ -33,9 +33,20 @@ export function shareState(share, now = Date.now()) {
   return "active";
 }
 
+// Mirrors firestore.rules' reportShareReportReleased() - only used here to
+// pick the right pending-state message client-side; the actual access
+// decision is always re-checked live by that rule, this hint can go stale
+// (e.g. a Final report reverted to Draft after being shared) without ever
+// granting access it shouldn't.
+export function isReleasedStatusHint(statusHint) {
+  const status = String(statusHint || "").trim().toLowerCase();
+  return ["released", "final", "completed"].includes(status);
+}
+
 export const MESSAGES = {
   invalid_link: "This report link is invalid.",
   revoked: "This report link is no longer active.",
   expired: "This report link has expired. Please contact KhunTest Lab.",
+  not_released: "Your report is still under review.",
   payment_pending: "Your payment is pending. Please clear your payment to view and download the report."
 };

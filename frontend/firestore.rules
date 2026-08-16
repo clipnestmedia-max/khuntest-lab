@@ -111,6 +111,21 @@ service cloud.firestore {
       return explicitlyPaid || (!explicitlyUnpaid && balance <= 0);
     }
 
+    // Live re-check that the report backing a share is still Final/Released
+    // - the admin UI only offers "Share on WhatsApp" for Final reports (see
+    // isFinalReport() in admin-dashboard.html), but that's a UI-side gate
+    // only. Without this, a share created for/reverted to a Draft report
+    // would still hand back its sanitized reportShareResults copy the
+    // moment payment shows Paid, unlike a genuine Firestore reports/{id}
+    // read (which reportIsReleased() above already guards).
+    function reportShareReportReleased(tokenHash) {
+      let share = get(/databases/$(database)/documents/reportShares/$(tokenHash)).data;
+      let reportId = share.get('reportId', '');
+      let report = get(/databases/$(database)/documents/reports/$(reportId)).data;
+      let status = report.get('reportStatus', report.get('status', ''));
+      return status in ['released', 'Released', 'final', 'Final', 'completed', 'Completed'];
+    }
+
     match /users/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if isAdmin();
@@ -182,6 +197,7 @@ service cloud.firestore {
     // results until payment is confirmed.
     match /reportShareResults/{tokenHash} {
       allow get: if shareIsActive(get(/databases/$(database)/documents/reportShares/$(tokenHash)).data)
+        && reportShareReportReleased(tokenHash)
         && reportShareBookingPaid(tokenHash);
       allow list: if isAdmin();
       allow create, update, delete: if isAdmin();

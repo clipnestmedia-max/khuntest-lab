@@ -774,6 +774,20 @@
       color: #062b59;
     }
 
+    .loading-spinner {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 14px;
+      border: 3.5px solid #cbd5e1;
+      border-top-color: #062b59;
+      border-radius: 50%;
+      animation: loading-spin 0.8s linear infinite;
+    }
+
+    @keyframes loading-spin {
+      to { transform: rotate(360deg); }
+    }
+
     .error-box {
       color: #991b1b;
     }
@@ -853,6 +867,198 @@
     @media (max-width: 900px) {
       .report-page {
         margin: 12px;
+      }
+    }
+
+    /* Mobile screen layout only - scoped to `screen` (never `print`) so it
+       can never affect the A4 print/PDF output below, which stays on the
+       original fixed-mm absolute layout regardless of the device's screen
+       width. The desktop/print DOM and render functions are unchanged -
+       this just reflows the same markup into a single readable column
+       instead of a shrunk 210mm page, and drops shapes that only make
+       sense at full A4 scale (skewed corner accents, watermark, fake
+       barcode/QR) since they carry no data. */
+    @media screen and (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+      }
+
+      .report-preview-wrap {
+        overflow-x: hidden;
+        padding: 0 0 20px;
+      }
+
+      .report-page {
+        width: 100%;
+        height: auto;
+        margin: 0 0 14px;
+        padding: 14px 12px 20px;
+        border-radius: 14px;
+        box-sizing: border-box;
+        overflow: visible;
+      }
+
+      .top-red-strip,
+      .header-white-mask,
+      .header-slashes,
+      .header-corner-lines,
+      .report-watermark,
+      .footer-navy,
+      .footer-white-cuts,
+      .footer-red-slashes,
+      .footer-note-icon,
+      .barcode,
+      .qr {
+        display: none !important;
+      }
+
+      .lab-letterhead {
+        position: static;
+        height: auto;
+        padding-bottom: 8px;
+        border-bottom: 1.5px solid #061f4f;
+      }
+
+      .brand-block {
+        position: static;
+        height: auto;
+        gap: 10px;
+      }
+
+      .brand-mark,
+      .brand-mark img {
+        width: 44px;
+        height: 44px;
+      }
+
+      .brand-title {
+        font-size: 22px;
+        letter-spacing: .3px;
+      }
+
+      .brand-lab {
+        margin-top: 3px;
+        gap: 4px;
+        font-size: 11px;
+        letter-spacing: 2px;
+      }
+
+      .brand-lab::before,
+      .brand-lab::after {
+        width: 8px;
+      }
+
+      .tagline {
+        margin-top: 3px;
+        text-align: left;
+        font-size: 8px;
+      }
+
+      .contact-panel {
+        position: static;
+        width: 100%;
+        height: auto;
+        margin-top: 8px;
+        padding: 8px 10px;
+        clip-path: none;
+        border-radius: 8px;
+        font-size: 11px;
+        box-sizing: border-box;
+      }
+
+      .contact-line {
+        grid-template-columns: 14px 1fr;
+        white-space: normal;
+      }
+
+      .report-content {
+        position: static;
+        inset: auto;
+        margin-top: 12px;
+      }
+
+      .patient-header {
+        grid-template-columns: 1fr;
+        row-gap: 6px;
+        padding: 8px 0;
+        font-size: 12px;
+      }
+
+      .patient-name-value {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        font-size: 13px !important;
+      }
+
+      .result-table,
+      .lft-table {
+        font-size: 12px;
+      }
+
+      .result-table th,
+      .lft-table th {
+        font-size: 12px;
+        padding: 6px 4px;
+      }
+
+      .result-table td,
+      .lft-table td {
+        padding: 6px 4px;
+      }
+
+      .range-col,
+      .lft-range-col {
+        white-space: normal;
+      }
+
+      .signature-area {
+        position: static;
+        margin-top: 22px;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 16px;
+      }
+
+      .signature {
+        width: 44%;
+        font-size: 11px;
+      }
+
+      .report-footer {
+        position: static;
+        height: auto;
+        margin-top: 18px;
+      }
+
+      .footer-note {
+        position: static;
+        padding-left: 0;
+        font-size: 10.5px;
+      }
+
+      .footer-strip {
+        position: static;
+        margin-top: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 11px;
+      }
+
+      #topActionBar {
+        gap: 8px;
+        padding: 10px;
+      }
+
+      #topActionBar button {
+        min-height: 44px;
+        flex: 1 1 auto;
+        font-size: 13px;
+      }
+
+      #printReportBtn {
+        display: none;
       }
     }
 
@@ -1788,14 +1994,27 @@
       `;
     }
 
+    // Shared links are opened over unpredictable mobile/WhatsApp in-app
+    // browser networks - fetchSharedReport()'s Firestore reads have no
+    // built-in timeout, so a slow/dropped connection would otherwise leave
+    // the visitor stuck on "Loading..." forever instead of getting a Try
+    // Again option (spec section 14).
+    const SHARED_LOAD_TIMEOUT_MS = 15000;
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise((resolve) => setTimeout(() => resolve({ success: false, state: "error", message: "This is taking longer than expected. Please check your connection and try again." }), ms))
+      ]);
+    }
+
     async function loadSharedReport(token) {
       console.log("[report] shared-mode load, token length:", token.length);
       hideSharedModeChrome();
       const app = document.getElementById("app");
       app.className = "loading";
-      app.textContent = "Loading report...";
+      app.innerHTML = `<div class="loading-spinner" aria-hidden="true"></div>Loading your report&hellip;`;
 
-      const result = await fetchSharedReport(token);
+      const result = await withTimeout(fetchSharedReport(token), SHARED_LOAD_TIMEOUT_MS);
       console.log("[report] shared-mode result state:", result.state);
 
       if (result.success && result.state === "available" && result.report) {

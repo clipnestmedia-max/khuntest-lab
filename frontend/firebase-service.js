@@ -227,7 +227,10 @@ function toDate(value) {
 
 function normalizeDoc(snap) {
   const data = snap.data() || {};
-  return { id: snap.id, ...data };
+  // The real Firestore document id must always win over any stray `id`
+  // field a document's own data happens to contain (e.g. legacy imports
+  // that stored billNo under `id`) - spread first, set id last.
+  return { ...data, id: snap.id };
 }
 
 function waitForAuthUser() {

@@ -190,6 +190,15 @@ async function createShare({ reportId, bookingId, billNo }) {
   const report = reportSnap.data();
   const booking = bookingSnap.data();
 
+  // The Reports panel already only offers "Share on WhatsApp" for Final
+  // reports (see isFinalReport() in admin-dashboard.html), but that's a
+  // UI-side gate only - enforce it here too so a share can never be created
+  // for a Draft report even via a direct console call.
+  const reportStatus = String(report.reportStatus || report.status || "").trim().toLowerCase();
+  if (!["released", "final", "completed"].includes(reportStatus)) {
+    throw new Error(`Cannot create a share link: report ${billNo || canonicalReportId} is not Final/Released yet.`);
+  }
+
   const rawToken = generateSecureShareToken();
   const tokenHash = await hashTokenHex(rawToken);
 
@@ -205,14 +214,16 @@ async function createShare({ reportId, bookingId, billNo }) {
     createdBy: auth.currentUser?.uid || "",
     lastAccessedAt: null,
     accessCount: 0,
-    // Denormalized display-only copy of payment state, kept in sync by
+    // Denormalized display-only copies, kept in sync for payment by
     // syncSharePaymentHint() whenever admin edits the booking - the actual
-    // access decision is re-checked live against the booking by
-    // firestore.rules on every read, this is only for the payment-pending
-    // card's "Balance Due" line so it doesn't need a live read of its own
-    // (which an anonymous visitor isn't allowed anyway).
+    // access decision is re-checked live against the booking/report by
+    // firestore.rules on every read (reportShareBookingPaid() /
+    // reportShareReportReleased()); these hints only let the client show
+    // the right pending-state message without a live read of its own
+    // (which an anonymous visitor isn't allowed to make directly).
     paymentStatusHint: booking.paymentStatus || "",
-    balanceDueHint: Number(booking.balanceDue ?? booking.dueAmount ?? 0)
+    balanceDueHint: Number(booking.balanceDue ?? booking.dueAmount ?? 0),
+    reportStatusHint: report.reportStatus || report.status || ""
   });
 
   await setDoc(doc(db, RESULTS_COLLECTION, tokenHash), sanitizeReportForShare(report));

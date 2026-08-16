@@ -1212,7 +1212,11 @@ async function loadBookings() {
 
 async function getReports() {
   const snap = await readCollection("reports");
-  const rows = snap.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() || {}) }));
+  // The real Firestore document id must always win over any stray `id`
+  // field stored inside the report data itself - spread first, then set
+  // id/reportId last, or "Share on WhatsApp" can silently point at the
+  // wrong report (see js/whatsapp-report-share.js resolveReportDoc()).
+  const rows = snap.docs.map((docSnap) => ({ ...(docSnap.data() || {}), id: docSnap.id, reportId: docSnap.id }));
   allReports = rows;
   firebaseReports = rows;
   return rows;
@@ -1577,7 +1581,7 @@ async function findLatestReportForBill(billNo) {
   if (!bill) return null;
   const snapshot = await getDocs(query(collection(db, "reports"), where("billNo", "==", bill)));
   if (snapshot.empty) return null;
-  const reports = snapshot.docs.map((item) => ({ id: item.id, ...(item.data() || {}) }));
+  const reports = snapshot.docs.map((item) => ({ ...(item.data() || {}), id: item.id, reportId: item.id }));
   reports.sort((a, b) => {
     const aTime = a.updatedAt?.toMillis?.() || a.releasedAt?.toMillis?.() || 0;
     const bTime = b.updatedAt?.toMillis?.() || b.releasedAt?.toMillis?.() || 0;

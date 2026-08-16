@@ -125,6 +125,19 @@ test("TEST F - draft report stays blocked even when paid", async () => {
   assert.equal(result.body.report, undefined);
 });
 
+test("explicit Paid status unlocks the report even with a stale nonzero balanceDue", async () => {
+  const hash = hashToken(VALID_TOKEN);
+  const deps = makeDeps({
+    shares: { [hash]: { id: hash, reportId: "rpt-7", bookingId: "bk-7", enabled: true, revoked: false } },
+    reports: { "rpt-7": { billNo: "7", status: "Final", results: [{ testName: "X" }] } },
+    // Admin marked the booking Paid but an old balanceDue was never re-zeroed.
+    bookings: { "bk-7": { paymentStatus: "Paid", balanceDue: 500 } }
+  });
+
+  const result = await handleSharedReportLookup(VALID_TOKEN, deps);
+  assert.equal(result.body.state, "available");
+});
+
 test("TEST E - revoked token blocks access", async () => {
   const hash = hashToken(VALID_TOKEN);
   const deps = makeDeps({

@@ -15,7 +15,7 @@
 //     them. This deliberately never touches Firebase Auth.
 import { db } from "../firebase-config.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { isValidTokenFormat, hashTokenHex, shareState, MESSAGES } from "./shared-report-logic.js";
+import { isValidTokenFormat, hashTokenHex, shareState, isReleasedStatusHint, MESSAGES } from "./shared-report-logic.js";
 
 const SHARE_COLLECTION = "reportShares";
 const RESULTS_COLLECTION = "reportShareResults";
@@ -58,14 +58,27 @@ export async function fetchSharedReport(rawToken) {
     return { success: false, state, message: MESSAGES[state], billNo: share.billNo || "" };
   }
 
+  // reportShareReportReleased() (firestore.rules) always re-checks the
+  // live report status before allowing the read below, but a
+  // permission-denied from that rule reads identically to a payment
+  // denial - check the creation-time hint first so the common case (a
+  // report shared before it was actually Final) shows "still under
+  // review" instead of misleadingly asking the patient to pay.
+  if (!isReleasedStatusHint(share.reportStatusHint)) {
+    console.log("[shared-report] report not released per hint:", share.reportStatusHint);
+    return { success: false, state: "not_released", message: MESSAGES.not_released, billNo: share.billNo || "" };
+  }
+
   console.log("[shared-report] share active, querying reportShareResults", { path: `${RESULTS_COLLECTION}/${tokenHash}` });
   let resultsSnap;
   try {
     resultsSnap = await getDoc(doc(db, RESULTS_COLLECTION, tokenHash));
   } catch (err) {
     // firestore.rules denies this read unless the linked booking's payment
-    // is live-confirmed as Paid - a permission-denied here, given the share
-    // itself is already confirmed active above, means payment is pending.
+    // is live-confirmed as Paid (and the report is still released, see the
+    // hint check above) - a permission-denied here, given the share itself
+    // is already confirmed active and released above, means payment is
+    // pending.
     console.log("[shared-report] reportShareResults denied (payment not cleared):", err.code);
     return {
       success: false,

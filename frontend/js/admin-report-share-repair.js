@@ -51,11 +51,32 @@ export async function auditReportShares({ apply = false, billNo = null } = {}) {
       continue;
     }
 
+    // Per the "permanent link" model (see whatsapp-report-share.js), an
+    // active share must stay enabled/not-revoked/non-expiring - this
+    // repairs old records left in a broken state (e.g. a stray manual edit,
+    // or a revoke that was never meant to be permanent) without touching
+    // any medical/payment data. Only runs when explicitly invoked with
+    // apply: true from the admin console - never automatically.
+    const patch = {};
     if (canonical.id !== share.reportId) {
       findings.push({ shareId: shareDoc.id, billNo: share.billNo || "", storedReportId: share.reportId, canonicalReportId: canonical.id, issue: "reportId-mismatch" });
-      if (apply) {
-        await updateDoc(doc(db, "reportShares", shareDoc.id), { reportId: canonical.id, updatedAt: serverTimestamp() });
-      }
+      patch.reportId = canonical.id;
+    }
+    if (share.enabled === false) {
+      findings.push({ shareId: shareDoc.id, billNo: share.billNo || "", issue: "disabled" });
+      patch.enabled = true;
+    }
+    if (share.revoked === true) {
+      findings.push({ shareId: shareDoc.id, billNo: share.billNo || "", issue: "revoked" });
+      patch.revoked = false;
+    }
+    if (share.expiresAt) {
+      findings.push({ shareId: shareDoc.id, billNo: share.billNo || "", issue: "has-expiry" });
+      patch.expiresAt = null;
+    }
+
+    if (Object.keys(patch).length && apply) {
+      await updateDoc(doc(db, "reportShares", shareDoc.id), { ...patch, updatedAt: serverTimestamp() });
     }
   }
 
