@@ -1301,6 +1301,10 @@
       );
     }
 
+    function isLipidProfileGroup(group) {
+      return compactKey(group?.testName) === "lipidprofile";
+    }
+
     function getFullCBCParameters() {
       return [
         { name: "Haemoglobin", normalRange: "M: 13.2-16.6, F: 11.6-15.0", unit: "g/dL", sample: "W.B. EDTA", method: "Non-cyanide Hb" },
@@ -1511,6 +1515,20 @@
       "ALT activity is often higher than AST in many liver diseases; exceptions may occur in alcoholic hepatitis, cirrhosis, and liver neoplasia.",
       "In chronic liver disease, ELF, AFP, or DCP/PIVKA II testing may be considered when clinically indicated."
     ];
+
+    const LIPID_DEFAULT_NOTES = [
+      "Please correlate with clinical conditions.",
+      "Alert: 10-12 hours fasting is mandatory for lipid parameters. If not, values might fluctuate."
+    ];
+
+    function applyDefaultGroupNotes(groups) {
+      groups.forEach((group) => {
+        if (!isLipidProfileGroup(group)) return;
+        LIPID_DEFAULT_NOTES.forEach((note) => {
+          if (!group.comments.includes(note)) group.comments.push(note);
+        });
+      });
+    }
 
     function lftSortIndex(row) {
       const key = compactKey(row.parameterName || row.testName);
@@ -1742,6 +1760,7 @@
       }
 
       const groups = groupResults(results);
+      applyDefaultGroupNotes(groups);
       const pages = [];
       groups.forEach((group) => {
         const chunks = chunkRows(group.rows);

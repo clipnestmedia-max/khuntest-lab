@@ -943,52 +943,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Total Cholesterol",
-        "normalRange": "<200 desirable",
+        "name": "Apolipoprotein A1 (Apo A1)",
+        "normalRange": "M: 104-202, F: 108-225",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Immunoturbidimetry",
         "sample": "",
         "sortOrder": 1
       },
       {
-        "name": "Triglycerides",
-        "normalRange": "<150 normal",
+        "name": "Apolipoprotein B (Apo B)",
+        "normalRange": "M: 66-133, F: 60-117",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Immunoturbidimetry",
         "sample": "",
         "sortOrder": 2
       },
       {
-        "name": "HDL Cholesterol",
-        "normalRange": ">40",
+        "name": "Lipoprotein (a) [Lp(a)]",
+        "normalRange": "<30",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Immunoturbidimetry",
         "sample": "",
         "sortOrder": 3
-      },
-      {
-        "name": "LDL Cholesterol",
-        "normalRange": "<100 optimal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 4
-      },
-      {
-        "name": "VLDL Cholesterol",
-        "normalRange": "5-40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 5
-      },
-      {
-        "name": "TC/HDL Ratio",
-        "normalRange": "<5.0",
-        "unit": "Ratio",
-        "method": "",
-        "sample": "",
-        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -2743,52 +2719,12 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Total Cholesterol",
-        "normalRange": "<200 desirable",
-        "unit": "mg/dL",
-        "method": "",
+        "name": "Anti-Phospholipid Antibody IgG",
+        "normalRange": "<10",
+        "unit": "GPL/mL",
+        "method": "ELISA",
         "sample": "",
         "sortOrder": 1
-      },
-      {
-        "name": "Triglycerides",
-        "normalRange": "<150 normal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 2
-      },
-      {
-        "name": "HDL Cholesterol",
-        "normalRange": ">40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 3
-      },
-      {
-        "name": "LDL Cholesterol",
-        "normalRange": "<100 optimal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 4
-      },
-      {
-        "name": "VLDL Cholesterol",
-        "normalRange": "5-40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 5
-      },
-      {
-        "name": "TC/HDL Ratio",
-        "normalRange": "<5.0",
-        "unit": "Ratio",
-        "method": "",
-        "sample": "",
-        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -2827,52 +2763,12 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Total Cholesterol",
-        "normalRange": "<200 desirable",
-        "unit": "mg/dL",
-        "method": "",
+        "name": "Anti-Phospholipid Antibody IgM",
+        "normalRange": "<10",
+        "unit": "MPL/mL",
+        "method": "ELISA",
         "sample": "",
         "sortOrder": 1
-      },
-      {
-        "name": "Triglycerides",
-        "normalRange": "<150 normal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 2
-      },
-      {
-        "name": "HDL Cholesterol",
-        "normalRange": ">40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 3
-      },
-      {
-        "name": "LDL Cholesterol",
-        "normalRange": "<100 optimal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 4
-      },
-      {
-        "name": "VLDL Cholesterol",
-        "normalRange": "5-40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 5
-      },
-      {
-        "name": "TC/HDL Ratio",
-        "normalRange": "<5.0",
-        "unit": "Ratio",
-        "method": "",
-        "sample": "",
-        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -3171,52 +3067,12 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Total Cholesterol",
-        "normalRange": "<200 desirable",
-        "unit": "mg/dL",
-        "method": "",
+        "name": "Anti-Phospholipid Antibody IgG",
+        "normalRange": "<10",
+        "unit": "GPL/mL",
+        "method": "ELISA",
         "sample": "",
         "sortOrder": 1
-      },
-      {
-        "name": "Triglycerides",
-        "normalRange": "<150 normal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 2
-      },
-      {
-        "name": "HDL Cholesterol",
-        "normalRange": ">40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 3
-      },
-      {
-        "name": "LDL Cholesterol",
-        "normalRange": "<100 optimal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 4
-      },
-      {
-        "name": "VLDL Cholesterol",
-        "normalRange": "5-40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 5
-      },
-      {
-        "name": "TC/HDL Ratio",
-        "normalRange": "<5.0",
-        "unit": "Ratio",
-        "method": "",
-        "sample": "",
-        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -3255,52 +3111,12 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Total Cholesterol",
-        "normalRange": "<200 desirable",
-        "unit": "mg/dL",
-        "method": "",
+        "name": "Anti-Phospholipid Antibody IgM",
+        "normalRange": "<10",
+        "unit": "MPL/mL",
+        "method": "ELISA",
         "sample": "",
         "sortOrder": 1
-      },
-      {
-        "name": "Triglycerides",
-        "normalRange": "<150 normal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 2
-      },
-      {
-        "name": "HDL Cholesterol",
-        "normalRange": ">40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 3
-      },
-      {
-        "name": "LDL Cholesterol",
-        "normalRange": "<100 optimal",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 4
-      },
-      {
-        "name": "VLDL Cholesterol",
-        "normalRange": "5-40",
-        "unit": "mg/dL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 5
-      },
-      {
-        "name": "TC/HDL Ratio",
-        "normalRange": "<5.0",
-        "unit": "Ratio",
-        "method": "",
-        "sample": "",
-        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -15330,51 +15146,83 @@
     "parameters": [
       {
         "name": "Total Cholesterol",
-        "normalRange": "<200 desirable",
+        "normalRange": "<200",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Photometry (Cholesterol Oxidase, Esterase, Peroxidase)",
         "sample": "",
         "sortOrder": 1
       },
       {
-        "name": "Triglycerides",
-        "normalRange": "<150 normal",
+        "name": "HDL Cholesterol - Direct",
+        "normalRange": "40-60",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Direct Photometry (Enzymatic Colorimetric)",
         "sample": "",
         "sortOrder": 2
       },
       {
-        "name": "HDL Cholesterol",
-        "normalRange": ">40",
+        "name": "LDL Cholesterol - Direct",
+        "normalRange": "<100",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Direct Photometry (Direct Measure)",
         "sample": "",
         "sortOrder": 3
       },
       {
-        "name": "LDL Cholesterol",
-        "normalRange": "<100 optimal",
+        "name": "Triglycerides",
+        "normalRange": "<150",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Photometry (Enzymatic, End Point)",
         "sample": "",
         "sortOrder": 4
+      },
+      {
+        "name": "TC/ HDL Cholesterol Ratio",
+        "normalRange": "3-5",
+        "unit": "Ratio",
+        "method": "Calculated - derived from Total Cholesterol and HDL",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "TRIG/ HDL Ratio",
+        "normalRange": "<3.12",
+        "unit": "Ratio",
+        "method": "Calculated - derived from Triglycerides and HDL",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "LDL/ HDL Ratio",
+        "normalRange": "1.5-3.5",
+        "unit": "Ratio",
+        "method": "Calculated - derived from LDL and HDL",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "HDL/ LDL Ratio",
+        "normalRange": ">0.40",
+        "unit": "Ratio",
+        "method": "Calculated - derived from HDL and LDL",
+        "sample": "",
+        "sortOrder": 8
+      },
+      {
+        "name": "Non-HDL Cholesterol",
+        "normalRange": "<160",
+        "unit": "mg/dL",
+        "method": "Calculated - derived from Total Cholesterol and HDL",
+        "sample": "",
+        "sortOrder": 9
       },
       {
         "name": "VLDL Cholesterol",
         "normalRange": "5-40",
         "unit": "mg/dL",
-        "method": "",
+        "method": "Calculated - derived from Triglycerides",
         "sample": "",
-        "sortOrder": 5
-      },
-      {
-        "name": "TC/HDL Ratio",
-        "normalRange": "<5.0",
-        "unit": "Ratio",
-        "method": "",
-        "sample": "",
-        "sortOrder": 6
+        "sortOrder": 10
       }
     ],
     "searchKeywords": [
