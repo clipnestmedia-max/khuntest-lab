@@ -1325,8 +1325,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.10-20.00",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -1902,8 +1902,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<25.0",
+        "unit": "U/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -2670,8 +2670,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.10-20.00",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -2707,8 +2707,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.10-20.00",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -4200,8 +4200,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<5.1",
+        "unit": "mIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -4236,8 +4236,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<5.1",
+        "unit": "mIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -5394,8 +5394,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<10.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -5430,8 +5430,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<10.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -5466,8 +5466,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<10.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -7699,8 +7699,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<5.00",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -8317,8 +8317,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<0.50",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -8352,8 +8352,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<0.50",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -10254,8 +10254,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<5.1",
+        "unit": "mIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -10291,8 +10291,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "3.10-6.80",
+        "unit": "pmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -10452,8 +10452,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "3.10-6.80",
+        "unit": "pmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -10486,8 +10486,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "12.00-22.00",
+        "unit": "pmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -11431,7 +11431,7 @@
     "parameters": [
       {
         "name": "HbA1c",
-        "normalRange": "Normal <5.7, Prediabetes 5.7-6.4, Diabetes ≥6.5",
+        "normalRange": "3.80-5.80",
         "unit": "%",
         "method": "",
         "sample": "",
@@ -12726,8 +12726,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<3.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -13831,8 +13831,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Refer to User Manual",
+        "unit": "IU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -16003,8 +16003,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<20.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -16038,8 +16038,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<20.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -16552,8 +16552,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<300",
+        "unit": "pg/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -17504,8 +17504,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<300",
+        "unit": "pg/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -17540,8 +17540,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<0.10",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -17576,8 +17576,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.10-40.00",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -18113,8 +18113,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<15.9",
+        "unit": "IU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -18526,8 +18526,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Refer to User Manual",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19749,8 +19749,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Refer to User Manual",
+        "unit": "IU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -20108,8 +20108,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Refer to User Manual",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -21634,8 +21634,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "1.30-3.10",
+        "unit": "nmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -21719,8 +21719,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "59.00-154.00",
+        "unit": "nmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23178,8 +23178,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<0.10",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23249,8 +23249,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.27-4.20",
+        "unit": "µIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -24526,8 +24526,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<20.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
