@@ -4135,6 +4135,27 @@ window.filterAdminBookings = function() {
   });
 };
 
+// Tests added to a booking snapshot their catalog parameters at that
+// moment (see selectedTestSnapshot), so a later fix to a test's reference
+// range in the catalog never reaches a booking made before the fix - the
+// snapshot's non-empty `parameters` array short-circuits the catalog
+// lookup below even though every value in it is still the generic
+// placeholder. Treat an all-placeholder snapshot the same as an empty one
+// so already-booked (but not yet Reported/Completed) tests pick up a
+// corrected catalog range automatically.
+const PLACEHOLDER_NORMAL_RANGES = new Set([
+  "as per lab method / reference range",
+  "refer to user manual"
+]);
+
+function testParametersArePlaceholder(parameters) {
+  if (!Array.isArray(parameters) || !parameters.length) return false;
+  return parameters.every((p) => {
+    const range = String(p?.normalRange ?? p?.normalValue ?? p?.normal ?? "").trim().toLowerCase();
+    return !range || PLACEHOLDER_NORMAL_RANGES.has(range);
+  });
+}
+
 window.loadReportEditor = async function(id) {
   currentReportBooking = bookingBySelectorValue(id);
   selectedBookingForReport = currentReportBooking;
@@ -4151,9 +4172,10 @@ window.loadReportEditor = async function(id) {
   document.getElementById("rReportingDate").value = b.reportingDate || ktNowLocal();
   const testsWithParams = [];
   let availableTests = allLabTests;
+  const bookingIsFinalized = ["Reported", "Completed"].includes(String(b.status || "").trim());
   for (const t of bookingTests(b)) {
     let full = t;
-    if (!Array.isArray(t.parameters) || !t.parameters.length) {
+    if (!Array.isArray(t.parameters) || !t.parameters.length || (!bookingIsFinalized && testParametersArePlaceholder(t.parameters))) {
       if (!availableTests.length) {
         const testResult = await loadAdminTestsCatalog().catch((err) => {
           lastTestLoadingError = err.message || String(err);
