@@ -53,8 +53,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: <220\nFemale: <280\nPostmenopausal: <50",
+        "unit": "ng/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -241,8 +241,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<30",
+        "unit": "mg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -316,8 +316,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<150",
+        "unit": "mg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -430,8 +430,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 30-85\nFemale: 4-22",
+        "unit": "ng/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -536,7 +536,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "HbA2: 2.0-3.5%\nHbF: <2%\nNo abnormal Hb variant detected",
         "unit": "",
         "method": "",
         "sample": "",
@@ -687,8 +687,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "8-52",
+        "unit": "U/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -836,8 +836,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "7.2-63.3",
+        "unit": "pg/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -1080,8 +1080,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<10",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -3156,8 +3156,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 104-202\nFemale: 108-225",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -3191,8 +3191,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 66-133\nFemale: 60-117",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -3226,8 +3226,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "25-35",
+        "unit": "seconds",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -4601,7 +4601,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "As determined by testing",
         "unit": "",
         "method": "",
         "sample": "",
@@ -4817,8 +4817,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "15-40",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -4852,8 +4852,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "6-20",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -4889,8 +4889,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "6-20",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -5568,8 +5568,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "8.5-10.5",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -5602,8 +5602,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "4.5-5.6",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -6562,8 +6562,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<200",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -6815,8 +6815,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "90-180",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -6852,8 +6852,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "15-45",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -7183,8 +7183,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "20-90",
+        "unit": "µg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -7221,8 +7221,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "20-90",
+        "unit": "µg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -9073,8 +9073,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 10-40\nFemale - Follicular: 30-120\nOvulatory: 130-370\nLuteal: 70-250\nPostmenopausal: <30",
+        "unit": "pg/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -10196,8 +10196,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 9-30\nFemale: 0.3-1.9",
+        "unit": "ng/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -10890,8 +10890,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Fasting: <5",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -11032,8 +11032,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 13.0-17.0\nFemale: 12.0-15.5",
+        "unit": "g/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -11066,7 +11066,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "HbA2: 2.0-3.5%\nHbF: <2%\nNo abnormal Hb variant detected",
         "unit": "",
         "method": "",
         "sample": "",
@@ -11549,8 +11549,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "40-60",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -14403,8 +14403,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "2.6-24.9",
+        "unit": "µIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -14438,8 +14438,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "2.6-24.9",
+        "unit": "µIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -14473,8 +14473,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Age-dependent (declines with age); adult approx. 100-300",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -15260,8 +15260,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<30",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -15490,7 +15490,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Negative",
         "unit": "",
         "method": "",
         "sample": "",
@@ -15528,7 +15528,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "dRVVT screen ratio <1.20",
         "unit": "",
         "method": "",
         "sample": "",
@@ -17060,8 +17060,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "1,50,000-4,50,000",
+        "unit": "/µL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -17281,8 +17281,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "3.5-5.1",
+        "unit": "mEq/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -17458,8 +17458,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<18.8",
+        "unit": "pmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -17642,8 +17642,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "15-65",
+        "unit": "pg/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -18034,8 +18034,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 4.5-5.5\nFemale: 4.0-5.0",
+        "unit": "mill/cumm",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -18374,7 +18374,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "Refer to User Manual",
+        "normalRange": "Male: <17\nFemale: <25",
         "unit": "ng/mL",
         "method": "",
         "sample": "",
@@ -18478,8 +18478,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 10-40\nFemale - Follicular: 30-120\nOvulatory: 130-370\nLuteal: 70-250\nPostmenopausal: <30",
+        "unit": "pg/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -18583,8 +18583,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<1.1",
+        "unit": "g/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19306,8 +19306,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "3.5-5.0",
+        "unit": "g/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19452,8 +19452,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "5-23",
+        "unit": "µg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19489,8 +19489,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "2-14",
+        "unit": "µg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19526,8 +19526,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.6-1.3",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19668,8 +19668,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<60",
+        "unit": "µIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19704,8 +19704,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "2.6-24.9",
+        "unit": "µIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19740,8 +19740,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 65-175\nFemale: 50-170",
+        "unit": "µg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -19956,7 +19956,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "Refer to User Manual",
+        "normalRange": "Male: <17\nFemale: <25",
         "unit": "ng/mL",
         "method": "",
         "sample": "",
@@ -19991,8 +19991,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "6.0-8.3",
+        "unit": "g/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -20062,8 +20062,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "136-145",
+        "unit": "mEq/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -20097,8 +20097,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 10-57\nFemale: 18-144",
+        "unit": "nmol/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -20171,8 +20171,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 10-40\nFemale: 7-35",
+        "unit": "U/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -21601,7 +21601,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "T4: 5.0-12.0 µg/dL\nTSH: 0.27-4.20 µIU/mL",
         "unit": "",
         "method": "",
         "sample": "",
@@ -22113,7 +22113,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Negative (not suggestive of thalassemia trait)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -22704,7 +22704,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Total Protein: 6.0-8.3 g/dL\nAlbumin: 3.5-5.0 g/dL\nGlobulin: 2.0-3.5 g/dL\nA/G Ratio: 1.0-2.0",
         "unit": "",
         "method": "",
         "sample": "",
@@ -23274,8 +23274,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 3.4-7.0\nFemale: 2.4-6.0",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23345,8 +23345,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "100-300",
+        "unit": "mg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23382,8 +23382,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Ca/Creatinine ratio <0.14",
+        "unit": "mg/mg",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23494,8 +23494,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Male: 1000-2000\nFemale: 600-1800",
+        "unit": "mg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23530,8 +23530,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "20-80",
+        "unit": "mEq/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23567,8 +23567,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "25-125",
+        "unit": "mEq/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23604,8 +23604,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "<20",
+        "unit": "mg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23640,8 +23640,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "250-750",
+        "unit": "mg/24hr",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -24264,7 +24264,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Absent to occasional (<20% dysmorphic forms)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -24301,7 +24301,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Absent",
         "unit": "",
         "method": "",
         "sample": "",
@@ -25236,8 +25236,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "137-370",
+        "unit": "µg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -25272,8 +25272,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "2.1-21.7",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -25415,8 +25415,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "5.5-17.0",
+        "unit": "mg/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -25449,8 +25449,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.2-3.1",
+        "unit": "ng/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
