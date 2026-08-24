@@ -428,6 +428,7 @@ import {
   isAstAltRatioParameter,
   isIndirectBilirubinParameter
 } from "./scripts/lft-calculations.mjs";
+import { applyLipidCalculatedParameters } from "./scripts/lipid-calculations.mjs";
 import {
   prepareWhatsAppShare,
   getShareStatus,
@@ -3109,13 +3110,16 @@ function applyLftCalculationsToEditorRows(rows) {
   const editorRows = rows
     .filter((row) => !isAstAltRatioParameter(row))
     .map((row) => ({ ...row }));
-  const report = applyLftCalculatedParameters({
+  const lftReport = applyLftCalculatedParameters({
     tests: currentReportBooking ? bookingTests(currentReportBooking) : [],
     results: editorRows.map(reportResultFromEditorRow)
   });
-  const nextRows = report.results.map(editorRowFromReportResult);
-  window.currentLftValidationWarning = report.lftValidationWarning || "";
-  return nextRows;
+  window.currentLftValidationWarning = lftReport.lftValidationWarning || "";
+  const lipidReport = applyLipidCalculatedParameters({
+    tests: currentReportBooking ? bookingTests(currentReportBooking) : [],
+    results: lftReport.results
+  });
+  return lipidReport.results.map(editorRowFromReportResult);
 }
 
 function currentFindingRows() {
@@ -4493,7 +4497,7 @@ function reportPayload(status = "Draft", suppliedRows = null) {
     reportStatus: status,
     status
   };
-  return applyLftCalculatedParameters(payload);
+  return applyLipidCalculatedParameters(applyLftCalculatedParameters(payload));
 }
 
 window.saveGeneratedDraft = async function() {
