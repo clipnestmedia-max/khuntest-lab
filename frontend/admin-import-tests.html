@@ -91,6 +91,7 @@
       doc,
       getCountFromServer,
       getDoc,
+      getDocs,
       serverTimestamp,
       writeBatch
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -197,6 +198,20 @@
       const errors = [];
 
       try {
+        // A getDoc() per test here (684 sequential round-trips) is what used
+        // to make this hang and trip Firestore's burst rate limit ("Quota
+        // exceeded") on a low-traffic project. One bulk read up front gives
+        // the same exists/new info in a single round-trip.
+        log("Checking existing Firestore tests...");
+        const existingIds = new Set();
+        try {
+          const existingSnap = await getDocs(collection(db, "tests"));
+          existingSnap.forEach((docSnap) => existingIds.add(docSnap.id));
+          log(`Found ${existingIds.size} existing tests in Firestore.`);
+        } catch (err) {
+          log(`Could not preload existing tests (${err.message}); treating all as new.`);
+        }
+
         for (let start = 0; start < tests.length; start += CHUNK_SIZE) {
           const batch = writeBatch(db);
           const chunk = tests.slice(start, start + CHUNK_SIZE);
@@ -205,11 +220,9 @@
               skipped++;
               continue;
             }
-            const ref = doc(db, "tests", docIdFor(test));
-            const exists = await getDoc(ref).then((snap) => snap.exists()).catch((err) => {
-              errors.push(`${test.name}: ${err.message}`);
-              return false;
-            });
+            const id = docIdFor(test);
+            const ref = doc(db, "tests", id);
+            const exists = existingIds.has(id);
             const payload = {
               name: test.name,
               nameLower: test.nameLower || String(test.name).toLowerCase(),
@@ -225,12 +238,13 @@
               needsParameterReview: test.needsParameterReview === true,
               source: test.source || null,
               sourceId: test.sourceId || test.source?.sqlSourceId || null,
-              slug: docIdFor(test),
+              slug: id,
               updatedAt: serverTimestamp(),
               importedAt: serverTimestamp()
             };
             if (!exists) payload.createdAt = serverTimestamp();
             batch.set(ref, payload, { merge: true });
+            existingIds.add(id);
             if (exists) updated++; else imported++;
           }
           await batch.commit();
