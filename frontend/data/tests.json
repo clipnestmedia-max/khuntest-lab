@@ -500,12 +500,52 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "pH",
+        "normalRange": "7.35-7.45",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "pCO2",
+        "normalRange": "35-45",
+        "unit": "mmHg",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "pO2",
+        "normalRange": "80-100",
+        "unit": "mmHg",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "HCO3 (Bicarbonate)",
+        "normalRange": "22-26",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "O2 Saturation",
+        "normalRange": "95-100",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Base Excess",
+        "normalRange": "-2 to +2",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -795,12 +835,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Cell Type",
+        "normalRange": "Predominantly mesothelial cells/lymphocytes",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Cell Count",
+        "normalRange": "<250",
+        "unit": "cells/µL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Albumin",
+        "normalRange": "Used to calculate SAAG (≥1.1 g/dL gradient indicates portal hypertension)",
+        "unit": "g/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -908,12 +964,36 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Sodium",
+        "normalRange": "136-145",
+        "unit": "mEq/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Potassium",
+        "normalRange": "3.5-5.1",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Chloride",
+        "normalRange": "98-106",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Bicarbonate (CO2)",
+        "normalRange": "22-26",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
       }
     ],
     "searchKeywords": [
@@ -1519,12 +1599,76 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Anti-dsDNA",
+        "normalRange": "Negative",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Anti-Sm",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Anti-RNP",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Anti-SSA/Ro",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Anti-SSB/La",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Anti-Scl-70",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "Anti-Jo-1",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "Anti-Centromere",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
+      },
+      {
+        "name": "Anti-Histone",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 9
       }
     ],
     "searchKeywords": [
@@ -3375,12 +3519,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Cell Count",
+        "normalRange": "<250 (predominantly mesothelial cells/lymphocytes)",
+        "unit": "cells/µL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Sugar",
+        "normalRange": "Equal to serum glucose",
+        "unit": "mg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Protein",
+        "normalRange": "<2.5",
+        "unit": "g/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -3452,12 +3612,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Cell Count",
+        "normalRange": "<250 (predominantly mesothelial cells/lymphocytes)",
+        "unit": "cells/µL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Sugar",
+        "normalRange": "Equal to serum glucose",
+        "unit": "mg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Protein",
+        "normalRange": "<2.5",
+        "unit": "g/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -3714,12 +3890,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Total Cell Count",
+        "normalRange": "Variable (typically lymphocyte/macrophage predominant)",
+        "unit": "cells/µL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Macrophages",
+        "normalRange": ">85",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Lymphocytes",
+        "normalRange": "<15",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Neutrophils",
+        "normalRange": "<3",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Eosinophils",
+        "normalRange": "<1",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -5140,12 +5348,52 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Appearance",
+        "normalRange": "Clear, colourless",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Opening Pressure",
+        "normalRange": "90-180",
+        "unit": "mm H2O",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Cell Count",
+        "normalRange": "0-5 (all mononuclear)",
+        "unit": "cells/µL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Protein",
+        "normalRange": "15-45",
+        "unit": "mg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Glucose",
+        "normalRange": "50-80 (>2/3 of blood glucose)",
+        "unit": "mg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Chloride",
+        "normalRange": "122-128",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -6236,7 +6484,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported by pathologist as Positive/Negative staining with intensity/percentage",
         "unit": "",
         "method": "",
         "sample": "",
@@ -6634,7 +6882,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No BCR-ABL kinase domain resistance mutation detected",
         "unit": "",
         "method": "",
         "sample": "",
@@ -6743,12 +6991,36 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Prothrombin Time (PT)",
+        "normalRange": "11-13.5",
+        "unit": "seconds",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "INR",
+        "normalRange": "0.8-1.1",
+        "unit": "ratio",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "APTT",
+        "normalRange": "25-35",
+        "unit": "seconds",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Bleeding Time",
+        "normalRange": "2-7",
+        "unit": "minutes",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
       }
     ],
     "searchKeywords": [
@@ -7000,12 +7272,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "FSH",
+        "normalRange": "Male: 1.5-12.4\nFemale - Follicular: 3.5-12.5\nOvulatory: 4.7-21.5\nLuteal: 1.7-7.7\nPostmenopausal: 25.8-134.8",
+        "unit": "mIU/mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "LH",
+        "normalRange": "Male: 2-12\nFemale - Follicular: 2-15\nMidcycle Peak: 22-105\nLuteal: 0.1-19\nPostmenopausal: 16-64",
+        "unit": "mIU/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Estradiol (E2)",
+        "normalRange": "Female - Follicular: 30-120\nOvulatory: 130-370\nLuteal: 70-250\nPostmenopausal: <30",
+        "unit": "pg/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Prolactin",
+        "normalRange": "Female: <25",
+        "unit": "ng/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "TSH",
+        "normalRange": "0.27-4.20",
+        "unit": "µIU/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -7769,8 +8073,8 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Oligoclonal Bands",
+        "normalRange": "Absent (no bands restricted to CSF when compared with paired serum)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -8024,7 +8328,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Normal diploid karyotype; no clonal chromosomal abnormality detected",
         "unit": "",
         "method": "",
         "sample": "",
@@ -8453,8 +8757,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Low risk: <1:250",
+        "unit": "Risk ratio",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -8560,7 +8864,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No growth after 48 hours of aerobic incubation",
         "unit": "",
         "method": "",
         "sample": "",
@@ -8630,12 +8934,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Sodium, Urine (Spot)",
+        "normalRange": "20-200",
+        "unit": "mEq/L",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Potassium, Urine (Spot)",
+        "normalRange": "20-80",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Chloride, Urine (Spot)",
+        "normalRange": "20-40",
+        "unit": "mEq/L",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -9471,7 +9791,7 @@
     "parameters": [
       {
         "name": "FISH & Cytogenetics(Aneuploidy Detection Products Of Conception (POC) Using Chromosomes 13 18 21 X & Y)",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No aneuploidy detected for chromosomes 13, 18, 21, X, Y (disomic signal pattern)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -9517,7 +9837,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "BCR-ABL1 fusion signal not detected (Negative)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -11990,12 +12310,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "HBsAg",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Anti-HBs",
+        "normalRange": "<10",
+        "unit": "mIU/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Anti-HBc Total",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "HBeAg",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Anti-HBe",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -12025,12 +12377,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "HBsAg",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Anti-HBs",
+        "normalRange": "<10",
+        "unit": "mIU/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Anti-HBc Total",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "HBeAg",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Anti-HBe",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -12249,12 +12633,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "HBsAg",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Anti-HBs",
+        "normalRange": "<10",
+        "unit": "mIU/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Anti-HBc Total",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "HBeAg",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Anti-HBe",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -14000,7 +14416,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported by pathologist as Positive/Negative staining per marker with intensity/percentage",
         "unit": "",
         "method": "",
         "sample": "",
@@ -14037,7 +14453,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported as % positive tumor cells with staining intensity (Allred/H-score)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -14074,7 +14490,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Scored 0/1+ Negative, 2+ Equivocal (reflex FISH advised), 3+ Positive",
         "unit": "",
         "method": "",
         "sample": "",
@@ -14111,7 +14527,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported by pathologist as Positive/Negative staining per marker with intensity/percentage",
         "unit": "",
         "method": "",
         "sample": "",
@@ -14148,7 +14564,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported by pathologist as Positive/Negative staining with intensity/percentage",
         "unit": "",
         "method": "",
         "sample": "",
@@ -14184,7 +14600,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported by pathologist as Positive/Negative staining per marker with intensity/percentage",
         "unit": "",
         "method": "",
         "sample": "",
@@ -14330,8 +14746,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "0.5-2.0",
+        "unit": "MoM",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -14510,12 +14926,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Serum Iron",
+        "normalRange": "Male: 65-175\nFemale: 50-170",
+        "unit": "µg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "TIBC",
+        "normalRange": "250-450",
+        "unit": "µg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "% Transferrin Saturation",
+        "normalRange": "20-50",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -14547,12 +14979,36 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Serum Iron",
+        "normalRange": "Male: 65-175\nFemale: 50-170",
+        "unit": "µg/dL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "TIBC",
+        "normalRange": "250-450",
+        "unit": "µg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "% Transferrin Saturation",
+        "normalRange": "20-50",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Ferritin",
+        "normalRange": "Male: 30-566\nFemale: 15-205",
+        "unit": "ng/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
       }
     ],
     "searchKeywords": [
@@ -14621,7 +15077,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "46,XY (Male) / 46,XX (Female) - no numerical or structural chromosomal abnormality detected",
         "unit": "",
         "method": "",
         "sample": "",
@@ -16622,7 +17078,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Negative for Intraepithelial Lesion or Malignancy (NILM)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -16878,12 +17334,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Appearance",
+        "normalRange": "Clear, straw-coloured",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Total Cell Count",
+        "normalRange": "Variable",
+        "unit": "cells/µL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Protein (Fluid/Serum Ratio)",
+        "normalRange": "≤0.5 (transudate)",
+        "unit": "ratio",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "LDH",
+        "normalRange": "Fluid/Serum ratio ≤0.6 (transudate)",
+        "unit": "ratio",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Glucose",
+        "normalRange": "Equal to serum glucose",
+        "unit": "mg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -16915,7 +17403,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "RBC, WBC and platelet morphology within normal limits",
         "unit": "",
         "method": "",
         "sample": "",
@@ -17094,12 +17582,52 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Appearance",
+        "normalRange": "Clear, straw-coloured",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Total Cell Count",
+        "normalRange": "<1000",
+        "unit": "cells/µL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Protein (Fluid/Serum Ratio)",
+        "normalRange": "≤0.5",
+        "unit": "ratio",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "LDH (Fluid/Serum Ratio)",
+        "normalRange": "≤0.6",
+        "unit": "ratio",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Glucose",
+        "normalRange": "Equal to serum glucose",
+        "unit": "mg/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "pH",
+        "normalRange": "7.60-7.66",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
       }
     ],
     "searchKeywords": [
@@ -17243,7 +17771,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No organisms seen",
         "unit": "",
         "method": "",
         "sample": "",
@@ -17314,12 +17842,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "HBsAg",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Anti-HCV",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "HIV 1 & 2 Antibody",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -17678,7 +18222,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No growth after 48 hours of aerobic incubation",
         "unit": "",
         "method": "",
         "sample": "",
@@ -17750,8 +18294,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Low risk: <1:270",
+        "unit": "Risk ratio",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -18443,7 +18987,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "Reported by pathologist as Positive/Negative staining pattern",
         "unit": "",
         "method": "",
         "sample": "",
@@ -19163,12 +19707,68 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Volume",
+        "normalRange": "≥1.4",
+        "unit": "mL",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "pH",
+        "normalRange": "7.2-8.0",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Sperm Concentration",
+        "normalRange": "≥16",
+        "unit": "million/mL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Total Sperm Count",
+        "normalRange": "≥39",
+        "unit": "million/ejaculate",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Total Motility",
+        "normalRange": "≥42",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Progressive Motility",
+        "normalRange": "≥30",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "Normal Morphology",
+        "normalRange": "≥4",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "Vitality",
+        "normalRange": "≥54",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
       }
     ],
     "searchKeywords": [
@@ -19199,7 +19799,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No growth after 48 hours of aerobic incubation",
         "unit": "",
         "method": "",
         "sample": "",
@@ -20025,12 +20625,44 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "Albumin",
+        "normalRange": "55-65",
+        "unit": "%",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Alpha-1 Globulin",
+        "normalRange": "2-4",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Alpha-2 Globulin",
+        "normalRange": "6-10",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Beta Globulin",
+        "normalRange": "8-13",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Gamma Globulin",
+        "normalRange": "10-20",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
       }
     ],
     "searchKeywords": [
@@ -20432,7 +21064,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No organisms seen",
         "unit": "",
         "method": "",
         "sample": "",
@@ -20505,12 +21137,28 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "FVC (% Predicted)",
+        "normalRange": "≥80",
+        "unit": "%",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "FEV1 (% Predicted)",
+        "normalRange": "≥80",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "FEV1/FVC Ratio",
+        "normalRange": "≥70",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
       }
     ],
     "searchKeywords": [
@@ -21058,12 +21706,76 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Colour",
+        "normalRange": "Brown",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Consistency",
+        "normalRange": "Formed/Semi-formed",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Mucus",
+        "normalRange": "Absent",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "RBC",
+        "normalRange": "Absent",
+        "unit": "/HPF",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Pus Cells",
+        "normalRange": "0-2",
+        "unit": "/HPF",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Ova/Cysts",
+        "normalRange": "Not seen",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "Occult Blood",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "Reducing Substance",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
+      },
+      {
+        "name": "Fat Globules",
+        "normalRange": "Absent/Occasional",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 9
       }
     ],
     "searchKeywords": [
@@ -21238,7 +21950,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No growth after 48 hours of aerobic incubation",
         "unit": "",
         "method": "",
         "sample": "",
@@ -21307,12 +22019,36 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Appearance",
+        "normalRange": "Clear, straw-coloured, viscous",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "WBC Count",
+        "normalRange": "<200",
+        "unit": "cells/µL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Mucin Clot",
+        "normalRange": "Good/Firm clot formation",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Crystals",
+        "normalRange": "Absent",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
       }
     ],
     "searchKeywords": [
@@ -22147,7 +22883,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No growth of pathogenic organism (normal throat flora)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -22236,7 +22972,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No growth after 48 hours of aerobic incubation",
         "unit": "",
         "method": "",
         "sample": "",
@@ -22381,12 +23117,60 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "TLC (Total Leucocyte Count)",
+        "normalRange": "4000-11000",
+        "unit": "cells/cumm",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Neutrophils",
+        "normalRange": "40-75",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Lymphocytes",
+        "normalRange": "20-40",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Monocytes",
+        "normalRange": "2-10",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Eosinophils",
+        "normalRange": "1-6",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Basophils",
+        "normalRange": "0-1",
+        "unit": "%",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "Haemoglobin",
+        "normalRange": "Male: 13.0-17.0\nFemale: 12.0-15.5",
+        "unit": "g/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
       }
     ],
     "searchKeywords": [
@@ -22418,12 +23202,20 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "name": "TLC (Total Leucocyte Count)",
+        "normalRange": "4000-11000",
+        "unit": "cells/cumm",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Haemoglobin",
+        "normalRange": "Male: 13.0-17.0\nFemale: 12.0-15.5",
+        "unit": "g/dL",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
       }
     ],
     "searchKeywords": [
@@ -22489,12 +23281,36 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Toxoplasma IgG",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Rubella IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "CMV IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "HSV IgG",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
       }
     ],
     "searchKeywords": [
@@ -22524,12 +23340,68 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Toxoplasma IgG",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Toxoplasma IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Rubella IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Rubella IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "CMV IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "CMV IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "HSV IgG",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "HSV IgM",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
       }
     ],
     "searchKeywords": [
@@ -22560,12 +23432,36 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Toxoplasma IgM",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Rubella IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "CMV IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "HSV IgM",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
       }
     ],
     "searchKeywords": [
@@ -22595,12 +23491,84 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Toxoplasma IgG",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Toxoplasma IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Rubella IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Rubella IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "CMV IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "CMV IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "HSV-1 IgG",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "HSV-1 IgM",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
+      },
+      {
+        "name": "HSV-2 IgG",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 9
+      },
+      {
+        "name": "HSV-2 IgM",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 10
       }
     ],
     "searchKeywords": [
@@ -22631,12 +23599,68 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Toxoplasma IgG",
+        "normalRange": "Non-Reactive",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Toxoplasma IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Rubella IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "Rubella IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "CMV IgG",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "CMV IgM",
+        "normalRange": "Non-Reactive",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "HSV IgG",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "HSV IgM",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
       }
     ],
     "searchKeywords": [
@@ -22955,8 +23979,8 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
+        "normalRange": "Low risk: <1:270",
+        "unit": "Risk ratio",
         "method": "",
         "sample": "",
         "sortOrder": 1
@@ -23202,7 +24226,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No multinucleated giant cells seen (Negative)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -23715,12 +24739,108 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Colour",
+        "normalRange": "Pale Yellow",
         "unit": "",
         "method": "",
         "sample": "",
         "sortOrder": 1
+      },
+      {
+        "name": "Appearance",
+        "normalRange": "Clear",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 2
+      },
+      {
+        "name": "Specific Gravity",
+        "normalRange": "1.005-1.030",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 3
+      },
+      {
+        "name": "pH",
+        "normalRange": "4.5-8.0",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 4
+      },
+      {
+        "name": "Protein",
+        "normalRange": "Absent/Trace",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 5
+      },
+      {
+        "name": "Glucose",
+        "normalRange": "Absent",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 6
+      },
+      {
+        "name": "Ketone",
+        "normalRange": "Absent",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 7
+      },
+      {
+        "name": "Pus Cells",
+        "normalRange": "0-5",
+        "unit": "/HPF",
+        "method": "",
+        "sample": "",
+        "sortOrder": 8
+      },
+      {
+        "name": "RBC",
+        "normalRange": "0-2",
+        "unit": "/HPF",
+        "method": "",
+        "sample": "",
+        "sortOrder": 9
+      },
+      {
+        "name": "Epithelial Cells",
+        "normalRange": "0-5",
+        "unit": "/HPF",
+        "method": "",
+        "sample": "",
+        "sortOrder": 10
+      },
+      {
+        "name": "Bacteria",
+        "normalRange": "Absent",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 11
+      },
+      {
+        "name": "Bile Pigment",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 12
+      },
+      {
+        "name": "Bile Salt",
+        "normalRange": "Negative",
+        "unit": "",
+        "method": "",
+        "sample": "",
+        "sortOrder": 13
       }
     ],
     "searchKeywords": [
@@ -23824,7 +24944,7 @@
     "parameters": [
       {
         "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "normalRange": "No significant growth (<10,000 CFU/mL)",
         "unit": "",
         "method": "",
         "sample": "",
@@ -24003,8 +25123,8 @@
     "isActive": true,
     "parameters": [
       {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
+        "name": "Protein Pattern",
+        "normalRange": "Polyclonal - no monoclonal (M-spike) band detected",
         "unit": "",
         "method": "",
         "sample": "",
