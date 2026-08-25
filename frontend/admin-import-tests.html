@@ -65,7 +65,8 @@
 
           <div class="import-actions">
             <button class="btn btn-outline" id="reloadBtn" type="button">Reload JSON</button>
-            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update 684 Tests</button>
+            <button class="btn btn-navy" id="importBtn" type="button" disabled>Import / Update Tests</button>
+            <button class="btn btn-red" id="pruneBtn" type="button" disabled>Prune Orphaned Firestore Tests</button>
           </div>
 
           <div class="import-progress"><div id="progressBar"></div></div>
@@ -88,6 +89,7 @@
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
       collection,
+      deleteDoc,
       doc,
       getCountFromServer,
       getDoc,
@@ -182,6 +184,8 @@
       await loadRemoteCount();
       $("statusText").textContent = "Ready";
       $("importBtn").disabled = !tests.length;
+      $("importBtn").textContent = `Import / Update ${tests.length} Tests`;
+      $("pruneBtn").disabled = !tests.length;
       log(`Loaded ${tests.length} tests from data/tests.json.`);
     }
 
@@ -264,8 +268,54 @@
       }
     }
 
+    async function pruneOrphanedTests() {
+      if (!tests.length) return;
+      $("pruneBtn").disabled = true;
+      $("statusText").textContent = "Checking";
+      try {
+        log("Checking for Firestore tests no longer in data/tests.json...");
+        const expectedIds = new Set(tests.map(docIdFor));
+        const existingSnap = await getDocs(collection(db, "tests"));
+        const orphanRefs = [];
+        existingSnap.forEach((docSnap) => {
+          if (!expectedIds.has(docSnap.id)) orphanRefs.push(docSnap.ref);
+        });
+
+        if (!orphanRefs.length) {
+          log("No orphaned Firestore tests found - Firestore already matches data/tests.json.");
+          $("statusText").textContent = "Ready";
+          return;
+        }
+
+        log(`Found ${orphanRefs.length} orphaned test(s) in Firestore not present in data/tests.json.`);
+        if (!confirm(`Delete ${orphanRefs.length} test document(s) from Firestore that no longer exist in data/tests.json? This cannot be undone.`)) {
+          log("Prune cancelled.");
+          $("statusText").textContent = "Ready";
+          return;
+        }
+
+        $("statusText").textContent = "Pruning";
+        let done = 0;
+        for (const ref of orphanRefs) {
+          await deleteDoc(ref);
+          done++;
+          setProgress(done, orphanRefs.length);
+          log(`Deleted ${done}/${orphanRefs.length}: ${ref.id}`);
+        }
+        $("statusText").textContent = "Done";
+        await loadRemoteCount();
+        log(`Prune completed. Deleted ${orphanRefs.length} orphaned test document(s).`);
+      } catch (err) {
+        $("statusText").textContent = "Error";
+        log(`Prune failed: ${err.message}`);
+      } finally {
+        $("pruneBtn").disabled = false;
+      }
+    }
+
     $("reloadBtn").addEventListener("click", () => loadTests().catch((err) => log(err.message)));
     $("importBtn").addEventListener("click", importTests);
+    $("pruneBtn").addEventListener("click", pruneOrphanedTests);
     $("logoutBtn").addEventListener("click", async () => {
       await logoutUser();
       window.location.href = "admin-login.html";

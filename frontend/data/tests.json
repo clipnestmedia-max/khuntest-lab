@@ -5481,78 +5481,6 @@
     }
   },
   {
-    "sno": 142,
-    "testCode": "KT0142",
-    "slug": "kt0142-c-reactive-protein-quantitative",
-    "name": "C-Reactive Protein Quantitative",
-    "nameLower": "c-reactive protein quantitative",
-    "category": "Biochemistry",
-    "price": 500,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Result",
-        "normalRange": "<10.0",
-        "unit": "mg/L",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0142",
-      "reactive",
-      "protein",
-      "quantitative",
-      "biochemistry",
-      "result"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 140,
-      "parameterMatch": "exact"
-    }
-  },
-  {
-    "sno": 143,
-    "testCode": "KT0143",
-    "slug": "kt0143-c-reactive-protein-quantitative",
-    "name": "C-Reactive Protein Quantitative",
-    "nameLower": "c-reactive protein quantitative",
-    "category": "Biochemistry",
-    "price": 500,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Result",
-        "normalRange": "<10.0",
-        "unit": "mg/L",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0143",
-      "reactive",
-      "protein",
-      "quantitative",
-      "biochemistry",
-      "result"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 140,
-      "parameterMatch": "exact"
-    }
-  },
-  {
     "sno": 144,
     "testCode": "KT0144",
     "slug": "kt0144-ca-15-3",
@@ -5894,43 +5822,6 @@
     ],
     "searchKeywords": [
       "kt0153",
-      "carbamazepine",
-      "tegretol",
-      "mazetol",
-      "lab",
-      "test",
-      "result"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 150,
-      "parameterMatch": "exact"
-    }
-  },
-  {
-    "sno": 154,
-    "testCode": "KT0154",
-    "slug": "kt0154-carbamazepine-tegretol-mazetol",
-    "name": "Carbamazepine (Tegretol, Mazetol)",
-    "nameLower": "carbamazepine (tegretol, mazetol)",
-    "category": "Lab Test",
-    "price": 1200,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Result",
-        "normalRange": "4 - 12",
-        "unit": "µg/mL",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0154",
       "carbamazepine",
       "tegretol",
       "mazetol",
@@ -16187,42 +16078,6 @@
     }
   },
   {
-    "sno": 416,
-    "testCode": "KT0416",
-    "slug": "kt0416-malaria-total-antibody",
-    "name": "Malaria Total Antibody",
-    "nameLower": "malaria total antibody",
-    "category": "Serology",
-    "price": 600,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Malaria Parasite",
-        "normalRange": "Not Seen / Negative",
-        "unit": "",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0416",
-      "malaria",
-      "total",
-      "antibody",
-      "serology",
-      "parasite"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 407,
-      "parameterMatch": "exact"
-    }
-  },
-  {
     "sno": 417,
     "testCode": "KT0417",
     "slug": "kt0417-malignant-cells",
@@ -19332,42 +19187,6 @@
     }
   },
   {
-    "sno": 499,
-    "testCode": "KT0499",
-    "slug": "kt0499-satyamev-lite",
-    "name": "SATYAMEV LITE",
-    "nameLower": "satyamev lite",
-    "category": "Health Package",
-    "price": 1099,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0499",
-      "satyamev",
-      "lite",
-      "health",
-      "package",
-      "result"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 488,
-      "parameterMatch": "exact"
-    }
-  },
-  {
     "sno": 500,
     "testCode": "KT0500",
     "slug": "kt0500-satyamev-mini-camp",
@@ -19499,42 +19318,6 @@
     ],
     "searchKeywords": [
       "kt0503",
-      "satyamev",
-      "super",
-      "health",
-      "package",
-      "result"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 492,
-      "parameterMatch": "exact"
-    }
-  },
-  {
-    "sno": 504,
-    "testCode": "KT0504",
-    "slug": "kt0504-satyamev-super",
-    "name": "SATYAMEV SUPER",
-    "nameLower": "satyamev super",
-    "category": "Health Package",
-    "price": 2549,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Result",
-        "normalRange": "As per lab method / reference range",
-        "unit": "",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0504",
       "satyamev",
       "super",
       "health",
@@ -21244,43 +21027,6 @@
     "source": {
       "rateList": "TRate.pdf",
       "sqlSourceId": 535,
-      "parameterMatch": "exact"
-    }
-  },
-  {
-    "sno": 549,
-    "testCode": "KT0549",
-    "slug": "kt0549-sputum-for-afb",
-    "name": "SPUTUM FOR AFB",
-    "nameLower": "sputum for afb",
-    "category": "Clinical Pathology",
-    "price": 500,
-    "sample": "",
-    "reportTime": "Same Day",
-    "isActive": true,
-    "parameters": [
-      {
-        "name": "Result",
-        "normalRange": "Negative for acid-fast bacilli (No AFB seen)",
-        "unit": "",
-        "method": "",
-        "sample": "",
-        "sortOrder": 1
-      }
-    ],
-    "searchKeywords": [
-      "kt0549",
-      "sputum",
-      "for",
-      "afb",
-      "clinical",
-      "pathology",
-      "result"
-    ],
-    "needsParameterReview": false,
-    "source": {
-      "rateList": "TRate.pdf",
-      "sqlSourceId": 536,
       "parameterMatch": "exact"
     }
   },
