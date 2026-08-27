@@ -288,19 +288,11 @@
       height: 17mm;
       width: 21mm;
       justify-self: center;
-      background:
-        repeating-linear-gradient(
-          90deg,
-          #111 0,
-          #111 1.1px,
-          #fff 1.1px,
-          #fff 3.2px,
-          #111 3.2px,
-          #111 4px,
-          #fff 4px,
-          #fff 6.1px
-        );
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .barcode svg { height: 100%; width: auto; max-width: 100%; }
 
     .patient-left,
     .patient-right {
@@ -386,12 +378,13 @@
       width: 20mm;
       height: 20mm;
       margin-inline: auto;
-      border: .4mm solid #111;
-      background:
-        conic-gradient(from 90deg, #111 25%, #fff 0 50%, #111 0 75%, #fff 0) 0 0 / 4mm 4mm,
-        repeating-linear-gradient(90deg, #111 0 1px, #fff 1px 3px);
-      opacity: .78;
+      padding: .4mm;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .qr svg { width: 100%; height: 100%; display: block; }
 
     .result-table {
       width: 100%;
@@ -1030,6 +1023,8 @@
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import { getBookingByBillNo, getReportByBillNo, getReportById } from "./firebase-service.js";
     import { fetchSharedReport, PAYMENT_PENDING_COPY, LAB_CONTACT } from "./js/shared-report.js";
+    import { qrSvg } from "./core/qrcode.js";
+    import { barcodeSvgVertical } from "./core/barcode.js";
 
     // Firebase auth restores the persisted session asynchronously (this can be
     // noticeably slower on mobile browsers). Firestore reads must not fire
@@ -1653,8 +1648,8 @@
       const gender = pick(report, ["gender", "patient_gender"], "");
       const refBy = pick(report, ["refBy", "ref_by", "doctor", "refDoctor", "ref_doctor"], "");
       const collectionDate = pick(report, ["collectionDate", "collection_date", "collDate", "createdAt"], "");
-      const registeredDate = pick(report, ["registeredDate", "registered_date", "createdAt", "created_at"], "");
-      const reportedDate = pick(report, ["reportedDate", "reportingDate", "reporting_date", "releasedAt", "updatedAt"], "");
+      const registeredDate = pick(report, ["registeredDate", "registered_date", "createdAt", "created_at", "bookingDate", "collectionDate", "collDate", "reportingDate"], "");
+      const reportedDate = pick(report, ["reportedDate", "reportingDate", "reporting_date", "releasedAt", "updatedAt", "approvedAt"], "");
       const status = pick(report, ["reportStatus", "report_status", "status"], "Final");
 
       return `
@@ -1752,6 +1747,38 @@
       `;
     }
 
+    // Real, locally generated Code 128 barcode + QR (Kazuhiko Arase's MIT
+    // encoder via core/qrcode.js) painted into the placeholder columns on
+    // every rendered page. Nothing is fetched from a QR/barcode web service -
+    // the printed report must not depend on a third party's uptime, and the QR
+    // encodes a link that opens medical results.
+    function paintReportCodes(report, billNo, root) {
+      const scope = root || document;
+      const bill = String(billNo || report.billNo || report.bill_no || report.reportId || "").trim();
+
+      if (bill) {
+        try {
+          const bc = barcodeSvgVertical(bill, { length: 58, moduleWidth: 1.15, margin: 3 });
+          scope.querySelectorAll(".report-barcode-column").forEach((el) => {
+            el.innerHTML = bc;
+            el.setAttribute("aria-label", "Bill number barcode " + bill);
+            el.removeAttribute("aria-hidden");
+          });
+        } catch (err) { console.warn("[report] barcode render failed", err); }
+      }
+
+      const qrUrl = String(report.verifyUrl || "").trim()
+        || `${location.origin}/report.html?bill=${encodeURIComponent(bill)}`;
+      try {
+        const qr = qrSvg(qrUrl, { size: 76, margin: 1, label: "Scan to open this report" });
+        scope.querySelectorAll(".report-qr-column").forEach((el) => {
+          el.innerHTML = qr;
+          el.setAttribute("aria-label", "QR code to open this report");
+          el.removeAttribute("aria-hidden");
+        });
+      } catch (err) { console.warn("[report] QR render failed", err); }
+    }
+
     function renderReport(report, billNo) {
       const results = completeCBCResults(report, completeESRResults(report, normalizeResults(report.results || report.reportResults || [])));
       if (!results.length) {
@@ -1773,6 +1800,7 @@
       const app = document.getElementById("app");
       app.className = "report-preview-wrap";
       app.innerHTML = pages.join("");
+      paintReportCodes(report, billNo, app);
       window.currentReportForShare = { report, billNo };
       const phone = String(report.whatsapp || report.phone || report.contactNo || "").replace(/\D/g, "");
       document.getElementById("shareWhatsAppBtn").classList.toggle("hidden", !phone);

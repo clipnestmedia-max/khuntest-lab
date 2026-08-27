@@ -141,6 +141,26 @@ All ported from swatisofttechsolution and wired to this app's kept `report.html`
 `firestore.rules` gate functions (`shareIsActive`, `reportShareBookingPaid`,
 `reportShareReportReleased`) already match the fields swati writes.
 
+### One renderer for every copy of a report
+
+`report.html` is now the only place a report is drawn — the admin preview, the
+patient portal and the shared link all open it, so every copy is identical
+(KhunTest letterhead, department groupings, CBC/ESR completion).
+
+- `admin/report-entry.js` `preview()` saves the draft, then opens
+  `report.html?reportId=<id>&print=1` instead of the platform's
+  `printReport()` (the `classic-letterhead` template is no longer used for
+  printing).
+- `report.html` used to draw the barcode and QR as **CSS gradient
+  placeholders** (`.barcode` / `.qr`) — decorative, not scannable. They are
+  now real: `paintReportCodes()` injects an SVG **Code 128** of the bill number
+  (`core/barcode.js` `barcodeSvgVertical`) and an SVG **QR** of the report's
+  verification link, or `report.html?bill=<no>` when there is none
+  (`core/qrcode.js` `qrSvg`, Kazuhiko Arase's MIT encoder — generated in the
+  browser, nothing fetched from a QR service). Painted onto every page.
+- `patientBlock()` "Registered Date" falls back to the booking / collection /
+  reporting date instead of printing blank.
+
 ## Known gaps / follow-ups
 - **Home Collection / Finance / Staff / Analytics** screens are wired and their
   rules are in place, but were not exercised against live data.

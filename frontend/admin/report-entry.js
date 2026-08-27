@@ -12,7 +12,6 @@ import { settingsDoc } from "../core/tenant.js";
 import { sessionCan, sessionCanWrite } from "../core/session.js";
 import { PERMISSIONS as P } from "../core/roles.js";
 import { listSignatories } from "../core/data/staff.js";
-import { printReport } from "../core/report-templates.js";
 import { sendReportReady } from "../core/whatsapp.js";
 import { createShareLink } from "./report-share.js";
 import { rupees } from "../core/data/helpers.js";
@@ -1067,42 +1066,37 @@ function pickSignatory(signatories) {
 async function preview() {
   if (!current.booking) return toastError("Open a booking first.");
 
-  // Recalculate so the PDF shows the current calculated values, not whatever
-  // was last painted.
   analyse();
 
-  // A released report gets its real link so the QR in the preview is the one
-  // that will be printed. A draft has none yet, and prints without a QR.
-  let verifyUrl = current.report?.verifyUrl || "";
-  if (!verifyUrl && current.report?.reportStatus === "Final") {
+  // Persist the current values so report.html reads them from Firestore, then
+  // open report.html itself for the preview / print. That is the KhunTest
+  // report layout (letterhead, department groupings, CBC/ESR completion, the
+  // real QR + barcode) - one renderer for the admin preview, the patient
+  // portal and the shared link, so every copy of a report looks identical.
+  try {
+    if (sessionCanWrite(P.REPORT_ENTER, ctx.session)) {
+      await saveDraft({ silent: true });
+    }
+  } catch (error) {
+    return reportError(error, "Could not save before preview.");
+  }
+
+  // A released report gets its secure verification link so the printed QR is
+  // the one a patient can scan. A draft previews with a plain open-link QR.
+  if (!current.report?.verifyUrl && current.report?.reportStatus === "Final") {
     try {
       const { url } = await createShareLink({
         report: current.report, booking: current.booking, actor: ctx.session
       });
-      verifyUrl = url;
-      // Persist it so it is on the document next time, and the patient portal
-      // and any later reopen print the same QR without minting again.
       current.report.verifyUrl = url;
       await Reports.saveReportVerifyUrl(current.report.reportId, url).catch(() => {});
-    } catch { /* preview without the QR rather than blocking the print */ }
-  }
-  if (!verifyUrl && current.report?.reportStatus === "Final") {
-    console.warn("[REPORT QR] a released report is being previewed without a verification link; the QR will be omitted");
+    } catch { /* preview without the secure QR rather than blocking the print */ }
   }
 
-  const report = {
-    ...(current.report || {}),
-    ...current.booking,
-    reportId: current.report?.reportId || current.booking.bookingId,
-    groups: current.groups,
-    reportStatus: current.report?.reportStatus || "Draft",
-    reportingDate: current.report?.reportingDate || new Date().toISOString(),
-    collectionDate: current.report?.collectionDate || current.booking.scheduledAt || "",
-    registeredDate: current.booking.createdAt || "",
-    verifyUrl
-  };
-  try { printReport(report, ctx.branding, reportSettings); }
-  catch (error) { toastError(error.message); }
+  const ref = current.report?.reportId || current.booking.billNo || current.booking.bookingId;
+  const url = `report.html?reportId=${encodeURIComponent(ref)}&print=1`;
+  const win = window.open(url, "_blank", "noopener");
+  if (!win) toastError("Please allow pop-ups to preview the report.");
 }
 
 function offerShare() {
