@@ -149,6 +149,47 @@ export function applyFlags(groups, patient = {}) {
 function isCalculatedRow(r) {
   return r.calculated === true || r.origin === "CALCULATED";
 }
+
+/**
+ * KhunTest compatibility layer.
+ *
+ * report.html (the patient-facing page) and the KhunTest patient portal read a
+ * report as a FLAT `results[]` array with a top-level `status` string. This
+ * app's admin panel entry screen is swatisofttechsolution's, which stores
+ * `groups[]` with `rows[]`. This deployment keeps report.html untouched, so
+ * every report we save carries BOTH shapes: `groups` for re-opening in the
+ * entry screen, `results` + `status` for rendering to the patient.
+ */
+export function flatResultsFromGroups(groups = []) {
+  const out = [];
+  groups.forEach((g) => {
+    (g.rows || []).forEach((r) => {
+      out.push({
+        category: g.category || "",
+        testName: g.testName || "",
+        parameterName: r.name || "",
+        parameterId: r.parameterId || "",
+        code: r.code || "",
+        resultValue: r.value ?? "",
+        normalRange: r.referenceRange || r.normalRange || "",
+        unit: r.unit || "",
+        method: r.method || "",
+        sample: g.sample || "",
+        comment: r.note || r.comment || "",
+        flag: r.flag || "",
+        isHeading: r.isHeading === true,
+        calculated: isCalculatedRow(r)
+      });
+    });
+  });
+  return out;
+}
+
+/** The status string report.html and the patient portal filter on. */
+export function khuntestStatus(reportStatus) {
+  return reportStatus === REPORT_STATUS.FINAL || reportStatus === REPORT_STATUS.AMENDED
+    ? "Final" : "Draft";
+}
 const hasValue = (r) => String(r.value ?? "").trim() !== "";
 
 /**
@@ -285,6 +326,10 @@ export async function saveReportDraft(input, { actor = {} } = {}) {
     ...(input.verifyUrl ? { verifyUrl: input.verifyUrl } : {}),
     templateId: input.templateId || "",
     reportStatus: REPORT_STATUS.DRAFT,
+    // KhunTest report.html / patient portal compatibility (see flatResultsFromGroups).
+    results: flatResultsFromGroups(groups),
+    status: khuntestStatus(REPORT_STATUS.DRAFT),
+    whatsapp: booking?.whatsapp || booking?.phone || input.phone || "",
     enteredByUid: actor.uid || "",
     enteredByName: actor.name || "",
     dayKey: dateKey(),
@@ -316,6 +361,10 @@ export async function approveReport(reportId, { actor = {}, signatory = null } =
 
   await updateDoc(docRef("reports", reportId), {
     reportStatus: REPORT_STATUS.FINAL,
+    // KhunTest report.html renders only when status === "Final"; refresh the
+    // flat results too so the released copy matches what was approved.
+    status: khuntestStatus(REPORT_STATUS.FINAL),
+    results: flatResultsFromGroups(before.groups),
     approvedByUid: actor.uid || "",
     approvedByName: actor.name || "",
     approvedAt: serverTimestamp(),
@@ -356,6 +405,7 @@ export async function revertReport(reportId, reason, { actor = {} } = {}) {
   const before = await getReport(reportId);
   await updateDoc(docRef("reports", reportId), {
     reportStatus: REPORT_STATUS.DRAFT,
+    status: khuntestStatus(REPORT_STATUS.DRAFT),
     revertReason: String(reason || "").trim(),
     revertedByName: actor.name || "",
     updatedAt: serverTimestamp()

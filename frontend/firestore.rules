@@ -298,6 +298,57 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- Collections used by the ported swatisofttechsolution admin panel ----
+    // The panel signs in as the same single "admin" user; these mirror the
+    // isAdmin() gate the rest of this file already uses.
+
+    // Sequential id counters (bill/booking/patient numbers), bumped in a txn.
+    match /counters/{kind} {
+      allow read, write: if isAdmin();
+    }
+
+    // Per-laboratory settings: medical rules, report signatories, branding.
+    // Readable by anyone so report rendering can use them; only admin writes.
+    match /settings/{key} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Append-only action log written by core/audit.js.
+    match /auditLogs/{entryId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /payments/{paymentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /homeCollections/{collectionId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /expenses/{expenseId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /staff/{staffId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /reportResults/{resultId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /reportTemplates/{templateId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Temporary development-only rules, if needed during setup:
     // match /{document=**} {
     //   allow read, write: if true;

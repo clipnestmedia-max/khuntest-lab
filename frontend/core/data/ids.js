@@ -7,7 +7,11 @@
 // each start at 1 and never interfere.
 import { db } from "../firebase-config.js";
 import { runTransaction, doc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { requireLabId, labPath } from "../tenant.js";
+
+// Single-tenant: no lab prefix on ids, and counters live at a flat
+// /counters/{kind}. Booking -> "B00001", bill -> "INV00001".
+const requireLabId = () => "";
+const labPath = () => "";
 
 const PREFIX = Object.freeze({
   patient: "P",
@@ -32,17 +36,17 @@ function pad(value, width) { return String(value).padStart(width, "0"); }
 export async function nextId(kind, { labId = requireLabId() } = {}) {
   const prefix = PREFIX[kind];
   if (!prefix) throw new Error(`Unknown id sequence "${kind}".`);
-  const ref = doc(db, `${labPath(labId)}/counters/${kind}`);
+  const ref = doc(db, "counters", kind);
 
   const value = await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     const current = snap.exists() ? Number(snap.data().value || 0) : 0;
     const next = current + 1;
-    tx.set(ref, { kind, value: next, labId, updatedAt: new Date().toISOString() }, { merge: true });
+    tx.set(ref, { kind, value: next, updatedAt: new Date().toISOString() }, { merge: true });
     return next;
   });
 
-  return `${labId}-${prefix}${pad(value, WIDTH[kind] || 5)}`;
+  return `${prefix}${pad(value, WIDTH[kind] || 5)}`;
 }
 
 /**
@@ -50,11 +54,11 @@ export async function nextId(kind, { labId = requireLabId() } = {}) {
  * public booking, or a counter write denied by an expired subscription). Still
  * lab-prefixed and still unique, just not sequential.
  */
-export function fallbackId(kind, labId = requireLabId()) {
+export function fallbackId(kind) {
   const prefix = PREFIX[kind] || "X";
   const stamp = Date.now().toString(36).toUpperCase();
   const salt = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `${labId}-${prefix}${stamp}${salt}`;
+  return `${prefix}${stamp}${salt}`;
 }
 
 /** Sequential when possible, unique always. Never throws. */
@@ -63,11 +67,11 @@ export async function safeNextId(kind, options = {}) {
     return await nextId(kind, options);
   } catch (err) {
     console.warn(`Sequential id for "${kind}" unavailable, using fallback.`, err?.message || err);
-    return fallbackId(kind, options.labId);
+    return fallbackId(kind);
   }
 }
 
 /** Peek at a counter without consuming a number (dashboard "next id" hints). */
-export function formatId(kind, value, labId = requireLabId()) {
-  return `${labId}-${PREFIX[kind] || "X"}${pad(value, WIDTH[kind] || 5)}`;
+export function formatId(kind, value) {
+  return `${PREFIX[kind] || "X"}${pad(value, WIDTH[kind] || 5)}`;
 }

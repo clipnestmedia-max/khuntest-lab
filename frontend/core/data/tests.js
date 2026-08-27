@@ -88,15 +88,38 @@ export function normalizeParameter(p = {}, index = 0) {
 import { rangeForPatient } from "../flags.js";
 export { rangeForPatient };
 
-/** Load the whole catalogue for the active lab (cached 10 minutes). */
+// The bundled 677-test KhunTest catalogue, loaded once and reused. It is the
+// fallback when the Firestore /tests collection is not populated on this
+// deployment, so the catalogue screen, booking search and the report-entry
+// parameter grids all work without a seed step.
+let bundledCatalogue = null;
+async function loadBundledCatalogue() {
+  if (bundledCatalogue) return bundledCatalogue;
+  const res = await fetch("/data/tests.json", { cache: "force-cache" });
+  if (!res.ok) throw new Error(`bundled catalogue: HTTP ${res.status}`);
+  const json = await res.json();
+  bundledCatalogue = (Array.isArray(json) ? json : [])
+    .map((t) => normalizeTest(String(t.testCode || t.slug || t.sno), t));
+  return bundledCatalogue;
+}
+
+/** Load the whole catalogue (cached 10 minutes). Firestore first, bundle fallback. */
 export async function loadTests({ activeOnly = true, force = false } = {}) {
   const key = `tests:${activeOnly ? "active" : "all"}`;
   if (force) cacheDrop(key);
   return cached(key, CACHE_TTL.tests, async () => {
-    const snap = await getDocs(col("tests"));
-    const rows = snap.docs
-      .map((d) => normalizeTest(d.id, d.data()))
-      .filter((t) => (activeOnly ? t.isActive : true));
+    let rows = [];
+    try {
+      const snap = await getDocs(col("tests"));
+      rows = snap.docs.map((d) => normalizeTest(d.id, d.data()));
+    } catch (err) {
+      console.warn("Firestore /tests read failed; using the bundled catalogue.", err);
+    }
+    if (rows.length < 50) {
+      // Not seeded into Firestore on this deployment - use the bundled file.
+      rows = await loadBundledCatalogue();
+    }
+    rows = rows.filter((t) => (activeOnly ? t.isActive : true));
     rows.sort((a, b) => a.name.localeCompare(b.name));
     return rows;
   });
@@ -114,8 +137,18 @@ export async function loadTestSummaries({ activeOnly = true, force = false } = {
 }
 
 export async function getTest(testId) {
-  const snap = await getDoc(docRef("tests", testId));
-  return snap.exists() ? normalizeTest(snap.id, snap.data()) : null;
+  const id = String(testId || "").trim();
+  if (!id) return null;
+  try {
+    const snap = await getDoc(docRef("tests", id));
+    if (snap.exists()) return normalizeTest(snap.id, snap.data());
+  } catch { /* fall through to the bundled catalogue */ }
+  const bundle = await loadBundledCatalogue().catch(() => []);
+  const key = id.toLowerCase();
+  return bundle.find((t) =>
+    String(t.id).toLowerCase() === key ||
+    String(t.testCode).toLowerCase() === key ||
+    String(t.slug).toLowerCase() === key) || null;
 }
 
 /**
