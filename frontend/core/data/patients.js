@@ -9,21 +9,21 @@ import { col, docRef, withLabId } from "../tenant.js";
 import { safeNextId } from "./ids.js";
 import {
   normalizeName, normalizePhone, cleanEmail, buildSearchTokens, clean, toNumber,
-  sortByDateDesc
+  sortByDateDesc, sortByBestTime, pick
 } from "./helpers.js";
 import { logAudit, AUDIT, diffFields } from "../audit.js";
 
 export function normalizePatient(id, data = {}) {
   return {
     id,
-    patientId: data.patientId || id,
-    uid: data.uid || "",
-    name: data.name || "",
-    phone: data.phone || "",
+    patientId: pick(data, ["patientId", "patient_id", "uid"], id),
+    uid: pick(data, ["uid", "authUid", "userId"], ""),
+    name: pick(data, ["name", "patientName", "patient_name", "fullName"], ""),
+    phone: pick(data, ["phone", "mobile", "contactNo"], ""),
     altPhone: data.altPhone || "",
-    whatsapp: data.whatsapp || data.phone || "",
-    email: data.email || "",
-    age: data.age || "",
+    whatsapp: pick(data, ["whatsapp", "phone", "mobile"], ""),
+    email: pick(data, ["email", "patientEmail"], ""),
+    age: pick(data, ["age", "patientAge"], ""),
     dob: data.dob || "",
     gender: data.gender || "",
     address: data.address || "",
@@ -125,21 +125,26 @@ export async function deletePatient(patientId, { hard = false } = {}) {
   });
 }
 
+// No orderBy: legacy patient docs (keyed by auth uid, written by the portal)
+// have no `createdAt` and would be dropped from an ordered query.
 export async function listPatients({ max = 500 } = {}) {
-  const snap = await getDocs(query(col("patients"), orderBy("createdAt", "desc"), limit(max)));
-  return snap.docs.map((d) => normalizePatient(d.id, d.data()));
+  const snap = await getDocs(query(col("patients"), limit(Math.max(max * 4, 2000))));
+  return sortByBestTime(snap.docs.map((d) => normalizePatient(d.id, d.data()))).slice(0, max);
 }
 
-/** Server-side prefix search using the stored token array. */
+/** Token search first; client-side scan fallback for legacy docs with no tokens. */
 export async function searchPatients(text, { max = 50 } = {}) {
   const term = String(text || "").trim().toLowerCase();
   if (!term) return listPatients({ max });
-  const snap = await getDocs(query(
-    col("patients"),
-    where("searchTokens", "array-contains", term),
-    limit(max)
-  ));
-  return snap.docs.map((d) => normalizePatient(d.id, d.data()));
+  const tokenSnap = await getDocs(query(
+    col("patients"), where("searchTokens", "array-contains", term), limit(max)
+  )).catch(() => null);
+  if (tokenSnap && !tokenSnap.empty) {
+    return tokenSnap.docs.map((d) => normalizePatient(d.id, d.data()));
+  }
+  const all = await listPatients({ max: 3000 });
+  return all.filter((p) => [p.name, p.phone, p.email, p.patientId]
+    .some((v) => String(v || "").toLowerCase().includes(term))).slice(0, max);
 }
 
 /** Exact phone lookup - the fastest path at a busy reception desk. */

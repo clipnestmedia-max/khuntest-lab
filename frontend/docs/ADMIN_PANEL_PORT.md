@@ -72,12 +72,28 @@ panel writes that previously had none: `counters`, `settings`, `auditLogs`,
 `reportResults`, `reportTemplates`. All existing rules are unchanged. **These
 take effect only when the rules are deployed.**
 
-## Known gaps / follow-ups
+## Reading legacy KhunTest data
 
-- **Booking interop:** admin-created bookings use swati's field shape. They
-  feed Report Entry fine. The KhunTest patient portal ("My Bookings") keys off
-  its own field names, so it may not list admin-created bookings until a
-  bookings compat pass (same idea as the reports dual-write).
+The platform's list queries used `orderBy("createdAt")`, and **Firestore
+silently drops any document missing the ordered field**. Pre-port KhunTest
+bookings, reports and patients were written without `createdAt` (and without
+`searchTokens`, `dayKey`, `patientUid`, `groups`), so the new screens showed
+nothing. Fixed in the data layer:
+
+- `core/data/{reports,bookings,patients,analytics}.js` list/listen queries drop
+  `orderBy` and sort client-side on `bestTime()` (the newest of `createdAt` /
+  `updatedAt` / `reportingDate` / `registeredDate` / ... a record actually has).
+- `normalizeReport()` rebuilds `groups[]` from a legacy flat `results[]` array
+  (`groupsFromLegacy`) and maps `status`/`reportStatus` values
+  `released`/`final`/`completed` → `Final`, so old reports open with their
+  values and flags intact.
+- `normalizeBooking()` / `normalizePatient()` accept the old field names
+  (`selectedTests`, `patient_name`, `customerBillNo`, `referringDoctor`,
+  `patientAge`, `dueAmount`, …) and infer `paymentStatus` from the balance.
+- `search*()` fall back to a client-side scan when the `searchTokens` query
+  returns nothing.
+
+## Known gaps / follow-ups
 - **Home Collection / Finance / Staff / Analytics** screens are wired and their
   rules are in place, but were not exercised against live data.
 - **Machine Results:** the screen reads flat `/machineResults`; confirm the

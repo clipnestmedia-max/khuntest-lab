@@ -7,10 +7,16 @@
 // aggregation without changing a single caller.
 import { getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { col } from "../tenant.js";
-import { snapshotRows, toNumber, dateKey } from "./helpers.js";
+import { snapshotRows, toNumber, dateKey, bestTime } from "./helpers.js";
 
 function inRange(row, from, to, field = "dayKey") {
-  const key = row[field] || dateKey(row.createdAt || row.paidAt);
+  // Legacy bookings/payments have no dayKey - fall back to any date they carry.
+  let key = row[field];
+  if (!key) {
+    const ms = bestTime(row);
+    key = ms ? dateKey(new Date(ms)) : "";
+  }
+  if (!key) return !from && !to;   // undateable row: only include an unbounded range
   if (from && key < from) return false;
   if (to && key > to) return false;
   return true;
@@ -40,10 +46,11 @@ export const RANGES = Object.freeze({
 
 /** Pull the raw rows once; every report below is derived from these. */
 export async function loadFinanceData({ from = "", to = "", max = 3000 } = {}) {
+  // No orderBy: legacy rows without the ordered field would be dropped.
   const [bookingSnap, paymentSnap, expenseSnap] = await Promise.all([
-    getDocs(query(col("bookings"), orderBy("createdAt", "desc"), limit(max))),
-    getDocs(query(col("payments"), orderBy("paidAt", "desc"), limit(max))),
-    getDocs(query(col("expenses"), orderBy("spentAt", "desc"), limit(max))).catch(() => ({ docs: [] }))
+    getDocs(query(col("bookings"), limit(max))),
+    getDocs(query(col("payments"), limit(max))).catch(() => ({ docs: [] })),
+    getDocs(query(col("expenses"), limit(max))).catch(() => ({ docs: [] }))
   ]);
   return {
     bookings: snapshotRows(bookingSnap).filter((r) => inRange(r, from, to)),
@@ -163,24 +170,45 @@ export function outstandingList(bookings = []) {
 /** Everything the dashboard's top strip needs, in one pass. */
 export async function dashboardStats() {
   const today = dateKey();
+  // No orderBy / no dayKey filter on the query: legacy KhunTest rows carry
+  // neither field and would be excluded. Read broadly and filter in JS.
   const [bookingSnap, reportSnap, paymentSnap] = await Promise.all([
-    getDocs(query(col("bookings"), where("dayKey", "==", today), limit(500))),
-    getDocs(query(col("reports"), orderBy("createdAt", "desc"), limit(300))),
-    getDocs(query(col("payments"), where("dayKey", "==", today), limit(500)))
+    getDocs(query(col("bookings"), limit(2000))),
+    getDocs(query(col("reports"), limit(2000))),
+    getDocs(query(col("payments"), limit(2000))).catch(() => ({ docs: [] }))
   ]);
-  const bookings = snapshotRows(bookingSnap);
-  const reports = snapshotRows(reportSnap);
-  const payments = snapshotRows(paymentSnap);
+  const allBookings = snapshotRows(bookingSnap);
+  const reports = (reportSnap.docs || []).map((d) => ({ id: d.id, ...d.data() }))
+    .map((r) => ({ reportStatus: legacyReportStatus(r) }));
+  const payments = (paymentSnap.docs || []).map((d) => ({ id: d.id, ...d.data() }));
+
+  const isToday = (row, dateFields) => {
+    if (row.dayKey === today) return true;
+    for (const f of dateFields) if (row[f] && dateKey(row[f]) === today) return true;
+    const ms = bestTime(row);
+    return Boolean(ms) && dateKey(new Date(ms)) === today;
+  };
+  const bookings = allBookings.filter((b) => isToday(b, ["createdAt", "collDate", "collectionDate"]));
+  const todayPayments = payments.filter((p) => isToday(p, ["paidAt", "createdAt", "date"]));
 
   return {
     todayBookings: bookings.length,
-    todayRevenue: payments.reduce((s, p) => s + toNumber(p.amount), 0),
-    todayBilled: bookings.reduce((s, b) => s + toNumber(b.totalAmount), 0),
-    pendingSamples: bookings.filter((b) => ["New", "Sample Pending"].includes(b.bookingStatus)).length,
+    todayRevenue: todayPayments.reduce((s, p) => s + toNumber(p.amount ?? p.amountPaid), 0),
+    todayBilled: bookings.reduce((s, b) => s + toNumber(b.totalAmount ?? b.grossTotal), 0),
+    pendingSamples: bookings.filter((b) => ["New", "Sample Pending", ""].includes(b.bookingStatus || b.status || "")).length,
     pendingReports: reports.filter((r) => r.reportStatus !== "Final").length,
     completedReports: reports.filter((r) => r.reportStatus === "Final").length,
-    outstanding: bookings.reduce((s, b) => s + toNumber(b.balanceDue), 0)
+    outstanding: allBookings.reduce((s, b) => s + toNumber(
+      b.balanceDue ?? b.dueAmount ?? Math.max(toNumber(b.totalAmount) - toNumber(b.paidAmount), 0)), 0)
   };
+}
+
+/** Map a legacy status string onto the platform's "Final"/"Draft". */
+function legacyReportStatus(r) {
+  const raw = String(r.reportStatus || r.status || "").toLowerCase();
+  if (["released", "final", "completed", "complete", "approved", "amended"].includes(raw)
+      || r.reportReleased === true) return "Final";
+  return raw ? "Draft" : "Draft";
 }
 
 // ---------- exports ----------

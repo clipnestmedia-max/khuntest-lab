@@ -4,6 +4,9 @@
 // the cache keys are now namespaced per laboratory so two labs open in two
 // browser tabs can never read each other's cached rows.
 import { getLabId } from "../tenant.js";
+// Imported for local use in bestTime() below. The re-export block further down
+// forwards these names to importers but does NOT bind them in this module.
+import { toMillis as _toMillis } from "../format.js";
 
 const memoryCache = new Map();
 const inFlight = new Map();
@@ -88,6 +91,42 @@ export {
 
 export function normalizeDoc(snapshot) {
   return { id: snapshot.id, ...snapshot.data() };
+}
+
+// Backward compatibility with the pre-port KhunTest data.
+//
+// The platform's list queries used orderBy("createdAt"), and Firestore
+// SILENTLY DROPS any document that lacks the ordered field. Legacy KhunTest
+// bookings, reports and patients were written without createdAt (and without
+// searchTokens, dayKey, patientUid, groups, ...). The data layer now queries
+// WITHOUT orderBy so nothing is dropped, and sorts client-side on whatever
+// timestamp a document actually has.
+const TIME_FIELDS = [
+  "createdAt", "created_at", "updatedAt", "updated_at", "approvedAt",
+  "reportingDate", "registeredDate", "collectionDate", "reportDate",
+  "bookingDate", "billDate", "date", "timestamp", "dayKey"
+];
+
+export function bestTime(data = {}) {
+  for (const f of TIME_FIELDS) {
+    const ms = _toMillis(data[f]);
+    if (ms) return ms;
+  }
+  return 0;
+}
+
+/** Sort newest-first by the best timestamp a record carries. */
+export function sortByBestTime(rows) {
+  return [...rows].sort((a, b) => bestTime(b) - bestTime(a));
+}
+
+/** First non-empty value among the given keys. */
+export function pick(obj = {}, keys = [], fallback = "") {
+  for (const k of keys) {
+    const v = obj[k];
+    if (v !== undefined && v !== null && v !== "") return v;
+  }
+  return fallback;
 }
 
 export function snapshotRows(snapshot) {

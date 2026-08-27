@@ -11,7 +11,7 @@ import { col, docRef, withLabId } from "../tenant.js";
 import { safeNextId } from "./ids.js";
 import {
   snapshotRows, normalizeName, normalizePhone, cleanEmail, buildSearchTokens, clean, toNumber,
-  dateKey, sortByDateDesc
+  dateKey, sortByDateDesc, sortByBestTime, pick
 } from "./helpers.js";
 import { upsertPatientByPhone, recordVisit } from "./patients.js";
 import { logAudit, AUDIT, diffFields } from "../audit.js";
@@ -63,37 +63,62 @@ export function priceBooking({ tests = [], collectionCharge = 0, discount = 0, p
 }
 
 export function normalizeBooking(id, data = {}) {
-  const tests = Array.isArray(data.tests) ? data.tests : [];
+  // Legacy KhunTest bookings stored the test list as `selectedTests` (or
+  // `reportItems`), the patient as `patient_name`/`name`, the bill as
+  // `customerBillNo`, and the doctor as `referringDoctor`. Accept all of them.
+  const rawTests = Array.isArray(data.tests) && data.tests.length ? data.tests
+    : Array.isArray(data.selectedTests) && data.selectedTests.length ? data.selectedTests
+    : Array.isArray(data.reportItems) ? data.reportItems
+    : [];
+  const tests = rawTests.map((t, i) => ({
+    testId: t.testId || t.id || t.testCode || t.slug || `T${i + 1}`,
+    testCode: t.testCode || t.code || "",
+    name: t.name || t.testName || t.test_name || "",
+    category: t.category || "",
+    sample: t.sample || "",
+    reportTime: t.reportTime || "",
+    price: toNumber(t.price ?? t.rate ?? t.amount),
+    packageName: t.packageName || t.package || ""
+  }));
+
+  const totalAmount = toNumber(pick(data, ["totalAmount", "grossTotal", "netAmount", "finalAmount", "price"], 0));
+  const paidAmount = toNumber(pick(data, ["paidAmount", "amountPaid", "paid", "receivedAmount"], 0));
+  const balanceRaw = data.balanceDue ?? data.dueAmount ?? data.balance;
+  const balanceDue = balanceRaw != null ? toNumber(balanceRaw) : Math.max(totalAmount - paidAmount, 0);
+  const explicitPay = pick(data, ["paymentStatus", "payment_status"], "");
+  const paymentStatus = explicitPay
+    || (totalAmount > 0 && balanceDue <= 0 ? "Paid" : paidAmount > 0 ? "Partial" : "Pending");
+
   return {
     id,
     bookingId: data.bookingId || id,
-    billNo: data.billNo || data.bookingId || id,
+    billNo: pick(data, ["billNo", "bill_no", "customerBillNo", "bookingId"], id),
     patientId: data.patientId || "",
-    patientUid: data.patientUid || "",
-    patientName: data.patientName || "",
-    phone: data.phone || "",
-    whatsapp: data.whatsapp || data.phone || "",
-    email: data.email || "",
-    age: data.age || "",
+    patientUid: pick(data, ["patientUid", "authUid", "userId", "uid"], ""),
+    patientName: pick(data, ["patientName", "patient_name", "name"], ""),
+    phone: pick(data, ["phone", "mobile", "contactNo"], ""),
+    whatsapp: pick(data, ["whatsapp", "phone", "mobile"], ""),
+    email: pick(data, ["email", "patientEmail"], ""),
+    age: pick(data, ["age", "patientAge"], ""),
     gender: data.gender || "",
     address: data.address || "",
-    refBy: data.refBy || data.referringDoctor || "",
+    refBy: pick(data, ["refBy", "referringDoctor", "doctor", "refDoctor"], ""),
     branchId: data.branchId || "",
-    collectionType: data.collectionType || "Lab Visit",
-    scheduledAt: data.scheduledAt || "",
+    collectionType: data.collectionType || data.collectionMode || "Lab Visit",
+    scheduledAt: pick(data, ["scheduledAt", "collDate", "collectionDate", "appointmentDate"], ""),
     tests,
     testNames: tests.map((t) => t.name).filter(Boolean).join(", "),
-    subtotal: toNumber(data.subtotal),
+    subtotal: toNumber(pick(data, ["subtotal", "grossTotal"], 0)),
     collectionCharge: toNumber(data.collectionCharge),
     discount: toNumber(data.discount),
-    totalAmount: toNumber(data.totalAmount),
-    paidAmount: toNumber(data.paidAmount),
-    balanceDue: toNumber(data.balanceDue),
-    paymentMode: data.paymentMode || "Cash",
-    paymentStatus: data.paymentStatus || "Pending",
-    bookingStatus: data.bookingStatus || data.status || "New",
+    totalAmount,
+    paidAmount,
+    balanceDue,
+    paymentMode: pick(data, ["paymentMode", "payMode"], "Cash"),
+    paymentStatus,
+    bookingStatus: pick(data, ["bookingStatus", "status"], "New"),
     source: data.source || "walkin",
-    remarks: data.remarks || "",
+    remarks: pick(data, ["remarks", "notes"], ""),
     collectedBy: data.collectedBy || "",
     createdByUid: data.createdByUid || "",
     createdByName: data.createdByName || "",
@@ -228,31 +253,37 @@ export async function deleteBooking(bookingId) {
   });
 }
 
+// No orderBy: a legacy booking without `createdAt` would be excluded entirely.
 export async function listBookings({ max = 400, status = "" } = {}) {
-  const clauses = [col("bookings")];
-  if (status) clauses.push(where("bookingStatus", "==", status));
-  clauses.push(orderBy("createdAt", "desc"), limit(max));
-  const snap = await getDocs(query(...clauses));
-  return snap.docs.map((d) => normalizeBooking(d.id, d.data()));
+  const snap = await getDocs(query(col("bookings"), limit(Math.max(max * 4, 1500))));
+  let rows = snap.docs.map((d) => normalizeBooking(d.id, d.data()));
+  if (status) rows = rows.filter((b) => b.bookingStatus === status);
+  return sortByBestTime(rows).slice(0, max);
 }
 
 export async function listTodayBookings() {
-  const snap = await getDocs(query(col("bookings"), where("dayKey", "==", dateKey()), limit(500)));
-  return sortByDateDesc(snap.docs.map((d) => normalizeBooking(d.id, d.data())));
+  // dayKey isn't on legacy bookings; match it OR a best-time that lands today.
+  const today = dateKey();
+  const snap = await getDocs(query(col("bookings"), limit(1500)));
+  const rows = snap.docs.map((d) => normalizeBooking(d.id, d.data()))
+    .filter((b) => {
+      const raw = b.createdAt || b.scheduledAt;
+      return (raw && dateKey(raw) === today);
+    });
+  return sortByBestTime(rows);
 }
 
 export async function listPatientBookings(patientUid, { max = 100 } = {}) {
   if (!patientUid) return [];
-  const snap = await getDocs(query(
-    col("bookings"), where("patientUid", "==", patientUid), orderBy("createdAt", "desc"), limit(max)
-  ));
-  return snap.docs.map((d) => normalizeBooking(d.id, d.data()));
+  const snap = await getDocs(query(col("bookings"), where("patientUid", "==", patientUid), limit(500))).catch(() => null);
+  const rows = snap ? snap.docs.map((d) => normalizeBooking(d.id, d.data())) : [];
+  return sortByBestTime(rows).slice(0, max);
 }
 
 export function listenBookings(callback, onError) {
   return onSnapshot(
-    query(col("bookings"), orderBy("createdAt", "desc"), limit(300)),
-    (snap) => callback(snap.docs.map((d) => normalizeBooking(d.id, d.data()))),
+    query(col("bookings"), limit(1500)),
+    (snap) => callback(sortByBestTime(snap.docs.map((d) => normalizeBooking(d.id, d.data())))),
     onError
   );
 }
@@ -260,8 +291,13 @@ export function listenBookings(callback, onError) {
 export async function searchBookings(text, { max = 50 } = {}) {
   const term = String(text || "").trim().toLowerCase();
   if (!term) return listBookings({ max });
-  const snap = await getDocs(query(col("bookings"), where("searchTokens", "array-contains", term), limit(max)));
-  return sortByDateDesc(snap.docs.map((d) => normalizeBooking(d.id, d.data())));
+  const tokenSnap = await getDocs(query(col("bookings"), where("searchTokens", "array-contains", term), limit(max))).catch(() => null);
+  if (tokenSnap && !tokenSnap.empty) {
+    return sortByBestTime(tokenSnap.docs.map((d) => normalizeBooking(d.id, d.data()))).slice(0, max);
+  }
+  const all = await listBookings({ max: 3000 });
+  return all.filter((b) => [b.billNo, b.patientName, b.phone, b.bookingId, b.testNames]
+    .some((v) => String(v || "").toLowerCase().includes(term))).slice(0, max);
 }
 
 // ---------- payments ----------

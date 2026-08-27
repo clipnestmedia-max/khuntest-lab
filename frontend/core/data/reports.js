@@ -12,7 +12,7 @@ import { col, docRef, withLabId } from "../tenant.js";
 import { getTest } from "./tests.js";
 import { rangeForPatient, flagResult } from "../flags.js";
 import { getBooking } from "./bookings.js";
-import { clean, toNumber, buildSearchTokens, dateKey, sortByDateDesc } from "./helpers.js";
+import { clean, toNumber, buildSearchTokens, dateKey, sortByDateDesc, sortByBestTime, pick } from "./helpers.js";
 import { logAudit, AUDIT } from "../audit.js";
 
 export const REPORT_STATUS = Object.freeze({
@@ -243,26 +243,84 @@ export function groupProgress(group) {
   };
 }
 
+// --- legacy KhunTest report compatibility ---------------------------------
+//
+// Pre-port reports were stored as a flat `results[]` array (no `groups[]`) with
+// a lowercase `status`/`reportStatus` like "released"/"final". Rebuild the
+// group/row structure the entry screen and templates expect so old reports
+// open with their values intact.
+const legacyNameKey = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+function legacyStatus(data) {
+  const raw = String(pick(data, ["reportStatus", "status", "report_status"], "")).toLowerCase();
+  if (["released", "release", "final", "completed", "complete", "approved", "done"].includes(raw)) {
+    return REPORT_STATUS.FINAL;
+  }
+  if (raw === "amended") return REPORT_STATUS.AMENDED;
+  if (data.reportReleased === true || data.released === true) return REPORT_STATUS.FINAL;
+  return REPORT_STATUS.DRAFT;
+}
+
+function groupsFromLegacy(data) {
+  const rows = pick(data, ["results", "reportResults", "reportItems", "resultRows"], null);
+  if (!Array.isArray(rows) || !rows.length) return [];
+  const byTest = new Map();
+  rows.forEach((r, i) => {
+    const testName = pick(r, ["testName", "test_name", "test", "groupName", "group"], "")
+      || pick(r, ["category", "department", "section"], "") || "Result";
+    const key = legacyNameKey(testName);
+    if (!byTest.has(key)) {
+      byTest.set(key, {
+        testId: testName, testCode: r.testCode || r.code || "",
+        testName, category: pick(r, ["category", "department", "section"], ""),
+        sample: pick(r, ["sample", "sampleType", "sample_type"], ""),
+        method: pick(r, ["method", "methodName"], ""), notes: "", rows: []
+      });
+    }
+    const name = pick(r, ["parameterName", "parameter_name", "parameter", "name"], testName);
+    byTest.get(key).rows.push({
+      parameterId: r.parameterId || legacyNameKey(name) || `P${i + 1}`,
+      code: r.code || r.parameterCode || "",
+      name,
+      unit: pick(r, ["unit", "units"], ""),
+      referenceRange: pick(r, ["normalRange", "normalValue", "normal_value", "referenceRange", "reference_range", "range", "normal"], ""),
+      rangeMale: "", rangeFemale: "", rangeChild: "",
+      method: pick(r, ["method", "methodName"], ""),
+      isHeading: Boolean(r.isHeading || r.heading || r.type === "heading"),
+      value: String(pick(r, ["value", "resultValue", "result", "finding"], "")),
+      flag: pick(r, ["flag", "abnormalFlag", "abnormal_flag", "resultFlag"], ""),
+      note: pick(r, ["comment", "remarks", "note"], "")
+    });
+  });
+  return Array.from(byTest.values());
+}
+// -----------------------------------------------------------------------------
+
 export function normalizeReport(id, data = {}) {
+  const groups = Array.isArray(data.groups) && data.groups.length
+    ? data.groups
+    : groupsFromLegacy(data);
   return {
     id,
     reportId: data.reportId || id,
-    bookingId: data.bookingId || "",
-    billNo: data.billNo || data.bookingId || "",
+    bookingId: data.bookingId || data.billNo || id,
+    billNo: pick(data, ["billNo", "bill_no", "customerBillNo", "bookingId"], id),
     patientId: data.patientId || "",
-    patientUid: data.patientUid || "",
-    patientName: data.patientName || "",
-    phone: data.phone || "",
-    age: data.age || "",
+    patientUid: pick(data, ["patientUid", "authUid", "userId", "uid"], ""),
+    patientName: pick(data, ["patientName", "patient_name", "name"], ""),
+    phone: pick(data, ["phone", "whatsapp", "contactNo", "mobile"], ""),
+    age: pick(data, ["age", "patientAge"], ""),
     gender: data.gender || "",
-    refBy: data.refBy || "",
+    refBy: pick(data, ["refBy", "referringDoctor", "doctor", "refDoctor"], ""),
     branchId: data.branchId || "",
-    collectionDate: data.collectionDate || "",
+    collectionDate: pick(data, ["collectionDate", "collDate", "sampleDate"], ""),
     registeredDate: data.registeredDate || data.createdAt || "",
-    reportingDate: data.reportingDate || "",
+    reportingDate: pick(data, ["reportingDate", "reportDate", "releasedAt"], ""),
     sampleType: data.sampleType || "",
-    groups: Array.isArray(data.groups) ? data.groups : [],
-    reportStatus: data.reportStatus || REPORT_STATUS.DRAFT,
+    groups,
+    reportStatus: data.reportStatus && Object.values(REPORT_STATUS).includes(data.reportStatus)
+      ? data.reportStatus
+      : legacyStatus(data),
     templateId: data.templateId || "",
     enteredByUid: data.enteredByUid || "",
     enteredByName: data.enteredByName || "",
@@ -425,41 +483,51 @@ export async function getReport(reportId) {
 export async function getReportByBooking(bookingId) {
   const direct = await getReport(bookingId);
   if (direct) return direct;
-  const snap = await getDocs(query(col("reports"), where("bookingId", "==", bookingId), limit(1)));
-  return snap.empty ? null : normalizeReport(snap.docs[0].id, snap.docs[0].data());
+  for (const field of ["bookingId", "billNo", "customerBillNo"]) {
+    const snap = await getDocs(query(col("reports"), where(field, "==", bookingId), limit(1))).catch(() => null);
+    if (snap && !snap.empty) return normalizeReport(snap.docs[0].id, snap.docs[0].data());
+  }
+  return null;
 }
 
+// No orderBy: a legacy report written without `createdAt` would be dropped from
+// the result set entirely. Read the collection and sort client-side instead.
 export async function listReports({ status = "", max = 300 } = {}) {
-  const clauses = [col("reports")];
-  if (status) clauses.push(where("reportStatus", "==", status));
-  clauses.push(orderBy("createdAt", "desc"), limit(max));
-  const snap = await getDocs(query(...clauses));
-  return snap.docs.map((d) => normalizeReport(d.id, d.data()));
+  const snap = await getDocs(query(col("reports"), limit(Math.max(max * 4, 1000))));
+  let rows = snap.docs.map((d) => normalizeReport(d.id, d.data()));
+  if (status) rows = rows.filter((r) => r.reportStatus === status);
+  return sortByBestTime(rows).slice(0, max);
 }
 
 export async function listPatientReports(patientUid, { max = 100 } = {}) {
   if (!patientUid) return [];
-  const snap = await getDocs(query(
-    col("reports"),
-    where("patientUid", "==", patientUid),
-    where("reportStatus", "==", REPORT_STATUS.FINAL),
-    orderBy("createdAt", "desc"),
-    limit(max)
-  ));
-  return snap.docs.map((d) => normalizeReport(d.id, d.data()));
+  const snap = await getDocs(query(col("reports"), where("patientUid", "==", patientUid), limit(500))).catch(() => null);
+  const rows = (snap ? snap.docs.map((d) => normalizeReport(d.id, d.data())) : [])
+    .filter((r) => r.reportStatus === REPORT_STATUS.FINAL || r.reportStatus === REPORT_STATUS.AMENDED);
+  return sortByBestTime(rows).slice(0, max);
 }
 
 export async function searchReports(text, { max = 50 } = {}) {
   const term = String(text || "").trim().toLowerCase();
   if (!term) return listReports({ max });
-  const snap = await getDocs(query(col("reports"), where("searchTokens", "array-contains", term), limit(max)));
-  return sortByDateDesc(snap.docs.map((d) => normalizeReport(d.id, d.data())));
+  // Token query first (fast when present); fall back to a client-side scan so
+  // legacy reports with no searchTokens are still found.
+  let rows = [];
+  const tokenSnap = await getDocs(query(col("reports"), where("searchTokens", "array-contains", term), limit(max))).catch(() => null);
+  if (tokenSnap && !tokenSnap.empty) {
+    rows = tokenSnap.docs.map((d) => normalizeReport(d.id, d.data()));
+  } else {
+    const all = await listReports({ max: 2000 });
+    rows = all.filter((r) => [r.billNo, r.patientName, r.phone, r.bookingId]
+      .some((v) => String(v || "").toLowerCase().includes(term)));
+  }
+  return sortByBestTime(rows).slice(0, max);
 }
 
 export function listenReports(callback, onError) {
   return onSnapshot(
-    query(col("reports"), orderBy("createdAt", "desc"), limit(200)),
-    (snap) => callback(snap.docs.map((d) => normalizeReport(d.id, d.data()))),
+    query(col("reports"), limit(1000)),
+    (snap) => callback(sortByBestTime(snap.docs.map((d) => normalizeReport(d.id, d.data())))),
     onError
   );
 }
