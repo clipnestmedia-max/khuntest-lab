@@ -24,6 +24,7 @@ import { initBookingScreen } from "./booking-screen.js";
 import { initReportEntry, openReportFor, refreshBookingList } from "./report-entry.js";
 import { initSettingsScreens } from "./settings-screen.js";
 import { initMedicalScreen, renderMedical } from "./medical-screen.js";
+import { initMachineResultsScreen, renderMachineResults } from "./machine-results-screen.js";
 
 const TAB_TITLES = {
   dashboard: "Dashboard", booking: "New Booking", bookings: "Bookings",
@@ -31,7 +32,7 @@ const TAB_TITLES = {
   homeCollection: "Home Collection", onlineBookings: "Online Requests",
   catalogue: "Test Catalogue", finance: "Finance", analytics: "Analytics",
   staff: "Staff", branding: "Branding", settings: "Settings",
-  medical: "Medical Rules", audit: "Audit Log"
+  medical: "Medical Rules", machineResults: "Machine Results", audit: "Audit Log"
 };
 
 // ---------- boot ----------
@@ -75,6 +76,7 @@ initBookingScreen({ session, branding, onSaved: () => {
 initReportEntry({ session, branding, onChanged: () => invalidate() });
 initSettingsScreens({ session, branding });
 initMedicalScreen({ session, branding });
+initMachineResultsScreen({ session, branding });
 
 // ---------- permissions ----------
 
@@ -135,6 +137,7 @@ async function loadTab(tab) {
       case "analytics": return renderAnalytics();
       case "staff": return renderStaff();
       case "medical": return renderMedical();
+      case "machineResults": return renderMachineResults();
       case "audit": return renderAudit();
       default: return undefined;
     }
