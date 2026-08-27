@@ -88,10 +88,12 @@ export function normalizeParameter(p = {}, index = 0) {
 import { rangeForPatient } from "../flags.js";
 export { rangeForPatient };
 
-// The bundled 677-test KhunTest catalogue, loaded once and reused. It is the
-// fallback when the Firestore /tests collection is not populated on this
-// deployment, so the catalogue screen, booking search and the report-entry
-// parameter grids all work without a seed step.
+// The catalogue is the bundled 677-test list (frontend/data/tests.json - the
+// swatisofttechsolution catalogue, parameters carrying structured male/female/
+// child + numeric reference ranges that core/flags.js and core/medical/* read).
+// It is the SOURCE OF TRUTH: those 677 always exist, exactly as shipped.
+// Firestore /tests is treated as an OVERLAY on top - a price the admin edited,
+// a test the admin added, a test the admin deactivated - matched by testCode.
 let bundledCatalogue = null;
 async function loadBundledCatalogue() {
   if (bundledCatalogue) return bundledCatalogue;
@@ -103,22 +105,45 @@ async function loadBundledCatalogue() {
   return bundledCatalogue;
 }
 
-/** Load the whole catalogue (cached 10 minutes). Firestore first, bundle fallback. */
+// The shipped catalogue is authoritative for a test's identity and its
+// PARAMETERS / reference ranges. Firestore may only adjust these scalar,
+// operational fields on a shipped test - never its parameter grid.
+const OVERLAY_FIELDS = Object.freeze([
+  "price", "mrp", "isActive", "reportTime", "sample", "method", "notes", "shortName"
+]);
+
+function applyOverlay(shipped, over) {
+  const out = { ...shipped };
+  OVERLAY_FIELDS.forEach((f) => {
+    const v = over[f];
+    if (v !== "" && v !== null && v !== undefined) out[f] = v;
+  });
+  return out;
+}
+
+/** Load the whole catalogue (cached 10 minutes): the shipped 677 + Firestore overlay. */
 export async function loadTests({ activeOnly = true, force = false } = {}) {
   const key = `tests:${activeOnly ? "active" : "all"}`;
   if (force) cacheDrop(key);
   return cached(key, CACHE_TTL.tests, async () => {
-    let rows = [];
+    const base = await loadBundledCatalogue();
+    const byCode = new Map(base.map((t) => [String(t.testCode).toUpperCase(), t]));
+
     try {
       const snap = await getDocs(col("tests"));
-      rows = snap.docs.map((d) => normalizeTest(d.id, d.data()));
+      snap.docs.forEach((d) => {
+        const over = normalizeTest(d.id, d.data());
+        const code = String(over.testCode || d.id).toUpperCase();
+        const shipped = byCode.get(code);
+        // Shipped test -> keep its parameters, take only operational edits.
+        // Unknown testCode -> a test the admin genuinely added; keep it whole.
+        byCode.set(code, shipped ? applyOverlay(shipped, over) : over);
+      });
     } catch (err) {
-      console.warn("Firestore /tests read failed; using the bundled catalogue.", err);
+      console.warn("Firestore /tests overlay read failed; using the shipped catalogue only.", err);
     }
-    if (rows.length < 50) {
-      // Not seeded into Firestore on this deployment - use the bundled file.
-      rows = await loadBundledCatalogue();
-    }
+
+    let rows = Array.from(byCode.values());
     rows = rows.filter((t) => (activeOnly ? t.isActive : true));
     rows.sort((a, b) => a.name.localeCompare(b.name));
     return rows;
@@ -139,16 +164,21 @@ export async function loadTestSummaries({ activeOnly = true, force = false } = {
 export async function getTest(testId) {
   const id = String(testId || "").trim();
   if (!id) return null;
-  try {
-    const snap = await getDoc(docRef("tests", id));
-    if (snap.exists()) return normalizeTest(snap.id, snap.data());
-  } catch { /* fall through to the bundled catalogue */ }
-  const bundle = await loadBundledCatalogue().catch(() => []);
   const key = id.toLowerCase();
-  return bundle.find((t) =>
+  const bundle = await loadBundledCatalogue().catch(() => []);
+  const shipped = bundle.find((t) =>
     String(t.id).toLowerCase() === key ||
     String(t.testCode).toLowerCase() === key ||
     String(t.slug).toLowerCase() === key) || null;
+
+  let overlay = null;
+  try {
+    const snap = await getDoc(docRef("tests", id));
+    if (snap.exists()) overlay = normalizeTest(snap.id, snap.data());
+  } catch { /* Firestore unavailable - the shipped entry is enough */ }
+  if (!overlay) return shipped;
+  // Shipped test keeps its parameter grid; unknown testCode is an admin addition.
+  return shipped ? applyOverlay(shipped, overlay) : overlay;
 }
 
 /**

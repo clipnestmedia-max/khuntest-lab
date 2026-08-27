@@ -48,11 +48,21 @@ patient portal read a flat `results[]` with a top-level `status`. So
 
 ## Test catalogue
 
-`core/data/tests.js` `loadTests()` / `getTest()` fall back to the bundled
-`/data/tests.json` (the 677-test KhunTest catalogue) when the Firestore
-`/tests` collection is not populated — so the Test Catalogue screen, booking
-search and the **report-entry parameter grids** work with no seeding step. If
-`/tests` is seeded, it wins.
+`frontend/data/tests.json` is now the **swatisofttechsolution 677-test
+catalogue** (also copied to `data/seed-catalogue.json`). Every parameter
+carries structured reference ranges — `normalRange` string **plus**
+`rangeMale` / `rangeFemale` / `rangeChild` and numeric `lowValue` / `highValue`
+— and a `parameterId`, which is what `core/flags.js` and the `core/medical/*`
+interpretation engine key on.
+
+`core/data/tests.js` treats that bundled file as the **source of truth**: the
+677 always exist exactly as shipped. Firestore `/tests` is only an *overlay* —
+`price`, `mrp`, `isActive`, `reportTime`, `sample`, `method`, `notes`,
+`shortName` edits on a shipped test, or an entirely new test the admin adds.
+Firestore can never change a shipped test's parameter grid or its ranges, so
+"the 677 with their ranges" holds regardless of DB state and with no seeding
+step. `admin-import-tests.html` still exists to push the file into `/tests` and
+prune orphans if you want the collection itself to match.
 
 ## Firestore rules
 
