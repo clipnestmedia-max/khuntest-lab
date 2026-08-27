@@ -1,5 +1,5 @@
 // Pure logic for the WhatsApp shared-report client - no Firebase imports,
-// so it can run under plain Node for tests (frontend/js/test/*.test.js)
+// so it can run under plain Node for tests (tests/)
 // as well as in the browser via shared-report.js.
 const MIN_TOKEN_HEX_LENGTH = 32; // 128 bits minimum; we issue 256-bit (64 hex chars)
 const MAX_TOKEN_HEX_LENGTH = 128;
@@ -54,7 +54,13 @@ export function isExplicitlyNotReleasedHint(statusHint) {
 export const MESSAGES = {
   invalid_link: "This report link is invalid.",
   revoked: "This report link is no longer active.",
-  expired: "This report link has expired. Please contact KhunTest Lab.",
+  expired: "This report link has expired. Please contact {{labName}} for a new link.",
   not_released: "Your report is still under review.",
   payment_pending: "Your payment is pending. Please clear your payment to view and download the report."
 };
+
+/** Fill {{labName}} (and any other token) into a MESSAGES string. */
+export function message(state, values = {}) {
+  return String(MESSAGES[state] || MESSAGES.invalid_link)
+    .replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, key) => String(values[key] ?? "the laboratory"));
+}

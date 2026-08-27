@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title data-brand-title="Laboratory Admin">Laboratory Admin</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles/platform.css">
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img data-brand="logoUrl" alt="" hidden>
+      <div><strong data-brand="labName">Laboratory</strong><small id="labIdTag"></small></div>
+    </div>
+    <nav id="mainNav">
+      <button data-tab="dashboard" class="active">Dashboard</button>
+      <button data-tab="booking" data-perm="booking.create">New Booking</button>
+      <button data-tab="bookings" data-perm="booking.view">Bookings</button>
+      <button data-tab="reportEntry" data-perm="report.enter">Report Entry</button>
+      <button data-tab="reports" data-perm="report.view">Reports</button>
+      <button data-tab="patients" data-perm="patient.view">Patients</button>
+      <span class="nav-group-label">Operations</span>
+      <button data-tab="homeCollection" data-perm="homecollection.view">Home Collection <span class="nav-badge hidden" id="hcBadge">0</span></button>
+      <button data-tab="onlineBookings" data-perm="booking.view">Online Requests <span class="nav-badge hidden" id="obBadge">0</span></button>
+      <button data-tab="catalogue" data-perm="test.view">Test Catalogue</button>
+      <span class="nav-group-label">Business</span>
+      <button data-tab="finance" data-perm="finance.view">Finance</button>
+      <button data-tab="analytics" data-perm="analytics.view">Analytics</button>
+      <button data-tab="staff" data-perm="staff.view">Staff</button>
+      <span class="nav-group-label">Configuration</span>
+      <button data-tab="branding" data-perm="branding.edit">Branding</button>
+      <button data-tab="settings" data-perm="settings.view">Settings</button>
+      <button data-tab="medical" data-perm="settings.view">Medical Rules</button>
+      <button data-tab="audit" data-perm="audit.view">Audit Log</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div id="whoami" class="small"></div>
+      <button class="btn btn-outline btn-sm btn-block" id="logoutBtn" type="button" style="margin-top:8px;">Sign out</button>
+      <p class="small" style="margin:10px 0 0;opacity:.7;" data-powered-by></p>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-ghost menu-toggle" type="button" aria-label="Menu">☰</button>
+      <h1 id="pageTitle">Dashboard</h1>
+      <span class="spacer"></span>
+      <input id="globalSearch" placeholder="Search patient, phone, bill, report…" style="max-width:320px;" aria-label="Global search">
+      <button class="btn btn-outline btn-sm" id="refreshBtn" type="button">Refresh</button>
+    </header>
+
+    <div class="content">
+      <div id="subscriptionBanner"></div>
+      <div id="globalSearchResults" class="card hidden" style="margin-bottom:16px;"></div>
+
+      <!-- ===== DASHBOARD ===== -->
+      <section data-panel="dashboard">
+        <div class="grid grid-4" id="dashStats"></div>
+        <div class="grid grid-2" style="margin-top:16px;">
+          <div class="card">
+            <div class="card-head"><h2>Today's bookings</h2></div>
+            <div class="table-wrap"><table class="data">
+              <thead><tr><th>Bill</th><th>Patient</th><th>Tests</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody id="dashBookingsBody"></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Reports awaiting entry or approval</h2></div>
+            <div class="table-wrap"><table class="data">
+              <thead><tr><th>Bill</th><th>Patient</th><th>Progress</th><th></th></tr></thead>
+              <tbody id="dashPendingBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-head"><h2>Home collection pipeline</h2></div>
+          <div class="grid grid-4" id="hcPipeline"></div>
+        </div>
+      </section>
+
+      <!-- ===== NEW BOOKING ===== -->
+      <section data-panel="booking" class="hidden">
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><h2>Patient</h2></div>
+            <form id="bookingForm" novalidate>
+              <div class="form-grid">
+                <label class="field"><span>Mobile number *</span>
+                  <input name="phone" inputmode="tel" maxlength="10" required placeholder="9876543210" autocomplete="off">
+                </label>
+                <label class="field"><span>Patient name *</span><input name="patientName" required autocomplete="off"></label>
+                <label class="field"><span>Age</span><input name="age" placeholder="34"></label>
+                <label class="field"><span>Gender</span>
+                  <select name="gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+                </label>
+                <label class="field"><span>Email</span><input name="email" type="email"></label>
+                <label class="field"><span>Referred by</span><input name="refBy" placeholder="Self"></label>
+              </div>
+              <label class="field"><span>Address</span><input name="address"></label>
+              <div class="notice hidden" id="patientFoundNotice"></div>
+              <input type="hidden" name="patientId">
+              <input type="hidden" name="patientUid">
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2>Add tests</h2><span class="spacer"></span><span class="small muted" id="catalogueCount"></span></div>
+            <label class="field">
+              <span>Search by test name, code or category</span>
+              <input id="testSearch" placeholder="cbc, KT0157, hematology…" autocomplete="off">
+            </label>
+            <div id="testSuggestions" class="table-wrap" style="max-height:290px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+          <div class="card-head"><h2>Selected tests</h2><span class="spacer"></span>
+            <button class="btn btn-ghost btn-sm" id="clearTestsBtn" type="button">Clear all</button></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Test</th><th>Code</th><th>Category</th><th class="right">Price</th><th></th></tr></thead>
+            <tbody id="selectedTestsBody"></tbody>
+          </table></div>
+
+          <div class="grid grid-2" style="margin-top:16px;">
+            <div>
+              <div class="form-grid">
+                <label class="field"><span>Collection</span>
+                  <select id="bkCollectionType"><option>Lab Visit</option><option>Home Collection</option></select>
+                </label>
+                <label class="field"><span>Home collection charge</span><input id="bkCharge" type="number" value="0" min="0"></label>
+                <label class="field"><span>Discount (₹)</span><input id="bkDiscount" type="number" value="0" min="0"></label>
+                <label class="field"><span>Amount received (₹)</span><input id="bkPaid" type="number" value="0" min="0"></label>
+                <label class="field"><span>Payment mode</span>
+                  <select id="bkMode"><option>Cash</option><option>UPI</option><option>Card</option><option>Net Banking</option><option>Pay Later</option></select>
+                </label>
+                <label class="field"><span>Scheduled for</span><input id="bkScheduled" type="datetime-local"></label>
+              </div>
+              <label class="field"><span>Remarks</span><input id="bkRemarks"></label>
+            </div>
+            <div>
+              <div class="card" style="background:var(--surface-2);box-shadow:none;">
+                <div id="bookingTotals"></div>
+                <div class="btn-row" style="margin-top:14px;">
+                  <button class="btn btn-block" id="saveBookingBtn" type="button">Save Booking &amp; Print Receipt</button>
+                </div>
+                <button class="btn btn-outline btn-block btn-sm" id="saveBookingOnlyBtn" type="button" style="margin-top:8px;">Save without printing</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== BOOKINGS ===== -->
+      <section data-panel="bookings" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Bookings</h2><span class="spacer"></span>
+            <input id="bookingSearch" placeholder="Search bill, patient, phone" style="max-width:260px;">
+            <select id="bookingStatusFilter" style="max-width:180px;">
+              <option value="">All statuses</option>
+            </select>
+            <button class="btn btn-outline btn-sm" id="exportBookingsBtn" type="button">Export CSV</button>
+          </div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Bill</th><th>Patient</th><th>Phone</th><th>Tests</th><th class="right">Total</th>
+              <th class="right">Due</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="bookingsBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== REPORT ENTRY ===== -->
+      <section data-panel="reportEntry" class="hidden">
+        <div class="card">
+          <div class="card-head">
+            <h2>Report entry</h2><span class="spacer"></span>
+            <select id="reportBookingSelect" style="max-width:400px;"></select>
+            <button class="btn btn-outline btn-sm" id="loadReportBtn" type="button">Open</button>
+          </div>
+          <div id="reportEntryMeta"></div>
+        </div>
+        <div id="reportEntryCards" style="margin-top:16px;"></div>
+        <div id="medicalNotices"></div>
+        <div id="interpretationPanel"></div>
+
+        <div class="card hidden" id="reportEntryFoot" style="margin-top:16px;position:sticky;bottom:0;">
+          <div class="row-flex">
+            <div id="reportEntryProgress"></div>
+            <span class="spacer"></span>
+            <button class="btn btn-outline" id="saveDraftBtn" type="button">Save Draft</button>
+            <button class="btn btn-green" id="approveReportBtn" type="button" data-perm="report.approve">Approve &amp; Release</button>
+            <button class="btn btn-outline" id="previewReportBtn" type="button">Preview / Print</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REPORTS ===== -->
+      <section data-panel="reports" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Reports</h2><span class="spacer"></span>
+            <input id="reportSearch" placeholder="Search bill, patient, phone" style="max-width:260px;">
+            <select id="reportStatusFilter" style="max-width:180px;">
+              <option value="">All statuses</option><option>Draft</option><option>Final</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Bill</th><th>Patient</th><th>Tests</th><th>Status</th><th>Reported</th><th>Actions</th></tr></thead>
+            <tbody id="reportsBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== PATIENTS ===== -->
+      <section data-panel="patients" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Patients</h2><span class="spacer"></span>
+            <input id="patientSearch" placeholder="Search name, phone, patient ID" style="max-width:280px;">
+            <button class="btn btn-sm" id="addPatientBtn" type="button" data-perm="patient.edit">Add patient</button>
+          </div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Patient ID</th><th>Name</th><th>Contact</th><th>Age/Gender</th>
+              <th class="right">Visits</th><th class="right">Spent</th><th>Last visit</th><th>Actions</th></tr></thead>
+            <tbody id="patientsBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== HOME COLLECTION ===== -->
+      <section data-panel="homeCollection" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Home collection requests</h2><span class="spacer"></span>
+            <select id="hcStatusFilter" style="max-width:200px;"><option value="">All statuses</option></select>
+          </div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Request</th><th>Patient</th><th>Address</th><th>Scheduled</th>
+              <th>Assigned to</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="hcBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== ONLINE BOOKINGS ===== -->
+      <section data-panel="onlineBookings" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Online booking requests</h2></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Request</th><th>Patient</th><th>Contact</th><th>Tests</th>
+              <th class="right">Amount</th><th>Preferred</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="onlineBookingsBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== CATALOGUE ===== -->
+      <section data-panel="catalogue" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Test catalogue</h2><span class="spacer"></span>
+            <input id="catalogueSearch" placeholder="Search tests" style="max-width:240px;">
+            <select id="catalogueCategory" style="max-width:200px;"><option value="">All categories</option></select>
+            <button class="btn btn-sm" id="addTestBtn" type="button" data-perm="test.edit">Add test</button>
+          </div>
+          <p class="small muted">This catalogue belongs to this laboratory only. Changing a price here affects no other customer.</p>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Code</th><th>Test</th><th>Category</th><th>Sample</th>
+              <th class="right">Price</th><th class="right">Parameters</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="catalogueBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== FINANCE ===== -->
+      <section data-panel="finance" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Financial reports</h2><span class="spacer"></span>
+            <select id="financeRange" style="max-width:170px;">
+              <option value="today">Today</option><option value="week">Last 7 days</option>
+              <option value="month" selected>This month</option><option value="year">This year</option>
+              <option value="custom">Custom range</option>
+            </select>
+            <input id="financeFrom" type="date" style="max-width:160px;" class="hidden">
+            <input id="financeTo" type="date" style="max-width:160px;" class="hidden">
+            <button class="btn btn-outline btn-sm" id="financeExportBtn" type="button" data-perm="finance.export">Export CSV</button>
+          </div>
+          <div class="grid grid-4" id="financeStats"></div>
+        </div>
+        <div class="grid grid-2" style="margin-top:16px;">
+          <div class="card">
+            <div class="card-head"><h3>Day by day</h3></div>
+            <div class="table-wrap" style="max-height:340px;overflow-y:auto;"><table class="data">
+              <thead><tr><th>Date</th><th class="right">Bookings</th><th class="right">Billed</th><th class="right">Collected</th></tr></thead>
+              <tbody id="financeDailyBody"></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Outstanding payments</h3></div>
+            <div class="table-wrap" style="max-height:340px;overflow-y:auto;"><table class="data">
+              <thead><tr><th>Bill</th><th>Patient</th><th class="right">Total</th><th class="right">Due</th><th></th></tr></thead>
+              <tbody id="financeDueBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-head"><h3>Test-wise revenue</h3></div>
+          <div class="table-wrap" style="max-height:400px;overflow-y:auto;"><table class="data">
+            <thead><tr><th>Test</th><th>Code</th><th class="right">Count</th><th class="right">Revenue</th></tr></thead>
+            <tbody id="financeTestBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== ANALYTICS ===== -->
+      <section data-panel="analytics" class="hidden">
+        <div class="grid grid-4" id="analyticsStats"></div>
+        <div class="grid grid-2" style="margin-top:16px;">
+          <div class="card">
+            <div class="card-head"><h3>Most booked tests</h3></div>
+            <div class="table-wrap"><table class="data">
+              <thead><tr><th>#</th><th>Test</th><th class="right">Bookings</th></tr></thead>
+              <tbody id="topTestsBody"></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Highest revenue tests</h3></div>
+            <div class="table-wrap"><table class="data">
+              <thead><tr><th>#</th><th>Test</th><th class="right">Revenue</th></tr></thead>
+              <tbody id="topRevenueBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== STAFF ===== -->
+      <section data-panel="staff" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Staff &amp; roles</h2><span class="spacer"></span>
+            <button class="btn btn-sm" id="addStaffBtn" type="button" data-perm="staff.manage">Add staff member</button></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Employee ID</th>
+              <th>Signs reports</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="staffBody"></tbody>
+          </table></div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-head"><h3>What each role can do</h3></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+            <tbody id="rolesMatrixBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== BRANDING ===== -->
+      <section data-panel="branding" class="hidden">
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><h2>Branding</h2></div>
+            <p class="small muted">Everything here appears on your reports, bills, website and patient portal. No source-code change is needed.</p>
+            <form id="brandingForm">
+              <fieldset><legend>Identity</legend><div class="form-grid">
+                <label class="field"><span>Laboratory name</span><input name="labName"></label>
+                <label class="field"><span>Legal name</span><input name="legalName"></label>
+                <label class="field"><span>Tagline</span><input name="tagline"></label>
+              </div></fieldset>
+
+              <fieldset><legend>Report wordmark</legend>
+                <p class="small muted" style="margin-top:0;">
+                  How your name is set on the printed letterhead, for the Classic Letterhead
+                  template. Leave blank to use the laboratory name on one line.
+                </p>
+                <div class="form-grid">
+                  <label class="field"><span>Line 1</span><input name="brandLine1" placeholder="HIMANSU"></label>
+                  <label class="field"><span>Line 2</span><input name="brandLine2" placeholder="L A B"></label>
+                  <label class="field"><span>Characters in the primary colour</span>
+                    <input name="brandAccentLength" type="number" min="0" max="30" placeholder="6">
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset><legend>Images</legend>
+                <p class="small muted" style="margin-top:0;">
+                  Upload a file, or paste a URL if you host images elsewhere.
+                  Uploads are resized automatically and stored with your settings —
+                  there is nothing to set up.
+                </p>
+                <div class="grid grid-3">
+                  <div>
+                    <div class="small" style="font-weight:600;margin-bottom:5px;">Logo</div>
+                    <div class="upload-box">
+                      <img id="logoPreview" alt="" hidden>
+                      <button class="btn btn-outline btn-sm" id="logoPick" type="button">Choose file…</button>
+                      <button class="btn btn-ghost btn-sm" id="logoClear" type="button">Clear</button>
+                    </div>
+                    <input name="logoUrl" placeholder="…or paste a URL" class="small">
+                    <div class="small muted" id="logoNote"></div>
+                  </div>
+                  <div>
+                    <div class="small" style="font-weight:600;margin-bottom:5px;">Stamp</div>
+                    <div class="upload-box">
+                      <img id="stampPreview" alt="" hidden>
+                      <button class="btn btn-outline btn-sm" id="stampPick" type="button">Choose file…</button>
+                      <button class="btn btn-ghost btn-sm" id="stampClear" type="button">Clear</button>
+                    </div>
+                    <input name="stampUrl" placeholder="…or paste a URL" class="small">
+                    <div class="small muted" id="stampNote"></div>
+                  </div>
+                  <div>
+                    <div class="small" style="font-weight:600;margin-bottom:5px;">Favicon</div>
+                    <div class="upload-box">
+                      <img id="faviconPreview" alt="" hidden>
+                      <button class="btn btn-outline btn-sm" id="faviconPick" type="button">Choose file…</button>
+                      <button class="btn btn-ghost btn-sm" id="faviconClear" type="button">Clear</button>
+                    </div>
+                    <input name="faviconUrl" placeholder="…or paste a URL" class="small">
+                    <div class="small muted" id="faviconNote"></div>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset><legend>Colours</legend><div class="form-grid">
+                <label class="field"><span>Primary</span><input name="primaryColor" type="color"></label>
+                <label class="field"><span>Secondary</span><input name="secondaryColor" type="color"></label>
+                <label class="field"><span>Accent</span><input name="accentColor" type="color"></label>
+              </div></fieldset>
+              <fieldset><legend>Contact</legend><div class="form-grid">
+                <label class="field"><span>Address</span><input name="address"></label>
+                <label class="field"><span>City</span><input name="city"></label>
+                <label class="field"><span>State</span><input name="state"></label>
+                <label class="field"><span>PIN code</span><input name="pincode"></label>
+                <label class="field"><span>Phone</span><input name="phone"></label>
+                <label class="field"><span>Alt phone</span><input name="altPhone"></label>
+                <label class="field"><span>WhatsApp</span><input name="whatsapp"></label>
+                <label class="field"><span>Email</span><input name="email"></label>
+                <label class="field"><span>Website</span><input name="website"></label>
+                <label class="field"><span>Business hours</span><input name="businessHours"></label>
+              </div></fieldset>
+              <fieldset><legend>Compliance</legend><div class="form-grid">
+                <label class="field"><span>GST number</span><input name="gstNumber"></label>
+                <label class="field"><span>Licence number</span><input name="licenseNumber"></label>
+                <label class="field"><span>Registration number</span><input name="registrationNumber"></label>
+              </div></fieldset>
+              <fieldset><legend>Social</legend><div class="form-grid">
+                <label class="field"><span>Facebook</span><input name="social.facebook"></label>
+                <label class="field"><span>Instagram</span><input name="social.instagram"></label>
+                <label class="field"><span>YouTube</span><input name="social.youtube"></label>
+                <label class="field"><span>Twitter / X</span><input name="social.twitter"></label>
+              </div></fieldset>
+              <fieldset><legend>Report &amp; footer text</legend>
+                <label class="field"><span>Report header note</span><input name="reportHeaderNote"></label>
+                <label class="field"><span>Report footer note</span><input name="reportFooterNote"></label>
+                <label class="field"><span>Disclaimer</span><textarea name="disclaimer"></textarea></label>
+                <label class="field"><span>Terms &amp; conditions</span><textarea name="termsAndConditions"></textarea></label>
+              </fieldset>
+              <button class="btn" type="submit">Save branding</button>
+            </form>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="card-head"><h2>Report template</h2></div>
+              <p class="small muted">Choose how your printed reports look. Applies to every new and existing report immediately.</p>
+              <div id="templateChooser" class="stack"></div>
+
+              <label class="field" style="margin-top:12px;">
+                <input type="checkbox" id="pageBreakPerTest">
+                Print each test on its own page
+                <div class="small muted" style="font-weight:400;margin-top:2px;">
+                  How a pathology report is normally handed over — every page carries the
+                  full letterhead and patient details, so a page given to a referring
+                  doctor stands on its own. Turn off to save paper on small panels.
+                </div>
+              </label>
+
+              <button class="btn btn-outline btn-block" id="previewTemplateBtn" type="button">Preview with sample data</button>
+
+              <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px;">
+                <div class="row-flex">
+                  <b class="small">Your own template</b>
+                  <span class="spacer"></span>
+                  <span class="pill" id="customTemplateState">Not in use</span>
+                </div>
+                <p class="small muted">
+                  Download a built-in layout, edit the HTML, and upload it back.
+                  Values are filled in through <code>{{placeholders}}</code>.
+                </p>
+                <div class="btn-row">
+                  <button class="btn btn-outline btn-sm" id="downloadTemplateBtn" type="button">Download current</button>
+                  <button class="btn btn-outline btn-sm" id="uploadTemplateBtn" type="button">Upload…</button>
+                  <button class="btn btn-outline btn-sm" id="editTemplateBtn" type="button">Edit here</button>
+                  <button class="btn btn-ghost btn-sm hidden" id="removeTemplateBtn" type="button">Stop using it</button>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:16px;">
+              <div class="card-head"><h2>Report signatories</h2><span class="spacer"></span>
+                <button class="btn btn-sm" id="addSignatoryBtn" type="button">Add</button>
+              </div>
+              <p class="small muted">
+                Who signs your reports, and how their block prints. Every laboratory has its
+                own technician and pathologist — these are yours alone.
+              </p>
+              <div id="signatoryList"></div>
+              <div class="btn-row" style="margin-top:10px;">
+                <button class="btn btn-outline btn-sm" id="importSignatoriesBtn" type="button">Import from Staff</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section data-panel="settings" class="hidden">
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-head"><h2>General</h2></div>
+            <form id="generalForm">
+              <label class="field"><span>Business hours</span><input name="businessHours"></label>
+              <label class="field"><span>Default referring doctor</span><input name="defaultRefDoctor"></label>
+              <label class="field"><input type="checkbox" name="onlineBookingEnabled"> Accept online bookings</label>
+              <label class="field"><input type="checkbox" name="homeCollectionEnabled"> Offer home collection</label>
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Payments</h2></div>
+            <form id="paymentForm">
+              <label class="field"><input type="checkbox" name="acceptCash"> Accept cash</label>
+              <label class="field"><input type="checkbox" name="acceptUpi"> Accept UPI</label>
+              <label class="field"><input type="checkbox" name="acceptCard"> Accept card</label>
+              <label class="field"><span>UPI ID</span><input name="upiId" placeholder="labname@upi"></label>
+              <label class="field"><span>UPI display name</span><input name="upiName"></label>
+              <label class="field"><span>Home collection charge (₹)</span><input name="homeCollectionCharge" type="number" min="0"></label>
+              <fieldset><legend>Razorpay (online payment)</legend>
+                <label class="field"><input type="checkbox" name="razorpayEnabled"> Enable Razorpay checkout</label>
+                <label class="field"><span>Razorpay Key ID</span><input name="razorpayKeyId" placeholder="rzp_live_..."></label>
+                <p class="small muted" style="margin:0;">The Key <b>Secret</b> is never stored here — it lives only in the
+                  backend environment. See <code>backend/.env.example</code>.</p>
+              </fieldset>
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>WhatsApp</h2></div>
+            <form id="whatsappForm">
+              <label class="field"><input type="checkbox" name="enabled"> Enable WhatsApp messaging</label>
+              <label class="field"><span>Mode</span>
+                <select name="mode">
+                  <option value="click-to-chat">Click to chat (opens WhatsApp, staff presses send)</option>
+                  <option value="cloud-api">Cloud API (automatic — needs backend configuration)</option>
+                </select>
+              </label>
+              <label class="field"><span>Report ready message</span><textarea name="reportReadyTemplate"></textarea></label>
+              <label class="field"><span>Booking confirmation</span><textarea name="bookingConfirmTemplate"></textarea></label>
+              <label class="field"><span>Payment reminder</span><textarea name="paymentReminderTemplate"></textarea></label>
+              <p class="small muted">Placeholders: <code>{{patientName}}</code> <code>{{labName}}</code>
+                <code>{{reportLink}}</code> <code>{{bookingId}}</code> <code>{{balance}}</code> <code>{{date}}</code></p>
+              <button class="btn" type="submit">Save</button>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Branches</h2></div>
+            <div id="branchList"></div>
+            <button class="btn btn-outline btn-sm" id="addBranchBtn" type="button" data-perm="branch.manage" style="margin-top:10px;">Add branch</button>
+          </div>
+          <div class="card">
+            <div class="card-head"><h2>Subscription</h2></div>
+            <div id="subscriptionCard"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== MEDICAL RULES ===== -->
+      <section data-panel="medical" class="hidden">
+        <div id="medicalPane"></div>
+      </section>
+
+      <!-- ===== AUDIT ===== -->
+      <section data-panel="audit" class="hidden">
+        <div class="card">
+          <div class="card-head"><h2>Audit log</h2><span class="spacer"></span>
+            <input id="auditSearch" placeholder="Filter by user or action" style="max-width:260px;"></div>
+          <p class="small muted">Append-only. Nobody, including the owner, can edit or delete these entries.</p>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>When</th><th>User</th><th>Role</th><th>Action</th><th>Details</th><th>Device</th></tr></thead>
+            <tbody id="auditBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="core/env-config.js"></script>
+<script type="module" src="admin/admin.js"></script>
+</body>
+</html>
