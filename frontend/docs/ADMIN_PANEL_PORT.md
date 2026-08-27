@@ -154,12 +154,24 @@ patient portal and the shared link all open it, so every copy is identical
 - `report.html` used to draw the barcode and QR as **CSS gradient
   placeholders** (`.barcode` / `.qr`) — decorative, not scannable. They are
   now real: `paintReportCodes()` injects an SVG **Code 128** of the bill number
-  (`core/barcode.js` `barcodeSvgVertical`) and an SVG **QR** of the report's
-  verification link, or `report.html?bill=<no>` when there is none
-  (`core/qrcode.js` `qrSvg`, Kazuhiko Arase's MIT encoder — generated in the
-  browser, nothing fetched from a QR service). Painted onto every page.
+  (`core/barcode.js`) and an SVG **QR** (`core/qrcode.js`, vendored MIT
+  encoder, generated in the browser) onto every page.
+- **The QR always encodes a secure `report.html?share=<token>` link**, never
+  `?bill=`/`?reportId=`. `shareLinkForQr()` reuses the link the page was opened
+  with, or the one stored on the report, or (authenticated admin view) mints
+  one via `js/whatsapp-report-share.js` `getOrCreateShareForReport()` /
+  `regenerateShareForReport()`. A scanned report therefore opens with **no
+  login** — `firestore.rules` gates it on the linked booking's payment status
+  alone (swatisofttechsolution's model). No share link → the QR is omitted
+  rather than a login-walled link. `renderReport()` is now `async` and awaited
+  before auto-print so the QR is on the page.
 - `patientBlock()` "Registered Date" falls back to the booking / collection /
   reporting date instead of printing blank.
+- `admin/admin.js`: Bookings rows get a **Print Report** button
+  (`data-print-report`); the **Bill** button now prints `admin/receipt.js`
+  `printReceipt(booking, branding)` (80mm receipt + Code 128) from the booking
+  in hand, instead of opening `bill.html` with mismatched params (which showed
+  "Bill unavailable").
 
 ## Known gaps / follow-ups
 - **Home Collection / Finance / Staff / Analytics** screens are wired and their

@@ -1025,6 +1025,7 @@
     import { fetchSharedReport, PAYMENT_PENDING_COPY, LAB_CONTACT } from "./js/shared-report.js";
     import { qrSvg } from "./core/qrcode.js";
     import { barcodeSvgVertical } from "./core/barcode.js";
+    import { getOrCreateShareForReport, regenerateShareForReport } from "./js/whatsapp-report-share.js";
 
     // Firebase auth restores the persisted session asynchronously (this can be
     // noticeably slower on mobile browsers). Firestore reads must not fire
@@ -1750,9 +1751,38 @@
     // Real, locally generated Code 128 barcode + QR (Kazuhiko Arase's MIT
     // encoder via core/qrcode.js) painted into the placeholder columns on
     // every rendered page. Nothing is fetched from a QR/barcode web service -
-    // the printed report must not depend on a third party's uptime, and the QR
-    // encodes a link that opens medical results.
-    function paintReportCodes(report, billNo, root) {
+    // the printed report must not depend on a third party's uptime.
+    //
+    // The QR always encodes a SECURE SHARE link (report.html?share=<token>),
+    // never ?bill=/?reportId=. A share link needs no login: firestore.rules
+    // gates it on the linked booking's PAYMENT status alone, so anyone who
+    // scans the printed report opens it if the bill is paid, or sees a
+    // "payment pending" screen if not - never a "log in as the patient" wall.
+    async function shareLinkForQr(report, bill) {
+      const params = new URLSearchParams(location.search);
+      // Already opened via a share link: the QR is just this page.
+      if (params.get("share")) {
+        return `${location.origin}${location.pathname}?share=${encodeURIComponent(params.get("share"))}`;
+      }
+      // A verification link stored on the report (minted at approval).
+      const stored = String(report.verifyUrl || "").trim();
+      if (/[?&](share|t)=/.test(stored)) return stored;
+      // Authenticated admin view: mint or reuse a secure share for this report.
+      const reportId = report.reportId || report.id || bill;
+      const bookingId = report.bookingId || report.booking_id || "";
+      try {
+        let res = await getOrCreateShareForReport({ reportId, bookingId, billNo: bill });
+        if (!res.rawToken) res = await regenerateShareForReport({ reportId, bookingId, billNo: bill });
+        if (res.rawToken) {
+          return `${location.origin}/report.html?share=${encodeURIComponent(res.rawToken)}`;
+        }
+      } catch (err) {
+        console.warn("[report] could not build a secure share link for the QR", err.message);
+      }
+      return "";
+    }
+
+    async function paintReportCodes(report, billNo, root) {
       const scope = root || document;
       const bill = String(billNo || report.billNo || report.bill_no || report.reportId || "").trim();
 
@@ -1767,8 +1797,8 @@
         } catch (err) { console.warn("[report] barcode render failed", err); }
       }
 
-      const qrUrl = String(report.verifyUrl || "").trim()
-        || `${location.origin}/report.html?bill=${encodeURIComponent(bill)}`;
+      const qrUrl = await shareLinkForQr(report, bill);
+      if (!qrUrl) return;   // omit the QR rather than print one that needs a login
       try {
         const qr = qrSvg(qrUrl, { size: 76, margin: 1, label: "Scan to open this report" });
         scope.querySelectorAll(".report-qr-column").forEach((el) => {
@@ -1779,7 +1809,7 @@
       } catch (err) { console.warn("[report] QR render failed", err); }
     }
 
-    function renderReport(report, billNo) {
+    async function renderReport(report, billNo) {
       const results = completeCBCResults(report, completeESRResults(report, normalizeResults(report.results || report.reportResults || [])));
       if (!results.length) {
         showError(`Report is not released yet or result was not saved permanently.<br><br>Bill No: ${safe(billNo)}`);
@@ -1800,7 +1830,7 @@
       const app = document.getElementById("app");
       app.className = "report-preview-wrap";
       app.innerHTML = pages.join("");
-      paintReportCodes(report, billNo, app);
+      await paintReportCodes(report, billNo, app);
       window.currentReportForShare = { report, billNo };
       const phone = String(report.whatsapp || report.phone || report.contactNo || "").replace(/\D/g, "");
       document.getElementById("shareWhatsAppBtn").classList.toggle("hidden", !phone);
@@ -1964,7 +1994,7 @@
       console.log("[report] shared-mode result state:", result.state);
 
       if (result.success && result.state === "available" && result.report) {
-        renderReport(result.report, result.report.billNo || "");
+        await renderReport(result.report, result.report.billNo || "");
         setTopActionBarVisible(true);
         // renderReport() re-shows shareWhatsAppBtn if the report has a phone
         // number, but the sanitized shared-report payload never includes one
@@ -2064,7 +2094,7 @@
 
       if (params.get("mock") === "1" || params.get("mock") === "lft") {
         const report = params.get("mock") === "lft" ? mockLFTReport() : mockReport();
-        renderReport(report, report.billNo);
+        await renderReport(report, report.billNo);
         return;
       }
 
@@ -2094,8 +2124,8 @@
           showError("You are not allowed to view this report.");
           return;
         }
-        renderReport(report, displayBillNo);
-        if (params.get("print") === "1") setTimeout(() => window.print(), 350);
+        await renderReport(report, displayBillNo);
+        if (params.get("print") === "1") setTimeout(() => window.print(), 300);
       } catch (err) {
         console.error("[report] failed to load report", {
           billNo,

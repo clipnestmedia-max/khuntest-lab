@@ -21,6 +21,7 @@ import {
   setupTabs, setupMobileNav, setBusy, readForm, pill, debounce, progressBar
 } from "../core/ui.js";
 import { initBookingScreen } from "./booking-screen.js";
+import { printReceipt } from "./receipt.js";
 import { initReportEntry, openReportFor, refreshBookingList } from "./report-entry.js";
 import { initSettingsScreens } from "./settings-screen.js";
 import { initMedicalScreen, renderMedical } from "./medical-screen.js";
@@ -239,6 +240,7 @@ async function renderBookings() {
       <td>${pill(b.bookingStatus)}</td>
       <td class="actions">
         <button class="btn btn-sm btn-outline" data-open-report="${esc(b.bookingId)}" type="button">Report</button>
+        <button class="btn btn-sm btn-outline" data-print-report="${esc(b.bookingId)}" type="button">Print Report</button>
         <button class="btn btn-sm btn-ghost" data-bill="${esc(b.bookingId)}" type="button">Bill</button>
         <button class="btn btn-sm btn-green" data-wa="${esc(b.bookingId)}" type="button">WhatsApp</button>
         ${b.balanceDue > 0 && sessionCanWrite(P.PAYMENT_RECEIVE, session)
@@ -977,7 +979,18 @@ document.addEventListener("click", async (event) => {
   if (wa) return openWhatsAppDialog(wa.dataset.wa);
 
   const bill = t.closest("[data-bill]");
-  if (bill) return window.open(`bill.html?booking=${encodeURIComponent(bill.dataset.bill)}&lab=${encodeURIComponent(getLabId())}`, "_blank", "noopener");
+  if (bill) {
+    try {
+      const id = bill.dataset.bill;
+      const b = (cache.bookings || []).find((x) => x.bookingId === id || x.billNo === id)
+        || await Bookings.getBooking(id);
+      if (!b) return toastError("Booking not found for this bill.");
+      printReceipt(b, branding);
+    } catch (error) {
+      reportError(error, "Could not open the bill.");
+    }
+    return;
+  }
 
   const history = t.closest("[data-patient-history]");
   if (history) return openPatientHistory(history.dataset.patientHistory);
