@@ -116,6 +116,31 @@ nothing. Fixed in the data layer:
   (via `normalizeSavedGroup`), appending only booked tests the report doesn't
   already cover.
 
+## Report QR, WhatsApp link and bill
+
+All ported from swatisofttechsolution and wired to this app's kept `report.html`:
+
+- **QR on the report** — `core/qrcode.js` draws an SVG QR in the browser
+  (`verifyBlock` / Classic template) of the report's secure verification link;
+  `report-entry.js` `preview()` mints that link for a `Final` report before
+  printing.
+- **Send report link on WhatsApp** — `report-entry.js` `shareOnWhatsApp()` →
+  `report-share.js` `createShareLink()` (SHA-256 of a 256-bit token is the doc
+  id; raw token never stored) → `core/whatsapp.js` `sendReportReady()` with the
+  link in `{{reportLink}}`.
+- **Bill** — `admin/receipt.js` (80mm thermal receipt, in-browser Code 128
+  barcode via `core/barcode.js`) and `core/whatsapp.js` `sendBill()` (itemised
+  WhatsApp bill from the laboratory).
+
+`report-share.js` was adapted to KhunTest's `report.html`: `shareUrl()` builds
+`report.html?share=<token>` (its `getShareToken()` reads `?share=`), and the
+`/reportShareResults/{tokenHash}` doc carries a flat `results[]`
+(`flatResultsFromGroups`) alongside `groups[]`, plus `billNo` /
+`paymentStatusHint` / `balanceDueHint` on `/reportShares` so the viewer's
+"link active but payment pending" screen shows the right bill. The existing
+`firestore.rules` gate functions (`shareIsActive`, `reportShareBookingPaid`,
+`reportShareReportReleased`) already match the fields swati writes.
+
 ## Known gaps / follow-ups
 - **Home Collection / Finance / Staff / Analytics** screens are wired and their
   rules are in place, but were not exercised against live data.

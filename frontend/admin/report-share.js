@@ -17,6 +17,7 @@ import { db } from "../core/firebase-config.js";
 import { getLabId, settingsDoc } from "../core/tenant.js";
 import { loadBranding } from "../core/branding.js";
 import { hashTokenHex } from "../js/shared-report-logic.js";
+import { flatResultsFromGroups } from "../core/data/reports.js";
 import { logAudit, AUDIT } from "../core/audit.js";
 
 const SHARES = "reportShares";
@@ -120,12 +121,25 @@ function sanitize(report) {
     const value = out[field];
     if (value && typeof value.toDate === "function") out[field] = value.toDate().toISOString();
   });
+  // report.html renders a flat results[] array (KhunTest schema); write it
+  // alongside groups[] so the same shared doc serves both.
+  out.results = flatResultsFromGroups(report.groups || out.groups || []);
   return out;
+}
+
+/** Payment / bill hints report.html shows on its "link active but…" screens. */
+function shareHints(report, booking) {
+  return {
+    billNo: booking?.billNo || report?.billNo || "",
+    paymentStatusHint: String(booking?.paymentStatus || "").toLowerCase(),
+    balanceDueHint: Number(booking?.balanceDue || 0)
+  };
 }
 
 export function shareUrl(token) {
   const base = globalThis.SWATI_ENV?.publicBaseUrl || location.origin;
-  return `${base.replace(/\/$/, "")}/report.html?t=${encodeURIComponent(token)}`;
+  // KhunTest's report.html reads the token from ?share= (see getShareToken()).
+  return `${base.replace(/\/$/, "")}/report.html?share=${encodeURIComponent(token)}`;
 }
 
 /**
@@ -149,7 +163,7 @@ export async function createShareLink({ report, booking, actor = {}, ttlDays = D
         updatedAt: serverTimestamp()
       }, { merge: true });
       await updateDoc(doc(db, SHARES, existingHash), {
-        reportStatusHint: report.reportStatus, updatedAt: serverTimestamp()
+        reportStatusHint: report.reportStatus, ...shareHints(report, booking), updatedAt: serverTimestamp()
       });
       return { token: cachedToken, tokenHash: existingHash, url: shareUrl(cachedToken), reused: true };
     }
@@ -165,6 +179,7 @@ export async function createShareLink({ report, booking, actor = {}, ttlDays = D
     bookingId: booking?.bookingId || report.bookingId || "",
     patientNameHint: report.patientName || "",
     reportStatusHint: report.reportStatus || "",
+    ...shareHints(report, booking),
     enabled: true,
     revoked: false,
     expiresAt,
