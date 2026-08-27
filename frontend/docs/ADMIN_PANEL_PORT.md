@@ -72,6 +72,22 @@ panel writes that previously had none: `counters`, `settings`, `auditLogs`,
 `reportResults`, `reportTemplates`. All existing rules are unchanged. **These
 take effect only when the rules are deployed.**
 
+## No data was deleted by the port
+
+Audited: nothing in the ported code (`core/*`, `admin/*`) or any commit in this
+port calls `deleteDoc` / batch-delete on `reports`, `bookings` or `patients`
+automatically. The exported `deleteReport` / `deletePatient` / `deleteBooking`
+helpers are **not wired to any button** in the new admin panel.
+
+The only bulk-delete that exists — `deleteDataOlderThanMonths()` in the
+untouched `firebase-service.js` — is triggered *only* by a confirm-gated button
+in `admin-dashboard.legacy.html` (the retired old panel), never by the new one,
+and never by a deploy. Deploys push hosting + rules; neither can touch document
+data.
+
+Old released reports were not showing because of the read path below, not
+because they were removed.
+
 ## Reading legacy KhunTest data
 
 The platform's list queries used `orderBy("createdAt")`, and **Firestore
@@ -92,6 +108,13 @@ nothing. Fixed in the data layer:
   `patientAge`, `dueAmount`, …) and infer `paymentStatus` from the balance.
 - `search*()` fall back to a client-side scan when the `searchTokens` query
   returns nothing.
+- `admin/report-entry.js` `openReportFor()`: a legacy report's synthesised
+  groups do not line up with a freshly built catalogue grid (test names differ,
+  the booking may be gone), so `mergeSavedResults()` dropped every value and the
+  report opened — and printed — blank. It now compares entered-value counts and,
+  when the merge would lose data, uses the saved report's own groups verbatim
+  (via `normalizeSavedGroup`), appending only booked tests the report doesn't
+  already cover.
 
 ## Known gaps / follow-ups
 - **Home Collection / Finance / Staff / Analytics** screens are wired and their

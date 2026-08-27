@@ -157,6 +157,48 @@ export async function refreshBookingList() {
 }
 
 /** Open a report by booking id or report id. Both resolve to the same doc. */
+const keyOf = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+const groupKey = (g) => keyOf(g.testCode || g.testName || g.testId);
+
+function countEnteredValues(groups = []) {
+  return groups.reduce((n, g) =>
+    n + (g.rows || []).filter((r) => !r.isHeading && String(r.value ?? "").trim() !== "").length, 0);
+}
+
+/** Give a saved (possibly legacy) group the row fields the cards + print expect. */
+function normalizeSavedGroup(g) {
+  return {
+    testId: g.testId || g.testCode || g.testName || "",
+    testCode: g.testCode || "",
+    testName: g.testName || g.testId || "Test",
+    category: g.category || "",
+    sample: g.sample || "",
+    method: g.method || "",
+    notes: g.notes || "",
+    rows: (g.rows || []).map((r, i) => ({
+      parameterId: r.parameterId || keyOf(r.name) || `P${i + 1}`,
+      code: r.code || "",
+      name: r.name || "",
+      unit: r.unit || "",
+      referenceRange: r.referenceRange || r.normalRange || r.normalValue || "",
+      rangeMale: r.rangeMale || "",
+      rangeFemale: r.rangeFemale || "",
+      rangeChild: r.rangeChild || "",
+      lowValue: r.lowValue ?? null,
+      highValue: r.highValue ?? null,
+      criticalLow: r.criticalLow ?? null,
+      criticalHigh: r.criticalHigh ?? null,
+      method: r.method || "",
+      isHeading: r.isHeading === true,
+      value: r.value ?? "",
+      flag: r.flag || "",
+      note: r.note || r.comment || "",
+      origin: r.origin,
+      calculated: r.calculated
+    }))
+  };
+}
+
 export async function openReportFor(id, { print = false, share = false } = {}) {
   try {
     const [booking, existing] = await Promise.all([
@@ -178,9 +220,27 @@ export async function openReportFor(id, { print = false, share = false } = {}) {
     // by its stable parameterId first, then by a normalised name — never lost
     // because the catalogue was renumbered. This is the ONLY place saved
     // results are restored, and it never replaces a saved value with a blank.
-    const groups = existing?.groups?.length
-      ? Reports.mergeSavedResults(blankGrid, existing.groups)
-      : blankGrid;
+    let groups;
+    if (existing?.groups?.length) {
+      const merged = Reports.mergeSavedResults(blankGrid, existing.groups);
+      // A legacy KhunTest report (its groups synthesised from a flat results[]
+      // array, its test names not matching the current catalogue, or its
+      // booking gone) will not line up with a freshly built catalogue grid, so
+      // the merge above would silently drop every value. When that happens,
+      // trust the saved report: use its own groups, and append only the booked
+      // tests it does not already cover.
+      const savedValues = countEnteredValues(existing.groups);
+      const mergedValues = countEnteredValues(merged);
+      if (savedValues > 0 && mergedValues < savedValues) {
+        const covered = new Set(existing.groups.map((g) => groupKey(g)));
+        const extras = blankGrid.filter((g) => !covered.has(groupKey(g)));
+        groups = [...existing.groups.map(normalizeSavedGroup), ...extras];
+      } else {
+        groups = merged;
+      }
+    } else {
+      groups = blankGrid;
+    }
 
     dbg("REPORT LOAD", {
       reportId: existing?.reportId || "(new)",
