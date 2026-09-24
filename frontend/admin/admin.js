@@ -14,7 +14,8 @@ import * as Staff from "../core/data/staff.js";
 import * as Analytics from "../core/data/analytics.js";
 import { formatDate, formatDateTime, rupees, dateKey } from "../core/data/helpers.js";
 import { col } from "../core/tenant.js";
-import { getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getDocs, getDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { docRef } from "../core/tenant.js";
 import { sendBookingConfirmation, sendBill, sendPaymentReminder } from "../core/whatsapp.js";
 import {
   $, $$, esc, toastOk, toastError, reportError, openModal, confirmAction, renderRows,
@@ -577,9 +578,12 @@ async function openStatusDialog(requestId) {
 
 // ---------- online bookings ----------
 
+let onlineBookingsCache = [];
+
 async function renderOnlineBookings() {
   const snap = await getDocs(query(col("onlineBookings"), orderBy("createdAt", "desc"), limit(200)));
   const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  onlineBookingsCache = rows;
   const pending = rows.filter((r) => ["New", "Pending Confirmation"].includes(r.bookingStatus || "New")).length;
   const badge = $("#obBadge");
   if (badge) { badge.textContent = pending; badge.classList.toggle("hidden", pending === 0); }
@@ -602,10 +606,12 @@ async function renderOnlineBookings() {
 async function convertOnlineBooking(id) {
   if (!await confirmAction("Create a lab booking from this online request?")) return;
   try {
-    const snap = await getDocs(query(col("onlineBookings"), limit(500)));
-    const row = snap.docs.find((d) => d.id === id);
-    if (!row) return toastError("Request not found.");
-    const data = row.data();
+    // The id always comes from a button rendered off onlineBookingsCache, so
+    // it's already in memory - only fall back to a single-doc read (never a
+    // full collection re-query) if the cache was somehow cleared meanwhile.
+    const cached = onlineBookingsCache.find((r) => r.id === id);
+    const data = cached || (await getDoc(docRef("onlineBookings", id))).data();
+    if (!data) return toastError("Request not found.");
     const booking = await Bookings.createBooking({
       patientName: data.patientName, phone: data.phone, email: data.email,
       age: data.age, gender: data.gender, address: data.address,

@@ -15,7 +15,7 @@ import { listSignatories } from "../core/data/staff.js";
 import { sessionCanWrite } from "../core/session.js";
 import { PERMISSIONS as P } from "../core/roles.js";
 import { PLANS, planLabel } from "../core/subscription.js";
-import { formatDate, clean } from "../core/data/helpers.js";
+import { formatDate, clean, dedupe } from "../core/data/helpers.js";
 import { logAudit, AUDIT } from "../core/audit.js";
 import {
   $, esc, toastOk, toastError, toastWarn, reportError, setBusy, readForm, fillForm,
@@ -198,7 +198,9 @@ let signatories = [];
 
 async function renderSignatories() {
   try {
-    const snap = await getDoc(settingsDoc("report"));
+    // Report Entry reads the same doc at boot (for report settings) - dedupe()
+    // collapses the two concurrent reads into one round trip.
+    const snap = await dedupe("settingsReportDoc", () => getDoc(settingsDoc("report")));
     signatories = Array.isArray(snap.data()?.signatories) ? snap.data().signatories : [];
   } catch {
     $("#signatoryList").innerHTML = `<p class="small muted">Signatories are not readable with your role.</p>`;

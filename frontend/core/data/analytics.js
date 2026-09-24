@@ -8,6 +8,7 @@
 import { getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { col } from "../tenant.js";
 import { snapshotRows, toNumber, dateKey, bestTime } from "./helpers.js";
+import { fetchBookingsSnapshot } from "./bookings.js";
 
 function inRange(row, from, to, field = "dayKey") {
   // Legacy bookings/payments have no dayKey - fall back to any date they carry.
@@ -172,8 +173,11 @@ export async function dashboardStats() {
   const today = dateKey();
   // No orderBy / no dayKey filter on the query: legacy KhunTest rows carry
   // neither field and would be excluded. Read broadly and filter in JS.
+  // Bookings go through fetchBookingsSnapshot() so this shares one Firestore
+  // read with listTodayBookings()/listBookings(), which run concurrently with
+  // this at dashboard boot instead of each querying the collection separately.
   const [bookingSnap, reportSnap, paymentSnap] = await Promise.all([
-    getDocs(query(col("bookings"), limit(2000))),
+    fetchBookingsSnapshot(2000),
     getDocs(query(col("reports"), limit(2000))),
     getDocs(query(col("payments"), limit(2000))).catch(() => ({ docs: [] }))
   ]);

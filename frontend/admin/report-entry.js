@@ -14,7 +14,7 @@ import { PERMISSIONS as P } from "../core/roles.js";
 import { listSignatories } from "../core/data/staff.js";
 import { sendReportReady } from "../core/whatsapp.js";
 import { createShareLink } from "./report-share.js";
-import { rupees } from "../core/data/helpers.js";
+import { rupees, dedupe } from "../core/data/helpers.js";
 import { logAudit, AUDIT } from "../core/audit.js";
 import { analyseReport, releaseBlockers, validationFooter, isCalculatedParameterRow }
   from "../core/medical/report-integration.js";
@@ -104,7 +104,9 @@ export function initReportEntry(context) {
 
 async function loadReportSettings() {
   try {
-    const snap = await getDoc(settingsDoc("report"));
+    // Settings screen reads the same doc at boot (for signatories) - dedupe()
+    // collapses the two concurrent reads into one round trip.
+    const snap = await dedupe("settingsReportDoc", () => getDoc(settingsDoc("report")));
     if (snap.exists()) reportSettings = snap.data();
   } catch { /* defaults */ }
 }

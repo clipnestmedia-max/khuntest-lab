@@ -11,7 +11,7 @@ import { col, docRef, withLabId } from "../tenant.js";
 import { safeNextId } from "./ids.js";
 import {
   snapshotRows, normalizeName, normalizePhone, cleanEmail, buildSearchTokens, clean, toNumber,
-  dateKey, sortByDateDesc, sortByBestTime, pick
+  dateKey, sortByDateDesc, sortByBestTime, pick, dedupe
 } from "./helpers.js";
 import { upsertPatientByPhone, recordVisit } from "./patients.js";
 import { logAudit, AUDIT, diffFields } from "../audit.js";
@@ -253,9 +253,23 @@ export async function deleteBooking(bookingId) {
   });
 }
 
+// On every login, the dashboard (listTodayBookings + dashboardStats) and
+// Report Entry (listBookings) each queried the whole `bookings` collection
+// independently and concurrently - three reads where one would do. They all
+// fire within the same tick at boot, so dedupe() collapses concurrent callers
+// asking for no more than BOOKINGS_BOOT_LIMIT rows into a single Firestore
+// round trip; a caller that genuinely needs more (e.g. a large export) still
+// gets its own bigger query.
+const BOOKINGS_BOOT_LIMIT = 2000;
+
+export async function fetchBookingsSnapshot(need) {
+  if (need > BOOKINGS_BOOT_LIMIT) return getDocs(query(col("bookings"), limit(need)));
+  return dedupe("bookings:snapshot", () => getDocs(query(col("bookings"), limit(BOOKINGS_BOOT_LIMIT))));
+}
+
 // No orderBy: a legacy booking without `createdAt` would be excluded entirely.
 export async function listBookings({ max = 400, status = "" } = {}) {
-  const snap = await getDocs(query(col("bookings"), limit(Math.max(max * 4, 1500))));
+  const snap = await fetchBookingsSnapshot(Math.max(max * 4, 1500));
   let rows = snap.docs.map((d) => normalizeBooking(d.id, d.data()));
   if (status) rows = rows.filter((b) => b.bookingStatus === status);
   return sortByBestTime(rows).slice(0, max);
@@ -264,7 +278,7 @@ export async function listBookings({ max = 400, status = "" } = {}) {
 export async function listTodayBookings() {
   // dayKey isn't on legacy bookings; match it OR a best-time that lands today.
   const today = dateKey();
-  const snap = await getDocs(query(col("bookings"), limit(1500)));
+  const snap = await fetchBookingsSnapshot(1500);
   const rows = snap.docs.map((d) => normalizeBooking(d.id, d.data()))
     .filter((b) => {
       const raw = b.createdAt || b.scheduledAt;
