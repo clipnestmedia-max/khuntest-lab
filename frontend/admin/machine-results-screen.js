@@ -49,10 +49,13 @@ export async function renderMachineResults() {
         (next) => { rows = next; paint(); updateBadge(); },
         (err) => reportError(err, "Lost the live connection to machine results.")
       );
+      // One-shot read only on first open, to paint before the listener's first
+      // event arrives. On later visits the listener has already kept `rows`
+      // current, so re-reading the same 300 docs here would be redundant.
+      rows = await MachineResults.listMachineResults({ max: 300 });
+      paint();
+      updateBadge();
     }
-    rows = await MachineResults.listMachineResults({ max: 300 });
-    paint();
-    updateBadge();
     loadListenerRelease();
   } catch (error) {
     reportError(error, "Could not load machine results.");

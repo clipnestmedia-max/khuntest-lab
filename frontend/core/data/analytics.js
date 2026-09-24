@@ -7,7 +7,7 @@
 // aggregation without changing a single caller.
 import { getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { col } from "../tenant.js";
-import { snapshotRows, toNumber, dateKey, bestTime } from "./helpers.js";
+import { snapshotRows, toNumber, dateKey, bestTime, cached, CACHE_TTL } from "./helpers.js";
 import { fetchBookingsSnapshot } from "./bookings.js";
 
 function inRange(row, from, to, field = "dayKey") {
@@ -45,19 +45,30 @@ export const RANGES = Object.freeze({
   year: () => ({ from: yearStart(), to: dateKey(), label: "This year" })
 });
 
-/** Pull the raw rows once; every report below is derived from these. */
+/**
+ * Pull the raw rows once; every report below is derived from these.
+ *
+ * Finance and Analytics both call this, often for the same or an overlapping
+ * range, and switching between the two tabs (or reopening the same one) used
+ * to re-read up to 3000 bookings/payments/expenses from scratch every time.
+ * Cached for CACHE_TTL.analytics (5 min, already reserved for this and unused
+ * until now) keyed by the exact range/max, with background revalidation so a
+ * reopen is instant but never more than one refresh cycle stale.
+ */
 export async function loadFinanceData({ from = "", to = "", max = 3000 } = {}) {
-  // No orderBy: legacy rows without the ordered field would be dropped.
-  const [bookingSnap, paymentSnap, expenseSnap] = await Promise.all([
-    getDocs(query(col("bookings"), limit(max))),
-    getDocs(query(col("payments"), limit(max))).catch(() => ({ docs: [] })),
-    getDocs(query(col("expenses"), limit(max))).catch(() => ({ docs: [] }))
-  ]);
-  return {
-    bookings: snapshotRows(bookingSnap).filter((r) => inRange(r, from, to)),
-    payments: snapshotRows(paymentSnap).filter((r) => inRange(r, from, to)),
-    expenses: (expenseSnap.docs || []).map((d) => ({ id: d.id, ...d.data() })).filter((r) => inRange(r, from, to))
-  };
+  return cached(`financeData:${from}:${to}:${max}`, CACHE_TTL.analytics, async () => {
+    // No orderBy: legacy rows without the ordered field would be dropped.
+    const [bookingSnap, paymentSnap, expenseSnap] = await Promise.all([
+      getDocs(query(col("bookings"), limit(max))),
+      getDocs(query(col("payments"), limit(max))).catch(() => ({ docs: [] })),
+      getDocs(query(col("expenses"), limit(max))).catch(() => ({ docs: [] }))
+    ]);
+    return {
+      bookings: snapshotRows(bookingSnap).filter((r) => inRange(r, from, to)),
+      payments: snapshotRows(paymentSnap).filter((r) => inRange(r, from, to)),
+      expenses: (expenseSnap.docs || []).map((d) => ({ id: d.id, ...d.data() })).filter((r) => inRange(r, from, to))
+    };
+  });
 }
 
 /** Headline numbers for the finance screen. */
