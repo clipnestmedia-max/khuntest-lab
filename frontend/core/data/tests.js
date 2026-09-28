@@ -41,6 +41,11 @@ export function normalizeTest(id, data = {}) {
     method: data.method || "",
     notes: data.notes || "",
     isActive: data.isActive !== false,
+    // "cultureSensitivity" tests skip the flat numeric parameter grid entirely -
+    // report-entry.js renders the Culture & Sensitivity workflow for them
+    // instead (see core/data/culture.js). Everything else keeps working
+    // exactly as before: this only ever adds a second, opt-in report shape.
+    reportType: data.reportType === "cultureSensitivity" ? "cultureSensitivity" : "standard",
     isPackage: data.isPackage === true || data.category === "Health Package",
     packageTestIds: Array.isArray(data.packageTestIds) ? data.packageTestIds : [],
     parameters: parameters.map((p, index) => normalizeParameter(p, index)),
@@ -109,7 +114,7 @@ async function loadBundledCatalogue() {
 // PARAMETERS / reference ranges. Firestore may only adjust these scalar,
 // operational fields on a shipped test - never its parameter grid.
 const OVERLAY_FIELDS = Object.freeze([
-  "price", "mrp", "isActive", "reportTime", "sample", "method", "notes", "shortName"
+  "price", "mrp", "isActive", "reportTime", "sample", "method", "notes", "shortName", "reportType"
 ]);
 
 function applyOverlay(shipped, over) {

@@ -47,6 +47,7 @@ export const PERMISSIONS = Object.freeze({
   PAYMENT_EDIT: "payment.edit",
   TEST_VIEW: "test.view",
   TEST_EDIT: "test.edit",
+  CULTURE_MASTER_MANAGE: "culture.master.manage",
   HOMECOLLECTION_VIEW: "homecollection.view",
   HOMECOLLECTION_ASSIGN: "homecollection.assign",
   HOMECOLLECTION_UPDATE: "homecollection.update",

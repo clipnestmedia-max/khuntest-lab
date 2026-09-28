@@ -202,6 +202,60 @@ function resultsTable(group, { showMethod = false, rangeBeforeUnit = false, labe
     </section>`;
 }
 
+const SIR_CLASS = { S: "flag-ok", I: "flag-abn", R: "flag-crit" };
+
+/**
+ * One Culture & Sensitivity test: unlike resultsTable()'s flat parameter
+ * rows, this is a table-of-tables - a sub-heading and its own antibiotic
+ * susceptibility table per organism isolated, since one specimen can grow
+ * more than one organism (see core/data/culture.js / admin/culture-report-entry.js).
+ */
+function cultureResultSection(cr) {
+  const summaryRows = [
+    ["Specimen", cr.specimenName || cr.specimenId],
+    ["Culture Result", cr.cultureResult],
+    ["Colony Count", [cr.colonyCount, cr.colonyCountUnit].filter(Boolean).join(" ")]
+  ].filter(([, v]) => String(v || "").trim());
+
+  const microscopy = [
+    ["Gram Stain", cr.gramStain], ["Pus Cells", cr.pusCells], ["RBC", cr.rbc],
+    ["Epithelial Cells", cr.epithelialCells], ["Other Findings", cr.otherFindings]
+  ].filter(([, v]) => String(v || "").trim());
+
+  const organisms = (cr.organisms || []).map((o) => `
+    <div class="organism-block">
+      <h4 class="organism-title">Organism Isolated: ${esc(o.organismName || o.organismId)}</h4>
+      ${o.sensitivities?.length ? `
+      <table class="results sir-table">
+        <thead><tr><th>Antibiotic</th><th>MIC</th><th>Zone</th><th>S/I/R</th><th>Comment</th></tr></thead>
+        <tbody>${o.sensitivities.map((s) => `
+          <tr>
+            <td class="p-name">${esc(s.antibioticName || s.antibioticId)}</td>
+            <td class="p-value">${esc(s.micValue ? `${s.micValue} ${s.micUnit || ""}` : "—")}</td>
+            <td class="p-value">${esc(s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}` : "—")}</td>
+            <td class="p-value"><span class="flag ${SIR_CLASS[s.sir] || ""}"><b>${esc(s.sir || "NT")}</b></span></td>
+            <td class="p-method">${esc(s.comment || "")}</td>
+          </tr>`).join("")}</tbody>
+      </table>` : `<p class="test-note">No antibiotic susceptibility results recorded for this organism.</p>`}
+    </div>`).join("");
+
+  const markers = Object.entries(cr.resistanceMarkers || {}).filter(([, v]) => v && v !== "Not Tested");
+  const markerBlock = markers.length
+    ? `<p class="test-note"><b>Resistance markers:</b> ${markers.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join(", ")}</p>` : "";
+
+  return `
+    <section class="test-block culture-block">
+      <h3 class="test-title">${esc(cr.testName || "Culture &amp; Sensitivity")}</h3>
+      <div class="patient-grid">
+        ${summaryRows.map(([label, value]) => `<div class="row"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`).join("")}
+      </div>
+      ${microscopy.length ? `<p class="test-note"><b>Microscopy:</b> ${microscopy.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join("; ")}</p>` : ""}
+      ${organisms || (cr.cultureResult === "No Growth" ? `<p class="test-note">No growth after 24-48 hours of aerobic incubation.</p>` : "")}
+      ${markerBlock}
+      ${cr.comments ? `<p class="test-note">${esc(cr.comments)}</p>` : ""}
+    </section>`;
+}
+
 // ---------- one stylesheet, four skins ----------
 
 export function reportStyles(branding) {
@@ -687,6 +741,16 @@ export function renderReport(report, branding, settings = {}) {
     rangeBeforeUnit: template.id === "classic-letterhead" || settings.rangeBeforeUnit === true
   };
   const groups = report.groups || [];
+  // Culture & Sensitivity results print as their own section(s), same status
+  // (one per page or joined onto the continuous sheet) as a numeric test
+  // group, just rendered as a table-of-tables instead of resultsTable()'s
+  // flat rows - see cultureResultSection().
+  const cultureResults = report.cultureResults || [];
+  const pageItems = [
+    ...groups.map((g) => ({ type: "group", data: g })),
+    ...cultureResults.map((c) => ({ type: "culture", data: c }))
+  ];
+  const renderItem = (item) => item.type === "culture" ? cultureResultSection(item.data) : resultsTable(item.data, tableOptions);
 
   const watermark = branding.logoUrl && settings.showWatermark !== false
     ? `<div class="watermark"><img src="${esc(branding.logoUrl)}" alt=""></div>` : "";
@@ -769,15 +833,15 @@ export function renderReport(report, branding, settings = {}) {
     : (last) => (last ? "— END OF REPORT —" : "— CONTINUED —");
 
   // --- one continuous sheet ---
-  if (!perTest || groups.length <= 1) {
+  if (!perTest || pageItems.length <= 1) {
     return `
 <div class="report-page tpl-${template.id}">
   ${watermark}
   ${header}
   ${settings.headerNote ? `<p class="test-note">${esc(settings.headerNote)}</p>` : ""}
   ${patientBlock}
-  ${groups.length
-    ? groups.map((g) => resultsTable(g, tableOptions)).join("")
+  ${pageItems.length
+    ? pageItems.map(renderItem).join("")
     : `<p class="test-note">No results have been entered for this report yet.</p>`}
   ${report.interpretation
     ? `<div class="interpretation"><h4>Interpretation / Comments</h4><p>${esc(report.interpretation)}</p></div>` : ""}
@@ -788,8 +852,8 @@ export function renderReport(report, branding, settings = {}) {
   }
 
   // --- one page per test ---
-  const total = groups.length;
-  return groups.map((group, index) => {
+  const total = pageItems.length;
+  return pageItems.map((item, index) => {
     const isLast = index === total - 1;
     return `
 <div class="report-page tpl-${template.id}">
@@ -797,7 +861,7 @@ export function renderReport(report, branding, settings = {}) {
   ${header}
   ${index === 0 && settings.headerNote ? `<p class="test-note">${esc(settings.headerNote)}</p>` : ""}
   ${patientBlock}
-  ${resultsTable(group, tableOptions)}
+  ${renderItem(item)}
   ${isLast && report.interpretation
     ? `<div class="interpretation"><h4>Interpretation / Comments</h4><p>${esc(report.interpretation)}</p></div>` : ""}
   ${isLast ? medicalNoticeBlock(report) : ""}
@@ -821,6 +885,7 @@ export function renderCustomTemplate(report, branding, settings = {}) {
   const html = sanitizeTemplate(settings.customTemplate.html);
   const perTest = settings.pageBreakPerTest !== false;
   const groups = report.groups || [];
+  const cultureResults = report.cultureResults || [];
   const showMethod = settings.showMethod === true;
 
   const base = {
@@ -848,7 +913,11 @@ export function renderCustomTemplate(report, branding, settings = {}) {
     pageNumber: index + 1,
     pageCount: pages.length,
     endMark: index === pages.length - 1 ? "— END OF REPORT —" : "— CONTINUED —",
-    results: pageGroups.map((g) => resultsTable(g, { showMethod })).join(""),
+    // Culture & Sensitivity has no natural per-test page of its own here
+    // (a custom template paginates by numeric test group), so it prints once,
+    // on the report's last page, rather than being silently dropped.
+    results: pageGroups.map((g) => resultsTable(g, { showMethod })).join("")
+      + (index === pages.length - 1 ? cultureResults.map(cultureResultSection).join("") : ""),
     testName: pageGroups[0]?.testName || "",
     testCode: pageGroups[0]?.testCode || "",
     sample: pageGroups[0]?.sample || ""

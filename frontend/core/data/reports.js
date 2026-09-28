@@ -318,6 +318,12 @@ export function normalizeReport(id, data = {}) {
     reportingDate: pick(data, ["reportingDate", "reportDate", "releasedAt"], ""),
     sampleType: data.sampleType || "",
     groups,
+    // One entry per Culture & Sensitivity test booked on this report (usually
+    // zero or one). Deliberately separate from `groups` - C&S is organism ->
+    // its own antibiotic table, not a flat parameter grid, so it cannot be
+    // expressed as another row shape in `groups` without corrupting the
+    // numeric flagging/calculation engine every other test relies on.
+    cultureResults: Array.isArray(data.cultureResults) ? data.cultureResults : [],
     reportStatus: data.reportStatus && Object.values(REPORT_STATUS).includes(data.reportStatus)
       ? data.reportStatus
       : legacyStatus(data),
@@ -367,6 +373,7 @@ export async function saveReportDraft(input, { actor = {} } = {}) {
     reportingDate: input.reportingDate || dateKey(),
     sampleType: input.sampleType || "",
     groups,
+    cultureResults: Array.isArray(input.cultureResults) ? input.cultureResults : [],
     // The printed comment. It is whatever the pathologist approved, and an
     // empty string until then - so an unapproved draft cannot reach a report
     // by any path, including a reissue or a shared link.

@@ -298,6 +298,32 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- Culture & Sensitivity master data ----
+    // Reference data, not patient data - same "read: true, write: admin only"
+    // shape as /tests, so the report-entry screen can look up any of these
+    // without a per-collection permission check, while only admin can edit
+    // the master lists themselves.
+    match /csSpecimens/{specimenId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /csOrganisms/{organismId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /csAntibiotics/{antibioticId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /csPanels/{panelId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /csBreakpoints/{breakpointId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ---- Collections used by the ported swatisofttechsolution admin panel ----
     // The panel signs in as the same single "admin" user; these mirror the
     // isAdmin() gate the rest of this file already uses.

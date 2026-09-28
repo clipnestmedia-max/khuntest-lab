@@ -1748,6 +1748,78 @@
       `;
     }
 
+    const SIR_MARK = { S: "S", I: "I", R: "R", NA: "NA", NT: "NT" };
+
+    // One Culture & Sensitivity test, one page: unlike the numeric result
+    // table above, this is a sub-heading per organism isolated, each with its
+    // own antibiotic susceptibility table - see admin/culture-report-entry.js
+    // for where this data is entered and core/data/culture.js for the
+    // breakpoint-driven S/I/R it was interpreted from.
+    function cultureResultSection(cr) {
+      const summary = [
+        ["Specimen", cr.specimenName || cr.specimenId],
+        ["Culture Result", cr.cultureResult],
+        ["Colony Count", [cr.colonyCount, cr.colonyCountUnit].filter(Boolean).join(" ")]
+      ].filter(([, v]) => String(v || "").trim());
+
+      const microscopy = [
+        ["Gram Stain", cr.gramStain], ["Pus Cells", cr.pusCells], ["RBC", cr.rbc],
+        ["Epithelial Cells", cr.epithelialCells], ["Other Findings", cr.otherFindings]
+      ].filter(([, v]) => String(v || "").trim());
+
+      const organismTables = (cr.organisms || []).map((o) => `
+        <div class="organism-block" style="margin:10px 0;">
+          <div class="group-row" style="font-weight:700;padding:4px 0;">Organism Isolated: ${safe(o.organismName || o.organismId)}</div>
+          ${o.sensitivities?.length ? `
+          <table class="result-table">
+            <thead><tr><th class="test-col">Antibiotic</th><th class="result-col">MIC</th><th class="result-col">Zone</th><th class="range-col">S/I/R</th><th class="unit-col">Comment</th></tr></thead>
+            <tbody>${o.sensitivities.map((s) => `
+              <tr>
+                <td class="test-col">${safe(s.antibioticName || s.antibioticId)}</td>
+                <td class="result-col result-value">${safe(s.micValue ? `${s.micValue} ${s.micUnit || ""}` : "—")}</td>
+                <td class="result-col result-value">${safe(s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}` : "—")}</td>
+                <td class="range-col"><b>${safe(SIR_MARK[s.sir] || "NT")}</b></td>
+                <td class="unit-col">${safe(s.comment || "")}</td>
+              </tr>`).join("")}</tbody>
+          </table>` : `<div class="note-row">No antibiotic susceptibility results recorded for this organism.</div>`}
+        </div>`).join("");
+
+      const markers = Object.entries(cr.resistanceMarkers || {}).filter(([, v]) => v && v !== "Not Tested");
+
+      return `
+        <table class="result-table">
+          <tbody>
+            <tr class="category-row"><td colspan="4">CULTURE &amp; SENSITIVITY</td></tr>
+            <tr class="group-row"><td colspan="4">${safe(cr.testName)}</td></tr>
+            ${summary.map(([label, value]) => `<tr><td class="test-col" colspan="1"><b>${safe(label)}</b></td><td class="result-col" colspan="3">${safe(value)}</td></tr>`).join("")}
+          </tbody>
+        </table>
+        ${microscopy.length ? `<div class="note-row">Microscopy: ${microscopy.map(([k, v]) => `${safe(k)}: ${safe(v)}`).join("; ")}</div>` : ""}
+        ${organismTables || (cr.cultureResult === "No Growth" ? `<div class="note-row">No growth after 24-48 hours of aerobic incubation.</div>` : "")}
+        ${markers.length ? `<div class="comment-row">Resistance markers: ${markers.map(([k, v]) => `${safe(k)}: ${safe(v)}`).join(", ")}</div>` : ""}
+        ${cr.comments ? `<div class="comment-row">${safe(cr.comments)}</div>` : ""}
+      `;
+    }
+
+    function cultureResultPageHtml(report, billNo, cr, pageIndex, pageCount) {
+      const showEnd = pageIndex === pageCount - 1;
+      return `
+        <div class="report-page-frame">
+          <section class="report-page">
+            ${letterheadHtml()}
+            <img class="report-watermark" src="assets/khuntest-logo.png" alt="">
+            <div class="report-content">
+              ${patientBlock(report, billNo)}
+              ${cultureResultSection(cr)}
+              ${showEnd ? `<div class="end-area">*** End of Report ***</div>` : `<div class="continued">Continued on next page</div>`}
+            </div>
+            ${signatureHtml()}
+            ${footerHtml()}
+          </section>
+        </div>
+      `;
+    }
+
     // Real, locally generated Code 128 barcode + QR (Kazuhiko Arase's MIT
     // encoder via core/qrcode.js) painted into the placeholder columns on
     // every rendered page. Nothing is fetched from a QR/barcode web service -
@@ -1811,7 +1883,8 @@
 
     async function renderReport(report, billNo) {
       const results = completeCBCResults(report, completeESRResults(report, normalizeResults(report.results || report.reportResults || [])));
-      if (!results.length) {
+      const cultureResults = Array.isArray(report.cultureResults) ? report.cultureResults : [];
+      if (!results.length && !cultureResults.length) {
         showError(`Report is not released yet or result was not saved permanently.<br><br>Bill No: ${safe(billNo)}`);
         return;
       }
@@ -1824,6 +1897,12 @@
         chunks.forEach((rows, index) => {
           pages.push(pageHtml(report, billNo, group, rows, index, chunks.length));
         });
+      });
+      // Each C&S test is one self-contained page, same as every numeric test
+      // group's own final chunk already prints its own "End of Report" mark
+      // above - not a single mark for the whole multi-test report.
+      cultureResults.forEach((cr) => {
+        pages.push(cultureResultPageHtml(report, billNo, cr, 0, 1));
       });
 
       document.title = "Report - " + billNo;

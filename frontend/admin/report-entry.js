@@ -7,6 +7,11 @@
 // layer with live abnormal-value flagging added.
 import * as Reports from "../core/data/reports.js";
 import * as Bookings from "../core/data/bookings.js";
+import * as Tests from "../core/data/tests.js";
+import {
+  loadCultureMasters, isCultureTest, cultureResultFor, renderCultureBlocks, bindCultureSection,
+  cultureValidationError
+} from "./culture-report-entry.js";
 import { getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { settingsDoc } from "../core/tenant.js";
 import { sessionCan, sessionCanWrite } from "../core/session.js";
@@ -28,7 +33,7 @@ import {
 } from "../core/ui.js";
 
 let ctx = { session: null, branding: null, onChanged: null };
-let current = { booking: null, report: null, groups: [] };
+let current = { booking: null, report: null, groups: [], cultureResults: [] };
 let reportSettings = {};
 let medicalConfig = emptyConfig();
 let analysis = null;
@@ -56,7 +61,19 @@ export function initReportEntry(context) {
   ctx = context;
   loadReportSettings();
   loadMedicalConfig().then((c) => { medicalConfig = c; }).catch(() => { /* shipped defaults */ });
+  loadCultureMasters().catch(() => { /* Culture & Sensitivity masters load on demand if this fails */ });
   refreshBookingList();
+
+  const cultureContainer = $("#cultureResultsContainer");
+  if (cultureContainer) {
+    bindCultureSection(cultureContainer, {
+      getState: () => current.cultureResults,
+      rerender: renderCultureSection,
+      // Local state only, same as a numeric result's onResultInput() -
+      // nothing is persisted until Save & Release.
+      onChange: () => {}
+    });
+  }
 
   $("#loadReportBtn").addEventListener("click", () => {
     const value = $("#reportBookingSelect").value;
@@ -215,7 +232,20 @@ export async function openReportFor(id, { print = false, share = false } = {}) {
       totalAmount: 0, balanceDue: 0, paymentStatus: "", testNames: ""
     };
 
-    const blankGrid = await Reports.buildResultGrid(resolvedBooking);
+    // A Culture & Sensitivity test has no numeric parameter grid at all (see
+    // core/data/tests.js reportType) - it gets its own structured section
+    // below instead of the generic single-"Result"-field fallback every other
+    // parameter-less test would otherwise fall back to in buildResultGrid().
+    const catalogue = await Tests.loadTests({ activeOnly: false }).catch(() => []);
+    const catalogueById = new Map(catalogue.map((t) => [t.id, t]));
+    const catalogueByCode = new Map(catalogue.map((t) => [t.testCode, t]));
+    const lookupTest = (bt) => catalogueById.get(bt.testId) || catalogueByCode.get(bt.testCode) || null;
+    const cultureTests = (resolvedBooking.tests || []).filter((bt) => isCultureTest(lookupTest(bt)));
+    const gridBooking = cultureTests.length
+      ? { ...resolvedBooking, tests: (resolvedBooking.tests || []).filter((bt) => !isCultureTest(lookupTest(bt))) }
+      : resolvedBooking;
+
+    const blankGrid = await Reports.buildResultGrid(gridBooking);
     // Overlay every saved value onto the fresh catalogue grid. A row is matched
     // by its stable parameterId first, then by a normalised name — never lost
     // because the catalogue was renumbered. This is the ONLY place saved
@@ -253,7 +283,11 @@ export async function openReportFor(id, { print = false, share = false } = {}) {
         g.rows.filter((r) => String(r.value ?? "").trim() !== "").map((r) => `${r.parameterId}=${r.value}`))
     });
 
-    current = { booking: resolvedBooking, report: existing, groups };
+    const cultureResults = cultureTests.map((bt) => cultureResultFor(
+      { ...bt, name: bt.name }, existing?.cultureResults || []
+    ));
+
+    current = { booking: resolvedBooking, report: existing, groups, cultureResults };
     // Every report opens with automatic calculation ON.
     autoCalcOn = true;
     // A saved interpretation carries its own approval state; a fresh report
@@ -265,6 +299,7 @@ export async function openReportFor(id, { print = false, share = false } = {}) {
     $("#reportBookingSelect").value = resolvedBooking.bookingId || "";
     renderMeta();
     renderCards();
+    renderCultureSection();
     renderMedicalPanels();
     $("#reportEntryFoot").classList.remove("hidden");
 
@@ -344,9 +379,15 @@ function renderCards() {
           </div>
         </div>
       </div>`;
-  }).join("") || `<div class="card"><p class="muted">Select a booking above to start entering results.</p></div>`;
+  }).join("") || (current.cultureResults.length ? "" : `<div class="card"><p class="muted">Select a booking above to start entering results.</p></div>`);
 
   renderProgress();
+}
+
+function renderCultureSection() {
+  const el = $("#cultureResultsContainer");
+  if (!el) return;
+  el.innerHTML = renderCultureBlocks(current.cultureResults, sessionCanWrite(P.REPORT_ENTER, ctx.session));
 }
 
 /** Turn automatic calculation on or off for this session (authorised users only). */
@@ -915,6 +956,7 @@ async function saveDraft({ silent = false } = {}) {
       bookingId: current.booking.bookingId,
       booking: current.booking,
       groups: current.groups,
+      cultureResults: current.cultureResults,
       templateId: reportSettings.templateId || ctx.branding.reportTemplate,
       sampleType: current.groups[0]?.sample || "",
       createdAt: current.report?.createdAt,
@@ -977,6 +1019,12 @@ async function saveAndRelease() {
   if (analyseError) {
     return toastError(`Cannot save: the calculation engine failed (${analyseError}). Reload and try again.`);
   }
+
+  // Data-integrity guard, not a bureaucratic approval step: a "Growth
+  // Detected"-class culture result with no organism recorded is an
+  // incomplete report, not a valid one - see cultureValidationError().
+  const cultureError = cultureValidationError(current.cultureResults);
+  if (cultureError) return toastError(cultureError);
 
   const signatories = await listSignatories().catch(() => []);
   let signatory = signatories.find((s) => s.uid === ctx.session.uid) || signatories[0] || null;

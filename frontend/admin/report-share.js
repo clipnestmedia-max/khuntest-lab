@@ -31,7 +31,7 @@ const DEFAULT_TTL_DAYS = 90;
 const SHARE_FIELDS = [
   "reportId", "billNo", "patientName", "age", "gender", "refBy",
   "collectionDate", "reportingDate", "sampleType", "reportStatus",
-  "groups", "interpretation", "templateId", "signatory", "medicalNotices"
+  "groups", "cultureResults", "interpretation", "templateId", "signatory", "medicalNotices"
 ];
 
 export function generateToken() {

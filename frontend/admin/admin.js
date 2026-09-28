@@ -27,6 +27,7 @@ import { initReportEntry, openReportFor, refreshBookingList } from "./report-ent
 import { initSettingsScreens } from "./settings-screen.js";
 import { initMedicalScreen, renderMedical } from "./medical-screen.js";
 import { initMachineResultsScreen, renderMachineResults } from "./machine-results-screen.js";
+import { initCultureMastersScreen, renderCultureMasters } from "./culture-masters-screen.js";
 
 const TAB_TITLES = {
   dashboard: "Dashboard", booking: "New Booking", bookings: "Bookings",
@@ -34,7 +35,8 @@ const TAB_TITLES = {
   homeCollection: "Home Collection", onlineBookings: "Online Requests",
   catalogue: "Test Catalogue", finance: "Finance", analytics: "Analytics",
   staff: "Staff", branding: "Branding", settings: "Settings",
-  medical: "Medical Rules", machineResults: "Machine Results", audit: "Audit Log"
+  medical: "Medical Rules", machineResults: "Machine Results",
+  cultureMasters: "Culture & Sensitivity", audit: "Audit Log"
 };
 
 // ---------- boot ----------
@@ -79,6 +81,7 @@ initReportEntry({ session, branding, onChanged: () => invalidate() });
 initSettingsScreens({ session, branding });
 initMedicalScreen({ session, branding });
 initMachineResultsScreen({ session, branding });
+initCultureMastersScreen({ session, branding });
 
 // ---------- permissions ----------
 
@@ -140,6 +143,7 @@ async function loadTab(tab) {
       case "staff": return renderStaff();
       case "medical": return renderMedical();
       case "machineResults": return renderMachineResults();
+      case "cultureMasters": return renderCultureMasters();
       case "audit": return renderAudit();
       default: return undefined;
     }
@@ -658,7 +662,8 @@ $("#catalogueCategory").addEventListener("change", renderCatalogue);
 
 async function openTestDialog(testId) {
   const test = testId ? await Tests.getTest(testId) : {
-    testCode: "", name: "", category: "Lab Test", price: 0, sample: "", reportTime: "", parameters: [], isActive: true
+    testCode: "", name: "", category: "Lab Test", price: 0, sample: "", reportTime: "",
+    parameters: [], isActive: true, reportType: "standard"
   };
   if (testId && !test) return toastError("Test not found.");
 
@@ -689,16 +694,27 @@ async function openTestDialog(testId) {
         <label class="field"><span>Price (₹) *</span><input name="price" type="number" min="0" value="${test.price}" required></label>
         <label class="field"><span>Reporting time</span><input name="reportTime" value="${esc(test.reportTime)}" placeholder="Same Day"></label>
         <label class="field"><span>Method</span><input name="method" value="${esc(test.method || "")}"></label>
+        <label class="field"><span>Report type</span><select name="reportType" id="testReportType">
+          <option value="standard" ${test.reportType !== "cultureSensitivity" ? "selected" : ""}>Standard (numeric parameters)</option>
+          <option value="cultureSensitivity" ${test.reportType === "cultureSensitivity" ? "selected" : ""}>Culture &amp; Sensitivity</option>
+        </select></label>
       </div>
       <label class="field"><span>Notes printed on the report</span><textarea name="notes">${esc(test.notes || "")}</textarea></label>
       <label class="field"><input type="checkbox" name="isActive" ${test.isActive ? "checked" : ""}> Active in the catalogue</label>
       </form>
+      <div id="paramSection" class="${test.reportType === "cultureSensitivity" ? "hidden" : ""}">
       <h4 style="margin-top:16px;">Parameters</h4>
       <div class="table-wrap"><table class="data">
         <thead><tr><th>Name</th><th>Unit</th><th>Reference range</th><th>Male</th><th>Female</th><th>Child</th><th></th></tr></thead>
         <tbody id="paramBody">${(test.parameters || []).map(paramRow).join("")}</tbody>
       </table></div>
-      <button class="btn btn-outline btn-sm" id="addParamBtn" type="button" style="margin-top:10px;">Add parameter</button>`,
+      <button class="btn btn-outline btn-sm" id="addParamBtn" type="button" style="margin-top:10px;">Add parameter</button>
+      </div>
+      <div id="cultureNotice" class="notice ${test.reportType === "cultureSensitivity" ? "" : "hidden"}" style="margin-top:16px;">
+        Culture &amp; Sensitivity tests have no fixed parameter list here — the technician selects specimen,
+        organism(s) and antibiotic results in Report Entry. Configure the Specimen, Organism, Antibiotic and
+        Breakpoint masters under <b>Culture &amp; Sensitivity</b> in the sidebar first.
+      </div>`,
     footer: `<button class="btn btn-outline" data-act="cancel" type="button">Cancel</button>
              <button class="btn" data-act="save" type="button">Save test</button>`
   });
@@ -711,6 +727,11 @@ async function openTestDialog(testId) {
   element.addEventListener("click", (e) => {
     const remove = e.target.closest("[data-remove-param]");
     if (remove) remove.closest("tr").remove();
+  });
+  element.querySelector("#testReportType").addEventListener("change", (e) => {
+    const isCulture = e.target.value === "cultureSensitivity";
+    element.querySelector("#paramSection").classList.toggle("hidden", isCulture);
+    element.querySelector("#cultureNotice").classList.toggle("hidden", !isCulture);
   });
   element.querySelector('[data-act="cancel"]').addEventListener("click", close);
   element.querySelector('[data-act="save"]').addEventListener("click", async (e) => {

@@ -21,6 +21,7 @@ backups/*.sql
 **/.DS_Store
 firebase-debug.log
 **/firebase-debug.log
+.firebase/
 backups/
 frontend/backups/
 database/

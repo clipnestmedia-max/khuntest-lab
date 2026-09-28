@@ -35,6 +35,7 @@
       <button data-tab="branding" data-perm="branding.edit">Branding</button>
       <button data-tab="settings" data-perm="settings.view">Settings</button>
       <button data-tab="medical" data-perm="settings.view">Medical Rules</button>
+      <button data-tab="cultureMasters" data-perm="culture.master.manage">Culture &amp; Sensitivity</button>
       <button data-tab="audit" data-perm="audit.view">Audit Log</button>
     </nav>
     <div class="sidebar-foot">
@@ -185,6 +186,7 @@
         <div id="reportEntryCards" style="margin-top:16px;"></div>
         <div id="medicalNotices"></div>
         <div id="interpretationPanel"></div>
+        <div id="cultureResultsContainer"></div>
 
         <div class="card hidden" id="reportEntryFoot" style="margin-top:16px;position:sticky;bottom:0;">
           <div class="row-flex">
@@ -587,6 +589,61 @@
       <!-- ===== MEDICAL RULES ===== -->
       <section data-panel="medical" class="hidden">
         <div id="medicalPane"></div>
+      </section>
+
+      <!-- ===== CULTURE & SENSITIVITY MASTERS ===== -->
+      <section data-panel="cultureMasters" class="hidden">
+        <p class="small muted" style="margin:0 0 14px;">
+          Reference data for Culture &amp; Sensitivity reports. Deactivating an entry hides it from new reports
+          without touching any report that already used it.
+        </p>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><h2>Specimens</h2><span class="spacer"></span>
+            <button class="btn btn-sm" id="addSpecimenBtn" type="button" data-perm="culture.master.manage">Add specimen</button></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="csSpecimensBody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><h2>Organisms</h2><span class="spacer"></span>
+            <button class="btn btn-sm" id="addOrganismBtn" type="button" data-perm="culture.master.manage">Add organism</button></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Name</th><th>Gram reaction</th><th>Aerobic/Anaerobic</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="csOrganismsBody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><h2>Antibiotics</h2><span class="spacer"></span>
+            <button class="btn btn-sm" id="addAntibioticBtn" type="button" data-perm="culture.master.manage">Add antibiotic</button></div>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Name</th><th>Class</th><th>Testing method</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="csAntibioticsBody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><h2>Antibiotic panels</h2><span class="spacer"></span>
+            <button class="btn btn-sm" id="addCulturePanelBtn" type="button" data-perm="culture.master.manage">Add panel</button></div>
+          <p class="small muted">What “Auto Fill Sensitivity Panel” loads in the report entry screen for a given specimen/Gram reaction.</p>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Panel</th><th>Specimen</th><th>Gram reaction</th><th>Antibiotics</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="csPanelsBody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>Breakpoints</h2><span class="spacer"></span>
+            <button class="btn btn-sm" id="addBreakpointBtn" type="button" data-perm="culture.master.manage">Add breakpoint</button></div>
+          <p class="small muted">S/I/R is only ever auto-interpreted from a breakpoint entered here — nothing is guessed.</p>
+          <div class="table-wrap"><table class="data">
+            <thead><tr><th>Organism</th><th>Antibiotic</th><th>Method</th><th>Standard</th><th>Thresholds</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="csBreakpointsBody"></tbody>
+          </table></div>
+        </div>
       </section>
 
       <!-- ===== AUDIT ===== -->
