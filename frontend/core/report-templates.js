@@ -203,6 +203,15 @@ function resultsTable(group, { showMethod = false, rangeBeforeUnit = false, labe
 }
 
 const SIR_CLASS = { S: "flag-ok", I: "flag-abn", R: "flag-crit" };
+// This lab's own reporting convention (see the sample reports this was built
+// from): "IMS" rather than the CLSI-standard "I", "X" for a drug listed but
+// not tested rather than "NT". Display-only - the stored value and the
+// auto-interpretation logic in core/data/culture.js are unchanged.
+const SIR_MARK = { S: "S", I: "IMS", R: "R", NA: "NA", NT: "X" };
+function formatSIR(s) {
+  const mark = SIR_MARK[s.sir] || "X";
+  return s.grade ? `${mark}(${s.grade})` : mark;
+}
 
 /**
  * One Culture & Sensitivity test: unlike resultsTable()'s flat parameter
@@ -222,22 +231,29 @@ function cultureResultSection(cr) {
     ["Epithelial Cells", cr.epithelialCells], ["Other Findings", cr.otherFindings]
   ].filter(([, v]) => String(v || "").trim());
 
-  const organisms = (cr.organisms || []).map((o) => `
+  // Most reports from this lab record only S/I/R (plus an optional grade),
+  // never a precise MIC/zone - those columns only print when at least one
+  // antibiotic actually has a value.
+  const organisms = (cr.organisms || []).map((o) => {
+    const hasMic = (o.sensitivities || []).some((s) => s.micValue);
+    const hasZone = (o.sensitivities || []).some((s) => s.zoneDiameter);
+    return `
     <div class="organism-block">
       <h4 class="organism-title">Organism Isolated: ${esc(o.organismName || o.organismId)}</h4>
       ${o.sensitivities?.length ? `
       <table class="results sir-table">
-        <thead><tr><th>Antibiotic</th><th>MIC</th><th>Zone</th><th>S/I/R</th><th>Comment</th></tr></thead>
+        <thead><tr><th>Antibiotic</th>${hasMic ? "<th>MIC</th>" : ""}${hasZone ? "<th>Zone</th>" : ""}<th>Sensitivity</th><th>Comment</th></tr></thead>
         <tbody>${o.sensitivities.map((s) => `
           <tr>
             <td class="p-name">${esc(s.antibioticName || s.antibioticId)}</td>
-            <td class="p-value">${esc(s.micValue ? `${s.micValue} ${s.micUnit || ""}` : "—")}</td>
-            <td class="p-value">${esc(s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}` : "—")}</td>
-            <td class="p-value"><span class="flag ${SIR_CLASS[s.sir] || ""}"><b>${esc(s.sir || "NT")}</b></span></td>
+            ${hasMic ? `<td class="p-value">${esc(s.micValue ? `${s.micValue} ${s.micUnit || ""}` : "—")}</td>` : ""}
+            ${hasZone ? `<td class="p-value">${esc(s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}` : "—")}</td>` : ""}
+            <td class="p-value"><span class="flag ${SIR_CLASS[s.sir] || ""}"><b>${esc(formatSIR(s))}</b></span></td>
             <td class="p-method">${esc(s.comment || "")}</td>
           </tr>`).join("")}</tbody>
       </table>` : `<p class="test-note">No antibiotic susceptibility results recorded for this organism.</p>`}
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   const markers = Object.entries(cr.resistanceMarkers || {}).filter(([, v]) => v && v !== "Not Tested");
   const markerBlock = markers.length
@@ -251,6 +267,7 @@ function cultureResultSection(cr) {
       </div>
       ${microscopy.length ? `<p class="test-note"><b>Microscopy:</b> ${microscopy.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join("; ")}</p>` : ""}
       ${organisms || (cr.cultureResult === "No Growth" ? `<p class="test-note">No growth after 24-48 hours of aerobic incubation.</p>` : "")}
+      ${organisms ? `<p class="test-note">S-SENSITIVE, R-RESISTANT, IMS-INTERMEDIATE SENSITIVE, NA-NOT APPLICABLE, X-NOT TESTED</p>` : ""}
       ${markerBlock}
       ${cr.comments ? `<p class="test-note">${esc(cr.comments)}</p>` : ""}
     </section>`;

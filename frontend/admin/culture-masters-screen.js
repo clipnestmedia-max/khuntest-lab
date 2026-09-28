@@ -119,7 +119,8 @@ const STARTER_ORGANISMS = [
   { name: "Streptococcus pyogenes", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
   { name: "Streptococcus pneumoniae", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
   { name: "Acinetobacter baumannii", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Coccobacilli", aerobicity: "Aerobic" },
-  { name: "Candida albicans", organismType: "Yeast", gramReaction: "Not Applicable", morphology: "Yeast", aerobicity: "Aerobic" }
+  { name: "Candida albicans", organismType: "Yeast", gramReaction: "Not Applicable", morphology: "Yeast", aerobicity: "Aerobic" },
+  { name: "Bacteroides fragilis", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Anaerobic" }
 ];
 
 const STARTER_ANTIBIOTICS = [
@@ -145,7 +146,16 @@ const STARTER_ANTIBIOTICS = [
   { displayName: "Erythromycin", antibioticClass: "Macrolide" },
   { displayName: "Tetracycline", antibioticClass: "Tetracycline" },
   { displayName: "Cefoxitin", antibioticClass: "Cephamycin" },
-  { displayName: "Penicillin", antibioticClass: "Penicillin" }
+  { displayName: "Penicillin", antibioticClass: "Penicillin" },
+  { displayName: "Ampicillin/Sulbactam", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
+  { displayName: "Cefazolin", antibioticClass: "Cephalosporin (1st gen)" },
+  { displayName: "Cefotaxime", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Ceftizoxime", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Ofloxacin", antibioticClass: "Fluoroquinolone" },
+  { displayName: "Tobramycin", antibioticClass: "Aminoglycoside" },
+  { displayName: "Chloramphenicol", antibioticClass: "Amphenicol" },
+  { displayName: "Metronidazole", antibioticClass: "Nitroimidazole (Anaerobic Cover)" },
+  { displayName: "Polymyxin B", antibioticClass: "Polymyxin" }
 ];
 
 async function loadStarterOrganisms() {

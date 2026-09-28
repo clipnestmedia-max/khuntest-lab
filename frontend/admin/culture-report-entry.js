@@ -59,6 +59,10 @@ function newSensitivityRow(antibioticId = "") {
     micValue: "", micUnit: abx?.micUnit || "µg/mL",
     zoneDiameter: "", zoneUnit: "mm",
     sir: "NT", auto: false, breakpointId: null, standard: "", standardVersion: "",
+    // Optional zone-of-inhibition grading some labs print alongside a plain
+    // S/R call (e.g. "S(++++)") instead of, or in addition to, a numeric MIC/
+    // zone value - purely a display convention, never fed into interpretSIR().
+    grade: "",
     comment: ""
   };
 }
@@ -132,6 +136,9 @@ function sensitivityRowHtml(ti, oi, si, row) {
     <td><select data-sens-sir class="pill ${sirBadgeClass(row.sir)}">
       ${Culture.SIR_VALUES.map((v) => `<option value="${v}" ${v === row.sir ? "selected" : ""}>${esc(v)}</option>`).join("")}
     </select>${row.auto ? ` <span class="small muted" title="Auto-interpreted from ${esc(row.standard)} ${esc(row.standardVersion)}">auto</span>` : ""}</td>
+    <td><select data-sens-grade title="Optional zone-of-inhibition grading, printed as e.g. S(++++)" style="width:70px;">
+      ${["", "+", "++", "+++", "++++"].map((g) => `<option value="${g}" ${g === (row.grade || "") ? "selected" : ""}>${g || "—"}</option>`).join("")}
+    </select></td>
     <td><input data-sens-comment type="text" value="${esc(row.comment)}" placeholder="Comment" style="width:110px;"></td>
     <td><button class="btn btn-sm btn-ghost" data-remove-sens type="button">×</button></td>
   </tr>`;
@@ -146,10 +153,11 @@ function organismBlockHtml(ti, oi, organismBlock) {
       <button class="btn btn-sm btn-ghost" data-remove-organism type="button" style="margin-top:20px;">Remove organism</button>
     </div>
     <div class="table-wrap" style="margin-top:8px;"><table class="data">
-      <thead><tr><th>Antibiotic</th><th>Method</th><th>MIC</th><th>Unit</th><th>Zone</th><th>S/I/R</th><th>Comment</th><th></th></tr></thead>
+      <thead><tr><th>Antibiotic</th><th>Method</th><th>MIC</th><th>Unit</th><th>Zone</th><th>S/I/R</th><th>Grade</th><th>Comment</th><th></th></tr></thead>
       <tbody>${organismBlock.sensitivities.map((row, si) => sensitivityRowHtml(ti, oi, si, row)).join("")
-        || `<tr><td colspan="8" class="small muted" style="text-align:center;padding:10px;">No antibiotics yet - use Auto Fill or add one.</td></tr>`}</tbody>
+        || `<tr><td colspan="9" class="small muted" style="text-align:center;padding:10px;">No antibiotics yet - use Auto Fill or add one.</td></tr>`}</tbody>
     </table></div>
+    <p class="small muted" style="margin:6px 0 0;">MIC/Zone are optional — leave them blank and just pick S/I/R (and, if this lab reports it, a grade) when precise values aren't recorded. The printed report shows only what's actually filled in.</p>
     <button class="btn btn-sm btn-ghost" data-add-sens type="button" style="margin-top:8px;">+ Add Antibiotic</button>
   </div>`;
 }
@@ -257,6 +265,7 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
           onChange(); return rerender();
         }
         if (el.matches("[data-sens-sir]")) { row.sir = el.value; row.auto = false; return onChange(); }
+        if (el.matches("[data-sens-grade]")) { row.grade = el.value; return onChange(); }
       }
     }
   });

@@ -1748,7 +1748,16 @@
       `;
     }
 
-    const SIR_MARK = { S: "S", I: "I", R: "R", NA: "NA", NT: "NT" };
+    // This lab's own reporting convention (see the sample reports this was
+    // built from): "IMS" rather than the CLSI-standard "I", "X" for a drug
+    // listed but not tested rather than "NT". The underlying value stored and
+    // used for auto-interpretation is unchanged (S/I/R/NA/NT) - this is
+    // display-only, at the one place text actually reaches a printed report.
+    const SIR_MARK = { S: "S", I: "IMS", R: "R", NA: "NA", NT: "X" };
+    function formatSIR(s) {
+      const mark = SIR_MARK[s.sir] || "X";
+      return s.grade ? `${mark}(${s.grade})` : mark;
+    }
 
     // One Culture & Sensitivity test, one page: unlike the numeric result
     // table above, this is a sub-heading per organism isolated, each with its
@@ -1767,22 +1776,30 @@
         ["Epithelial Cells", cr.epithelialCells], ["Other Findings", cr.otherFindings]
       ].filter(([, v]) => String(v || "").trim());
 
-      const organismTables = (cr.organisms || []).map((o) => `
+      const organismTables = (cr.organisms || []).map((o) => {
+        // Most reports from this lab record only S/I/R (plus an optional
+        // grade), never a precise MIC/zone - so those columns only print when
+        // at least one antibiotic actually has a value, instead of a page
+        // full of "-" that isn't how this lab's reports normally look.
+        const hasMic = (o.sensitivities || []).some((s) => s.micValue);
+        const hasZone = (o.sensitivities || []).some((s) => s.zoneDiameter);
+        return `
         <div class="organism-block" style="margin:10px 0;">
           <div class="group-row" style="font-weight:700;padding:4px 0;">Organism Isolated: ${safe(o.organismName || o.organismId)}</div>
           ${o.sensitivities?.length ? `
           <table class="result-table">
-            <thead><tr><th class="test-col">Antibiotic</th><th class="result-col">MIC</th><th class="result-col">Zone</th><th class="range-col">S/I/R</th><th class="unit-col">Comment</th></tr></thead>
+            <thead><tr><th class="test-col">Antibiotic</th>${hasMic ? `<th class="result-col">MIC</th>` : ""}${hasZone ? `<th class="result-col">Zone</th>` : ""}<th class="range-col">Sensitivity</th><th class="unit-col">Comment</th></tr></thead>
             <tbody>${o.sensitivities.map((s) => `
               <tr>
                 <td class="test-col">${safe(s.antibioticName || s.antibioticId)}</td>
-                <td class="result-col result-value">${safe(s.micValue ? `${s.micValue} ${s.micUnit || ""}` : "—")}</td>
-                <td class="result-col result-value">${safe(s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}` : "—")}</td>
-                <td class="range-col"><b>${safe(SIR_MARK[s.sir] || "NT")}</b></td>
+                ${hasMic ? `<td class="result-col result-value">${safe(s.micValue ? `${s.micValue} ${s.micUnit || ""}` : "—")}</td>` : ""}
+                ${hasZone ? `<td class="result-col result-value">${safe(s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}` : "—")}</td>` : ""}
+                <td class="range-col"><b>${safe(formatSIR(s))}</b></td>
                 <td class="unit-col">${safe(s.comment || "")}</td>
               </tr>`).join("")}</tbody>
           </table>` : `<div class="note-row">No antibiotic susceptibility results recorded for this organism.</div>`}
-        </div>`).join("");
+        </div>`;
+      }).join("");
 
       const markers = Object.entries(cr.resistanceMarkers || {}).filter(([, v]) => v && v !== "Not Tested");
 
@@ -1796,6 +1813,7 @@
         </table>
         ${microscopy.length ? `<div class="note-row">Microscopy: ${microscopy.map(([k, v]) => `${safe(k)}: ${safe(v)}`).join("; ")}</div>` : ""}
         ${organismTables || (cr.cultureResult === "No Growth" ? `<div class="note-row">No growth after 24-48 hours of aerobic incubation.</div>` : "")}
+        ${organismTables ? `<div class="note-row">S-SENSITIVE, R-RESISTANT, IMS-INTERMEDIATE SENSITIVE, NA-NOT APPLICABLE, X-NOT TESTED</div>` : ""}
         ${markers.length ? `<div class="comment-row">Resistance markers: ${markers.map(([k, v]) => `${safe(k)}: ${safe(v)}`).join(", ")}</div>` : ""}
         ${cr.comments ? `<div class="comment-row">${safe(cr.comments)}</div>` : ""}
       `;
