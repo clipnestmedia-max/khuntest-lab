@@ -161,7 +161,12 @@ table.data th {
 }
 table.data td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 table.data tbody tr:hover { background: var(--surface-2); }
-table.data td.actions { white-space: nowrap; }
+/* Bookings' row alone can carry 5 buttons (Report/Print/Bill/WhatsApp/Collect) -
+   nowrap forced every table with an actions column wider than its other
+   columns combined, so desktop users had to scroll the whole table
+   horizontally just to reach WhatsApp/Collect. Wrapping onto a second line
+   inside the cell keeps the row (and the buttons) fully visible instead. */
+table.data td.actions { white-space: normal; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; max-width: 230px; }
 table.data .empty-row td { text-align: center; color: var(--muted); padding: 26px; }
 
 /* ---------- pills ---------- */

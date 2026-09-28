@@ -236,13 +236,17 @@ export async function openReportFor(id, { print = false, share = false } = {}) {
     // core/data/tests.js reportType) - it gets its own structured section
     // below instead of the generic single-"Result"-field fallback every other
     // parameter-less test would otherwise fall back to in buildResultGrid().
-    const catalogue = await Tests.loadTests({ activeOnly: false }).catch(() => []);
-    const catalogueById = new Map(catalogue.map((t) => [t.id, t]));
-    const catalogueByCode = new Map(catalogue.map((t) => [t.testCode, t]));
-    const lookupTest = (bt) => catalogueById.get(bt.testId) || catalogueByCode.get(bt.testCode) || null;
-    const cultureTests = (resolvedBooking.tests || []).filter((bt) => isCultureTest(lookupTest(bt)));
+    // Targeted per-booked-test lookups (typically 1-5 tests, same cheap path
+    // buildResultGrid() already uses) - NOT the full catalogue: an earlier
+    // version of this loaded every test in Firestore just to check reportType
+    // on a couple of booked tests, which made every "Report" click do a full
+    // collection scan (plus a background re-fetch every time) instead of a
+    // couple of single-document reads.
+    const bookedTests = resolvedBooking.tests || [];
+    const lookups = await Promise.all(bookedTests.map((bt) => Tests.getTest(bt.testId || bt.testCode).catch(() => null)));
+    const cultureTests = bookedTests.filter((bt, i) => isCultureTest(lookups[i]));
     const gridBooking = cultureTests.length
-      ? { ...resolvedBooking, tests: (resolvedBooking.tests || []).filter((bt) => !isCultureTest(lookupTest(bt))) }
+      ? { ...resolvedBooking, tests: bookedTests.filter((bt, i) => !isCultureTest(lookups[i])) }
       : resolvedBooking;
 
     const blankGrid = await Reports.buildResultGrid(gridBooking);
