@@ -486,6 +486,10 @@
       renderCatalog();
     };
 
+    window.retryTestCatalog = function() {
+      loadCatalog().catch((err) => showMessage("error", err.message || "Could not load tests."));
+    };
+
     window.selectCatalogTest = function(index) {
       const test = (window.currentCatalogRows || [])[index];
       if (!test) return;
@@ -497,20 +501,31 @@
     async function loadCatalog() {
       if (catalogPromise) return catalogPromise;
       catalogPromise = (async () => {
-        const result = await loadAvailableTestSummaries();
-        catalog = result.tests || [];
-        $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
-        renderCategories();
-        renderCatalog();
-        const requested = new URLSearchParams(location.search).get("test");
-        if (requested) {
-          const match = catalog.find((test) => test.testCode === requested || test.name === requested);
-          if (match) {
-            selectedTests = [match];
-            renderSelectedTests();
+        try {
+          const result = await loadAvailableTestSummaries();
+          catalog = result.tests || [];
+          $("testCatalogList").innerHTML = catalog.map((test) => `<option value="${safe(testLabel(test))}"></option>`).join("");
+          renderCategories();
+          renderCatalog();
+          const requested = new URLSearchParams(location.search).get("test");
+          if (requested) {
+            const match = catalog.find((test) => test.testCode === requested || test.name === requested);
+            if (match) {
+              selectedTests = [match];
+              renderSelectedTests();
+            }
           }
+          if (!catalog.length) showMessage("error", "No tests imported yet. Admin should import tests first.");
+        } catch (err) {
+          // Leaving the "Loading tests..." placeholder forever was worse than a
+          // clear error - and caching a rejected promise meant a later retry
+          // never actually re-fetched, so the failure is transient (cleared
+          // below) rather than sticking for the rest of the page's life.
+          $("catalogBody").innerHTML = `<tr><td colspan="5">Unable to load tests. `
+            + `<button type="button" class="btn-outline" onclick="window.retryTestCatalog()">Retry</button></td></tr>`;
+          catalogPromise = null;
+          throw err;
         }
-        if (!catalog.length) showMessage("error", "No tests imported yet. Admin should import tests first.");
       })();
       return catalogPromise;
     }
