@@ -19,6 +19,9 @@ export function initCultureMastersScreen(context) {
   $("#addAntibioticBtn")?.addEventListener("click", () => openAntibioticDialog(null));
   $("#addCulturePanelBtn")?.addEventListener("click", () => openPanelDialog(null));
   $("#addBreakpointBtn")?.addEventListener("click", () => openBreakpointDialog(null));
+  $("#loadStarterSpecimensBtn")?.addEventListener("click", loadStarterSpecimens);
+  $("#loadStarterOrganismsBtn")?.addEventListener("click", loadStarterOrganisms);
+  $("#loadStarterAntibioticsBtn")?.addEventListener("click", loadStarterAntibiotics);
 }
 
 const canManage = () => sessionCanWrite(P.CULTURE_MASTER_MANAGE, ctx.session);
@@ -53,6 +56,24 @@ function renderSpecimens() {
     { colspan: 3, empty: "No specimen types yet." });
 }
 
+const STARTER_SPECIMENS = [
+  "Urine", "Blood", "Pus", "Wound Swab", "Sputum", "Throat Swab", "Nasal Swab",
+  "Vaginal Swab", "Cervical Swab", "Semen", "Stool", "CSF", "Body Fluid",
+  "Catheter Tip", "Ear Swab", "Eye Swab", "Skin Swab", "Other"
+];
+
+async function loadStarterSpecimens() {
+  const existing = new Set(cache.specimens.map((s) => s.name.toLowerCase()));
+  const toAdd = STARTER_SPECIMENS.filter((name) => !existing.has(name.toLowerCase()));
+  if (!toAdd.length) return toastOk("Every starter specimen type is already in your list.");
+  if (!await confirmAction(`Add ${toAdd.length} starter specimen type(s) (Urine, Blood, Pus, ...)? You can edit or deactivate any of them afterward.`)) return;
+  try {
+    await Promise.all(toAdd.map((name) => Culture.saveSpecimen(null, { name })));
+    toastOk(`Added ${toAdd.length} specimen type(s).`);
+    await renderCultureMasters();
+  } catch (error) { reportError(error, "Could not add the starter specimens."); }
+}
+
 function openSpecimenDialog(specimen) {
   const { element, close } = openModal({
     title: specimen ? `Edit ${specimen.name}` : "Add specimen type",
@@ -78,6 +99,78 @@ function openSpecimenDialog(specimen) {
 }
 
 // ---------- organisms ----------
+
+// ---------- starter lists ----------
+// Objective taxonomy (Gram reaction, morphology, aerobicity), not a clinical
+// judgment call - unlike breakpoints/S-I-R/resistance rules, this is safe to
+// pre-fill. Antibiotics are seeded with NO applicableOrganismIds/
+// applicableSpecimenIds so nothing is implicitly "universal" - the admin
+// still configures which antibiotics apply to which organism/specimen via
+// Antibiotic Panels, per the "lab administrator must control this" rule.
+const STARTER_ORGANISMS = [
+  { name: "Escherichia coli", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Klebsiella pneumoniae", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Pseudomonas aeruginosa", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Aerobic" },
+  { name: "Proteus mirabilis", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Enterococcus faecalis", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Enterococcus faecium", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Staphylococcus aureus", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Staphylococcus epidermidis", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Streptococcus pyogenes", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Streptococcus pneumoniae", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Acinetobacter baumannii", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Coccobacilli", aerobicity: "Aerobic" },
+  { name: "Candida albicans", organismType: "Yeast", gramReaction: "Not Applicable", morphology: "Yeast", aerobicity: "Aerobic" }
+];
+
+const STARTER_ANTIBIOTICS = [
+  { displayName: "Ampicillin", antibioticClass: "Penicillin" },
+  { displayName: "Amoxicillin/Clavulanate", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
+  { displayName: "Cefuroxime", antibioticClass: "Cephalosporin (2nd gen)" },
+  { displayName: "Ceftriaxone", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Cefixime", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Ceftazidime", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Cefepime", antibioticClass: "Cephalosporin (4th gen)" },
+  { displayName: "Gentamicin", antibioticClass: "Aminoglycoside" },
+  { displayName: "Amikacin", antibioticClass: "Aminoglycoside" },
+  { displayName: "Ciprofloxacin", antibioticClass: "Fluoroquinolone" },
+  { displayName: "Levofloxacin", antibioticClass: "Fluoroquinolone" },
+  { displayName: "Nitrofurantoin", antibioticClass: "Nitrofuran" },
+  { displayName: "Trimethoprim/Sulfamethoxazole", antibioticClass: "Folate Pathway Inhibitor" },
+  { displayName: "Piperacillin/Tazobactam", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
+  { displayName: "Meropenem", antibioticClass: "Carbapenem" },
+  { displayName: "Imipenem", antibioticClass: "Carbapenem" },
+  { displayName: "Vancomycin", antibioticClass: "Glycopeptide" },
+  { displayName: "Linezolid", antibioticClass: "Oxazolidinone" },
+  { displayName: "Clindamycin", antibioticClass: "Lincosamide" },
+  { displayName: "Erythromycin", antibioticClass: "Macrolide" },
+  { displayName: "Tetracycline", antibioticClass: "Tetracycline" },
+  { displayName: "Cefoxitin", antibioticClass: "Cephamycin" },
+  { displayName: "Penicillin", antibioticClass: "Penicillin" }
+];
+
+async function loadStarterOrganisms() {
+  const existing = new Set(cache.organisms.map((o) => o.name.toLowerCase()));
+  const toAdd = STARTER_ORGANISMS.filter((o) => !existing.has(o.name.toLowerCase()));
+  if (!toAdd.length) return toastOk("Every starter organism is already in your list.");
+  if (!await confirmAction(`Add ${toAdd.length} starter organism(s) (E. coli, Klebsiella, Pseudomonas, ...)? You can edit or deactivate any of them afterward.`)) return;
+  try {
+    await Promise.all(toAdd.map((o) => Culture.saveOrganism(null, o)));
+    toastOk(`Added ${toAdd.length} organism(s).`);
+    await renderCultureMasters();
+  } catch (error) { reportError(error, "Could not add the starter organisms."); }
+}
+
+async function loadStarterAntibiotics() {
+  const existing = new Set(cache.antibiotics.map((a) => a.displayName.toLowerCase()));
+  const toAdd = STARTER_ANTIBIOTICS.filter((a) => !existing.has(a.displayName.toLowerCase()));
+  if (!toAdd.length) return toastOk("Every starter antibiotic is already in your list.");
+  if (!await confirmAction(`Add ${toAdd.length} starter antibiotic(s) (Ampicillin, Ciprofloxacin, Vancomycin, ...)? You can edit or deactivate any of them afterward.`)) return;
+  try {
+    await Promise.all(toAdd.map((a) => Culture.saveAntibiotic(null, a)));
+    toastOk(`Added ${toAdd.length} antibiotic(s).`);
+    await renderCultureMasters();
+  } catch (error) { reportError(error, "Could not add the starter antibiotics."); }
+}
 
 function renderOrganisms() {
   renderRows("csOrganismsBody", cache.organisms, (o) => `
