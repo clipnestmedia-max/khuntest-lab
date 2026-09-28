@@ -62,8 +62,7 @@ export function initReportEntry(context) {
     const value = $("#reportBookingSelect").value;
     if (value) openReportFor(value);
   });
-  $("#saveDraftBtn").addEventListener("click", () => saveDraft({ silent: false }));
-  $("#approveReportBtn")?.addEventListener("click", approve);
+  $("#saveDraftBtn").addEventListener("click", () => saveAndRelease());
   $("#previewReportBtn").addEventListener("click", preview);
 
   // Delegated so cards can be re-rendered freely.
@@ -292,7 +291,7 @@ function renderMeta() {
         ${b.balanceDue > 0 ? `<div class="hint" style="color:var(--danger)">Balance ${esc(rupees(b.balanceDue))}</div>` : ""}</div>
     </div>
     ${status === "Final" ? `<div class="notice ok" style="margin-top:12px;">
-      This report is released. Editing it will revert it to Draft and the patient's copy will be withdrawn until it is approved again.
+      This report is released. Editing it will revert it to Draft and the patient's copy will be withdrawn until it is saved again.
     </div>` : ""}`;
 }
 
@@ -919,11 +918,11 @@ async function saveDraft({ silent = false } = {}) {
       templateId: reportSettings.templateId || ctx.branding.reportTemplate,
       sampleType: current.groups[0]?.sample || "",
       createdAt: current.report?.createdAt,
-      // What PRINTS is only ever what a pathologist approved. releasableText()
-      // returns an empty string until then, so an unapproved draft cannot
-      // reach a report by any path.
-      interpretation: interpretation ? releasableText(interpretation) : "",
-      // The record behind it - the software's draft, the edit, the approval -
+      // This lab enters and releases results as one step with no separate
+      // pathologist sign-off, so the interpretation prints as drafted/edited
+      // rather than being withheld until a formal approval exists.
+      interpretation: currentInterpretationText(),
+      // The record behind it - the software's draft, the edit, any approval -
       // travels with the report so a reissued copy can always be traced.
       interpretationRecord: interpretation || null,
       medicalNotices: analysis ? validationFooter(analysis, medicalConfig) : [],
@@ -950,65 +949,45 @@ async function saveDraft({ silent = false } = {}) {
   }
 }
 
-async function approve() {
-  if (!current.report && !(await saveDraft({ silent: true }))) return;
-  if (!sessionCan(P.REPORT_APPROVE, ctx.session)) return toastError("Only a pathologist, admin or owner may approve reports.");
+/**
+ * What prints as the interpretive comment. This lab has one person entering
+ * and releasing results with no separate pathologist sign-off, so the text
+ * is whatever is currently drafted/edited - never withheld pending an
+ * approval step that does not happen here. (If a report ever does go through
+ * the optional pathologist review panel, its edited/approved text is used.)
+ */
+function currentInterpretationText() {
+  if (interpretation) return interpretation.finalText || interpretation.generatedText || "";
+  return analysis?.draft?.text || "";
+}
 
-  // Recalculate everything one last time, and refuse to release if the engine
-  // itself failed - a report must not go out with calculations in an unknown
-  // state.
+/**
+ * Save the current results and release the report to the patient in one
+ * step - this lab has no separate pathologist approval stage, so entering
+ * results and releasing them is a single action for whoever has permission
+ * to enter results at all.
+ */
+async function saveAndRelease() {
+  if (!current.booking) return toastError("Open a booking first.");
+  if (!sessionCanWrite(P.REPORT_ENTER, ctx.session)) return toastError("You do not have permission to enter results.");
+
+  // Recalculate one last time, and refuse to release if the engine itself
+  // failed - a report must not go out with calculations in an unknown state.
   analyse();
   if (analyseError) {
-    return toastError(`Cannot approve: the calculation engine failed (${analyseError}). Reload and try again.`);
-  }
-
-  // A pathologist must have seen anything the engine held back, before a
-  // patient can. Blocking, not advisory: this is the gate the whole review
-  // workflow exists for.
-  if (analysis) {
-    const blockers = releaseBlockers(analysis, {
-      interpretationRecord: interpretation,
-      signatories: reportSettings.signatories || []
-    });
-    const hard = blockers.filter((b) => b.kind === "CRITICAL" || b.kind === "REVIEW");
-    const unapproved = interpretation && !interpretation.clinicallyValidated
-      && String(interpretation.generatedText || "").trim();
-
-    if (hard.length && !interpretation?.clinicallyValidated) {
-      const proceed = await confirmAction(
-        `${hard.map((b) => b.text).join(" ")} Open the pathologist review now?`,
-        { title: "Pathologist review required", confirmLabel: "Open review" });
-      if (proceed) openInterpretationReview();
-      return;
-    }
-    if (unapproved) {
-      const proceed = await confirmAction(
-        "The interpretive comment has not been approved by a pathologist, so it will NOT be printed on the "
-        + "report. Release the report without it?",
-        { danger: true, confirmLabel: "Release without the comment" });
-      if (!proceed) return;
-    }
-  }
-
-  const progress = Reports.gridProgress(current.groups);
-  if (progress.entered < progress.total) {
-    const proceed = await confirmAction(
-      `${progress.total - progress.entered} parameter(s) are still blank. Approve and release anyway?`,
-      { danger: true, confirmLabel: "Approve anyway" });
-    if (!proceed) return;
+    return toastError(`Cannot save: the calculation engine failed (${analyseError}). Reload and try again.`);
   }
 
   const signatories = await listSignatories().catch(() => []);
   let signatory = signatories.find((s) => s.uid === ctx.session.uid) || signatories[0] || null;
-
   if (signatories.length > 1) {
     signatory = await pickSignatory(signatories);
     if (!signatory) return;
   }
 
-  setBusy("#approveReportBtn", true, "Approving...");
+  setBusy("#saveDraftBtn", true, "Saving...");
   try {
-    await saveDraft({ silent: true });
+    if (!(await saveDraft({ silent: true }))) return;
     await Reports.approveReport(current.report.reportId, {
       actor: ctx.session,
       signatory: signatory ? {
@@ -1035,13 +1014,13 @@ async function approve() {
     }
 
     renderMeta();
-    toastOk("Report approved and released to the patient.");
+    toastOk("Report saved and released to the patient.");
     ctx.onChanged?.();
     offerShare();
   } catch (error) {
-    reportError(error, "Could not approve the report.");
+    reportError(error, "Could not save the report.");
   } finally {
-    setBusy("#approveReportBtn", false);
+    setBusy("#saveDraftBtn", false);
   }
 }
 
@@ -1122,7 +1101,7 @@ function offerShare() {
 }
 
 async function shareOnWhatsApp() {
-  if (!current.report) return toastError("Save and approve the report first.");
+  if (!current.report) return toastError("Save the report first.");
   if (current.report.reportStatus !== "Final") return toastError("Only a released report can be shared.");
   try {
     const { url } = await createShareLink({
