@@ -827,7 +827,7 @@ export function renderReport(report, branding, settings = {}) {
         <span>${esc(settings.footerNote
           || "The report finding should be correlated with clinical parameters. The test may be repeated if needed.")}</span>
       </div>
-      ${branding.showPoweredBy !== false ? `<p class="powered">Powered by Swati Softtech Solution</p>` : ""}
+      ${branding.showPoweredBy !== false ? `<p class="powered">Powered by KureKaya Health Care Private Limited &middot; Tech by Himanshu Kr Sahni, +91 9142579601</p>` : ""}
       <div class="cl-strip">
         <span class="cl-strip-slashes" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="cl-strip-text">${esc(settings.disclaimer || branding.disclaimer)}</span>
@@ -843,7 +843,7 @@ export function renderReport(report, branding, settings = {}) {
       </div>` : ""}
       ${settings.footerNote ? `<p class="test-note">${esc(settings.footerNote)}</p>` : ""}
       <p class="disclaimer">${esc(settings.disclaimer || branding.disclaimer)}</p>
-      ${branding.showPoweredBy !== false ? `<p class="powered">Powered by Swati Softtech Solution</p>` : ""}
+      ${branding.showPoweredBy !== false ? `<p class="powered">Powered by KureKaya Health Care Private Limited &middot; Tech by Himanshu Kr Sahni, +91 9142579601</p>` : ""}
     </div>`;
 
   const footer = template.id === "classic-letterhead" ? classicFooter : standardFooter;
@@ -928,7 +928,7 @@ export function renderCustomTemplate(report, branding, settings = {}) {
     signatures: signatureBlock(settings, branding, report),
     verification: verifyBlock(settings, report, branding),
     poweredBy: branding.showPoweredBy !== false
-      ? '<span class="powered">Powered by Swati Softtech Solution</span>' : ""
+      ? '<span class="powered">Powered by KureKaya Health Care Private Limited &middot; Tech by Himanshu Kr Sahni, +91 9142579601</span>' : ""
   };
 
   const pages = perTest && groups.length > 1 ? groups.map((g) => [g]) : [groups];

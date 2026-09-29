@@ -40,7 +40,7 @@ export function receiptHtml(booking, branding, { title = "PAYMENT RECEIPT" } = {
   <footer>
     <p class="small">${esc(branding.termsAndConditions || "Please collect your report using the bill number above.")}</p>
     ${branding.whatsapp ? `<p class="small">Reports on WhatsApp: ${esc(branding.whatsapp)}</p>` : ""}
-    ${branding.showPoweredBy !== false ? `<p class="small powered">Powered by Swati Softtech Solution</p>` : ""}
+    ${branding.showPoweredBy !== false ? `<p class="small powered">Powered by KureKaya Health Care Private Limited &middot; Tech by Himanshu Kr Sahni, +91 9142579601</p>` : ""}
   </footer>
 </div>`;
 }

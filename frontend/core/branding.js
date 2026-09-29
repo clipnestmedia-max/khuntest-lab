@@ -118,12 +118,12 @@ export function applyBranding(branding, scope = document) {
   return branding;
 }
 
-/** Optional "Powered by Swati Softtech Solution" footer (Super Admin toggle). */
+/** Optional "Powered by ..." footer (Super Admin toggle). */
 export function renderPoweredBy(branding, scope = document) {
   scope.querySelectorAll("[data-powered-by]").forEach((el) => {
     if (branding.showPoweredBy === false) { el.hidden = true; el.innerHTML = ""; return; }
     el.hidden = false;
-    el.innerHTML = `<span class="powered-by">Powered by <strong>Swati Softtech Solution</strong></span>`;
+    el.innerHTML = `<span class="powered-by">Powered by <strong>KureKaya Health Care Private Limited</strong> &middot; Tech by Himanshu Kr Sahni, +91 9142579601</span>`;
   });
 }
 
