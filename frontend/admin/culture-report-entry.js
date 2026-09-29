@@ -38,7 +38,7 @@ export function cultureResultFor(test, existing = []) {
   if (found) return { ...found, organisms: (found.organisms || []).map((o) => ({ ...o, sensitivities: [...(o.sensitivities || [])] })) };
   return {
     testId: test.testId || test.id || "", testCode: test.testCode || "", testName: test.name || test.testName || "",
-    specimenId: "", cultureResult: "Pending",
+    specimenId: "", specimenName: "", cultureResult: "Pending",
     colonyCount: "", colonyCountUnit: "",
     gramStain: "", pusCells: "", rbc: "", epithelialCells: "", otherFindings: "",
     organisms: [],
@@ -231,7 +231,11 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
     const result = cr()[ti];
     if (!result) return;
 
-    if (el.matches("[data-cr-specimen]")) { result.specimenId = el.value; onChange(); return rerender(); }
+    if (el.matches("[data-cr-specimen]")) {
+      result.specimenId = el.value;
+      result.specimenName = masters.specimens.find((s) => s.id === el.value)?.name || "";
+      onChange(); return rerender();
+    }
     if (el.matches("[data-cr-result]")) { result.cultureResult = el.value; onChange(); return rerender(); }
     if (el.matches("[data-cr-colony]")) { result.colonyCount = el.value; return onChange(); }
     if (el.matches("[data-cr-colony-unit]")) { result.colonyCountUnit = el.value; return onChange(); }
