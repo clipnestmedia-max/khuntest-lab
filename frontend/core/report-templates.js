@@ -207,11 +207,15 @@ const SIR_CLASS = { S: "flag-ok", I: "flag-abn", R: "flag-crit" };
 // from): "IMS" rather than the CLSI-standard "I", "X" for a drug listed but
 // not tested rather than "NT". Display-only - the stored value and the
 // auto-interpretation logic in core/data/culture.js are unchanged.
-const SIR_MARK = { S: "S", I: "IMS", R: "R", NA: "NA", NT: "X" };
+const SIR_MARK = { S: "S", I: "I", R: "R", NA: "NA", NT: "X" };
 function formatSIR(s) {
-  const mark = SIR_MARK[s.sir] || "X";
+  const sir = String(s.sir ?? "").trim().toUpperCase();
+  const norm = ({ IMS: "I", SENSITIVE: "S", RESISTANT: "R", INTERMEDIATE: "I" })[sir] || sir;
+  if (!norm) return "—";
+  const mark = SIR_MARK[norm] || "X";
   return s.grade ? `${mark}(${s.grade})` : mark;
 }
+const reportableRow = (s) => String(s.sir ?? "").trim() !== "" || String(s.micValue ?? "").trim() !== "" || String(s.zoneDiameter ?? "").trim() !== "";
 
 /**
  * One Culture & Sensitivity test: unlike resultsTable()'s flat parameter
@@ -228,7 +232,7 @@ function cultureResultSection(cr) {
   ].filter(([, v]) => String(v || "").trim());
 
   const organisms = (cr.organisms || []).map((o) => {
-    const rows = o.sensitivities || [];
+    const rows = (o.sensitivities || []).filter(reportableRow);
     // MIC / zone column only when this organism actually has a recorded value;
     // this lab's usual report is plain S/I/R with no numbers at all.
     const hasValues = rows.some((s) => String(s.micValue || "").trim() || String(s.zoneDiameter || "").trim());
@@ -254,6 +258,8 @@ function cultureResultSection(cr) {
   const ast = cr.astStandard && cr.astStandard.show !== false && cr.astStandard.name
     ? [cr.astStandard.name, cr.astStandard.version].filter(Boolean).join(" ") : "";
 
+  const legendUsed = new Set((cr.organisms || []).flatMap((o) => (o.sensitivities || []).filter(reportableRow)).map((s) => String(s.sir ?? "").trim().toUpperCase().replace("IMS", "I")));
+  const legend = ["R - RESISTANT", "S - SENSITIVE", "I - INTERMEDIATE"].concat(legendUsed.has("NT") ? ["X - NOT TESTED"] : [], legendUsed.has("NA") ? ["NA - NOT APPLICABLE"] : []).join(", ");
   const markers = Object.entries(cr.resistanceMarkers || {}).filter(([, v]) => v && v !== "Not Tested");
   const markerBlock = markers.length
     ? `<p class="test-note"><b>Resistance markers:</b> ${markers.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join(", ")}</p>` : "";
@@ -269,7 +275,7 @@ function cultureResultSection(cr) {
       ${microscopy.length ? `<p class="test-note"><b>Microscopy:</b> ${microscopy.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join("; ")}</p>` : ""}
       ${organisms || (cr.cultureResult === "No Growth" ? `<p class="test-note">No growth after 24-48 hours of aerobic incubation.</p>`
         : cr.cultureResult === "Sterile" ? `<p class="test-note">Specimen is sterile — no organisms isolated.</p>` : "")}
-      ${organisms ? `<p class="test-note">R-RESISTANT, S-SENSITIVE, IMS-INTERMEDIATE SENSITIVE, NA-NOT APPLICABLE, X-NOT TESTED</p>` : ""}
+      ${organisms ? `<p class="test-note">${esc(legend)}</p>` : ""}
       ${organisms && ast ? `<p class="test-note">Susceptibility interpreted as per ${esc(ast)}.</p>` : ""}
       ${markerBlock}
       ${cr.comments ? `<p class="test-note">${esc(cr.comments)}</p>` : ""}

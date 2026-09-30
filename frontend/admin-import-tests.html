@@ -240,6 +240,9 @@
               parameters: Array.isArray(test.parameters) ? test.parameters : [],
               searchKeywords: Array.isArray(test.searchKeywords) ? test.searchKeywords : [],
               needsParameterReview: test.needsParameterReview === true,
+              // Only written when the catalogue says so, so a re-import never resets a
+              // report type an admin set by hand in the Test Catalogue.
+              ...(test.reportType ? { reportType: test.reportType } : {}),
               source: test.source || null,
               sourceId: test.sourceId || test.source?.sqlSourceId || null,
               slug: id,

@@ -156,14 +156,14 @@ org.sensitivities = [];
 eq("addAntibiotics adds 17", E.addAntibiotics(org, REF.map(slug)), 17);
 eq("addAntibiotics skips duplicates", E.addAntibiotics(org, REF.map(slug)), 0);
 eq("addAntibiotics ignores unknown ids", E.addAntibiotics(org, ["nope"]), 0);
-eq("17 rows, all default Not Tested (no auto results)", [org.sensitivities.length, org.sensitivities.every((r) => r.sir === "NT")], [17, true]);
+eq("17 rows, all start BLANK (nothing invented)", [org.sensitivities.length, org.sensitivities.every((r) => r.sir === "" && r.micValue === "")], [17, true]);
 eq("MIC unit defaults to µg/mL", org.sensitivities[0].micUnit, "µg/mL");
 const meropenem = org.sensitivities.find((r) => r.antibioticId === "meropenem");
 meropenem.zoneDiameter = "22"; E.recalcRow("pa", meropenem);
 eq("configured breakpoint auto-interprets zone", [meropenem.sir, meropenem.auto, meropenem.standard], ["S", true, "CLSI"]);
 const amik = org.sensitivities.find((r) => r.antibioticId === "amikacin");
 amik.micValue = "4"; E.recalcRow("pa", amik);
-eq("no breakpoint => stays Not Tested, manual choice needed", [amik.sir, amik.auto], ["NT", false]);
+eq("no breakpoint => stays blank, manual choice needed", [amik.sir, amik.auto], ["", false]);
 amik.sir = "R"; amik.auto = false;
 
 // panel auto-fill: only what the admin configured, only active antibiotics
@@ -205,7 +205,7 @@ function verifyRendering(label, html, { headerRepeats = true } = {}) {
     check(`${label}: row ${i + 1} ${name} => ${want}`, row.test(html));
   });
   check(`${label}: no MIC column when nothing recorded`, !html.includes('<th class="cs-c-mic">'));
-  check(`${label}: legend`, t.includes("X-NOT TESTED"));
+  check(`${label}: legend R/S/I + X (X is used)`, t.includes("R - RESISTANT, S - SENSITIVE, I - INTERMEDIATE, X - NOT TESTED"));
   check(`${label}: AST standard printed`, t.includes("interpreted as per CLSI M100 34th ed."));
   check(`${label}: organism + general comments`, t.includes("Multidrug-resistant isolate.") && t.includes("Repeat culture advised."));
   if (headerRepeats) check(`${label}: CSS repeats header + keeps rows whole`, /thead\s*\{\s*display:\s*table-header-group/.test(html) && /tr\s*\{\s*page-break-inside:\s*avoid/.test(html));
@@ -232,6 +232,27 @@ check("template: old report without astStandard prints without error", (() => { 
 for (const tpl of ["minimal-clinical", "modern-diagnostic", "traditional-pathology", "hospital-style", "classic-letterhead"])
   check(`template ${tpl} renders C&S table`, T.renderReportDocument(reportOf(refCr), { ...branding, reportTemplate: tpl }, {}).includes('<table class="cs-table">'));
 
+// ---- result mapping, blank rows, incomplete report ----
+eq("display: S", L.SIR_DISPLAY.S, "Sensitive"); eq("display: I", L.SIR_DISPLAY.I, "Intermediate"); eq("display: R", L.SIR_DISPLAY.R, "Resistant");
+eq("print mark I is I (not IMS)", L.SIR_PRINT_MARK.I, "I");
+eq("legacy IMS normalises to I", [L.normalizeSir("IMS"), L.normalizeSir("i"), L.normalizeSir("Sensitive")], ["I", "i", "S"]);
+eq("formatSirMark grade", L.formatSirMark({ sir: "S", grade: "++" }), "S(++)");
+eq("formatSirMark blank result but MIC", L.formatSirMark({ sir: "", micValue: "4" }), "—");
+check("blank row is not reportable; MIC-only row is", !L.isReportableRow({ sir: "" }) && L.isReportableRow({ sir: "", micValue: "4" }) && L.isReportableRow({ sir: "NT" }));
+eq("legend without X/NA", L.sirLegend([{ sir: "S" }, { sir: "R" }]), "R - RESISTANT, S - SENSITIVE, I - INTERMEDIATE");
+eq("legend with X and NA", L.sirLegend([{ sir: "NT" }, { sir: "NA" }]), "R - RESISTANT, S - SENSITIVE, I - INTERMEDIATE, X - NOT TESTED, NA - NOT APPLICABLE");
+const partial = { ...refCr, organisms: [{ organismId: "pa", organismName: "Pseudomonas aeruginosa", sensitivities: REF.map((name, i) => ({ antibioticId: slug(name), antibioticName: name, micValue: "", micUnit: "µg/mL", zoneDiameter: "", zoneUnit: "mm", sir: i < 5 ? ["S", "R", "I", "R", "S"][i] : "", grade: "", comment: "" })) }] };
+const partialHtml = T.renderReportDocument(reportOf(partial), branding, {});
+const partialRows = (partialHtml.match(/<td class="cs-c-num">/g) || []).length;
+eq("incomplete report (5 of 17 entered): only 5 rows printed", partialRows, 5);
+check("incomplete report: unentered drugs are NOT printed or invented", !text(partialHtml).includes("Cefepime") && !text(partialHtml).includes("Polymyxin") && !/\bX\b/.test(text(partialHtml).replace(/X - NOT TESTED/g, "")));
+check("incomplete report: intermediate prints as I and legend has no X", text(partialHtml).includes("Amoxicillin/Clavulanate I") && !text(partialHtml).includes("X - NOT TESTED"));
+check("incomplete report validates for release", L.cultureValidationError([partial]) === "");
+const legacyIms = { ...partial, organisms: [{ organismName: "E. coli", sensitivities: [{ antibioticName: "Ampicillin", sir: "IMS", grade: "" }] }] };
+check("legacy IMS value still prints (as I)", text(T.renderReportDocument(reportOf(legacyIms), branding, {})).includes("Ampicillin I"));
+const allBlank = { ...partial, organisms: [{ organismName: "E. coli", sensitivities: [{ antibioticName: "Ampicillin", sir: "" }] }] };
+check("organism with only blank rows prints the 'no results' note", text(T.renderReportDocument(reportOf(allBlank), branding, {})).includes("No antibiotic susceptibility results"));
+
 // Patient-facing report.html has its own copy of the renderer - extract and run it.
 const rh = fs.readFileSync(path.join(root, "report.html"), "utf8");
 const start = rh.indexOf("const SIR_MARK"); const fnStart = rh.indexOf("function cultureResultSection", start);
@@ -240,6 +261,8 @@ const safe = (v) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
 const patientRender = new Function("safe", rh.slice(start, fnEnd) + "\nreturn cultureResultSection;")(safe);
 const pHtml = patientRender(refCr);
 verifyRendering("report.html", pHtml, { headerRepeats: false });
+{ const pp = text(patientRender(partial)); check("report.html: incomplete report prints 5 rows, no invented X", (patientRender(partial).match(/<td class="cs-c-num">/g) || []).length === 5 && !pp.includes("X - NOT TESTED"));
+  check("report.html: legacy IMS prints as I", text(patientRender(legacyIms)).includes("Ampicillin I")); }
 check("report.html: CSS repeats header + keeps rows whole", /\.cs-table thead\s*\{\s*display:\s*table-header-group/.test(rh) && /\.cs-table tr\s*\{\s*page-break-inside:\s*avoid/.test(rh));
 check("report.html: long drug names wrap", /\.cs-table \.cs-c-drug\s*\{[^}]*overflow-wrap:\s*anywhere/.test(rh));
 check("report.html: hostile text escaped", !patientRender({ ...refCr, specimenName: "<script>1</script>" }).includes("<script>1"));
@@ -248,8 +271,19 @@ check("report.html: legacy report without astStandard renders", (() => { const o
 
 // ============ 7. Catalogue + safety ============
 const cat = JSON.parse(fs.readFileSync(path.join(root, "data/tests.json"), "utf8"));
-const kt = cat.find((t) => t.testCode === "KT0685");
-check("catalogue: Suction Tip C&S test exists as a C&S report type", kt?.reportType === "cultureSensitivity" && kt.isActive === true);
+const csTests = cat.filter((t) => t.reportType === "cultureSensitivity");
+check("catalogue: 22 culture-and-sensitivity tests flagged for the C&S editor", csTests.length === 22, String(csTests.length));
+check("catalogue: 'Tip C & S' (KT0593) and generic 'Culture & Sensitivity (Other Specimen)' (KT0207) are flagged", ["KT0593", "KT0207"].every((c) => cat.find((t) => t.testCode === c)?.reportType === "cultureSensitivity"));
+check("catalogue: duplicate KT0685 removed", !cat.some((t) => t.testCode === "KT0685"));
+check("catalogue: no non-C&S test was flagged", csTests.every((t) => /sensitiv|sensetiv|c\s*&\s*s|c and s|c\+s/i.test(t.name)));
+check("catalogue: flagged tests are searchable as C/S", csTests.every((t) => t.searchKeywords.includes("c/s")));
+check("catalogue: CBC/LFT/KFT/etc untouched (no reportType)", cat.filter((t) => /^(cbc|lft|kft|lipid|tsh|esr)/i.test(t.name)).every((t) => !t.reportType));
+const seed = JSON.parse(fs.readFileSync(path.join(root, "data/seed-catalogue.json"), "utf8"));
+check("seed catalogue matches tests.json flags", seed.filter((t) => t.reportType === "cultureSensitivity").length === 22 && !seed.some((t) => t.testCode === "KT0685"));
+const importPage = fs.readFileSync(path.join(root, "admin-import-tests.html"), "utf8");
+check("catalogue import writes reportType only when the catalogue defines it", /\.\.\.\(test\.reportType \? \{ reportType: test\.reportType \} : \{\}\)/.test(importPage));
+const sanitizeSrc = fs.readFileSync(path.join(root, "..", "functions/lib/sanitize.js"), "utf8");
+check("cloud-function share whitelist carries cultureResults", /"cultureResults"/.test(sanitizeSrc));
 check("catalogue: no duplicate test codes", new Set(cat.map((t) => t.testCode)).size === cat.length);
 const rules = fs.readFileSync(path.join(root, "firestore.rules"), "utf8");
 check("rules: AST setting is not world-writable", /match \/settings\/\{key\}[\s\S]{0,200}allow write: if isAdmin\(\)/.test(rules));

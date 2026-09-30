@@ -10,7 +10,7 @@ import { getDocs, getDoc, setDoc, updateDoc, deleteDoc, query } from "https://ww
 import { col, docRef, settingsDoc, withLabId } from "../tenant.js";
 import { cached, cacheDrop, CACHE_TTL, snapshotRows, buildSearchTokens, clean } from "./helpers.js";
 
-export { parseMic, isValidMic, findBreakpoint, interpretSIR, matchPanels, cultureNeedsOrganism, cultureDraftError, cultureValidationError } from "../culture-logic.js";
+export { SIR_DISPLAY, SIR_PRINT_MARK, normalizeSir, isReportableRow, formatSirMark, sirLegend, parseMic, isValidMic, findBreakpoint, interpretSIR, matchPanels, cultureNeedsOrganism, cultureDraftError, cultureValidationError } from "../culture-logic.js";
 
 const CULTURE_CACHE_TTL = CACHE_TTL.tests; // same 10-minute TTL as the test catalogue
 
@@ -20,9 +20,9 @@ export const TESTING_METHODS = Object.freeze([
   "Disk Diffusion (Kirby-Bauer)", "MIC (Broth Microdilution)", "E-test (Gradient MIC)", "Automated (VITEK/Phoenix)"
 ]);
 export const BREAKPOINT_STANDARDS = Object.freeze(["CLSI", "EUCAST"]);
-export const SIR_VALUES = Object.freeze(["S", "I", "R", "NA", "NT"]);
+export const SIR_VALUES = Object.freeze(["", "S", "I", "R", "NA", "NT"]); // "" = not entered yet
 export const SIR_LABELS = Object.freeze({
-  S: "Susceptible", I: "Intermediate", R: "Resistant", NA: "Not Applicable", NT: "Not Tested"
+  S: "Sensitive", I: "Intermediate", R: "Resistant", NA: "Not Applicable", NT: "Not Tested", "": "—"
 });
 export const CULTURE_RESULTS = Object.freeze([
   "Pending", "No Growth", "Sterile", "Growth Detected", "Significant Growth",

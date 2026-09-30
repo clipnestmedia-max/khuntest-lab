@@ -18,6 +18,7 @@ const REPORT_FIELDS = [
   "reportItems",
   "results",
   "reportResults",
+  "cultureResults",
   "esrFirstHour",
   "esrSecondHour"
 ];

@@ -12,6 +12,40 @@ export function cultureNeedsOrganism(cultureResult) {
   return CULTURE_POSITIVE_RESULTS.includes(cultureResult);
 }
 
+// ---------- result mapping (stored value -> display) ----------
+// The stored value never changes (so every historical report stays readable);
+// only how it is shown does. "" = not yet entered: the row is left out of the
+// printed report rather than being reported as anything.
+export const SIR_DISPLAY = Object.freeze({ S: "Sensitive", I: "Intermediate", R: "Resistant", NA: "Not Applicable", NT: "Not Tested", "": "" });
+export const SIR_PRINT_MARK = Object.freeze({ S: "S", I: "I", R: "R", NA: "NA", NT: "X" });
+// Older reports (and one earlier print layout) used "IMS" for intermediate.
+const LEGACY_SIR = Object.freeze({ IMS: "I", SENSITIVE: "S", RESISTANT: "R", INTERMEDIATE: "I" });
+export function normalizeSir(value) {
+  const v = String(value ?? "").trim();
+  if (LEGACY_SIR[v.toUpperCase()]) return LEGACY_SIR[v.toUpperCase()];
+  return v;
+}
+
+/** A row is printed if it has a result or a recorded MIC/zone. Blank rows are simply not reported. */
+export function isReportableRow(row) {
+  return normalizeSir(row?.sir) !== "" || String(row?.micValue ?? "").trim() !== "" || String(row?.zoneDiameter ?? "").trim() !== "";
+}
+
+/** "S", "R(++)", "X" or "—" (MIC recorded but no result chosen). */
+export function formatSirMark(row) {
+  const sir = normalizeSir(row?.sir);
+  if (!sir) return "—";
+  const mark = SIR_PRINT_MARK[sir] || "X";
+  return row.grade ? `${mark}(${row.grade})` : mark;
+}
+
+/** Legend under the table: R/S/I always, X / NA only if some printed row uses them. */
+export function sirLegend(rows) {
+  const used = new Set((rows || []).map((r) => normalizeSir(r.sir)));
+  return ["R - RESISTANT", "S - SENSITIVE", "I - INTERMEDIATE"]
+    .concat(used.has("NT") ? ["X - NOT TESTED"] : [], used.has("NA") ? ["NA - NOT APPLICABLE"] : []).join(", ");
+}
+
 // ---------- MIC ----------
 
 /**

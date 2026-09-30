@@ -64,7 +64,7 @@ function newSensitivityRow(antibioticId = "") {
     testingMethod: abx?.testingMethod || Culture.TESTING_METHODS[0],
     micValue: "", micUnit: abx?.micUnit || "µg/mL",
     zoneDiameter: "", zoneUnit: "mm",
-    sir: "NT", auto: false, breakpointId: null, standard: "", standardVersion: "",
+    sir: "", auto: false, breakpointId: null, standard: "", standardVersion: "",
     // Optional zone-of-inhibition grading some labs print alongside a plain
     // S/R call (e.g. "S(++++)") instead of, or in addition to, a numeric MIC/
     // zone value - purely a display convention, never fed into interpretSIR().
@@ -155,8 +155,8 @@ function sensitivityRowHtml(ti, oi, si, row) {
     <td><input data-sens-mic type="text" inputmode="text" value="${esc(row.micValue)}" style="width:80px;${isValidMic(row.micValue) ? "" : "border-color:var(--danger,#c0392b);"}" placeholder="MIC" title="e.g. 0.5, 16, >16, ≤0.25" aria-invalid="${isValidMic(row.micValue) ? "false" : "true"}"></td>
     <td class="small">${esc(row.micUnit)}</td>
     <td><input data-sens-zone type="text" inputmode="decimal" value="${esc(row.zoneDiameter)}" style="width:60px;" placeholder="Zone"></td>
-    <td><select data-sens-sir class="pill ${sirBadgeClass(row.sir)}">
-      ${Culture.SIR_VALUES.map((v) => `<option value="${v}" ${v === row.sir ? "selected" : ""}>${esc(v)}</option>`).join("")}
+    <td><select data-sens-sir class="pill ${sirBadgeClass(Culture.normalizeSir(row.sir))}" aria-label="Result">
+      ${Culture.SIR_VALUES.map((v) => `<option value="${v}" ${v === Culture.normalizeSir(row.sir) ? "selected" : ""} title="${esc(Culture.SIR_LABELS[v] || "")}">${esc(v ? `${v} — ${Culture.SIR_LABELS[v]}` : "—")}</option>`).join("")}
     </select>${row.auto ? ` <span class="small muted" title="Auto-interpreted from ${esc(row.standard)} ${esc(row.standardVersion)}">auto</span>` : ""}</td>
     <td><select data-sens-grade title="Optional zone-of-inhibition grading, printed as e.g. S(++++)" style="width:70px;">
       ${["", "+", "++", "+++", "++++"].map((g) => `<option value="${g}" ${g === (row.grade || "") ? "selected" : ""}>${g || "—"}</option>`).join("")}
