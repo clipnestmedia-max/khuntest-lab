@@ -227,26 +227,32 @@ function cultureResultSection(cr) {
     ["Epithelial Cells", cr.epithelialCells], ["Other Findings", cr.otherFindings]
   ].filter(([, v]) => String(v || "").trim());
 
-  // Numbered drug list with a dotted leader to the S/I/R result - this lab's
-  // own format (see the sample reports this was built from), not a bordered
-  // table of columns. MIC/zone print inline next to the drug name only when
-  // actually recorded, since this lab's reports normally carry plain S/I/R
-  // with no numeric value at all.
-  const organisms = (cr.organisms || []).map((o) => `
+  const organisms = (cr.organisms || []).map((o) => {
+    const rows = o.sensitivities || [];
+    // MIC / zone column only when this organism actually has a recorded value;
+    // this lab's usual report is plain S/I/R with no numbers at all.
+    const hasValues = rows.some((s) => String(s.micValue || "").trim() || String(s.zoneDiameter || "").trim());
+    const valueCell = (s) => [
+      String(s.micValue || "").trim() ? `${esc(s.micValue)} ${esc(s.micUnit || "")}`.trim() : "",
+      String(s.zoneDiameter || "").trim() ? `${esc(s.zoneDiameter)} ${esc(s.zoneUnit || "mm")}`.trim() : ""
+    ].filter(Boolean).join("<br>") || "—";
+    return `
     <div class="cs-organism-label">ORGANISM ISOLATED: ${esc(o.organismName || o.organismId || "—")}</div>
-    ${o.sensitivities?.length ? `
-    <div class="cs-drugs-head"><span>Drugs</span><span>Sensitivity</span></div>
-    ${o.sensitivities.map((s, i) => {
-      const values = [s.micValue ? `${s.micValue} ${s.micUnit || ""}`.trim() : "", s.zoneDiameter ? `${s.zoneDiameter} ${s.zoneUnit || "mm"}`.trim() : ""].filter(Boolean);
-      return `
-      <div class="cs-drug-row">
-        <span class="cs-drug-num">(${i + 1})</span>
-        <span class="cs-drug-name">${esc(s.antibioticName || s.antibioticId)}${values.length ? ` (${esc(values.join(", "))})` : ""}</span>
-        <span class="cs-drug-leader"></span>
-        <span class="cs-drug-result flag ${SIR_CLASS[s.sir] || ""}">${esc(formatSIR(s))}</span>
-        ${s.comment ? `<span class="cs-drug-comment">${esc(s.comment)}</span>` : ""}
-      </div>`;
-    }).join("")}` : `<p class="test-note">No antibiotic susceptibility results recorded for this organism.</p>`}`).join("");
+    ${rows.length ? `
+    <table class="cs-table">
+      <thead><tr><th class="cs-c-num">#</th><th class="cs-c-drug">Drug</th>${hasValues ? `<th class="cs-c-mic">MIC / Zone</th>` : ""}<th class="cs-c-res">Result</th></tr></thead>
+      <tbody>${rows.map((s, i) => `
+        <tr>
+          <td class="cs-c-num">${i + 1}</td>
+          <td class="cs-c-drug">${esc(s.antibioticName || s.antibioticId)}${s.comment ? `<div class="cs-drug-comment">${esc(s.comment)}</div>` : ""}</td>
+          ${hasValues ? `<td class="cs-c-mic">${valueCell(s)}</td>` : ""}
+          <td class="cs-c-res ${SIR_CLASS[s.sir] || ""}">${esc(formatSIR(s))}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>${o.comments ? `<p class="cs-note">${esc(o.comments)}</p>` : ""}` : `<p class="cs-note">No antibiotic susceptibility results recorded for this organism.</p>`}`;
+  }).join("");
+  const ast = cr.astStandard && cr.astStandard.show !== false && cr.astStandard.name
+    ? [cr.astStandard.name, cr.astStandard.version].filter(Boolean).join(" ") : "";
 
   const markers = Object.entries(cr.resistanceMarkers || {}).filter(([, v]) => v && v !== "Not Tested");
   const markerBlock = markers.length
@@ -261,8 +267,10 @@ function cultureResultSection(cr) {
       </div>
       ${colonyCount ? `<p class="test-note">Colony Count: ${esc(colonyCount)}</p>` : ""}
       ${microscopy.length ? `<p class="test-note"><b>Microscopy:</b> ${microscopy.map(([k, v]) => `${esc(k)}: ${esc(v)}`).join("; ")}</p>` : ""}
-      ${organisms || (cr.cultureResult === "No Growth" ? `<p class="test-note">No growth after 24-48 hours of aerobic incubation.</p>` : "")}
+      ${organisms || (cr.cultureResult === "No Growth" ? `<p class="test-note">No growth after 24-48 hours of aerobic incubation.</p>`
+        : cr.cultureResult === "Sterile" ? `<p class="test-note">Specimen is sterile — no organisms isolated.</p>` : "")}
       ${organisms ? `<p class="test-note">R-RESISTANT, S-SENSITIVE, IMS-INTERMEDIATE SENSITIVE, NA-NOT APPLICABLE, X-NOT TESTED</p>` : ""}
+      ${organisms && ast ? `<p class="test-note">Susceptibility interpreted as per ${esc(ast)}.</p>` : ""}
       ${markerBlock}
       ${cr.comments ? `<p class="test-note">${esc(cr.comments)}</p>` : ""}
     </section>`;
@@ -327,18 +335,23 @@ export function reportStyles(branding) {
                 border-radius: 3px; padding: 0 3px; margin-left: 4px; vertical-align: 1px; }
   .test-note { font-size: 10.5px; color: var(--rp-muted); margin: 6px 0 0; }
   .interpretation { margin-top: 14px; font-size: 11.5px; }
-  /* Culture & Sensitivity: numbered drug list with a dotted leader to the
-     result, matching this lab's own report format rather than a bordered
-     results table. */
-  .cs-header-row { display: flex; justify-content: space-between; gap: 16px; font-size: 11.5px; font-weight: 700; margin: 8px 0 4px; }
-  .cs-organism-label { font-size: 11.5px; font-weight: 700; margin: 8px 0 4px; }
-  .cs-drugs-head { display: flex; justify-content: space-between; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; border-top: 1.5px solid var(--rp-primary); border-bottom: 1.5px solid var(--rp-primary); padding: 4px 0; margin-top: 4px; }
-  .cs-drug-row { display: flex; align-items: baseline; gap: 6px; font-size: 11.5px; padding: 3px 0; flex-wrap: wrap; }
-  .cs-drug-num, .cs-drug-result { flex: none; }
-  .cs-drug-result { font-weight: 700; }
-  .cs-drug-name { flex: none; text-transform: uppercase; }
-  .cs-drug-leader { flex: 1; border-bottom: 1px dotted var(--rp-muted); margin: 0 4px; min-width: 24px; }
-  .cs-drug-comment { flex-basis: 100%; font-size: 10px; color: var(--rp-muted); padding-left: 28px; }
+  /* Culture & Sensitivity: a real table so Drug / MIC / Result stay aligned, long
+     drug names wrap, rows never split across a page and the header repeats
+     when the table continues onto the next page. */
+  .cs-header-row { display: flex; justify-content: space-between; gap: 16px; font-size: 11.5px; font-weight: 700; margin: 8px 0 4px; flex-wrap: wrap; }
+  .cs-organism-label { font-size: 11.5px; font-weight: 700; margin: 10px 0 4px; overflow-wrap: anywhere; }
+  .cs-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .cs-table thead { display: table-header-group; }
+  .cs-table tr { page-break-inside: avoid; break-inside: avoid; }
+  .cs-table th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; border-top: 1.5px solid var(--rp-primary); border-bottom: 1.5px solid var(--rp-primary); padding: 4px 6px; }
+  .cs-table td { padding: 4px 6px; border-bottom: 1px solid var(--rp-line); vertical-align: top; }
+  .cs-table .cs-c-num { width: 26px; color: var(--rp-muted); }
+  .cs-table .cs-c-drug { overflow-wrap: anywhere; }
+  .cs-table .cs-c-mic { width: 26%; white-space: nowrap; }
+  .cs-table .cs-c-res { width: 18%; font-weight: 700; text-align: right; white-space: nowrap; }
+  .cs-table th.cs-c-res { text-align: right; }
+  .cs-drug-comment { font-size: 10px; color: var(--rp-muted); font-weight: 400; }
+  .cs-note { font-size: 10.5px; color: var(--rp-muted); margin: 4px 0 0; }
   .medical-notice { margin-top: 10px; font-size: 9.5px; line-height: 1.45; color: #444;
                     border-top: 1px dashed #bbb; padding-top: 6px; }
   .medical-notice p { margin: 0 0 3px; }

@@ -10,7 +10,7 @@ import * as Bookings from "../core/data/bookings.js";
 import * as Tests from "../core/data/tests.js";
 import {
   loadCultureMasters, isCultureTest, cultureResultFor, renderCultureBlocks, bindCultureSection,
-  cultureValidationError
+  cultureValidationError, cultureDraftError
 } from "./culture-report-entry.js";
 import { getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { settingsDoc } from "../core/tenant.js";
@@ -69,9 +69,10 @@ export function initReportEntry(context) {
     bindCultureSection(cultureContainer, {
       getState: () => current.cultureResults,
       rerender: renderCultureSection,
-      // Local state only, same as a numeric result's onResultInput() -
-      // nothing is persisted until Save & Release.
-      onChange: () => {}
+      // Edits stay local and are autosaved as a DRAFT a moment after the user
+      // stops (never for a released report - that would withdraw the patient's
+      // copy without the user asking). Nothing is released until Save & Release.
+      onChange: scheduleCultureAutosave
     });
   }
 
@@ -388,10 +389,58 @@ function renderCards() {
   renderProgress();
 }
 
+let cultureAutosaveTimer = null;
+function scheduleCultureAutosave() {
+  clearTimeout(cultureAutosaveTimer);
+  if (!current.booking || !current.cultureResults.length) return;
+  if (current.report && current.report.reportStatus !== "Draft") return; // released/amended: only an explicit Save & Release
+  if (!sessionCanWrite(P.REPORT_ENTER, ctx.session)) return;
+  cultureAutosaveTimer = setTimeout(async () => {
+    // Re-check at fire time: a release that happened while the timer was pending
+    // must never be turned back into a draft by a stale autosave.
+    if (!current.booking || (current.report && current.report.reportStatus !== "Draft")) return;
+    if (cultureDraftError(current.cultureResults)) return;      // never persist text that is not a valid MIC
+    const ok = await saveDraft({ silent: true });
+    const badge = $("#cultureAutosaveState");
+    if (badge) badge.textContent = ok ? `Draft autosaved ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Autosave failed — use Save";
+  }, 2000);
+}
+
 function renderCultureSection() {
   const el = $("#cultureResultsContainer");
   if (!el) return;
+  // Re-rendering replaces the DOM; put the scroll position and the focused field
+  // back so adding a row or picking a drug never jumps the page or drops the cursor.
+  const scrollY = window.scrollY;
+  const active = document.activeElement;
+  const focusKey = active && el.contains(active) ? focusKeyFor(active) : null;
   el.innerHTML = renderCultureBlocks(current.cultureResults, sessionCanWrite(P.REPORT_ENTER, ctx.session));
+  if (current.cultureResults.length) {
+    el.insertAdjacentHTML("afterbegin", `<div class="row-flex" style="justify-content:flex-end;gap:10px;align-items:center;">
+      <span class="small muted" id="cultureAutosaveState">${current.report && current.report.reportStatus !== "Draft" ? "Released — editing needs Save &amp; Release" : "Drafts autosave as you type"}</span>
+      <button class="btn btn-sm btn-outline" id="cultureSaveDraftBtn" type="button">Save draft</button></div>`);
+    $("#cultureSaveDraftBtn")?.addEventListener("click", async () => {
+      const problem = cultureDraftError(current.cultureResults);
+      if (problem) return toastError(problem);
+      if (current.report && current.report.reportStatus !== "Draft" && !(await confirmAction("This report is released. Saving a draft withdraws the patient's copy until it is released again. Continue?", { danger: true }))) return;
+      await saveDraft();
+    });
+  }
+  window.scrollTo(window.scrollX, scrollY);
+  if (focusKey) el.querySelector(focusKey)?.focus({ preventScroll: true });
+}
+
+/** A CSS selector that finds the same field again after a re-render. */
+function focusKeyFor(node) {
+  const attr = ["data-sens-mic", "data-sens-zone", "data-sens-sir", "data-sens-grade", "data-sens-comment", "data-sens-antibiotic",
+    "data-organism-input", "data-organism-comment", "data-cr-comments", "data-cr-colony", "data-cr-gram"].find((a) => node.hasAttribute(a));
+  if (!attr) return null;
+  const row = node.closest("[data-sens-row]");
+  if (row) return `[data-sens-row="${row.dataset.sensRow}"] [${attr}]`;
+  const org = node.closest("[data-organism-block]");
+  if (org) return `[data-organism-block="${org.dataset.organismBlock}"] [${attr}]`;
+  const block = node.closest("[data-culture-block]");
+  return block ? `[data-culture-block="${block.dataset.cultureBlock}"] [${attr}]` : null;
 }
 
 /** Turn automatic calculation on or off for this session (authorised users only). */
@@ -954,6 +1003,8 @@ async function saveDraft({ silent = false } = {}) {
   // Recalculate before persisting, so a stored report never carries a stale or
   // missing calculated value even if the grid was not touched since it loaded.
   analyse();
+  const cultureDraftProblem = cultureDraftError(current.cultureResults);
+  if (cultureDraftProblem) { if (!silent) toastError(cultureDraftProblem); return false; }
   if (!silent) setBusy("#saveDraftBtn", true, "Saving...");
   try {
     const saved = await Reports.saveReportDraft({
@@ -1014,6 +1065,7 @@ function currentInterpretationText() {
  * to enter results at all.
  */
 async function saveAndRelease() {
+  clearTimeout(cultureAutosaveTimer);  // a pending culture autosave must not fire after (and undo) the release
   if (!current.booking) return toastError("Open a booking first.");
   if (!sessionCanWrite(P.REPORT_ENTER, ctx.session)) return toastError("You do not have permission to enter results.");
 

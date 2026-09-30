@@ -4786,5 +4786,12 @@
     "testCode": "KT0684",
     "sourceSlug": "kt0684-zinc-transporter-8-znt8-antibody",
     "needsAdminReview": true
+  },
+  "KT0685": {
+    "slug": "kt0685-suction-tip-culture-sensitivity",
+    "name": "Suction Tip Culture & Sensitivity",
+    "testCode": "KT0685",
+    "sourceSlug": "kt0685-suction-tip-culture-sensitivity",
+    "needsAdminReview": true
   }
 }

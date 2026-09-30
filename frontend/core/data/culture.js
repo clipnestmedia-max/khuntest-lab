@@ -6,9 +6,11 @@
 // tenant.js's col()/docRef(), setDoc merge, isActive rather than delete so
 // historical C&S reports that reference a since-deactivated organism or
 // antibiotic keep rendering correctly).
-import { getDocs, setDoc, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import { col, docRef, withLabId } from "../tenant.js";
+import { getDocs, getDoc, setDoc, updateDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { col, docRef, settingsDoc, withLabId } from "../tenant.js";
 import { cached, cacheDrop, CACHE_TTL, snapshotRows, buildSearchTokens, clean } from "./helpers.js";
+
+export { parseMic, isValidMic, findBreakpoint, interpretSIR, matchPanels, cultureNeedsOrganism, cultureDraftError, cultureValidationError } from "../culture-logic.js";
 
 const CULTURE_CACHE_TTL = CACHE_TTL.tests; // same 10-minute TTL as the test catalogue
 
@@ -23,8 +25,8 @@ export const SIR_LABELS = Object.freeze({
   S: "Susceptible", I: "Intermediate", R: "Resistant", NA: "Not Applicable", NT: "Not Tested"
 });
 export const CULTURE_RESULTS = Object.freeze([
-  "Pending", "No Growth", "Growth Detected", "Significant Growth",
-  "Insignificant Growth", "Mixed Growth", "Contaminated", "Final"
+  "Pending", "No Growth", "Sterile", "Growth Detected", "Significant Growth",
+  "Insignificant Growth", "Mixed Growth", "Contaminated", "Final", "Other"
 ]);
 export const COLONY_COUNT_UNITS = Object.freeze(["CFU/mL", "CFU/g", "CFU/specimen", "Semi-quantitative"]);
 export const RESISTANCE_MARKER_VALUES = Object.freeze(["Not Tested", "Not Applicable", "Detected", "Not Detected"]);
@@ -120,6 +122,7 @@ function normalizeAntibiotic(id, data = {}) {
     id, antibioticId: data.antibioticId || id,
     genericName: data.genericName || data.displayName || "",
     displayName: data.displayName || data.genericName || "",
+    abbreviation: data.abbreviation || "",
     antibioticClass: data.antibioticClass || "",
     testingMethod: data.testingMethod || TESTING_METHODS[0],
     micUnit: data.micUnit || "µg/mL",
@@ -146,7 +149,7 @@ export async function saveAntibiotic(antibioticId, data) {
   if (!String(data.displayName || data.genericName || "").trim()) throw new Error("An antibiotic needs a name.");
   const payload = withLabId(clean({
     ...normalizeAntibiotic(id, data),
-    searchKeywords: buildSearchTokens(data.genericName, data.displayName, data.antibioticClass),
+    searchKeywords: buildSearchTokens(data.genericName, data.displayName, data.antibioticClass, data.abbreviation, ...(data.aliases || [])),
     updatedAt: new Date().toISOString()
   }));
   delete payload.id;
@@ -172,6 +175,7 @@ function normalizePanel(id, data = {}) {
     id,
     name: data.name || "",
     specimenId: data.specimenId || "",
+    organismId: data.organismId || "",
     gramReaction: data.gramReaction || "",
     antibioticIds: Array.isArray(data.antibioticIds) ? data.antibioticIds : [],
     isActive: data.isActive !== false
@@ -202,13 +206,6 @@ export async function savePanel(panelId, data) {
 export async function setPanelActive(panelId, isActive) {
   await updateDoc(docRef("csPanels", panelId), { isActive: Boolean(isActive), updatedAt: new Date().toISOString() });
   cacheDrop("csPanels:active"); cacheDrop("csPanels:all");
-}
-
-/** What "Auto Fill Sensitivity Panel" uses: the configured antibiotics for this specimen + gram reaction, or none. */
-export function matchPanels(panels, { specimenId, gramReaction }) {
-  return panels.filter((p) => p.isActive
-    && (!p.specimenId || p.specimenId === specimenId)
-    && (!p.gramReaction || p.gramReaction === gramReaction));
 }
 
 // ---------- breakpoints ----------
@@ -265,42 +262,37 @@ export async function setBreakpointActive(breakpointId, isActive) {
   cacheDrop("csBreakpoints:active"); cacheDrop("csBreakpoints:all");
 }
 
-/**
- * Find the one active breakpoint for this organism+antibiotic+method+standard.
- * Never guesses across methods or standards - an admin who wants MIC
- * interpretation must configure a MIC breakpoint, a disk-diffusion one
- * separately, etc.
- */
-export function findBreakpoint(breakpoints, { organismId, antibioticId, testingMethod, standard }) {
-  return breakpoints.find((b) => b.isActive
-    && b.organismId === organismId
-    && b.antibioticId === antibioticId
-    && b.testingMethod === testingMethod
-    && (!standard || b.standard === standard)) || null;
+// findBreakpoint / interpretSIR / matchPanels live in ../culture-logic.js (pure, unit-tested) and are re-exported above.
+
+// ---------- AST interpretation standard (lab setting) ----------
+// Which standard/version the lab interprets against. Stored on every report it
+// is used for (see cultureResults[].astStandard) so a released report always
+// says which standard produced its S/I/R, even if the lab later changes it.
+export const AST_STANDARD_NAMES = Object.freeze(["CLSI", "EUCAST", "Other (laboratory-defined)"]);
+
+export function normalizeAstStandard(data = {}) {
+  return {
+    standardName: data.standardName || "",
+    version: data.version || "",
+    effectiveDate: data.effectiveDate || "",
+    notes: data.notes || "",
+    showOnReport: data.showOnReport !== false
+  };
 }
 
-/**
- * Interpret a MIC or zone-diameter value against one breakpoint. Returns
- * { sir, breakpointId, standard, standardVersion } or, if no matching
- * breakpoint/threshold exists, { sir: null, reason }. Never falls back to a
- * guessed threshold - see BREAKPOINT MASTER requirement.
- */
-export function interpretSIR(breakpoint, { micValue, zoneDiameter } = {}) {
-  if (!breakpoint) return { sir: null, reason: "Interpretation unavailable — breakpoint configuration required." };
+export async function loadAstStandard({ force = false } = {}) {
+  if (force) cacheDrop("csAstStandard");
+  return cached("csAstStandard", CULTURE_CACHE_TTL, async () => {
+    const snap = await getDoc(settingsDoc("ast"));
+    return normalizeAstStandard(snap.exists() ? snap.data() : {});
+  });
+}
 
-  const mic = micValue === "" || micValue == null ? null : Number(micValue);
-  if (mic != null && Number.isFinite(mic) && breakpoint.micSMax != null && breakpoint.micRMin != null) {
-    const sir = mic <= breakpoint.micSMax ? "S" : mic >= breakpoint.micRMin ? "R" : "I";
-    return { sir, breakpointId: breakpoint.id, standard: breakpoint.standard, standardVersion: breakpoint.standardVersion };
-  }
-
-  const zone = zoneDiameter === "" || zoneDiameter == null ? null : Number(zoneDiameter);
-  if (zone != null && Number.isFinite(zone) && breakpoint.zoneSMin != null && breakpoint.zoneRMax != null) {
-    const sir = zone >= breakpoint.zoneSMin ? "S" : zone <= breakpoint.zoneRMax ? "R" : "I";
-    return { sir, breakpointId: breakpoint.id, standard: breakpoint.standard, standardVersion: breakpoint.standardVersion };
-  }
-
-  return { sir: null, reason: "Interpretation unavailable — breakpoint configuration required." };
+export async function saveAstStandard(data) {
+  const payload = withLabId(clean({ ...normalizeAstStandard(data), updatedAt: new Date().toISOString() }));
+  await setDoc(settingsDoc("ast"), payload, { merge: true });
+  cacheDrop("csAstStandard");
+  return normalizeAstStandard(payload);
 }
 
 function cryptoRandomId() {

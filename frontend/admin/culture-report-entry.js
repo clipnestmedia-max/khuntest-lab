@@ -11,19 +11,22 @@
 // `groups[]`, so the numeric flagging/calculation engine and every existing
 // report keep working completely unchanged.
 import * as Culture from "../core/data/culture.js";
+import { cultureValidationError, cultureDraftError, isValidMic } from "../core/culture-logic.js";
 import { esc, toastError, toastWarn, confirmAction } from "../core/ui.js";
 
-let masters = { specimens: [], organisms: [], antibiotics: [], panels: [], breakpoints: [] };
+let masters = { specimens: [], organisms: [], antibiotics: [], panels: [], breakpoints: [], ast: Culture.normalizeAstStandard() };
+const CUSTOM_SPECIMEN = "__custom__";
 let mastersLoaded = false;
 
 export async function loadCultureMasters(force = false) {
   if (mastersLoaded && !force) return masters;
-  const [specimens, organisms, antibiotics, panels, breakpoints] = await Promise.all([
+  const [specimens, organisms, antibiotics, panels, breakpoints, ast] = await Promise.all([
     Culture.loadSpecimens({ activeOnly: true }), Culture.loadOrganisms({ activeOnly: true }),
     Culture.loadAntibiotics({ activeOnly: true }), Culture.loadPanels({ activeOnly: true }),
-    Culture.loadBreakpoints({ activeOnly: true })
+    Culture.loadBreakpoints({ activeOnly: true }),
+    Culture.loadAstStandard().catch(() => Culture.normalizeAstStandard())
   ]);
-  masters = { specimens, organisms, antibiotics, panels, breakpoints };
+  masters = { specimens, organisms, antibiotics, panels, breakpoints, ast };
   mastersLoaded = true;
   return masters;
 }
@@ -39,6 +42,9 @@ export function cultureResultFor(test, existing = []) {
   return {
     testId: test.testId || test.id || "", testCode: test.testCode || "", testName: test.name || test.testName || "",
     specimenId: "", specimenName: "", cultureResult: "Pending",
+    // Which standard/version this report was interpreted under. Captured when the
+    // block is created so a later change in Lab Settings never rewrites a report.
+    astStandard: { name: masters.ast.standardName, version: masters.ast.version, effectiveDate: masters.ast.effectiveDate, show: masters.ast.showOnReport !== false },
     colonyCount: "", colonyCountUnit: "",
     gramStain: "", pusCells: "", rbc: "", epithelialCells: "", otherFindings: "",
     organisms: [],
@@ -48,7 +54,7 @@ export function cultureResultFor(test, existing = []) {
 }
 
 function newOrganismBlock() {
-  return { organismId: "", organismName: "", sensitivities: [] };
+  return { organismId: "", organismName: "", sensitivities: [], comments: "" };
 }
 
 function newSensitivityRow(antibioticId = "") {
@@ -85,9 +91,9 @@ export function recalcRow(organismId, row) {
 /** "Auto Fill Sensitivity Panel": load the configured antibiotics for this organism's Gram reaction + the block's specimen. */
 export function autoFillPanel(cultureResult, organismBlock) {
   const organism = masters.organisms.find((o) => o.id === organismBlock.organismId);
-  if (!organism) return { added: 0 };
+  if (!organism) return { added: 0, noPanel: true };
   const matches = Culture.matchPanels(masters.panels, {
-    specimenId: cultureResult.specimenId, gramReaction: organism.gramReaction
+    specimenId: cultureResult.specimenId, organismId: organism.id, gramReaction: organism.gramReaction
   });
   if (!matches.length) return { added: 0, noPanel: true };
   const existingIds = new Set(organismBlock.sensitivities.map((s) => s.antibioticId));
@@ -105,20 +111,36 @@ export function autoFillPanel(cultureResult, organismBlock) {
   return { added };
 }
 
+/** Add every antibiotic in `ids` that this organism block does not already list. Returns how many were added. */
+export function addAntibiotics(organismBlock, ids) {
+  const have = new Set(organismBlock.sensitivities.map((s) => s.antibioticId).filter(Boolean));
+  let added = 0;
+  ids.forEach((id) => {
+    if (have.has(id)) return;
+    const abx = masters.antibiotics.find((a) => a.id === id);
+    if (!abx) return;
+    organismBlock.sensitivities.push(newSensitivityRow(id));
+    have.add(id); added += 1;
+  });
+  return added;
+}
+
 // ---------- rendering ----------
 
 function sirBadgeClass(sir) {
   if (sir === "S") return "ok"; if (sir === "R") return "danger"; if (sir === "I") return "warn"; return "";
 }
 
-function specimenOptions(selected) {
+const isCustomSpecimen = (cr) => !cr.specimenId && Boolean(cr.specimenName);
+
+function specimenOptions(cr) {
   return `<option value="">Select specimen…</option>` +
-    masters.specimens.map((s) => `<option value="${esc(s.id)}" ${s.id === selected ? "selected" : ""}>${esc(s.name)}</option>`).join("");
+    masters.specimens.map((s) => `<option value="${esc(s.id)}" ${s.id === cr.specimenId ? "selected" : ""}>${esc(s.name)}</option>`).join("") +
+    `<option value="${CUSTOM_SPECIMEN}" ${isCustomSpecimen(cr) ? "selected" : ""}>Other / type your own…</option>`;
 }
 
-function organismOptions(selected) {
-  return `<option value="">Select organism…</option>` +
-    masters.organisms.map((o) => `<option value="${esc(o.id)}" ${o.id === selected ? "selected" : ""}>${esc(o.name)}</option>`).join("");
+function organismDatalist() {
+  return `<datalist id="csOrganismList">${masters.organisms.map((o) => `<option value="${esc(o.name)}"></option>`).join("")}</datalist>`;
 }
 
 function antibioticOptions(selected) {
@@ -130,7 +152,7 @@ function sensitivityRowHtml(ti, oi, si, row) {
   return `<tr data-sens-row="${ti}:${oi}:${si}">
     <td><select data-sens-antibiotic style="min-width:170px;">${antibioticOptions(row.antibioticId)}</select></td>
     <td class="small">${esc(row.testingMethod)}</td>
-    <td><input data-sens-mic type="text" inputmode="decimal" value="${esc(row.micValue)}" style="width:70px;" placeholder="MIC"></td>
+    <td><input data-sens-mic type="text" inputmode="text" value="${esc(row.micValue)}" style="width:80px;${isValidMic(row.micValue) ? "" : "border-color:var(--danger,#c0392b);"}" placeholder="MIC" title="e.g. 0.5, 16, >16, ≤0.25" aria-invalid="${isValidMic(row.micValue) ? "false" : "true"}"></td>
     <td class="small">${esc(row.micUnit)}</td>
     <td><input data-sens-zone type="text" inputmode="decimal" value="${esc(row.zoneDiameter)}" style="width:60px;" placeholder="Zone"></td>
     <td><select data-sens-sir class="pill ${sirBadgeClass(row.sir)}">
@@ -144,19 +166,35 @@ function sensitivityRowHtml(ti, oi, si, row) {
   </tr>`;
 }
 
+function antibioticPickerHtml(ti, oi, organismBlock) {
+  const have = new Set(organismBlock.sensitivities.map((s) => s.antibioticId));
+  return `<details style="margin-top:8px;" data-abx-picker>
+    <summary class="small" style="cursor:pointer;font-weight:600;">Select antibiotics (checklist)</summary>
+    <input data-abx-filter type="search" placeholder="Search antibiotic…" style="margin:6px 0;width:100%;max-width:280px;">
+    <div class="abx-picklist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 12px;max-height:220px;overflow:auto;">
+      ${masters.antibiotics.map((a) => `<label class="small" data-abx-name="${esc((a.displayName + " " + (a.abbreviation || "") + " " + (a.genericName || "")).toLowerCase())}" style="display:flex;gap:6px;align-items:center;">
+        <input type="checkbox" data-abx-check value="${esc(a.id)}" ${have.has(a.id) ? "checked disabled" : ""}> ${esc(a.displayName)}</label>`).join("") || `<span class="small muted">No antibiotics in the master list yet.</span>`}
+    </div>
+    <button class="btn btn-sm btn-outline" data-abx-add type="button" style="margin-top:6px;">Add checked antibiotics</button>
+  </details>`;
+}
+
 function organismBlockHtml(ti, oi, organismBlock) {
   return `<div class="card" style="margin:10px 0;background:var(--surface-2);" data-organism-block="${ti}:${oi}">
     <div class="row-flex">
-      <label class="field" style="flex:1;margin:0;"><span>Organism ${oi + 1}</span>
-        <select data-organism-select>${organismOptions(organismBlock.organismId)}</select></label>
+      <label class="field" style="flex:1;margin:0;"><span>Organism ${oi + 1} * <span class="small muted">(search the list, or type any organism)</span></span>
+        <input data-organism-input type="text" list="csOrganismList" autocomplete="off" value="${esc(organismBlock.organismName)}" placeholder="Search or type organism…"></label>
       <button class="btn btn-sm btn-outline" data-autofill-panel type="button" style="margin-top:20px;">Auto Fill Sensitivity Panel</button>
       <button class="btn btn-sm btn-ghost" data-remove-organism type="button" style="margin-top:20px;">Remove organism</button>
     </div>
+    ${antibioticPickerHtml(ti, oi, organismBlock)}
     <div class="table-wrap" style="margin-top:8px;"><table class="data">
       <thead><tr><th>Antibiotic</th><th>Method</th><th>MIC</th><th>Unit</th><th>Zone</th><th>S/I/R</th><th>Grade</th><th>Comment</th><th></th></tr></thead>
       <tbody>${organismBlock.sensitivities.map((row, si) => sensitivityRowHtml(ti, oi, si, row)).join("")
         || `<tr><td colspan="9" class="small muted" style="text-align:center;padding:10px;">No antibiotics yet - use Auto Fill or add one.</td></tr>`}</tbody>
     </table></div>
+    <label class="field" style="margin-top:8px;"><span>Organism comment</span>
+      <input data-organism-comment type="text" value="${esc(organismBlock.comments || "")}" placeholder="Optional note for this organism"></label>
     <p class="small muted" style="margin:6px 0 0;">MIC/Zone are optional — leave them blank and just pick S/I/R (and, if this lab reports it, a grade) when precise values aren't recorded. The printed report shows only what's actually filled in.</p>
     <button class="btn btn-sm btn-ghost" data-add-sens type="button" style="margin-top:8px;">+ Add Antibiotic</button>
   </div>`;
@@ -176,7 +214,8 @@ export function renderCultureBlocks(cultureResults, canEdit) {
     <div class="card" style="margin-top:16px;" data-culture-block="${ti}">
       <div class="card-head"><h2>Culture &amp; Sensitivity — ${esc(cr.testName)}</h2></div>
       <div class="form-grid">
-        <label class="field"><span>Specimen</span><select data-cr-specimen ${canEdit ? "" : "disabled"}>${specimenOptions(cr.specimenId)}</select></label>
+        <label class="field"><span>Specimen *</span><select data-cr-specimen ${canEdit ? "" : "disabled"}>${specimenOptions(cr)}</select>
+          ${isCustomSpecimen(cr) || cr.specimenCustom ? `<input data-cr-specimen-custom type="text" value="${esc(cr.specimenName)}" placeholder="Type the specimen" style="margin-top:6px;" ${canEdit ? "" : "disabled"}>` : ""}</label>
         <label class="field"><span>Culture Result</span><select data-cr-result ${canEdit ? "" : "disabled"}>
           ${Culture.CULTURE_RESULTS.map((r) => `<option ${r === cr.cultureResult ? "selected" : ""}>${esc(r)}</option>`).join("")}
         </select></label>
@@ -200,6 +239,7 @@ export function renderCultureBlocks(cultureResults, canEdit) {
 
       ${cr.cultureResult !== "No Growth" && cr.cultureResult !== "Pending" ? `
         <h4 style="margin:14px 0 4px;">Organisms</h4>
+        ${organismDatalist()}
         ${cr.organisms.map((o, oi) => organismBlockHtml(ti, oi, o)).join("")}
         ${canEdit ? `<button class="btn btn-sm btn-outline" data-add-organism type="button">+ Add Organism</button>` : ""}
 
@@ -232,10 +272,14 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
     if (!result) return;
 
     if (el.matches("[data-cr-specimen]")) {
-      result.specimenId = el.value;
-      result.specimenName = masters.specimens.find((s) => s.id === el.value)?.name || "";
+      if (el.value === CUSTOM_SPECIMEN) { result.specimenId = ""; result.specimenName = ""; result.specimenCustom = true; }
+      else {
+        result.specimenId = el.value; result.specimenCustom = false;
+        result.specimenName = masters.specimens.find((s) => s.id === el.value)?.name || "";
+      }
       onChange(); return rerender();
     }
+    if (el.matches("[data-cr-specimen-custom]")) { result.specimenName = el.value.trim(); result.specimenId = ""; return onChange(); }
     if (el.matches("[data-cr-result]")) { result.cultureResult = el.value; onChange(); return rerender(); }
     if (el.matches("[data-cr-colony]")) { result.colonyCount = el.value; return onChange(); }
     if (el.matches("[data-cr-colony-unit]")) { result.colonyCountUnit = el.value; return onChange(); }
@@ -251,10 +295,14 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
       const [, oi] = orgBlockEl.dataset.organismBlock.split(":").map(Number);
       const organism = result.organisms[oi];
       if (!organism) return;
-      if (el.matches("[data-organism-select]")) {
-        organism.organismId = el.value;
-        organism.organismName = masters.organisms.find((o) => o.id === el.value)?.name || "";
-        onChange(); return rerender();
+      if (el.matches("[data-organism-input]")) {
+        const typed = el.value.trim();
+        const match = masters.organisms.find((o) => o.name.toLowerCase() === typed.toLowerCase());
+        organism.organismId = match?.id || ""; // "" = a lab-typed organism with no master record (manual S/I/R only)
+        organism.organismName = match?.name || typed;
+        el.value = organism.organismName;
+        (organism.sensitivities || []).forEach((row) => recalcRow(organism.organismId, row));
+        onChange(); return;
       }
       const sensRow = el.closest("[data-sens-row]");
       if (sensRow) {
@@ -263,6 +311,10 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
         if (!row) return;
         if (el.matches("[data-sens-antibiotic]")) {
           const abx = masters.antibiotics.find((a) => a.id === el.value);
+          if (el.value && organism.sensitivities.some((r, i) => i !== si && r.antibioticId === el.value)) {
+            toastWarn(`${abx?.displayName || "That antibiotic"} is already listed for this organism.`);
+            return rerender();
+          }
           row.antibioticId = el.value; row.antibioticName = abx?.displayName || "";
           row.testingMethod = abx?.testingMethod || row.testingMethod; row.micUnit = abx?.micUnit || row.micUnit;
           recalcRow(organism.organismId, row);
@@ -282,14 +334,30 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
     const result = cr()[ti];
     if (!result) return;
     if (el.matches("[data-cr-comments]")) { result.comments = el.value; return onChange(); }
+    if (el.matches("[data-abx-filter]")) {
+      const q = el.value.trim().toLowerCase();
+      el.closest("[data-abx-picker]").querySelectorAll("[data-abx-name]").forEach((l) => { l.style.display = !q || l.dataset.abxName.includes(q) ? "flex" : "none"; });
+      return;
+    }
 
+    if (el.matches("[data-organism-comment]")) {
+      const [, ooi] = el.closest("[data-organism-block]").dataset.organismBlock.split(":").map(Number);
+      if (result.organisms[ooi]) result.organisms[ooi].comments = el.value;
+      return onChange();
+    }
     const sensRow = el.closest("[data-sens-row]");
     if (!sensRow) return;
     const [, oi, si] = sensRow.dataset.sensRow.split(":").map(Number);
     const organism = result.organisms[oi];
     const row = organism?.sensitivities[si];
     if (!row) return;
-    if (el.matches("[data-sens-mic]")) row.micValue = el.value;
+    if (el.matches("[data-sens-mic]")) {
+      row.micValue = el.value;
+      const ok = isValidMic(el.value);
+      el.style.borderColor = ok ? "" : "var(--danger,#c0392b)";
+      el.setAttribute("aria-invalid", ok ? "false" : "true");
+      if (!ok) { onChange(); return; } // don't interpret text that is not a MIC
+    }
     else if (el.matches("[data-sens-zone]")) row.zoneDiameter = el.value;
     else if (el.matches("[data-sens-comment]")) { row.comment = el.value; return onChange(); }
     else return;
@@ -338,6 +406,12 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
         else if (!added) toastWarn("Every antibiotic in the configured panel is already listed.");
         onChange(); return rerender();
       }
+      if (el.closest("[data-abx-add]")) {
+        const ids = Array.from(orgBlockEl.querySelectorAll("[data-abx-check]:checked:not(:disabled)")).map((c) => c.value);
+        if (!ids.length) return toastWarn("Tick at least one antibiotic first.");
+        addAntibiotics(organism, ids);
+        onChange(); return rerender();
+      }
       if (el.closest("[data-add-sens]")) {
         organism.sensitivities.push(newSensitivityRow());
         onChange(); return rerender();
@@ -352,16 +426,5 @@ export function bindCultureSection(container, { getState, rerender, onChange }) 
   });
 }
 
-/** Release-time sanity check, not a bureaucratic approval gate - see spec item 9. */
-export function cultureValidationError(cultureResults) {
-  for (const cr of cultureResults) {
-    if (cr.cultureResult === "No Growth" || cr.cultureResult === "Pending") continue;
-    if (!cr.organisms.length) {
-      return `${cr.testName}: "${cr.cultureResult}" needs at least one organism before this report can be released.`;
-    }
-    for (const o of cr.organisms) {
-      if (!o.organismId) return `${cr.testName}: every organism row needs an organism selected.`;
-    }
-  }
-  return "";
-}
+// Release-time and draft validation live in ../core/culture-logic.js (unit-tested).
+export { cultureValidationError, cultureDraftError };

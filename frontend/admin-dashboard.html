@@ -619,11 +619,24 @@
         </div>
 
         <div class="card" style="margin-bottom:16px;">
+          <div class="card-head"><h2>AST interpretation standard</h2></div>
+          <p class="small muted">The standard and version this laboratory interprets S/I/R against. It is recorded on every Culture &amp; Sensitivity report, and optionally printed on it. No breakpoint values are supplied by the software — enter them under Breakpoints below.</p>
+          <form id="astStandardForm" class="form-grid">
+            <label class="field"><span>Standard</span><select name="standardName" id="astStandardName"></select></label>
+            <label class="field"><span>Version / year</span><input name="version" placeholder="e.g. CLSI M100 34th ed. (2024)"></label>
+            <label class="field"><span>Effective date</span><input name="effectiveDate" type="date"></label>
+            <label class="field"><span>Notes</span><input name="notes"></label>
+            <label class="field"><span><input type="checkbox" name="showOnReport" checked> Print on report</span></label>
+            <div><button class="btn btn-sm" id="saveAstStandardBtn" type="button" data-perm="culture.master.manage">Save standard</button></div>
+          </form>
+        </div>
+
+        <div class="card" style="margin-bottom:16px;">
           <div class="card-head"><h2>Antibiotics</h2><span class="spacer"></span>
             <button class="btn btn-sm btn-outline" id="loadStarterAntibioticsBtn" type="button" data-perm="culture.master.manage">Load starter list</button>
             <button class="btn btn-sm" id="addAntibioticBtn" type="button" data-perm="culture.master.manage">Add antibiotic</button></div>
           <div class="table-wrap"><table class="data">
-            <thead><tr><th>Name</th><th>Class</th><th>Testing method</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Name</th><th>Abbr.</th><th>Class</th><th>Testing method</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="csAntibioticsBody"></tbody>
           </table></div>
         </div>
@@ -631,9 +644,9 @@
         <div class="card" style="margin-bottom:16px;">
           <div class="card-head"><h2>Antibiotic panels</h2><span class="spacer"></span>
             <button class="btn btn-sm" id="addCulturePanelBtn" type="button" data-perm="culture.master.manage">Add panel</button></div>
-          <p class="small muted">What “Auto Fill Sensitivity Panel” loads in the report entry screen for a given specimen/Gram reaction.</p>
+          <p class="small muted">What “Auto Fill Sensitivity Panel” loads in the report entry screen for a given specimen, organism and/or Gram reaction. Leave a field blank for “any”. The reference report antibiotics are in the starter list, but no drug is ever auto-selected without a panel you configured.</p>
           <div class="table-wrap"><table class="data">
-            <thead><tr><th>Panel</th><th>Specimen</th><th>Gram reaction</th><th>Antibiotics</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Panel</th><th>Specimen</th><th>Organism</th><th>Gram reaction</th><th>Antibiotics</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="csPanelsBody"></tbody>
           </table></div>
         </div>

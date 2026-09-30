@@ -22,6 +22,7 @@ export function initCultureMastersScreen(context) {
   $("#loadStarterSpecimensBtn")?.addEventListener("click", loadStarterSpecimens);
   $("#loadStarterOrganismsBtn")?.addEventListener("click", loadStarterOrganisms);
   $("#loadStarterAntibioticsBtn")?.addEventListener("click", loadStarterAntibiotics);
+  $("#saveAstStandardBtn")?.addEventListener("click", saveAstStandard);
 }
 
 const canManage = () => sessionCanWrite(P.CULTURE_MASTER_MANAGE, ctx.session);
@@ -38,6 +39,30 @@ export async function renderCultureMasters() {
   renderAntibiotics();
   renderPanels();
   renderBreakpoints();
+  renderAstStandard(await Culture.loadAstStandard({ force: true }).catch(() => Culture.normalizeAstStandard()));
+}
+
+function renderAstStandard(ast) {
+  const form = $("#astStandardForm");
+  if (!form) return;
+  $("#astStandardName").innerHTML = `<option value="">Not configured</option>` +
+    Culture.AST_STANDARD_NAMES.map((n) => `<option ${n === ast.standardName ? "selected" : ""}>${esc(n)}</option>`).join("");
+  form.version.value = ast.version; form.effectiveDate.value = ast.effectiveDate; form.notes.value = ast.notes;
+  form.showOnReport.checked = ast.showOnReport !== false;
+  $("#saveAstStandardBtn").disabled = !canManage();
+}
+
+async function saveAstStandard(event) {
+  const form = $("#astStandardForm");
+  setBusy(event.target, true);
+  try {
+    await Culture.saveAstStandard({
+      standardName: form.standardName.value, version: form.version.value.trim(),
+      effectiveDate: form.effectiveDate.value, notes: form.notes.value.trim(), showOnReport: form.showOnReport.checked
+    });
+    toastOk("AST standard saved.");
+  } catch (error) { reportError(error, "Could not save the AST standard."); }
+  finally { setBusy(event.target, false); }
 }
 
 function orgName(id) { return cache.organisms.find((o) => o.id === id)?.name || id || "—"; }
@@ -59,7 +84,8 @@ function renderSpecimens() {
 const STARTER_SPECIMENS = [
   "Urine", "Blood", "Pus", "Wound Swab", "Sputum", "Throat Swab", "Nasal Swab",
   "Vaginal Swab", "Cervical Swab", "Semen", "Stool", "CSF", "Body Fluid",
-  "Catheter Tip", "Ear Swab", "Eye Swab", "Skin Swab", "Other"
+  "Ascitic Fluid", "Pleural Fluid", "Synovial Fluid", "BAL", "ET Aspirate", "Tissue",
+  "Catheter Tip", "Suction Tip", "Ear Swab", "Eye Swab", "Skin Swab", "Other"
 ];
 
 async function loadStarterSpecimens() {
@@ -120,42 +146,49 @@ const STARTER_ORGANISMS = [
   { name: "Streptococcus pneumoniae", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
   { name: "Acinetobacter baumannii", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Coccobacilli", aerobicity: "Aerobic" },
   { name: "Candida albicans", organismType: "Yeast", gramReaction: "Not Applicable", morphology: "Yeast", aerobicity: "Aerobic" },
+  { name: "Proteus vulgaris", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Enterobacter spp.", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Citrobacter spp.", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Serratia spp.", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Morganella spp.", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Facultative Anaerobic" },
+  { name: "Streptococcus spp.", organismType: "Bacteria", gramReaction: "Gram Positive", morphology: "Cocci", aerobicity: "Facultative Anaerobic" },
+  { name: "Candida spp.", organismType: "Yeast", gramReaction: "Not Applicable", morphology: "Yeast", aerobicity: "Aerobic" },
   { name: "Bacteroides fragilis", organismType: "Bacteria", gramReaction: "Gram Negative", morphology: "Bacilli", aerobicity: "Anaerobic" }
 ];
 
 const STARTER_ANTIBIOTICS = [
   { displayName: "Ampicillin", antibioticClass: "Penicillin" },
-  { displayName: "Amoxicillin/Clavulanate", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
+  { displayName: "Amoxicillin/Clavulanate", abbreviation: "AMC", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
   { displayName: "Cefuroxime", antibioticClass: "Cephalosporin (2nd gen)" },
   { displayName: "Ceftriaxone", antibioticClass: "Cephalosporin (3rd gen)" },
   { displayName: "Cefixime", antibioticClass: "Cephalosporin (3rd gen)" },
-  { displayName: "Ceftazidime", antibioticClass: "Cephalosporin (3rd gen)" },
-  { displayName: "Cefepime", antibioticClass: "Cephalosporin (4th gen)" },
-  { displayName: "Gentamicin", antibioticClass: "Aminoglycoside" },
-  { displayName: "Amikacin", antibioticClass: "Aminoglycoside" },
+  { displayName: "Ceftazidime", abbreviation: "CAZ", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Cefepime", abbreviation: "CPM", antibioticClass: "Cephalosporin (4th gen)" },
+  { displayName: "Gentamicin", abbreviation: "GEN", antibioticClass: "Aminoglycoside" },
+  { displayName: "Amikacin", abbreviation: "AK", antibioticClass: "Aminoglycoside" },
   { displayName: "Ciprofloxacin", antibioticClass: "Fluoroquinolone" },
-  { displayName: "Levofloxacin", antibioticClass: "Fluoroquinolone" },
+  { displayName: "Levofloxacin", abbreviation: "LE", antibioticClass: "Fluoroquinolone" },
   { displayName: "Nitrofurantoin", antibioticClass: "Nitrofuran" },
   { displayName: "Trimethoprim/Sulfamethoxazole", antibioticClass: "Folate Pathway Inhibitor" },
-  { displayName: "Piperacillin/Tazobactam", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
-  { displayName: "Meropenem", antibioticClass: "Carbapenem" },
-  { displayName: "Imipenem", antibioticClass: "Carbapenem" },
-  { displayName: "Vancomycin", antibioticClass: "Glycopeptide" },
+  { displayName: "Piperacillin/Tazobactam", abbreviation: "PIT", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
+  { displayName: "Meropenem", abbreviation: "MEM", antibioticClass: "Carbapenem" },
+  { displayName: "Imipenem", abbreviation: "IPM", antibioticClass: "Carbapenem" },
+  { displayName: "Vancomycin", abbreviation: "VA", antibioticClass: "Glycopeptide" },
   { displayName: "Linezolid", antibioticClass: "Oxazolidinone" },
   { displayName: "Clindamycin", antibioticClass: "Lincosamide" },
-  { displayName: "Erythromycin", antibioticClass: "Macrolide" },
+  { displayName: "Erythromycin", abbreviation: "E", antibioticClass: "Macrolide" },
   { displayName: "Tetracycline", antibioticClass: "Tetracycline" },
   { displayName: "Cefoxitin", antibioticClass: "Cephamycin" },
   { displayName: "Penicillin", antibioticClass: "Penicillin" },
   { displayName: "Ampicillin/Sulbactam", antibioticClass: "Penicillin + Beta-lactamase Inhibitor" },
-  { displayName: "Cefazolin", antibioticClass: "Cephalosporin (1st gen)" },
-  { displayName: "Cefotaxime", antibioticClass: "Cephalosporin (3rd gen)" },
+  { displayName: "Cefazolin", abbreviation: "CZ", antibioticClass: "Cephalosporin (1st gen)" },
+  { displayName: "Cefotaxime", abbreviation: "CTX", antibioticClass: "Cephalosporin (3rd gen)" },
   { displayName: "Ceftizoxime", antibioticClass: "Cephalosporin (3rd gen)" },
-  { displayName: "Ofloxacin", antibioticClass: "Fluoroquinolone" },
-  { displayName: "Tobramycin", antibioticClass: "Aminoglycoside" },
-  { displayName: "Chloramphenicol", antibioticClass: "Amphenicol" },
+  { displayName: "Ofloxacin", abbreviation: "OF", antibioticClass: "Fluoroquinolone" },
+  { displayName: "Tobramycin", abbreviation: "TOB", antibioticClass: "Aminoglycoside" },
+  { displayName: "Chloramphenicol", abbreviation: "C", antibioticClass: "Amphenicol" },
   { displayName: "Metronidazole", antibioticClass: "Nitroimidazole (Anaerobic Cover)" },
-  { displayName: "Polymyxin B", antibioticClass: "Polymyxin" }
+  { displayName: "Polymyxin B", abbreviation: "PB", antibioticClass: "Polymyxin" }
 ];
 
 async function loadStarterOrganisms() {
@@ -236,6 +269,7 @@ function openOrganismDialog(organism) {
 function renderAntibiotics() {
   renderRows("csAntibioticsBody", cache.antibiotics, (a) => `
     <tr><td><b>${esc(a.displayName)}</b><br><span class="small muted">${esc(a.genericName)}</span></td>
+      <td class="small">${esc(a.abbreviation || "—")}</td>
       <td class="small">${esc(a.antibioticClass || "—")}</td>
       <td class="small">${esc(a.testingMethod)}</td>
       <td>${pill(a.isActive ? "Active" : "Inactive")}</td>
@@ -243,7 +277,7 @@ function renderAntibiotics() {
         <button class="btn btn-sm btn-outline" data-edit-antibiotic="${esc(a.id)}" type="button">Edit</button>
         <button class="btn btn-sm btn-ghost" data-toggle-antibiotic="${esc(a.id)}" data-active="${a.isActive}" type="button">
           ${a.isActive ? "Deactivate" : "Activate"}</button>` : ""}</td></tr>`,
-    { colspan: 5, empty: "No antibiotics yet." });
+    { colspan: 6, empty: "No antibiotics yet." });
 }
 
 function openAntibioticDialog(antibiotic) {
@@ -253,6 +287,7 @@ function openAntibioticDialog(antibiotic) {
     body: `<form id="antibioticForm"><div class="form-grid">
         <label class="field"><span>Display name *</span><input name="displayName" value="${esc(antibiotic?.displayName || "")}" required></label>
         <label class="field"><span>Generic name</span><input name="genericName" value="${esc(antibiotic?.genericName || "")}"></label>
+        <label class="field"><span>Abbreviation</span><input name="abbreviation" value="${esc(antibiotic?.abbreviation || "")}" placeholder="AK, CAZ, ..."></label>
         <label class="field"><span>Class</span><input name="antibioticClass" value="${esc(antibiotic?.antibioticClass || "")}" placeholder="Fluoroquinolone, ..."></label>
         <label class="field"><span>Testing method</span><select name="testingMethod">
           ${Culture.TESTING_METHODS.map((m) => `<option ${m === antibiotic?.testingMethod ? "selected" : ""}>${esc(m)}</option>`).join("")}
@@ -283,6 +318,7 @@ function renderPanels() {
   renderRows("csPanelsBody", cache.panels, (p) => `
     <tr><td><b>${esc(p.name)}</b></td>
       <td class="small">${esc(specimenName(p.specimenId))}</td>
+      <td class="small">${p.organismId ? esc(orgName(p.organismId)) : "Any"}</td>
       <td class="small">${esc(p.gramReaction || "Any")}</td>
       <td class="small">${p.antibioticIds.length} antibiotics</td>
       <td>${pill(p.isActive ? "Active" : "Inactive")}</td>
@@ -290,7 +326,7 @@ function renderPanels() {
         <button class="btn btn-sm btn-outline" data-edit-panel="${esc(p.id)}" type="button">Edit</button>
         <button class="btn btn-sm btn-ghost" data-toggle-panel="${esc(p.id)}" data-active="${p.isActive}" type="button">
           ${p.isActive ? "Deactivate" : "Activate"}</button>` : ""}</td></tr>`,
-    { colspan: 6, empty: "No antibiotic panels yet. “Auto Fill Sensitivity Panel” has nothing to load until one is added." });
+    { colspan: 7, empty: "No antibiotic panels yet. “Auto Fill Sensitivity Panel” has nothing to load until one is added." });
 }
 
 function openPanelDialog(panel) {
@@ -302,6 +338,10 @@ function openPanelDialog(panel) {
         <label class="field"><span>Specimen (optional)</span><select name="specimenId">
           <option value="">Any specimen</option>
           ${cache.specimens.map((s) => `<option value="${esc(s.id)}" ${s.id === panel?.specimenId ? "selected" : ""}>${esc(s.name)}</option>`).join("")}
+        </select></label>
+        <label class="field"><span>Organism (optional)</span><select name="organismId">
+          <option value="">Any organism</option>
+          ${cache.organisms.filter((o) => o.isActive).map((o) => `<option value="${esc(o.id)}" ${o.id === panel?.organismId ? "selected" : ""}>${esc(o.name)}</option>`).join("")}
         </select></label>
         <label class="field"><span>Gram reaction (optional)</span><select name="gramReaction">
           <option value="">Any</option>
