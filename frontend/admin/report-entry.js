@@ -76,6 +76,18 @@ export function initReportEntry(context) {
     });
   }
 
+  $("#cultureSaveDraftBtn")?.addEventListener("click", async () => {
+    clearTimeout(cultureAutosaveTimer);
+    const problem = cultureDraftError(current.cultureResults);
+    if (problem) return toastError(problem);
+    if (current.report && current.report.reportStatus !== "Draft"
+        && !(await confirmAction("This report is released. Saving a draft withdraws the patient's copy until it is released again. Continue?", { danger: true }))) return;
+    setCultureSaveState("Saving…");
+    const ok = await saveDraft({ quiet: false });
+    if (ok) { writeCultureBackup(false); setCultureSaveState("Draft saved — not released"); }
+    else setCultureSaveState("Not saved — your entries are kept on this device", "error");
+  });
+
   $("#loadReportBtn").addEventListener("click", () => {
     const value = $("#reportBookingSelect").value;
     if (value) openReportFor(value);
@@ -288,8 +300,19 @@ export async function openReportFor(id, { print = false, share = false } = {}) {
         g.rows.filter((r) => String(r.value ?? "").trim() !== "").map((r) => `${r.parameterId}=${r.value}`))
     });
 
+    let cultureSource = existing?.cultureResults || [];
+    if (cultureTests.length) {
+      // Entries that could not be saved earlier (network drop, closed tab) are kept on this
+      // device; offer them back instead of silently starting from the older server copy.
+      const backup = readCultureBackup(resolvedBooking.bookingId);
+      if (backup?.pending && Array.isArray(backup.cultureResults) && backup.cultureResults.length
+          && JSON.stringify(backup.cultureResults) !== JSON.stringify(cultureSource)
+          && await confirmAction("Culture & Sensitivity entries that were not saved were found on this device. Restore them?", { confirmLabel: "Restore" })) {
+        cultureSource = backup.cultureResults;
+      }
+    }
     const cultureResults = cultureTests.map((bt) => cultureResultFor(
-      { ...bt, name: bt.name }, existing?.cultureResults || []
+      { ...bt, name: bt.name }, cultureSource
     ));
 
     current = { booking: resolvedBooking, report: existing, groups, cultureResults };
@@ -390,20 +413,48 @@ function renderCards() {
 }
 
 let cultureAutosaveTimer = null;
+const isEditableDraft = () => !current.report || current.report.reportStatus === "Draft";
+
+/** Small status next to the sticky action buttons: "Saving…" / "Saved just now" / a specific problem. */
+function setCultureSaveState(text, kind = "") {
+  const el = $("#cultureSaveState");
+  if (!el) return;
+  el.textContent = text;
+  el.dataset.kind = kind;
+  el.style.color = kind === "error" ? "var(--danger, #c0392b)" : "";
+}
+
+// A copy of the culture entries in this browser, so a failed or slow save never costs the technician their work.
+const backupKey = () => `cs-draft:${current.booking?.bookingId || ""}`;
+function writeCultureBackup(pending) {
+  try {
+    if (!current.booking || !current.cultureResults.length) return;
+    localStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), pending, cultureResults: current.cultureResults }));
+  } catch { /* private mode / quota: the server draft still works */ }
+}
+function readCultureBackup(bookingId) {
+  try { return JSON.parse(localStorage.getItem(`cs-draft:${bookingId}`) || "null"); } catch { return null; }
+}
+
 function scheduleCultureAutosave() {
   clearTimeout(cultureAutosaveTimer);
   if (!current.booking || !current.cultureResults.length) return;
-  if (current.report && current.report.reportStatus !== "Draft") return; // released/amended: only an explicit Save & Release
+  writeCultureBackup(true);
+  if (!isEditableDraft()) { setCultureSaveState("Released — changes need Save & Release"); return; }   // released/amended: only an explicit Save & Release
   if (!sessionCanWrite(P.REPORT_ENTER, ctx.session)) return;
+  const problem = cultureDraftError(current.cultureResults);
+  if (problem) { setCultureSaveState("Not saved — fix the highlighted MIC", "error"); return; }
+  setCultureSaveState("Unsaved changes…");
   cultureAutosaveTimer = setTimeout(async () => {
     // Re-check at fire time: a release that happened while the timer was pending
     // must never be turned back into a draft by a stale autosave.
-    if (!current.booking || (current.report && current.report.reportStatus !== "Draft")) return;
-    if (cultureDraftError(current.cultureResults)) return;      // never persist text that is not a valid MIC
-    const ok = await saveDraft({ silent: true });
-    const badge = $("#cultureAutosaveState");
-    if (badge) badge.textContent = ok ? `Draft autosaved ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Autosave failed — use Save";
-  }, 2000);
+    if (!current.booking || !isEditableDraft()) return;
+    if (cultureDraftError(current.cultureResults)) return;
+    setCultureSaveState("Saving…");
+    const ok = await saveDraft({ silent: true, quiet: true });
+    if (ok) { writeCultureBackup(false); setCultureSaveState("Saved just now"); }
+    else setCultureSaveState("Saved on this device only — will retry on your next change", "error");
+  }, 1500);
 }
 
 function renderCultureSection() {
@@ -415,17 +466,9 @@ function renderCultureSection() {
   const active = document.activeElement;
   const focusKey = active && el.contains(active) ? focusKeyFor(active) : null;
   el.innerHTML = renderCultureBlocks(current.cultureResults, sessionCanWrite(P.REPORT_ENTER, ctx.session));
-  if (current.cultureResults.length) {
-    el.insertAdjacentHTML("afterbegin", `<div class="row-flex" style="justify-content:flex-end;gap:10px;align-items:center;">
-      <span class="small muted" id="cultureAutosaveState">${current.report && current.report.reportStatus !== "Draft" ? "Released — editing needs Save &amp; Release" : "Drafts autosave as you type"}</span>
-      <button class="btn btn-sm btn-outline" id="cultureSaveDraftBtn" type="button">Save draft</button></div>`);
-    $("#cultureSaveDraftBtn")?.addEventListener("click", async () => {
-      const problem = cultureDraftError(current.cultureResults);
-      if (problem) return toastError(problem);
-      if (current.report && current.report.reportStatus !== "Draft" && !(await confirmAction("This report is released. Saving a draft withdraws the patient's copy until it is released again. Continue?", { danger: true }))) return;
-      await saveDraft();
-    });
-  }
+  const hasCulture = current.cultureResults.length > 0;
+  $("#cultureSaveDraftBtn")?.classList.toggle("hidden", !hasCulture);
+  $("#cultureSaveState")?.classList.toggle("hidden", !hasCulture);
   window.scrollTo(window.scrollX, scrollY);
   if (focusKey) el.querySelector(focusKey)?.focus({ preventScroll: true });
 }
@@ -433,7 +476,7 @@ function renderCultureSection() {
 /** A CSS selector that finds the same field again after a re-render. */
 function focusKeyFor(node) {
   const attr = ["data-sens-mic", "data-sens-zone", "data-sens-sir", "data-sens-grade", "data-sens-comment", "data-sens-antibiotic",
-    "data-organism-input", "data-organism-comment", "data-cr-comments", "data-cr-colony", "data-cr-gram"].find((a) => node.hasAttribute(a));
+    "data-organism-input", "data-organism-comment", "data-abx-quick", "data-cr-specimen", "data-cr-specimen-custom", "data-cr-comments", "data-cr-colony", "data-cr-gram"].find((a) => node.hasAttribute(a));
   if (!attr) return null;
   const row = node.closest("[data-sens-row]");
   if (row) return `[data-sens-row="${row.dataset.sensRow}"] [${attr}]`;
@@ -997,7 +1040,7 @@ async function clearCard(index) {
   toastOk(`${group.testName} cleared.`);
 }
 
-async function saveDraft({ silent = false } = {}) {
+async function saveDraft({ silent = false, quiet = false } = {}) {
   if (!current.booking) { toastError("Open a booking first."); return false; }
   if (!sessionCanWrite(P.REPORT_ENTER, ctx.session)) { toastError("You do not have permission to enter results."); return false; }
   // Recalculate before persisting, so a stored report never carries a stale or
@@ -1027,6 +1070,7 @@ async function saveDraft({ silent = false } = {}) {
       verifyUrl: current.report?.verifyUrl || ""
     }, { actor: ctx.session });
     current.report = saved;
+    writeCultureBackup(false); // whatever was just saved is no longer "unsaved" on this device
     dbg("PERSISTENCE", {
       reportId: saved.reportId,
       saved: current.groups.flatMap((g) => g.rows
@@ -1039,7 +1083,10 @@ async function saveDraft({ silent = false } = {}) {
     ctx.onChanged?.();
     return true;
   } catch (error) {
-    reportError(error, "Could not save the report.");
+    // Autosave failures are shown in the small status text (the entries stay on screen and in
+    // the local backup); every other save still raises the normal error.
+    if (quiet) console.warn("[culture autosave] failed", error?.message);
+    else reportError(error, "Could not save the report.");
     return false;
   } finally {
     if (!silent) setBusy("#saveDraftBtn", false);

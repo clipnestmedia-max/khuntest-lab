@@ -146,12 +146,43 @@ cr.organisms.push({ organismId: "pa", organismName: "Pseudomonas aeruginosa", se
 const org = cr.organisms[0];
 
 const htmlA = E.renderCultureBlocks([cr], true);
-check("editor: specimen dropdown has master + custom option", htmlA.includes("Suction Tip") && htmlA.includes("Other / type your own"));
-check("editor: searchable organism input with datalist", htmlA.includes('list="csOrganismList"') && htmlA.includes("Staphylococcus aureus"));
-check("editor: antibiotic checklist lists all 32+ antibiotics", (htmlA.match(/data-abx-check/g) || []).length >= 17);
+check("editor: searchable specimen input backed by the master list (incl. Other)", htmlA.includes('list="csSpecimenList"') && htmlA.includes('<option value="Suction Tip">'));
+check("editor: searchable organism input with datalist", htmlA.includes('id="csOrganismList"') && htmlA.includes("Staphylococcus aureus") && E.renderCultureBlocks([{ ...cr, organisms: [{ organismId: "", organismName: "", sensitivities: [], comments: "" }] }], true).includes('list="csOrganismList"'));
+check("editor: NO giant antibiotic checklist on the page (dialog only)", !htmlA.includes("data-abx-check") && !/type="checkbox"/.test(htmlA));
+check("editor: basic fields visible (specimen, result, colony count, unit)", ["data-cr-specimen", "data-cr-result", "data-cr-colony", "data-cr-colony-unit"].every((a) => htmlA.includes(a)));
+check("editor: advanced sections are collapsed by default", (htmlA.match(/<details class="cs-details"[^>]*>/g) || []).every((d) => !/sopen/.test(d)) && htmlA.includes("Microscopy / Gram stain") && htmlA.includes("Resistance markers"));
+check("editor: named organism shows as a collapsed summary, not an open form", (() => { const h = E.renderCultureBlocks([{ ...cr, organisms: [{ organismId: "pa", organismName: "Pseudomonas aeruginosa", sensitivities: [{ antibioticId: "amikacin", antibioticName: "Amikacin", sir: "S" }, { antibioticId: "meropenem", antibioticName: "Meropenem", sir: "R" }], comments: "" }] }], true); return h.includes("2 antibiotics · S 1 · R 1") && h.includes("data-org-toggle") && !h.includes("data-sens-mic") && !h.includes("data-abx-quick"); })());
+check("editor: empty organism prompts to select one and shows no antibiotic UI", (() => { const h = E.renderCultureBlocks([{ ...cr, organisms: [{ organismId: "", organismName: "", sensitivities: [], comments: "" }] }], true); return h.includes("Select an organism to enter antibiotic sensitivity.") && !h.includes("data-abx-open"); })());
 check("editor: add organism button", htmlA.includes("data-add-organism"));
-check("editor: MIC/zone/SIR/grade/comment inputs exist after adding a row", (() => { E.addAntibiotics(org, ["amikacin"]); const h = E.renderCultureBlocks([cr], true); return ["data-sens-mic", "data-sens-zone", "data-sens-sir", "data-sens-grade", "data-sens-comment"].every((a) => h.includes(a)); })());
+check("editor: OPEN organism renders search, + Add Antibiotic, panel button and the selected-antibiotics table", (() => {
+  const c2 = { ...cr, organisms: [{ organismId: "pa", organismName: "Pseudomonas aeruginosa", comments: "x", sensitivities: [
+    { antibioticId: "amikacin", antibioticName: "Amikacin", micValue: "4", micUnit: "µg/mL", zoneDiameter: "", zoneUnit: "mm", sir: "S", grade: "++", comment: "ok" },
+    { antibioticId: "meropenem", antibioticName: "Meropenem", micValue: "", micUnit: "µg/mL", zoneDiameter: "", zoneUnit: "mm", sir: "", grade: "", comment: "" }] }] };
+  E.setOrganismOpen(0, 0, true);
+  const h = E.renderCultureBlocks([c2], true);
+  E.setOrganismOpen(0, 0, false);
+  return ["data-abx-quick", "data-abx-open", "data-autofill-panel", "Selected antibiotics: 2", "data-sens-sir", "data-sens-mic", "data-sens-zone", "data-sens-grade", "data-sens-comment", "data-remove-sens", "data-organism-comment"].every((x) => h.includes(x))
+    && h.includes('<option value="S" selected>S — Sensitive</option>') && h.includes('<option value="I" >I — Intermediate</option>') && h.includes('<option value="R" >R — Resistant</option>')
+    && h.includes('<option value="" selected>Select…</option>') && h.includes('value="++" selected') && h.includes('value="4"');
+})());
+check("editor: read-only mode disables inputs and hides add/remove", (() => {
+  E.setOrganismOpen(0, 0, true);
+  const h = E.renderCultureBlocks([{ ...cr, organisms: [{ organismId: "pa", organismName: "PA", sensitivities: [{ antibioticId: "amikacin", antibioticName: "Amikacin", sir: "R" }], comments: "" }] }], false);
+  E.setOrganismOpen(0, 0, false);
+  return !h.includes("data-abx-open") && !h.includes("data-remove-sens") && !h.includes("data-add-organism") && /data-sens-sir[^>]*disabled/.test(h);
+})());
+check("editor: legacy stored values (IMS, NT) display sensibly", (() => {
+  E.setOrganismOpen(0, 0, true);
+  const h = E.renderCultureBlocks([{ ...cr, organisms: [{ organismId: "", organismName: "E. coli", sensitivities: [{ antibioticId: "", antibioticName: "Ampicillin", sir: "IMS" }, { antibioticId: "", antibioticName: "", sir: "NT" }], comments: "" }] }], true);
+  E.setOrganismOpen(0, 0, false);
+  return h.includes('<option value="I" selected>') && h.includes('<option value="NT" selected>') && h.includes("(no antibiotic selected)");
+})());
+check("editor: 'No growth' hides the organism section", !E.renderCultureBlocks([{ ...cr, cultureResult: "No Growth", organisms: [] }], true).includes("data-add-organism"));
+check("editor: existing organisms are never hidden even on 'No Growth'", E.renderCultureBlocks([{ ...cr, cultureResult: "No Growth" }], true).includes("Pseudomonas aeruginosa"));
+check("editor: 'Other' specimen asks what it is", E.renderCultureBlocks([{ ...cr, specimenId: "", specimenName: "", specimenCustom: true }], true).includes("Specify specimen"));
+check("editor: legacy custom specimen shows its typed name", E.renderCultureBlocks([{ ...cr, specimenId: "", specimenName: "Drain fluid" }], true).includes('value="Drain fluid"'));
 org.sensitivities = [];
+
 
 eq("addAntibiotics adds 17", E.addAntibiotics(org, REF.map(slug)), 17);
 eq("addAntibiotics skips duplicates", E.addAntibiotics(org, REF.map(slug)), 0);
