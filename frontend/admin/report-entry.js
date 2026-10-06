@@ -1018,12 +1018,31 @@ function renderProgress() {
     </div>`;
 }
 
+const isReleasedReport = (report) => report?.reportStatus === "Final" || report?.reportStatus === "Amended";
+
 async function saveCard(index) {
+  const wasReleased = isReleasedReport(current.report);
   const ok = await saveDraft({ silent: true });
   if (!ok) return;
   const card = document.querySelector(`[data-card="${index}"]`);
   if (card) card.dataset.open = "false";
   toastOk(`${current.groups[index]?.testName || "Test"} saved.`);
+  await releaseIfComplete({ wasReleased });
+}
+
+/**
+ * This lab has no approval step, so a report whose every parameter has been
+ * entered is released as soon as the last card is saved - it must not sit as
+ * "Draft" waiting for a second click nobody knows to make. A saved edit to an
+ * already-released report is re-released the same way (saving writes Draft
+ * first), so correcting a value doesn't leave the patient's copy withdrawn.
+ * Culture & Sensitivity has its own explicit Save & Release, so any report
+ * carrying one is left to that.
+ */
+async function releaseIfComplete({ wasReleased = false } = {}) {
+  if (current.cultureResults.length) return;
+  if (!Reports.gridProgress(current.groups).complete) return;
+  await saveAndRelease({ offer: !wasReleased });
 }
 
 async function clearCard(index) {
@@ -1111,7 +1130,7 @@ function currentInterpretationText() {
  * results and releasing them is a single action for whoever has permission
  * to enter results at all.
  */
-async function saveAndRelease() {
+async function saveAndRelease({ offer = true } = {}) {
   clearTimeout(cultureAutosaveTimer);  // a pending culture autosave must not fire after (and undo) the release
   if (!current.booking) return toastError("Open a booking first.");
   if (!sessionCanWrite(P.REPORT_ENTER, ctx.session)) return toastError("You do not have permission to enter results.");
@@ -1133,7 +1152,7 @@ async function saveAndRelease() {
   let signatory = signatories.find((s) => s.uid === ctx.session.uid) || signatories[0] || null;
   if (signatories.length > 1) {
     signatory = await pickSignatory(signatories);
-    if (!signatory) return;
+    if (!signatory) return toastWarn("Not released - the report is still a draft until a signatory is chosen.");
   }
 
   setBusy("#saveDraftBtn", true, "Saving...");
@@ -1165,9 +1184,9 @@ async function saveAndRelease() {
     }
 
     renderMeta();
-    toastOk("Report saved and released to the patient.");
+    toastOk(offer ? "Report saved and released to the patient." : "Report updated and re-released.");
     ctx.onChanged?.();
-    offerShare();
+    if (offer) offerShare();
   } catch (error) {
     reportError(error, "Could not save the report.");
   } finally {
@@ -1205,8 +1224,13 @@ async function preview() {
   // report layout (letterhead, department groupings, CBC/ESR completion, the
   // real QR + barcode) - one renderer for the admin preview, the patient
   // portal and the shared link, so every copy of a report looks identical.
+  //
+  // A released report is NOT re-saved here: every save writes the status back
+  // to Draft, so previewing or printing a released report used to silently
+  // withdraw it (Draft in the list, WhatsApp button gone, patient link dead).
+  // Looking at a report must never change it.
   try {
-    if (sessionCanWrite(P.REPORT_ENTER, ctx.session)) {
+    if (!isReleasedReport(current.report) && sessionCanWrite(P.REPORT_ENTER, ctx.session)) {
       await saveDraft({ silent: true });
     }
   } catch (error) {
@@ -1236,9 +1260,9 @@ function offerShare() {
   const { element, close } = openModal({
     title: "Send the report to the patient",
     body: `<p>The report for <b>${esc(current.booking.patientName)}</b> is released.</p>
-      <p class="small muted">A secure link is generated that only works while the bill is settled.
+      <p class="small muted">A secure link is generated that opens the report directly for the patient.
       ${current.booking.balanceDue > 0
-        ? `<b style="color:var(--danger)">This bill still has ${esc(rupees(current.booking.balanceDue))} outstanding — the patient will see a payment-pending message until it is cleared.</b>`
+        ? `<b>Note: this bill still has ${esc(rupees(current.booking.balanceDue))} outstanding. The report opens for the patient regardless.</b>`
         : ""}</p>`,
     footer: `<button class="btn btn-outline" data-act="later" type="button">Later</button>
              <button class="btn btn-green" data-act="send" type="button">Send on WhatsApp</button>`

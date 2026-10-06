@@ -55,6 +55,5 @@ export const MESSAGES = {
   invalid_link: "This report link is invalid.",
   revoked: "This report link is no longer active.",
   expired: "This report link has expired. Please contact KhunTest Lab.",
-  not_released: "Your report is still under review.",
-  payment_pending: "Your payment is pending. Please clear your payment to view and download the report."
+  not_released: "Your report is still under review."
 };

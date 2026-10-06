@@ -157,13 +157,11 @@ export async function resolveReportDoc(reportId, billNo) {
 async function createShare({ reportId, bookingId, billNo }) {
   if (!reportId) throw new Error("reportId is required to create a share link.");
   if (!bookingId) {
-    // The shared-link payment check (firestore.rules reportShareBookingPaid)
-    // re-reads bookings/{bookingId} live on every access - without a real
-    // booking id it can never confirm payment, so the link would be stuck
-    // showing "payment pending" forever regardless of actual payment
-    // status. Fail loudly here instead of writing a share that can never
-    // work - see admin-dashboard.html's renderReportsPanel() for where a
-    // wrong/missing bookingId (e.g. billNo used as a stand-in) got fixed.
+    // Every share is tied to its booking; without a real booking id the link
+    // can't be traced back to a bill. Fail loudly here instead of writing an
+    // orphan share - see admin-dashboard.html's renderReportsPanel() for
+    // where a wrong/missing bookingId (e.g. billNo used as a stand-in) got
+    // fixed.
     throw new Error(`Cannot create a share link: report ${billNo || reportId} has no linked booking id.`);
   }
 
@@ -188,7 +186,6 @@ async function createShare({ reportId, bookingId, billNo }) {
     throw new Error(`Cannot create a share link: linked booking ${bookingId} was not found.`);
   }
   const report = reportSnap.data();
-  const booking = bookingSnap.data();
 
   // The Reports panel already only offers "Share on WhatsApp" for Final
   // reports (see isFinalReport() in admin-dashboard.html), but that's a
@@ -214,15 +211,11 @@ async function createShare({ reportId, bookingId, billNo }) {
     createdBy: auth.currentUser?.uid || "",
     lastAccessedAt: null,
     accessCount: 0,
-    // Denormalized display-only copies, kept in sync for payment by
-    // syncSharePaymentHint() whenever admin edits the booking - the actual
-    // access decision is re-checked live against the booking/report by
-    // firestore.rules on every read (reportShareBookingPaid() /
-    // reportShareReportReleased()); these hints only let the client show
-    // the right pending-state message without a live read of its own
-    // (which an anonymous visitor isn't allowed to make directly).
-    paymentStatusHint: booking.paymentStatus || "",
-    balanceDueHint: Number(booking.balanceDue ?? booking.dueAmount ?? 0),
+    // Display-only copy of the report status at creation time. The actual
+    // access decision is re-checked live by firestore.rules on every read
+    // (reportShareReportReleased()); this hint only lets the client pick the
+    // right message without a denied read. Payment is not part of the
+    // decision, so no payment hints are stored.
     reportStatusHint: report.reportStatus || report.status || ""
   });
 
@@ -230,25 +223,6 @@ async function createShare({ reportId, bookingId, billNo }) {
 
   cacheToken(canonicalReportId, tokenHash, rawToken);
   return { shareId: tokenHash, rawToken, reused: false, canonicalReportId };
-}
-
-/**
- * Call after any write that changes a booking's payment fields, so already-
- * issued share links reflect the new balance without needing a live read
- * (anonymous shared-link visitors can't read bookings/{bookingId} directly).
- * Safe to call for bookings that have no share yet - it's then a no-op.
- */
-export async function syncSharePaymentHint(bookingId, { paymentStatus, balanceDue, dueAmount } = {}) {
-  if (!bookingId) return;
-  const q = query(collection(db, SHARE_COLLECTION), where("bookingId", "==", String(bookingId)), where("enabled", "==", true), limit(10));
-  const snap = await getDocs(q).catch((err) => {
-    console.warn("Failed to look up shares for payment hint sync", err);
-    return { docs: [] };
-  });
-  await Promise.all(snap.docs.map((d) => updateDoc(doc(db, SHARE_COLLECTION, d.id), {
-    paymentStatusHint: paymentStatus || "",
-    balanceDueHint: Number(balanceDue ?? dueAmount ?? 0)
-  }).catch((err) => console.warn("Failed to sync share payment hint", d.id, err))));
 }
 
 /**
@@ -326,8 +300,6 @@ export function buildWhatsAppReportMessage({ patientName, billNo, shareUrl }) {
     shareUrl,
     "",
     `Bill No: ${billNo || ""}`,
-    "",
-    "If payment is pending, please clear the payment to access your report.",
     "",
     "For assistance:",
     "+91 9234277007",

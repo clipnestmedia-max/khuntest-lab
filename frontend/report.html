@@ -1048,7 +1048,7 @@
     import { auth } from "./firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import { getBookingByBillNo, getReportByBillNo, getReportById } from "./firebase-service.js";
-    import { fetchSharedReport, PAYMENT_PENDING_COPY, LAB_CONTACT } from "./js/shared-report.js";
+    import { fetchSharedReport, LAB_CONTACT } from "./js/shared-report.js";
     import { qrSvg } from "./core/qrcode.js";
     import { barcodeSvgVertical } from "./core/barcode.js";
     import { getOrCreateShareForReport, regenerateShareForReport } from "./js/whatsapp-report-share.js";
@@ -1881,9 +1881,9 @@
     //
     // The QR always encodes a SECURE SHARE link (report.html?share=<token>),
     // never ?bill=/?reportId=. A share link needs no login: firestore.rules
-    // gates it on the linked booking's PAYMENT status alone, so anyone who
-    // scans the printed report opens it if the bill is paid, or sees a
-    // "payment pending" screen if not - never a "log in as the patient" wall.
+    // only requires the link to be active and the report released (payment
+    // status is not checked), so anyone who scans the printed report opens
+    // it - never a "log in as the patient" wall.
     async function shareLinkForQr(report, bill) {
       const params = new URLSearchParams(location.search);
       // Already opened via a share link: the QR is just this page.
@@ -2053,34 +2053,6 @@
       if (back) back.classList.add("hidden");
     }
 
-    function rupeesDisplay(value) {
-      const num = Number(value);
-      return Number.isFinite(num) ? `Rs. ${num.toFixed(2)}` : "";
-    }
-
-    function renderPaymentPendingCard(body, billNo) {
-      const balanceDue = body?.payment?.balanceDue;
-      const app = document.getElementById("app");
-      app.className = "";
-      const whatsappMessage = `Hello, I would like to clear my pending payment for KhunTest Lab Bill No: ${billNo || ""}.`;
-      const whatsappUrl = `https://wa.me/${LAB_CONTACT.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
-      app.innerHTML = `
-        <div class="payment-pending-card">
-          <h1>${safe(PAYMENT_PENDING_COPY.title)}</h1>
-          <p>${safe(PAYMENT_PENDING_COPY.body)}</p>
-          <div class="payment-pending-details">
-            ${billNo ? `<div><span>Bill Number</span><span>${safe(billNo)}</span></div>` : ""}
-            ${Number.isFinite(Number(balanceDue)) ? `<div><span>Balance Due</span><span>${safe(rupeesDisplay(balanceDue))}</span></div>` : ""}
-            <div><span>Lab Contact</span><span>${safe(LAB_CONTACT.phone)}</span></div>
-          </div>
-          <div class="payment-pending-actions">
-            <a class="whatsapp" href="${whatsappUrl}" target="_blank" rel="noopener">Contact KhunTest Lab</a>
-            <button class="secondary" type="button" onclick="loadReport()">Try Again</button>
-          </div>
-        </div>
-      `;
-    }
-
     function renderShareStateMessage(state, message) {
       const app = document.getElementById("app");
       app.className = "";
@@ -2138,11 +2110,6 @@
         document.getElementById("backDashboardBtn")?.classList.add("hidden");
         const params = getParams();
         if (params.get("print") === "1") setTimeout(() => window.print(), 350);
-        return;
-      }
-
-      if (result.state === "payment_pending") {
-        renderPaymentPendingCard(result, result.billNo);
         return;
       }
 

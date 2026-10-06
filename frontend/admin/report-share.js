@@ -5,9 +5,10 @@
 // doubles as the document id. A client must already know the exact unguessable
 // 256-bit token to get() the document; `list` is denied so the collection
 // cannot be enumerated. The medical content lives in a second collection with
-// the same id, whose rule re-checks payment and release state live on every
-// read, so a link starts working the moment the bill is settled and stops
-// working the moment the report is reverted - with no new token.
+// the same id, whose rule re-checks the release state live on every read, so
+// a link stops working the moment the report is reverted - with no new token.
+// Payment status is deliberately not checked: a released report opens whether
+// or not the bill is fully paid.
 //
 // What is new here: every share document carries labId, and the rules resolve
 // the booking and report under /labs/{labId}/..., so one laboratory can never
@@ -127,12 +128,10 @@ function sanitize(report) {
   return out;
 }
 
-/** Payment / bill hints report.html shows on its "link active but…" screens. */
+/** Bill number report.html shows on its "link not usable" screens (revoked/expired/etc). */
 function shareHints(report, booking) {
   return {
-    billNo: booking?.billNo || report?.billNo || "",
-    paymentStatusHint: String(booking?.paymentStatus || "").toLowerCase(),
-    balanceDueHint: Number(booking?.balanceDue || 0)
+    billNo: booking?.billNo || report?.billNo || ""
   };
 }
 
