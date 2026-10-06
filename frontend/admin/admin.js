@@ -24,6 +24,7 @@ import {
 import { initBookingScreen } from "./booking-screen.js";
 import { printReceipt } from "./receipt.js";
 import { initReportEntry, openReportFor, refreshBookingList } from "./report-entry.js";
+import { releaseCompleteDrafts, isBulkReleasable } from "./bulk-release.js";
 import { initSettingsScreens } from "./settings-screen.js";
 import { initMedicalScreen, renderMedical } from "./medical-screen.js";
 import { initMachineResultsScreen, renderMachineResults } from "./machine-results-screen.js";
@@ -382,6 +383,10 @@ let reportFilter = { text: "", status: "" };
 
 async function renderReports() {
   const rows = await reports();
+  const releasable = rows.filter(isBulkReleasable).length;
+  const releaseBtn = $("#releaseDraftsBtn");
+  releaseBtn.textContent = `Release all complete drafts (${releasable})`;
+  releaseBtn.classList.toggle("hidden", !releasable || !sessionCanWrite(P.REPORT_ENTER, session));
   const filtered = rows.filter((r) => {
     if (reportFilter.status && r.reportStatus !== reportFilter.status) return false;
     if (!reportFilter.text) return true;
@@ -405,6 +410,16 @@ async function renderReports() {
       </td></tr>`;
   }, { colspan: 6, empty: "No reports match this filter." });
 }
+
+$("#releaseDraftsBtn").addEventListener("click", async (event) => {
+  setBusy(event.target, true, "Releasing...");
+  try {
+    if (await releaseCompleteDrafts({ session })) invalidate();
+  } finally {
+    setBusy(event.target, false);
+    await renderReports();          // refresh the count / hide the button
+  }
+});
 
 $("#reportSearch").addEventListener("input", debounce((e) => {
   reportFilter.text = e.target.value.trim().toLowerCase(); renderReports();

@@ -342,6 +342,8 @@ export function normalizeReport(id, data = {}) {
     // viewer that injects it from the address bar. Written once, at approval;
     // the same token is reused on every later print (see report-share.js).
     verifyUrl: data.verifyUrl || "",
+    // Set only when someone deliberately pulled a released report back for correction.
+    revertReason: data.revertReason || "",
     createdAt: data.createdAt || null,
     updatedAt: data.updatedAt || null,
     labId: data.labId || ""
