@@ -21,7 +21,9 @@ export function isBulkReleasable(report) {
 }
 
 export async function findReleasableDrafts() {
-  const all = await Reports.listReports({ max: 5000 });
+  // listReports reads max*4 documents and Firestore rejects a query limit over
+  // 10000, so 2000 is the most that can be asked for here.
+  const all = await Reports.listReports({ max: 2000 });
   return all.filter(isBulkReleasable);
 }
 
