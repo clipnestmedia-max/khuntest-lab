@@ -40,6 +40,7 @@ export function receiptHtml(booking, branding, { title = "PAYMENT RECEIPT" } = {
   <footer>
     <p class="small">${esc(branding.termsAndConditions || "Please collect your report using the bill number above.")}</p>
     ${branding.whatsapp ? `<p class="small">Reports on WhatsApp: ${esc(branding.whatsapp)}</p>` : ""}
+    <p class="small"><b>You can also book a test through our website www.khuntest.com and get your reports on your WhatsApp &mdash; no need to visit the lab centre.</b></p>
     ${branding.showPoweredBy !== false ? `<p class="small powered">Powered by Swati Softtech Solution</p>` : ""}
   </footer>
 </div>`;

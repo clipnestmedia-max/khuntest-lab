@@ -375,6 +375,7 @@ export function reportStyles(branding) {
   .verify-qr svg { width: 100%; height: 100%; display: block; }
   .disclaimer { margin-top: 14px; font-size: 9.5px; color: var(--rp-muted); border-top: 1px dashed var(--rp-line); padding-top: 6px; }
   .powered { text-align: center; font-size: 9px; color: var(--rp-muted); margin-top: 8px; }
+  .book-online { text-align: center; font-size: 10px; font-weight: 700; margin: 6px 0 0; }
   .end-mark { text-align: center; font-size: 10px; letter-spacing: 3px; color: var(--rp-muted); margin-top: 10px; }
 
   /* --- Minimal Clinical --- */
@@ -838,6 +839,8 @@ export function renderReport(report, branding, settings = {}) {
   // Signatures on EVERY page, not only the last. A pathology report is often
   // separated and a single page handed to a referring doctor, so an unsigned
   // page is not much use - and it is how the sample report prints.
+  const bookOnline = `<p class="book-online">You can also book a test through our website www.khuntest.com and get your reports on your WhatsApp &mdash; no need to visit the lab centre.</p>`;
+
   const classicFooter = () => `
     <div class="report-foot cl-foot">
       ${classicSignatures(settings, branding, report)}
@@ -846,6 +849,7 @@ export function renderReport(report, branding, settings = {}) {
         <span>${esc(settings.footerNote
           || "The report finding should be correlated with clinical parameters. The test may be repeated if needed.")}</span>
       </div>
+      ${bookOnline}
       ${branding.showPoweredBy !== false ? `<p class="powered">Powered by Swati Softtech Solution</p>` : ""}
       <div class="cl-strip">
         <span class="cl-strip-slashes" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -862,6 +866,7 @@ export function renderReport(report, branding, settings = {}) {
       </div>` : ""}
       ${settings.footerNote ? `<p class="test-note">${esc(settings.footerNote)}</p>` : ""}
       <p class="disclaimer">${esc(settings.disclaimer || branding.disclaimer)}</p>
+      ${bookOnline}
       ${branding.showPoweredBy !== false ? `<p class="powered">Powered by Swati Softtech Solution</p>` : ""}
     </div>`;
 

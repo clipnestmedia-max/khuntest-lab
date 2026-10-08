@@ -36,6 +36,7 @@
     .summary .line { grid-template-columns:1fr auto; border-bottom:1px solid var(--line); padding:8px 0; }
     .summary .total { font-size:18px; font-weight:900; color:var(--blue); }
     .thanks { margin-top:22px; text-align:center; color:var(--blue); font-weight:900; }
+    .book-online { margin-top:14px; text-align:center; font-size:13px; font-weight:700; color:var(--ink); }
     .signature { margin-top:34px; display:flex; justify-content:flex-end; }
     .signature div { width:180px; border-top:1px solid var(--ink); text-align:center; padding-top:8px; }
     body.thermal { background:#fff; }
@@ -162,6 +163,7 @@
         </section>
         ${bill.remarks ? `<section class="box"><h2>Remarks</h2><p>${safe(bill.remarks)}</p></section>` : ""}
         <div class="signature"><div>Authorized Signature</div></div>
+        <p class="book-online">You can also book a test through our website <b>www.khuntest.com</b> and get your reports on your WhatsApp &mdash; no need to visit the lab centre.</p>
         <p class="thanks">Thank you for choosing KhunTest Lab</p>
       `;
       prepareBillLogo();

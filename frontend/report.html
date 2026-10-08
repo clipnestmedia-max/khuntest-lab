@@ -717,6 +717,19 @@
       line-height: 1.35;
     }
 
+    /* Centred line just above the footer band (the band itself is full). */
+    .footer-promo {
+      position: absolute;
+      left: 8mm;
+      right: 8mm;
+      bottom: 23.5mm;
+      text-align: center;
+      color: #062b59;
+      font-size: 2.6mm;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
     .footer-note-icon {
       position: absolute;
       left: -9mm;
@@ -1721,6 +1734,7 @@
     function footerHtml() {
       return `
         <footer class="report-footer">
+          <div class="footer-promo">You can also book a test through our website <b>www.khuntest.com</b> and get your reports on your WhatsApp &mdash; no need to visit the lab centre.</div>
           <div class="footer-note">
             <span class="footer-note-icon" aria-hidden="true"></span>
             <div>Note: The Report finding should be correlated with clinical Parameter.</div>
