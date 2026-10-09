@@ -658,7 +658,7 @@
       position: absolute;
       left: 15mm;
       right: 15mm;
-      bottom: 31mm;
+      bottom: 29.5mm;
       z-index: 2;
       display: flex;
       justify-content: space-between;
@@ -697,6 +697,17 @@
       font-size: 4mm;
       font-weight: 900;
     }
+
+    /* Qualification lines under the signatory's name. The technician block
+       carries invisible copies so both names stay on the same baseline. */
+    .signature-degree {
+      color: #293040;
+      font-size: 2.9mm;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .signature-degree.spacer { visibility: hidden; }
 
     .report-footer {
       position: absolute;
@@ -1720,12 +1731,16 @@
             <div>Technician</div>
             <div class="signature-line"></div>
             <div class="signature-name">MR. R. K. Suman</div>
+            <div class="signature-degree spacer" aria-hidden="true">&nbsp;</div>
+            <div class="signature-degree spacer" aria-hidden="true">&nbsp;</div>
           </div>
           <div class="signature">
             <div class="signature-icon">M</div>
             <div>Pathologist</div>
             <div class="signature-line"></div>
             <div class="signature-name">Dr. N. K. Suman</div>
+            <div class="signature-degree">MBBS, MD</div>
+            <div class="signature-degree">(DMCH, Darbhanga)</div>
           </div>
         </div>
       `;
